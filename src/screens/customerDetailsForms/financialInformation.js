@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchDropdownFromBasicsMaster, checkFieldForUpdate, } from "../../utilities/commonServices";
+import {
+  fetchDropdownFromBasicsMaster,
+  checkFieldForUpdate,
+} from "../../utilities/commonServices";
 import "../../styles/forms.css";
 import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
@@ -11,10 +14,30 @@ import Swal from "sweetalert2";
 import { DataGrid } from "@mui/x-data-grid";
 // import { useTranslation } from "react-i18next";
 import useMediaQuery from "@mui/material/useMediaQuery";
-
-const CUSTOMER_APPROVAL_CHECKLIST_URL = Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
+import {
+  Modal,
+  Box,
+  Typography,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  TextField,
+  Button,
+  Checkbox,
+  Grid,
+} from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import axios from "axios";
+const CUSTOMER_APPROVAL_CHECKLIST_URL =
+  Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const CUSTOMER_APPROVAL_CHECKLIST = Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST =
+  Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
 function FinancialInformation({
   customerData = {},
   originalCustomerData = {},
@@ -31,6 +54,8 @@ function FinancialInformation({
   setTabsHeight,
   formErrors = {},
   completeWorkflowData = {},
+  originalCustomerContactsData = {}, //primaryContactEmail
+  customerContactsData = {},
 }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
@@ -52,7 +77,7 @@ function FinancialInformation({
   );
   const [partialPayment, setPartialPayment] = useState(
     customerPaymentMethodsData?.methodDetails?.partialPayment?.isAllowed ||
-    false
+      false
   );
   const [COD, setCOD] = useState(
     customerPaymentMethodsData?.methodDetails?.COD?.isAllowed || false
@@ -67,136 +92,201 @@ function FinancialInformation({
   const [creditLimitData, setCreditLimitData] = useState(null);
   const [isCreditBalanceData, setIsCreditBalanceData] = useState(false);
   // Example state for conditional fields
-  const [bankName, setBankName] = useState(
-    customerData?.bankName || ""
-  );
+  const [bankName, setBankName] = useState(customerData?.bankName || "");
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
+  const [open, setOpen] = useState(false);
+  const [selectedEntities, setSelectedEntities] = useState([]);
+  const [fromDate, setFromDate] = useState(dayjs());
+  const [toDate, setToDate] = useState(dayjs());
+  const [ccEmail, setCcEmail] = useState("");
+  const [ccError, setCcError] = useState("");
   useEffect(() => {
     setBankName(customerData?.bankName || "");
   }, [customerData?.bankName]);
 
   useEffect(() => {
-      const handleResize = () => setIsMobile(window.innerWidth < 768);
-      console.log("isMobile", isMobile);
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   // Dropdown state for pricingPolicy
   const dropdownFields = ["pricingPolicy", "bankName", "entity"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
-const [fieldsForUpdate, setFieldsForUpdate] = useState({});
-const [paymentFieldsForUpdate, setPaymentFieldsForUpdate] = useState({});
-    const fieldList = [
-      {field: "bankName", fieldType: "customer"},
-      {field: "bankNameOther", fieldType: "customer"},
-      {field: "bankAccountNumber", fieldType: "customer"},
-      {field: "iban", fieldType: "customer"},
-      {field: "pricingPolicy?." + [Constants.ENTITY.DAR], fieldType: "pricingpolicy"},
-      {field: "pricingPolicy?." + [Constants.ENTITY.VMCO], fieldType: "pricingpolicy"},
-      {field: "pricingPolicy?." + [Constants.ENTITY.SHC], fieldType: "pricingpolicy"},
-      {field: "pricingPolicy?." + [Constants.ENTITY.NAQI], fieldType: "pricingpolicy"},
-      {field: "pricingPolicy?." + [Constants.ENTITY.GMTC], fieldType: "pricingpolicy"},
-      {field: "isDeliveryChargesApplicable", fieldType: "customer"},
-      {field: "financeHeadEmail", fieldType: "customer"},
-      {field: "financeHeadMobile", fieldType: "customer"},
-      {field: "purchasingHeadName", fieldType: "customer"},
-      {field: "purchasingHeadDesignation", fieldType: "customer"},
-      {field: "purchasingHeadEmail", fieldType: "customer"},
-      {field: "purchasingHeadMobile", fieldType: "customer"},
-      {field: "buildingName", fieldType: "customer"},
-      {field: "street", fieldType: "customer"},
-      {field: "region", fieldType: "customer"},
-      {field: "city", fieldType: "customer"},
-      {field: "cityOther", fieldType: "customer"},
-      {field: "district", fieldType: "customer"},
-      {field: "districtOther", fieldType: "customer"},
-      {field: "zone", fieldType: "customer"},
-      {field: "pincode", fieldType: "customer"},
-      {field: "geolocation", fieldType: "customer"},
-    ]
-    const paymentFieldsList = [
-      {field: "prePayment?.isAllowed", fieldType: "payments"},
-      {field: "COD?.isAllowed", fieldType: "payments"},
-      {field: "COD?.limit", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.DAR] + "?.isAllowed", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.DAR] + "?.limit", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.DAR] + "?.period", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.VMCO] + "?.limit", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.VMCO] + "?.period", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.SHC] + "?.isAllowed", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.SHC] + "?.limit", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.SHC] + "?.period", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.NAQI] + "?.limit", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.NAQI] + "?.period", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.GMTC] + "?.limit", fieldType: "payments"},
-      {field: "credit?." + [Constants.ENTITY.GMTC] + "?.period", fieldType: "payments"},
-    ]
+  const [fieldsForUpdate, setFieldsForUpdate] = useState({});
+  const [paymentFieldsForUpdate, setPaymentFieldsForUpdate] = useState({});
+  const fieldList = [
+    { field: "bankName", fieldType: "customer" },
+    { field: "bankNameOther", fieldType: "customer" },
+    { field: "bankAccountNumber", fieldType: "customer" },
+    { field: "iban", fieldType: "customer" },
+    {
+      field: "pricingPolicy?." + [Constants.ENTITY.DAR],
+      fieldType: "pricingpolicy",
+    },
+    {
+      field: "pricingPolicy?." + [Constants.ENTITY.VMCO],
+      fieldType: "pricingpolicy",
+    },
+    {
+      field: "pricingPolicy?." + [Constants.ENTITY.SHC],
+      fieldType: "pricingpolicy",
+    },
+    {
+      field: "pricingPolicy?." + [Constants.ENTITY.NAQI],
+      fieldType: "pricingpolicy",
+    },
+    {
+      field: "pricingPolicy?." + [Constants.ENTITY.GMTC],
+      fieldType: "pricingpolicy",
+    },
+    { field: "isDeliveryChargesApplicable", fieldType: "customer" },
+    { field: "financeHeadEmail", fieldType: "customer" },
+    { field: "financeHeadMobile", fieldType: "customer" },
+    { field: "purchasingHeadName", fieldType: "customer" },
+    { field: "purchasingHeadDesignation", fieldType: "customer" },
+    { field: "purchasingHeadEmail", fieldType: "customer" },
+    { field: "purchasingHeadMobile", fieldType: "customer" },
+    { field: "buildingName", fieldType: "customer" },
+    { field: "street", fieldType: "customer" },
+    { field: "region", fieldType: "customer" },
+    { field: "city", fieldType: "customer" },
+    { field: "cityOther", fieldType: "customer" },
+    { field: "district", fieldType: "customer" },
+    { field: "districtOther", fieldType: "customer" },
+    { field: "zone", fieldType: "customer" },
+    { field: "pincode", fieldType: "customer" },
+    { field: "geolocation", fieldType: "customer" },
+  ];
+  const paymentFieldsList = [
+    { field: "prePayment?.isAllowed", fieldType: "payments" },
+    { field: "COD?.isAllowed", fieldType: "payments" },
+    { field: "COD?.limit", fieldType: "payments" },
+    {
+      field: "credit?." + [Constants.ENTITY.DAR] + "?.isAllowed",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.DAR] + "?.limit",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.DAR] + "?.period",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.VMCO] + "?.limit",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.VMCO] + "?.period",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.SHC] + "?.isAllowed",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.SHC] + "?.limit",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.SHC] + "?.period",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.NAQI] + "?.limit",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.NAQI] + "?.period",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.GMTC] + "?.limit",
+      fieldType: "payments",
+    },
+    {
+      field: "credit?." + [Constants.ENTITY.GMTC] + "?.period",
+      fieldType: "payments",
+    },
+  ];
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
-        dropdownFields, token
+        dropdownFields,
+        token
       );
       setBasicMasterLists(listOfBasicsMaster);
     };
     fetchData();
     setTabsHeight("auto");
   }, []);
-useEffect(() => {
-      const checkFieldUpdates = async () => {
-        
-        try {
-          const fieldStatus = {};
-          const paymentFieldStatus = {};
-          // Use for...of loop instead of forEach for async operations
-          for (const fieldItem of fieldList) {
-            const canUpdate = await checkFieldForUpdate(
-              fieldItem.fieldType, 
-              completeWorkflowData?.workflowName
-            );
-            fieldStatus[fieldItem.field] = canUpdate;
-          }
+  useEffect(() => {
+    const checkFieldUpdates = async () => {
+      try {
+        const fieldStatus = {};
+        const paymentFieldStatus = {};
+        // Use for...of loop instead of forEach for async operations
+        for (const fieldItem of fieldList) {
+          const canUpdate = await checkFieldForUpdate(
+            fieldItem.fieldType,
+            completeWorkflowData?.workflowName
+          );
+          fieldStatus[fieldItem.field] = canUpdate;
+        }
 
-          for (const fieldItem of paymentFieldsList) {
-            const canUpdate = await checkFieldForUpdate(
-              fieldItem.fieldType, 
-              completeWorkflowData?.workflowName
-            );
-            paymentFieldStatus[fieldItem.field] = canUpdate;
-          }
-          setFieldsForUpdate(fieldStatus);
-          setPaymentFieldsForUpdate(paymentFieldStatus);
-        } catch (error) {
-          console.error('Error checking field updates:', error);
-          // Set all fields to false in case of error
-          const errorStatus = {};
-          fieldList.forEach(fieldItem => {
-            errorStatus[fieldItem.field] = false;
-          });
-          setFieldsForUpdate(errorStatus);
-        } 
-      };
-  
-      // if (completeWorkflowData?.workflowName) {
-        checkFieldUpdates();
-      // }
-    }, []); // Add other dependencies if needed
-  
+        for (const fieldItem of paymentFieldsList) {
+          const canUpdate = await checkFieldForUpdate(
+            fieldItem.fieldType,
+            completeWorkflowData?.workflowName
+          );
+          paymentFieldStatus[fieldItem.field] = canUpdate;
+        }
+        setFieldsForUpdate(fieldStatus);
+        setPaymentFieldsForUpdate(paymentFieldStatus);
+      } catch (error) {
+        console.error("Error checking field updates:", error);
+        // Set all fields to false in case of error
+        const errorStatus = {};
+        fieldList.forEach((fieldItem) => {
+          errorStatus[fieldItem.field] = false;
+        });
+        setFieldsForUpdate(errorStatus);
+      }
+    };
+
+    // if (completeWorkflowData?.workflowName) {
+    checkFieldUpdates();
+    // }
+  }, []); // Add other dependencies if needed
 
   const handleGetCreditBalance = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerData?.id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+      const response = await fetch(
+        `${API_BASE_URL}/payment-method-balances/id/${customerData?.id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
       const data = await response.json();
       if (data?.status?.toLowerCase() === "ok") {
         setCreditBalanceData(data?.data?.currentBalance || {});
@@ -216,86 +306,181 @@ useEffect(() => {
       });
     }
   };
-  
-const checkDisabledStatus = (fieldPath) => {
-  // Split the field path by dots to handle nested properties
-  const fieldParts = fieldPath?.split('?.');
-  
-  // Helper function to get nested value safely
-  const getNestedValue = (obj, path) => {
-    console.log('Input object:', obj);
-    console.log('Input path:', path);
-    
-    const result = path?.reduce((current, key) => {
-      console.log('Current:', current, 'Key:', key);
-      const next = current?.[key];
-      console.log('Next value:', next);
-      return next;
-    }, obj);
-    
-    console.log('Final result:', result);
-    return result;
+
+  const checkDisabledStatus = (fieldPath) => {
+    // Split the field path by dots to handle nested properties
+    const fieldParts = fieldPath?.split("?.");
+
+    // Helper function to get nested value safely
+    const getNestedValue = (obj, path) => {
+      console.log("Input object:", obj);
+      console.log("Input path:", path);
+
+      const result = path?.reduce((current, key) => {
+        console.log("Current:", current, "Key:", key);
+        const next = current?.[key];
+        console.log("Next value:", next);
+        return next;
+      }, obj);
+
+      console.log("Final result:", result);
+      return result;
+    };
+
+    const originalValue = getNestedValue(originalCustomerData, fieldParts);
+    const currentValue = getNestedValue(customerData, fieldParts);
+
+    const commonConditions =
+      originalCustomerData &&
+      customerData &&
+      originalValue === currentValue &&
+      mode === "edit" &&
+      customerData?.customerStatus !== "pending";
+
+    if (
+      user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR ||
+      user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+      user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE ||
+      user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+      user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+    ) {
+      return commonConditions && !fieldsForUpdate?.[fieldPath];
+    }
+
+    return commonConditions;
+  };
+  const checkDisabledStatusPayment = (fieldPath) => {
+    // Split the field path by dots to handle nested properties
+    const fieldParts = fieldPath?.split("?.");
+
+    // Helper function to get nested value safely
+    const getNestedValue = (obj, path) => {
+      // console.log(path.reduce((current, key) => current?.[key], obj))
+      // return path.reduce((current, key) => current?.[key], obj);
+      console.log("Input object:", obj);
+      console.log("Input path:", path);
+
+      const result = path?.reduce((current, key) => {
+        console.log("Current:", current, "Key:", key);
+        const next = current?.[key];
+        console.log("Next value:", next);
+        return next;
+      }, obj);
+
+      console.log("Final result:", result);
+      return result;
+    };
+
+    const originalValue = getNestedValue(
+      originalCustomerPaymentMethodsData?.methodDetails,
+      fieldParts
+    );
+    const currentValue = getNestedValue(paymentMethods, fieldParts);
+
+    const commonConditions =
+      originalCustomerPaymentMethodsData &&
+      paymentMethods &&
+      originalValue === currentValue &&
+      mode === "edit";
+
+    if (
+      user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR ||
+      user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+      user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE ||
+      user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+      user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+    ) {
+      return commonConditions && !paymentFieldsForUpdate?.[fieldPath];
+    }
+
+    return commonConditions;
   };
 
-  const originalValue = getNestedValue(originalCustomerData, fieldParts);
-  const currentValue = getNestedValue(customerData, fieldParts);
-  
-  const commonConditions = originalCustomerData &&
-                          customerData &&
-                          originalValue === currentValue &&
-                          mode === "edit" &&
-                          customerData?.customerStatus !== "pending";
+  const handleEntityChange = (key) => {
+    setSelectedEntities((prev) =>
+      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
+    );
+  };
+  const formatDate = (d) => dayjs(d).format("DD-MM-YYYY");
+  const handleSubmit = async () => {
+    setOpen(false);
+    if (ccEmail && !validateEmails(ccEmail)) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid CC Email",
+        text: "Please enter valid comma-separated emails.",
+      });
+      return;
+    }
 
-  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
-    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
-    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
-  ) {
-    return commonConditions && !fieldsForUpdate?.[fieldPath];
-  }
-  
-  return commonConditions;
-};
-    const checkDisabledStatusPayment = (fieldPath) => {
-  // Split the field path by dots to handle nested properties
-  const fieldParts = fieldPath?.split('?.');
-  
-  // Helper function to get nested value safely
-  const getNestedValue = (obj, path) => {
-    // console.log(path.reduce((current, key) => current?.[key], obj))
-    // return path.reduce((current, key) => current?.[key], obj);
-    console.log('Input object:', obj);
-  console.log('Input path:', path);
-  
-  const result = path?.reduce((current, key) => {
-    console.log('Current:', current, 'Key:', key);
-    const next = current?.[key];
-    console.log('Next value:', next);
-    return next;
-  }, obj);
-  
-  console.log('Final result:', result);
-  return result;
+    Swal.fire({
+      title: "Submitting...",
+      text: "Please wait",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const payload = {
+      entity: `{${selectedEntities.map((e) => `"${e}"`).join(",")}}`,
+      fromDate: formatDate(fromDate),
+      toDate: formatDate(toDate),
+      email: originalCustomerContactsData?.primaryContactEmail || "",
+      cc: ccEmail,
+      erpCustomerId: customerData?.erpCustId,
+      assignedTo: customerData?.assignedTo,
+    };
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/sending-request-statement-of-account`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Close loader
+      Swal.close();
+
+      // Check if the request was successful
+      if (data.success) {
+        // Success popup
+        Swal.fire({
+          icon: "success",
+          title: "Request Submitted",
+          text: "Please wait up to 15 minutes to receive the email.",
+          confirmButtonColor: "#1976d2",
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Submission Failed",
+          text: data.message || "Something went wrong. Please try again.",
+        });
+      }
+    } catch (error) {
+      Swal.close();
+
+      // Handle axios error response
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      Swal.fire({
+        icon: "error",
+        title: "Submission Failed",
+        text: errorMessage,
+      });
+    }
   };
 
-  const originalValue = getNestedValue(originalCustomerPaymentMethodsData?.methodDetails, fieldParts);
-  const currentValue = getNestedValue(paymentMethods, fieldParts);
-  
-  const commonConditions = originalCustomerPaymentMethodsData &&
-                          paymentMethods &&
-                          originalValue === currentValue &&
-                          mode === "edit";
+  const validateEmails = (value) => {
+    const emails = value.split(",").map((e) => e.trim());
 
-  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
-    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
-    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
-  ) {
-    return commonConditions && !paymentFieldsForUpdate?.[fieldPath];
-  }
-  
-  return commonConditions;
-};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-
+    return emails.every((email) => emailRegex.test(email));
+  };
   return (
     <div className="customer-onboarding-form-grid">
       {/* {isV("customerApprovalChecklist") && (
@@ -422,36 +607,37 @@ const checkDisabledStatus = (fieldPath) => {
                 target: { name: "bankName", value: e.target.value },
               });
             }}
-            disabled={
-            checkDisabledStatus("bankName")
-          }
+            disabled={checkDisabledStatus("bankName")}
             className={
               originalCustomerData &&
-                customerData &&
-                originalCustomerData?.bankName != bankName &&
-                mode === "edit"
+              customerData &&
+              originalCustomerData?.bankName != bankName &&
+              mode === "edit"
                 ? "update-field"
                 : ""
             }
             placeholder={t("Select")}
           />
-          {isV("bankNameVerified") && (
+          {isV("bankNameVerified") &&
             // (originalCustomerData &&
             //     customerData &&
             //     originalCustomerData?.companyNameEn !==
             //       customerData?.companyNameEn &&
             //     mode === "edit") ||
-            (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-              <input
-                type="checkbox"
-                id="bankNameVerified"
-                name="bankNameVerified"
-                checked={verifiedData?.bankNameVerified || false}
-                onChange={onChangeVerifiedData}
-              // className="verified-checkbox"
-              />
-              <label htmlFor="bankNameVerified">Verified</label>
-            </div>)}
+            mode === "edit" &&
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="bankNameVerified"
+                  name="bankNameVerified"
+                  checked={verifiedData?.bankNameVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="bankNameVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
@@ -475,7 +661,7 @@ const checkDisabledStatus = (fieldPath) => {
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.bankNameOther !=
-              customerData?.bankNameOther &&
+                customerData?.bankNameOther &&
               mode === "edit" && (
                 <span className="update-badge">{t("Updated")}</span>
               )}
@@ -485,47 +671,48 @@ const checkDisabledStatus = (fieldPath) => {
               type="text"
               id="bankNameOther"
               name="bankNameOther"
-              className={`text-field small ${originalCustomerData &&
+              className={`text-field small ${
+                originalCustomerData &&
                 customerData &&
                 originalCustomerData?.bankNameOther !=
-                customerData?.bankNameOther &&
+                  customerData?.bankNameOther &&
                 mode === "edit"
-                ? "update-field"
-                : ""
-                }`}
+                  ? "update-field"
+                  : ""
+              }`}
               placeholder={t("Enter other bank name")}
               value={customerData?.bankNameOther || ""}
               onChange={onChangeCustomerData}
-              disabled={
-            checkDisabledStatus("bankNameOther")
-          }
+              disabled={checkDisabledStatus("bankNameOther")}
             />
-            {isV("bankNameOtherVerified") && (
+            {isV("bankNameOtherVerified") &&
               // (originalCustomerData &&
               //     customerData &&
               //     originalCustomerData?.companyNameEn !==
               //       customerData?.companyNameEn &&
               //     mode === "edit") ||
-              (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-                <input
-                  type="checkbox"
-                  id="bankNameOtherVerified"
-                  name="bankNameOtherVerified"
-                  checked={verifiedData?.bankNameOtherVerified || false}
-                  onChange={onChangeVerifiedData}
-                // className="verified-checkbox"
-                />
-                <label htmlFor="bankNameOtherVerified">Verified</label>
-              </div>)}
+              mode === "edit" &&
+              customerData?.customerStatus === "pending" && (
+                <div className="verification-checkbox">
+                  <input
+                    type="checkbox"
+                    id="bankNameOtherVerified"
+                    name="bankNameOtherVerified"
+                    checked={verifiedData?.bankNameOtherVerified || false}
+                    onChange={onChangeVerifiedData}
+                    // className="verified-checkbox"
+                  />
+                  <label htmlFor="bankNameOtherVerified">Verified</label>
+                </div>
+              )}
           </div>
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.bankNameOther !=
-            customerData?.bankNameOther &&
+              customerData?.bankNameOther &&
             mode === "edit" && (
               <div className="current-value">
-                Previous:{" "}
-                {originalCustomerData?.bankNameOther || "(empty)"}
+                Previous: {originalCustomerData?.bankNameOther || "(empty)"}
               </div>
             )}
           {formErrors.bankNameOther && (
@@ -543,7 +730,7 @@ const checkDisabledStatus = (fieldPath) => {
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.bankAccountNumber !=
-            customerData?.bankAccountNumber &&
+              customerData?.bankAccountNumber &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -553,44 +740,46 @@ const checkDisabledStatus = (fieldPath) => {
             type="text"
             id="bankAccountNumber"
             name="bankAccountNumber"
-            className={`text-field small ${originalCustomerData &&
+            className={`text-field small ${
+              originalCustomerData &&
               customerData &&
               originalCustomerData?.bankAccountNumber !=
-              customerData?.bankAccountNumber &&
+                customerData?.bankAccountNumber &&
               mode === "edit"
-              ? "update-field"
-              : ""
-              }`}
+                ? "update-field"
+                : ""
+            }`}
             placeholder={t("Enter account number")}
             value={customerData?.bankAccountNumber || ""}
             onChange={onChangeCustomerData}
-            disabled={
-            checkDisabledStatus("bankAccountNumber")
-          }
+            disabled={checkDisabledStatus("bankAccountNumber")}
             required
           />
-          {isV("bankAccountNumberVerified") && (
+          {isV("bankAccountNumberVerified") &&
             // (originalCustomerData &&
             //     customerData &&
             //     originalCustomerData?.companyNameEn !==
             //       customerData?.companyNameEn &&
             //     mode === "edit") ||
-            (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-              <input
-                type="checkbox"
-                id="bankAccountNumberVerified"
-                name="bankAccountNumberVerified"
-                checked={verifiedData?.bankAccountNumberVerified || false}
-                onChange={onChangeVerifiedData}
-              // className="verified-checkbox"
-              />
-              <label htmlFor="bankAccountNumberVerified">Verified</label>
-            </div>)}
+            mode === "edit" &&
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="bankAccountNumberVerified"
+                  name="bankAccountNumberVerified"
+                  checked={verifiedData?.bankAccountNumberVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="bankAccountNumberVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.bankAccountNumber !=
-          customerData?.bankAccountNumber &&
+            customerData?.bankAccountNumber &&
           mode === "edit" && (
             <div className="current-value">
               Previous: {originalCustomerData?.bankAccountNumber || "(empty)"}
@@ -617,38 +806,40 @@ const checkDisabledStatus = (fieldPath) => {
             type="text"
             id="iban"
             name="iban"
-            className={`text-field small ${originalCustomerData &&
+            className={`text-field small ${
+              originalCustomerData &&
               customerData &&
               originalCustomerData?.iban != customerData?.iban &&
               mode === "edit"
-              ? "update-field"
-              : ""
-              }`}
+                ? "update-field"
+                : ""
+            }`}
             placeholder={t("Enter IBAN")}
             value={customerData?.iban || ""}
             onChange={onChangeCustomerData}
-            disabled={
-            checkDisabledStatus("iban")
-          }
+            disabled={checkDisabledStatus("iban")}
             required
           />
-          {isV("ibanVerified") && (
+          {isV("ibanVerified") &&
             // (originalCustomerData &&
             //     customerData &&
             //     originalCustomerData?.companyNameEn !==
             //       customerData?.companyNameEn &&
             //     mode === "edit") ||
-            (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-              <input
-                type="checkbox"
-                id="ibanVerified"
-                name="ibanVerified"
-                checked={verifiedData?.ibanVerified || false}
-                onChange={onChangeVerifiedData}
-              // className="verified-checkbox"
-              />
-              <label htmlFor="ibanVerified">Verified</label>
-            </div>)}
+            mode === "edit" &&
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="ibanVerified"
+                  name="ibanVerified"
+                  checked={verifiedData?.ibanVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="ibanVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
@@ -673,7 +864,7 @@ const checkDisabledStatus = (fieldPath) => {
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -681,33 +872,40 @@ const checkDisabledStatus = (fieldPath) => {
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.DAR]}
-              className={`dropdown ${originalCustomerData &&
+              className={`dropdown ${
+                originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
                 mode === "edit"
-                ? "update-field"
-                : ""
-                }`}
+                  ? "update-field"
+                  : ""
+              }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.DAR] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.DAR]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-          }
+                checkDisabledStatus(
+                  "pricingPolicy?." + [Constants.ENTITY.DAR]
+                ) ||
+                customerData?.customerStatus?.toLowerCase() === "new" ||
+                customerData?.customerStatus?.toLowerCase() === "pending"
+              }
             >
               <option value="" disabled>
                 {t("Select")}
               </option>
               {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                  {i18n.language === "ar"
+                    ? type.valueLc
+                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
-              customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -724,7 +922,7 @@ const checkDisabledStatus = (fieldPath) => {
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -732,33 +930,40 @@ const checkDisabledStatus = (fieldPath) => {
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.VMCO]}
-              className={`dropdown ${originalCustomerData &&
+              className={`dropdown ${
+                originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
                 mode === "edit"
-                ? "update-field"
-                : ""
-                }`}
+                  ? "update-field"
+                  : ""
+              }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.VMCO]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-          }
+                checkDisabledStatus(
+                  "pricingPolicy?." + [Constants.ENTITY.VMCO]
+                ) ||
+                customerData?.customerStatus?.toLowerCase() === "new" ||
+                customerData?.customerStatus?.toLowerCase() === "pending"
+              }
             >
               <option value="" disabled>
                 {t("Select")}
               </option>
               {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                  {i18n.language === "ar"
+                    ? type.valueLc
+                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
-              customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -775,7 +980,7 @@ const checkDisabledStatus = (fieldPath) => {
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -783,33 +988,40 @@ const checkDisabledStatus = (fieldPath) => {
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.SHC]}
-              className={`dropdown ${originalCustomerData &&
+              className={`dropdown ${
+                originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
                 mode === "edit"
-                ? "update-field"
-                : ""
-                }`}
+                  ? "update-field"
+                  : ""
+              }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.SHC] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.SHC]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-          }
+                checkDisabledStatus(
+                  "pricingPolicy?." + [Constants.ENTITY.SHC]
+                ) ||
+                customerData?.customerStatus?.toLowerCase() === "new" ||
+                customerData?.customerStatus?.toLowerCase() === "pending"
+              }
             >
               <option value="" disabled>
                 {t("Select")}
               </option>
               {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                  {i18n.language === "ar"
+                    ? type.valueLc
+                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
-              customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -827,7 +1039,7 @@ const checkDisabledStatus = (fieldPath) => {
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -835,33 +1047,40 @@ const checkDisabledStatus = (fieldPath) => {
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.NAQI]}
-              className={`dropdown ${originalCustomerData &&
+              className={`dropdown ${
+                originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
                 mode === "edit"
-                ? "update-field"
-                : ""
-                }`}
+                  ? "update-field"
+                  : ""
+              }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.NAQI]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-          }
+                checkDisabledStatus(
+                  "pricingPolicy?." + [Constants.ENTITY.NAQI]
+                ) ||
+                customerData?.customerStatus?.toLowerCase() === "new" ||
+                customerData?.customerStatus?.toLowerCase() === "pending"
+              }
             >
               <option value="" disabled>
                 {t("Select")}
               </option>
               {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                  {i18n.language === "ar"
+                    ? type.valueLc
+                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
-              customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -879,7 +1098,7 @@ const checkDisabledStatus = (fieldPath) => {
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -887,33 +1106,40 @@ const checkDisabledStatus = (fieldPath) => {
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.GMTC]}
-              className={`dropdown ${originalCustomerData &&
+              className={`dropdown ${
+                originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
+                  customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
                 mode === "edit"
-                ? "update-field"
-                : ""
-                }`}
+                  ? "update-field"
+                  : ""
+              }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.GMTC]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-          }
+                checkDisabledStatus(
+                  "pricingPolicy?." + [Constants.ENTITY.GMTC]
+                ) ||
+                customerData?.customerStatus?.toLowerCase() === "new" ||
+                customerData?.customerStatus?.toLowerCase() === "pending"
+              }
             >
               <option value="" disabled>
                 {t("Select")}
               </option>
               {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                  {i18n.language === "ar"
+                    ? type.valueLc
+                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
-              customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -936,8 +1162,10 @@ const checkDisabledStatus = (fieldPath) => {
                 checked={customerData?.isDeliveryChargesApplicable}
                 onChange={setIsDeliveryChargesApplicable}
                 disabled={
-            checkDisabledStatus("isDeliveryChargesApplicable") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-          }
+                  checkDisabledStatus("isDeliveryChargesApplicable") ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending"
+                }
               />
               {`\t ${t("Is delivery charges applicable")}`}
               {customerData?.isDeliveryChargesApplicable !==
@@ -964,7 +1192,9 @@ const checkDisabledStatus = (fieldPath) => {
                 checked={paymentMethods?.prePayment?.isAllowed}
                 onChange={onChangeCustomerPaymentMethodsData}
                 disabled={
-                  checkDisabledStatusPayment("prePayment?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
+                  checkDisabledStatusPayment("prePayment?.isAllowed") ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending"
                 }
               />
               {`\t ${t("Pre-Payment")}`}
@@ -1004,7 +1234,9 @@ const checkDisabledStatus = (fieldPath) => {
                 checked={paymentMethods?.COD?.isAllowed}
                 onChange={onChangeCustomerPaymentMethodsData}
                 disabled={
-                  checkDisabledStatusPayment("COD?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
+                  checkDisabledStatusPayment("COD?.isAllowed") ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending"
                 }
               />
               {`\t ${t("Cash on Delivery (COD) per Branch")}`}
@@ -1024,22 +1256,25 @@ const checkDisabledStatus = (fieldPath) => {
                   type="text"
                   id="CODLimit"
                   name="CODLimit"
-                  className={`text-field small ${customerPaymentMethodsData &&
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.COD
                       ?.limit != paymentMethods?.COD?.limit &&
                     mode === "edit"
-                    ? "update-field"
-                    : ""
-                    }`}
+                      ? "update-field"
+                      : ""
+                  }`}
                   placeholder={t("Enter COD limit")}
                   value={
                     customerPaymentMethodsData?.methodDetails?.COD?.limit || ""
                   }
                   onChange={onChangeCustomerPaymentMethodsData}
                   disabled={
-                  checkDisabledStatusPayment("COD?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-                }
+                    checkDisabledStatusPayment("COD?.limit") ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
                 />
               </>
             )}
@@ -1059,7 +1294,11 @@ const checkDisabledStatus = (fieldPath) => {
                 }
                 onChange={setCustomerCreditChange}
                 disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
+                  checkDisabledStatusPayment(
+                    "credit?." + [Constants.ENTITY.DAR] + "?.isAllowed"
+                  ) ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending"
                 }
               />
               {`\t ${t(Constants.ENTITY.DAR)}`}
@@ -1076,51 +1315,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.DAR
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                  <input
-                    type="text"
-                    id="DARCreditLimit"
-                    name="DARCreditLimit"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.DAR
-                      ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit limit")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.DAR
-                      ]?.limit || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-                }
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                <input
+                  type="text"
+                  id="DARCreditLimit"
+                  name="DARCreditLimit"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.DAR
                     ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit limit")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.DAR
+                    ]?.limit || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.DAR] + "?.limit"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.DAR
+                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.DAR]?.limit || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.DARCreditLimit && (
-                    <div className="error">{formErrors.DARCreditLimit}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.DAR]?.limit || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.DARCreditLimit && (
+                  <div className="error">{formErrors.DARCreditLimit}</div>
+                )}
+              </>
+            )}
           </div>
           <div className="form-group" />
 
@@ -1128,51 +1372,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.DAR
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                  <input
-                    type="text"
-                    id="DARCreditPeriod"
-                    name="DARCreditPeriod"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.DAR
-                      ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit period")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.DAR
-                      ]?.period || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
-                }
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                <input
+                  type="text"
+                  id="DARCreditPeriod"
+                  name="DARCreditPeriod"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.DAR
                     ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit period")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.DAR
+                    ]?.period || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.DAR] + "?.period"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.DAR
+                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.DAR]?.period || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.DARCreditPeriod && (
-                    <div className="error">{formErrors.DARCreditPeriod}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.DAR]?.period || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.DARCreditPeriod && (
+                  <div className="error">{formErrors.DARCreditPeriod}</div>
+                )}
+              </>
+            )}
           </div>
           {/* VMCO Credit */}
           <div className="form-group">
@@ -1185,7 +1434,13 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
+                disabled={
+                  checkDisabledStatusPayment(
+                    "credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed"
+                  ) ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending"
+                }
               />
               {`\t ${t(Constants.ENTITY.VMCO)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.VMCO].isAllowed !==
@@ -1201,49 +1456,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.VMCO
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                  <input
-                    type="text"
-                    id="VMCOCreditLimit"
-                    name="VMCOCreditLimit"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.VMCO
-                      ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit limit")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.VMCO
-                      ]?.limit || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                <input
+                  type="text"
+                  id="VMCOCreditLimit"
+                  name="VMCOCreditLimit"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.VMCO
                     ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit limit")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.VMCO
+                    ]?.limit || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.VMCO] + "?.limit"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.VMCO
+                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.VMCO]?.limit || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.VMCOCreditLimit && (
-                    <div className="error">{formErrors.VMCOCreditLimit}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.VMCO]?.limit || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.VMCOCreditLimit && (
+                  <div className="error">{formErrors.VMCOCreditLimit}</div>
+                )}
+              </>
+            )}
           </div>
           <div className="form-group" />
 
@@ -1251,49 +1513,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.VMCO
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                  <input
-                    type="text"
-                    id="VMCOCreditPeriod"
-                    name="VMCOCreditPeriod"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.VMCO
-                      ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit period")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.VMCO
-                      ]?.period || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                <input
+                  type="text"
+                  id="VMCOCreditPeriod"
+                  name="VMCOCreditPeriod"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.VMCO
                     ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit period")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.VMCO
+                    ]?.period || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.VMCO] + "?.period"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.VMCO
+                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.VMCO]?.period || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.VMCOCreditPeriod && (
-                    <div className="error">{formErrors.VMCOCreditPeriod}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.VMCO]?.period || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.VMCOCreditPeriod && (
+                  <div className="error">{formErrors.VMCOCreditPeriod}</div>
+                )}
+              </>
+            )}
           </div>
           {/* SHC Credit */}
           <div className="form-group">
@@ -1306,7 +1575,13 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.SHC]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
+                disabled={
+                  checkDisabledStatusPayment(
+                    "credit?." + [Constants.ENTITY.SHC] + "?.isAllowed"
+                  ) ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending"
+                }
               />
               {`\t ${t(Constants.ENTITY.SHC)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.SHC].isAllowed !==
@@ -1322,49 +1597,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.SHC
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                  <input
-                    type="text"
-                    id="SHCCreditLimit"
-                    name="SHCCreditLimit"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.SHC
-                      ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit limit")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.SHC
-                      ]?.limit || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                <input
+                  type="text"
+                  id="SHCCreditLimit"
+                  name="SHCCreditLimit"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.SHC
                     ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit limit")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.SHC
+                    ]?.limit || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.SHC] + "?.limit"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.SHC
+                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.SHC]?.limit || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.SHCCreditLimit && (
-                    <div className="error">{formErrors.SHCCreditLimit}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.SHC]?.limit || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.SHCCreditLimit && (
+                  <div className="error">{formErrors.SHCCreditLimit}</div>
+                )}
+              </>
+            )}
           </div>
           <div className="form-group" />
 
@@ -1372,49 +1654,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.SHC
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                  <input
-                    type="text"
-                    id="SHCCreditPeriod"
-                    name="SHCCreditPeriod"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.SHC
-                      ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit period")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.SHC
-                      ]?.period || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                <input
+                  type="text"
+                  id="SHCCreditPeriod"
+                  name="SHCCreditPeriod"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.SHC
                     ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit period")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.SHC
+                    ]?.period || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.SHC] + "?.period"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.SHC
+                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.SHC]?.period || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.SHCCreditPeriod && (
-                    <div className="error">{formErrors.SHCCreditPeriod}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.SHC]?.period || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.SHCCreditPeriod && (
+                  <div className="error">{formErrors.SHCCreditPeriod}</div>
+                )}
+              </>
+            )}
           </div>
           {/* NAQI Credit */}
           <div className="form-group">
@@ -1427,7 +1716,13 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
+                disabled={
+                  checkDisabledStatusPayment(
+                    "credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed"
+                  ) ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending"
+                }
               />
               {`\t ${t(Constants.ENTITY.NAQI)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.NAQI].isAllowed !==
@@ -1443,49 +1738,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.NAQI
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                  <input
-                    type="text"
-                    id="NAQICreditLimit"
-                    name="NAQICreditLimit"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.NAQI
-                      ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit limit")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.NAQI
-                      ]?.limit || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                <input
+                  type="text"
+                  id="NAQICreditLimit"
+                  name="NAQICreditLimit"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.NAQI
                     ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit limit")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.NAQI
+                    ]?.limit || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.NAQI] + "?.limit"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.NAQI
+                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.NAQI]?.limit || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.NAQICreditLimit && (
-                    <div className="error">{formErrors.NAQICreditLimit}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.NAQI]?.limit || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.NAQICreditLimit && (
+                  <div className="error">{formErrors.NAQICreditLimit}</div>
+                )}
+              </>
+            )}
           </div>
           <div className="form-group" />
 
@@ -1493,49 +1795,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.NAQI
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                  <input
-                    type="text"
-                    id="NAQICreditPeriod"
-                    name="NAQICreditPeriod"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.NAQI
-                      ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit period")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.NAQI
-                      ]?.period || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                <input
+                  type="text"
+                  id="NAQICreditPeriod"
+                  name="NAQICreditPeriod"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.NAQI
                     ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit period")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.NAQI
+                    ]?.period || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.NAQI] + "?.period"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.NAQI
+                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.NAQI]?.period || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.NAQICreditPeriod && (
-                    <div className="error">{formErrors.NAQICreditPeriod}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.NAQI]?.period || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.NAQICreditPeriod && (
+                  <div className="error">{formErrors.NAQICreditPeriod}</div>
+                )}
+              </>
+            )}
           </div>
           {/* GMTC Credit */}
           <div className="form-group">
@@ -1548,7 +1857,13 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
+                disabled={
+                  checkDisabledStatusPayment(
+                    "credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed"
+                  ) ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending"
+                }
               />
               {`\t ${t(Constants.ENTITY.GMTC)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.GMTC].isAllowed !==
@@ -1564,49 +1879,56 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.GMTC
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                  <input
-                    type="text"
-                    id="GMTCCreditLimit"
-                    name="GMTCCreditLimit"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.NAQI
-                      ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit limit")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.GMTC
-                      ]?.limit || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                <input
+                  type="text"
+                  id="GMTCCreditLimit"
+                  name="GMTCCreditLimit"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.GMTC
+                      Constants.ENTITY.NAQI
                     ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit limit")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.GMTC
+                    ]?.limit || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.GMTC] + "?.limit"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.GMTC
+                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.limit &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.GMTC]?.limit || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.GMTCCreditLimit && (
-                    <div className="error">{formErrors.GMTCCreditLimit}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.GMTC]?.limit || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors.GMTCCreditLimit && (
+                  <div className="error">{formErrors.GMTCCreditLimit}</div>
+                )}
+              </>
+            )}
           </div>
           <div className="form-group" />
 
@@ -1614,57 +1936,63 @@ const checkDisabledStatus = (fieldPath) => {
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.GMTC
             ]?.isAllowed && (
-                <>
-                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                  <input
-                    type="text"
-                    id="GMTCCreditPeriod"
-                    name="GMTCCreditPeriod"
-                    className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.GMTC
-                      ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
-                      }`}
-                    placeholder={t("Enter credit period")}
-                    value={
-                      customerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.GMTC
-                      ]?.period || ""
-                    }
-                    onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
-                  />
-                  {customerPaymentMethodsData &&
+              <>
+                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                <input
+                  type="text"
+                  id="GMTCCreditPeriod"
+                  name="GMTCCreditPeriod"
+                  className={`text-field small ${
+                    customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.GMTC
                     ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter credit period")}
+                  value={
+                    customerPaymentMethodsData?.methodDetails?.credit?.[
+                      Constants.ENTITY.GMTC
+                    ]?.period || ""
+                  }
+                  onChange={setCustomerCreditChange}
+                  disabled={
+                    checkDisabledStatusPayment(
+                      "credit?." + [Constants.ENTITY.GMTC] + "?.period"
+                    ) ||
+                    customerData?.customerStatus?.toLowerCase() === "new" ||
+                    customerData?.customerStatus?.toLowerCase() === "pending"
+                  }
+                />
+                {customerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData &&
+                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                    Constants.ENTITY.GMTC
+                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
-                    mode === "edit" && (
-                      <div className="current-value">
-                        Previous:{" "}
-                        {originalCustomerPaymentMethodsData?.methodDetails
-                          ?.credit?.[Constants.ENTITY.GMTC]?.period || "(empty)"}
-                      </div>
-                    )}
-                  {formErrors.GMTCCreditPeriod && (
-                    <div className="error">{formErrors.GMTCCreditPeriod}</div>
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerPaymentMethodsData?.methodDetails
+                        ?.credit?.[Constants.ENTITY.GMTC]?.period || "(empty)"}
+                    </div>
                   )}
-                </>
-              )}
+                {formErrors?.GMTCCreditPeriod && (
+                  <div className="error">{formErrors?.GMTCCreditPeriod}</div>
+                )}
+              </>
+            )}
           </div>
-
         </>
       )}
 
       {/* Credit Balance Header */}
-      {customerData?.customerStatus.toLowerCase() === "approved" &&
-        (<>
+      {customerData?.customerStatus?.toLowerCase() === "approved" && (
+        <>
           <h3 className="form-header full-width">{t("Credit Balance")}</h3>
           <div>
             <button
@@ -1675,9 +2003,20 @@ const checkDisabledStatus = (fieldPath) => {
               {isLoading ? t("Loading...") : t("Get Credit Balance")}
             </button>
           </div>
+          {isV("isStatementofAccount")&&(<><h3 className="form-header full-width">{t("Account Statement")}</h3>
+          <div>
+            <button
+              onClick={() => setOpen(true)}
+              className="action-button save"
+            >
+              {t("Statement of Account")}
+            </button>
+          </div></>)
+
+          }
+          
         </>
-        )
-      }
+      )}
       {/* {isCreditBalanceData && (
         <div className="gi-backdrop">
           <dialog className="credit-balance-dialog" open>
@@ -1947,207 +2286,212 @@ const checkDisabledStatus = (fieldPath) => {
         </div>
       )} */}
 
-
-{isCreditBalanceData && (
-  <div className="gi-backdrop">
-    <dialog className="credit-balance-dialog" open>
-      <div className="dialog-header">
-        <h2>{t("Credit Balance")}</h2>
-        <button
-          className="close-dialog"
-          onClick={() => setIsCreditBalanceData(false)}
-        >
-          &times;
-        </button>
-      </div>
-
-      <div className="dialog-content">
-        {/* Detect mobile screen */}
-        {(() => {
-          // const isMobile = useMediaQuery("(max-width: 600px)");
-
-          // Prepare data rows
-          const rows =
-            basicMasterLists?.entity?.map((item, index) => {
-              const creditLimit = creditLimitData?.[item.value]?.limit || 0;
-              const remainingCredit = creditBalanceData?.[item.value] || 0;
-              const dueToPay = parseFloat(creditLimit) - parseFloat(remainingCredit);
-
-              return {
-                id: index + 1,
-                entity:
-                  i18n.language === "en"
-                    ? item.description
-                    : item.descriptionLc,
-                dueToPay,
-                remainingCredit,
-                creditLimit,
-              };
-            }) || [];
-
-          // Define columns for DataGrid
-          const columns = [
-            { field: "entity", headerName: t("Entity"), flex: 1 },
-            {
-              field: "dueToPay",
-              headerName: t("Due to Pay"),
-              flex: 1,
-              renderCell: (params) => (
-                <span
-                  style={{
-                    color:
-                      params.value === 0
-                        ? "#6c757d"
-                        : params.value > 0
-                        ? "#dc3545"
-                        : "#dc3545",
-                  }}
-                >
-                  {params.value.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "SAR",
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-              ),
-            },
-            {
-              field: "remainingCredit",
-              headerName: t("Remaining Credit"),
-              flex: 1,
-              renderCell: (params) => (
-                <span
-                  style={{
-                    color:
-                      params.value === 0
-                        ? "#6c757d"
-                        : params.value > 0
-                        ? "#6c757d"
-                        : "#6c757d",
-                  }}
-                >
-                  {params.value.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "SAR",
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-              ),
-            },
-            {
-              field: "creditLimit",
-              headerName: t("Credit Limit"),
-              flex: 1,
-              renderCell: (params) => (
-                <span style={{ color: "#6c757d" }}>
-                  {params.value.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "SAR",
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-              ),
-            },
-          ];
-
-          if (isMobile) {
-            // 📱 Render MUI DataGrid for Mobile
-            return (
-              <div style={{ height: "auto", width: "100%" }}>
-                <DataGrid
-                  rows={rows}
-                  columns={columns}
-                  pageSize={5}
-                  rowsPerPageOptions={[5]}
-                  disableSelectionOnClick
-                  disableColumnFilter
-                  hideFooter
-                  sx={{
-                    border: "1.5px solid #eee",
-                    borderRadius: "10px",
-                    "& .MuiDataGrid-cell": {
-                      fontSize: "0.9rem",
-                    },
-                    "& .MuiDataGrid-columnHeaders": {
-                      backgroundColor: "#fafafa",
-                      fontWeight: 600,
-                    },
-                  }}
-                />
-              </div>
-            );
-          }
-
-          // 💻 Render classic table for desktop
-          return (
-            <div className="balance-table-container">
-              <table className="balance-table">
-                <thead>
-                  <tr>
-                    <th>{t("Entity")}</th>
-                    <th className="due-to-pay">{t("Due to Pay")}</th>
-                    <th className="balance-amount">{t("Remaining Credit")}</th>
-                    <th className="credit-limit">{t("Credit Limit")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.entity}</td>
-                      <td
-                        className={`due-to-pay ${
-                          row.dueToPay === 0
-                            ? "zero"
-                            : row.dueToPay > 0
-                            ? "positive"
-                            : "negative"
-                        }`}
-                      >
-                        {row.dueToPay.toLocaleString("en-US", {
-                          style: "currency",
-                          currency: "SAR",
-                          minimumFractionDigits: 2,
-                        })}
-                      </td>
-                      <td className="balance-amount">
-                        {row.remainingCredit.toLocaleString("en-US", {
-                          style: "currency",
-                          currency: "SAR",
-                          minimumFractionDigits: 2,
-                        })}
-                      </td>
-                      <td className="credit-limit">
-                        {row.creditLimit.toLocaleString("en-US", {
-                          style: "currency",
-                          currency: "SAR",
-                          minimumFractionDigits: 2,
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {isCreditBalanceData && (
+        <div className="gi-backdrop">
+          <dialog className="credit-balance-dialog" open>
+            <div className="dialog-header">
+              <h2>{t("Credit Balance")}</h2>
+              <button
+                className="close-dialog"
+                onClick={() => setIsCreditBalanceData(false)}
+              >
+                &times;
+              </button>
             </div>
-          );
-        })()}
 
-        {(!creditBalanceData ||
-          Object.keys(creditBalanceData)?.length === 0) && (
-          <p className="no-data">{t("No credit balance data available")}</p>
-        )}
-      </div>
+            <div className="dialog-content">
+              {/* Detect mobile screen */}
+              {(() => {
+                // const isMobile = useMediaQuery("(max-width: 600px)");
 
-      <div className="gi-footer">
-        <button
-          className="gi-close-btn"
-          onClick={() => setIsCreditBalanceData(false)}
-        >
-          {t("Close")}
-        </button>
+                // Prepare data rows
+                const rows =
+                  basicMasterLists?.entity?.map((item, index) => {
+                    const creditLimit =
+                      creditLimitData?.[item.value]?.limit || 0;
+                    const remainingCredit =
+                      creditBalanceData?.[item.value] || 0;
+                    const dueToPay =
+                      parseFloat(creditLimit) - parseFloat(remainingCredit);
 
-      </div>
-    </dialog>
-    <style>
+                    return {
+                      id: index + 1,
+                      entity:
+                        i18n.language === "en"
+                          ? item.description
+                          : item.descriptionLc,
+                      dueToPay,
+                      remainingCredit,
+                      creditLimit,
+                    };
+                  }) || [];
+
+                // Define columns for DataGrid
+                const columns = [
+                  { field: "entity", headerName: t("Entity"), flex: 1 },
+                  {
+                    field: "dueToPay",
+                    headerName: t("Due to Pay"),
+                    flex: 1,
+                    renderCell: (params) => (
+                      <span
+                        style={{
+                          color:
+                            params.value === 0
+                              ? "#6c757d"
+                              : params.value > 0
+                              ? "#dc3545"
+                              : "#dc3545",
+                        }}
+                      >
+                        {params.value.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "SAR",
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    ),
+                  },
+                  {
+                    field: "remainingCredit",
+                    headerName: t("Remaining Credit"),
+                    flex: 1,
+                    renderCell: (params) => (
+                      <span
+                        style={{
+                          color:
+                            params.value === 0
+                              ? "#6c757d"
+                              : params.value > 0
+                              ? "#6c757d"
+                              : "#6c757d",
+                        }}
+                      >
+                        {params.value.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "SAR",
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    ),
+                  },
+                  {
+                    field: "creditLimit",
+                    headerName: t("Credit Limit"),
+                    flex: 1,
+                    renderCell: (params) => (
+                      <span style={{ color: "#6c757d" }}>
+                        {params.value.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "SAR",
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    ),
+                  },
+                ];
+
+                if (isMobile) {
+                  // 📱 Render MUI DataGrid for Mobile
+                  return (
+                    <div style={{ height: "auto", width: "100%" }}>
+                      <DataGrid
+                        rows={rows}
+                        columns={columns}
+                        pageSize={5}
+                        rowsPerPageOptions={[5]}
+                        disableSelectionOnClick
+                        disableColumnFilter
+                        hideFooter
+                        sx={{
+                          border: "1.5px solid #eee",
+                          borderRadius: "10px",
+                          "& .MuiDataGrid-cell": {
+                            fontSize: "0.9rem",
+                          },
+                          "& .MuiDataGrid-columnHeaders": {
+                            backgroundColor: "#fafafa",
+                            fontWeight: 600,
+                          },
+                        }}
+                      />
+                    </div>
+                  );
+                }
+
+                // 💻 Render classic table for desktop
+                return (
+                  <div className="balance-table-container">
+                    <table className="balance-table">
+                      <thead>
+                        <tr>
+                          <th>{t("Entity")}</th>
+                          <th className="due-to-pay">{t("Due to Pay")}</th>
+                          <th className="balance-amount">
+                            {t("Remaining Credit")}
+                          </th>
+                          <th className="credit-limit">{t("Credit Limit")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row) => (
+                          <tr key={row.id}>
+                            <td>{row.entity}</td>
+                            <td
+                              className={`due-to-pay ${
+                                row.dueToPay === 0
+                                  ? "zero"
+                                  : row.dueToPay > 0
+                                  ? "positive"
+                                  : "negative"
+                              }`}
+                            >
+                              {row.dueToPay.toLocaleString("en-US", {
+                                style: "currency",
+                                currency: "SAR",
+                                minimumFractionDigits: 2,
+                              })}
+                            </td>
+                            <td className="balance-amount">
+                              {row.remainingCredit.toLocaleString("en-US", {
+                                style: "currency",
+                                currency: "SAR",
+                                minimumFractionDigits: 2,
+                              })}
+                            </td>
+                            <td className="credit-limit">
+                              {row.creditLimit.toLocaleString("en-US", {
+                                style: "currency",
+                                currency: "SAR",
+                                minimumFractionDigits: 2,
+                              })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+
+              {(!creditBalanceData ||
+                Object.keys(creditBalanceData)?.length === 0) && (
+                <p className="no-data">
+                  {t("No credit balance data available")}
+                </p>
+              )}
+            </div>
+
+            <div className="gi-footer">
+              <button
+                className="gi-close-btn"
+                onClick={() => setIsCreditBalanceData(false)}
+              >
+                {t("Close")}
+              </button>
+            </div>
+          </dialog>
+          <style>
             {`
         .gi-backdrop {
           position: fixed;
@@ -2316,9 +2660,163 @@ const checkDisabledStatus = (fieldPath) => {
         }
       `}
           </style>
-  </div>
-)}
+        </div>
+      )}
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "90%",
+            maxWidth: 560,
+            maxHeight: "90vh", // 🔥 IMPORTANT
+            overflowY: "auto",
+            bgcolor: "background.paper",
+            borderRadius: 3,
+            boxShadow: 5,
+            p: 3,
+          }}
+        >
+          <Typography variant="h6" textAlign="center" mb={2}>
+            {t("Request Statement of Account")}
+          </Typography>
 
+          <Grid container spacing={2}>
+            {/* SELECT ENTITY */}
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <FormLabel sx={{ fontWeight: 600 }}>{t("Select Entity")}</FormLabel>
+
+                <Grid container spacing={1} sx={{ mt: 1 }}>
+                  {Object.keys(customerData?.assignedToEntityWise || {}).map(
+                    (key) => (
+                      <Grid item xs={12} sm={6} md={4} key={key}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={selectedEntities.includes(key)}
+                              onChange={() => handleEntityChange(key)}
+                            />
+                          }
+                          label={key}
+                        />
+                      </Grid>
+                    )
+                  )}
+                </Grid>
+              </FormControl>
+            </Grid>
+
+
+  <Grid container spacing={2}>
+
+    {/* FROM DATE */}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <Grid item xs={12} sm={6} xl={6}>
+      <DatePicker
+        label={t("From Date")}
+        value={fromDate}
+        onChange={(newValue) => setFromDate(newValue)}
+        sx={{ width: "100%" }}
+      />
+    </Grid>
+    </LocalizationProvider>
+<LocalizationProvider dateAdapter={AdapterDayjs}>
+    {/* TO DATE */}
+    <Grid item xs={12} sm={6} xl={6}>
+      <DatePicker
+        label={t("To Date")}
+        value={toDate}
+        maxDate={dayjs()} 
+        onChange={(newValue) => setToDate(newValue)}
+        sx={{ width: "100%" }}
+      />
+    </Grid>
+</LocalizationProvider>
+  </Grid>
+
+
+
+
+            {/* EMAIL */}
+            <Grid item xs={12}>
+              <TextField
+                label={t("Email")}
+                value={originalCustomerContactsData?.primaryContactEmail || ""}
+                fullWidth
+                InputProps={{ readOnly: true }}
+              />
+            </Grid>
+
+            {/* CC EMAIL */}
+            <Grid item xs={12}>
+              <TextField
+                label={t("CC")}
+               placeholder="abs@gmail.com, abs1@gmail.com"
+                value={ccEmail}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setCcEmail(value);
+
+                  // validate
+                  if (value && !validateEmails(value)) {
+                    setCcError(
+                      "Invalid email format. Use comma-separated values."
+                    );
+                  } else {
+                    setCcError("");
+                  }
+                }}
+                error={Boolean(ccError)}
+                helperText={t(ccError)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography
+                variant="body2"
+                sx={{
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
+                  whiteSpace: "normal",
+                }}
+              >
+                {t("If you have already submitted, please wait 15 minutes for the  email.")}
+              </Typography>
+            </Grid>
+
+            {/* BUTTONS */}
+            <Grid item xs={12}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{ py: 1.3, borderRadius: 2, fontSize: "16px" }}
+                    onClick={handleSubmit}
+                  >
+                    {t("Submit")}
+                  </Button>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    sx={{ py: 1.3, borderRadius: 2, fontSize: "16px" }}
+                    onClick={() => setOpen(false)}
+                  >
+                    {t("Close")}
+                  </Button>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+        </Box>
+      </Modal>
     </div>
   );
 }

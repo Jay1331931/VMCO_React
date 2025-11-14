@@ -2561,6 +2561,8 @@ if (uniqueFieldsList.includes(field) && value) {
                     setTabsHeight={setTabsHeight}
                     formErrors={formErrors}
                     completeWorkflowData={completeWorkflowData}
+                        customerContactsData={customerContactsData}
+                  originalCustomerContactsData={originalCustomerContactsData}
                   />
                 )}
               {activeTab === "Documents" && isV("documentsTab") && (

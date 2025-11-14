@@ -7,7 +7,7 @@ import i18n from "../i18n";
 import axios from "axios";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import RbacManager from "../utilities/rbac";
-import CustomToolbar from "../components/CustomToolbar"; // same as used in Support
+import CustomToolbar from "../components/CustomToolbar";
 import LoadingSpinner from "../components/LoadingSpinner";
 import BankTransactionsCard from "../components/BankTransactionsCard";
 import TableMobile from "../components/TableMobile";
@@ -30,13 +30,14 @@ const BankTransactions = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("pending");
 
   // Pagination + sorting
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [sortModel, setSortModel] = useState([]);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({ status: "pending" });
   const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
   const [filterAnchor, setFilterAnchor] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -44,6 +45,7 @@ const BankTransactions = () => {
   const gridApiRef = useGridApiRef();
   const contentRef = useRef(null);
   const [isAtTop, setIsAtTop] = useState(true);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -54,13 +56,14 @@ const BankTransactions = () => {
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = contentRef.current?.scrollTop || 0;
-      setIsAtTop(scrollTop < 20); // detect near top
+      setIsAtTop(scrollTop < 20);
     };
 
     const container = contentRef.current;
     container?.addEventListener("scroll", handleScroll);
     return () => container?.removeEventListener("scroll", handleScroll);
   }, []);
+
   // RBAC
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
@@ -70,9 +73,10 @@ const BankTransactions = () => {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
 
-  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
-  const pageName = "BankTransactions"
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0];
+  const pageName = "BankTransactions";
   const storageKey = `${pageName}_${role}_columns`;
+
   useEffect(() => {
     const savedModel = localStorage.getItem(storageKey);
     if (savedModel) {
@@ -104,16 +108,23 @@ const BankTransactions = () => {
 
         const formattedData = (data.data || []).map((row) => ({
           ...row,
-          id: row.id, // required for DataGrid
-          orderId: Array.isArray(row.orderId) ? row.orderId.join(", ") : row.orderId,
-          erpOrderId: Array.isArray(row.erpOrderId) ? row.erpOrderId.join(", ") : row.erpOrderId,
+          id: row.id,
+          transactionId: row.transactionId || "",
+          erpCustId: row.erpCustId || "",
+          customerName: isArabic ? row.companyNameAr : row.companyNameEn,
+          entity: row.entity || "",
+          assignedSalesExecutive: row.assignedSalesExecutive || "",
+          salesPersonRegion: Array.isArray(row.salesPersonRegion) ? row.salesPersonRegion.join(", ") : row.salesPersonRegion || "",
+          orderId: Array.isArray(row.orderId) ? row.orderId.join(", ") : row.orderId || "",
+          erpOrderId: Array.isArray(row.erpOrderId) ? row.erpOrderId.join(", ") : row.erpOrderId || "",
+          transactionDate: convertToTimezone(row.transactionDate, TIMEZONES.SAUDI_ARABIA, "DD/MM/YYYY"),
           createdAt: convertToTimezone(row.createdAt, TIMEZONES.SAUDI_ARABIA, "DD/MM/YYYY"),
-          transactionDate:
-            convertToTimezone(row.transactionDate, TIMEZONES.SAUDI_ARABIA, "DD/MM/YYYY") || "N/A",
+          modifiedByName: row.modifiedByName || "",
+          status: row.status,
         }));
 
         setTransactions(formattedData);
-        setTotal(data.pagination?.totalPages || formattedData?.lengt || 1);
+        setTotal(data.pagination?.totalPages || 1);
       } catch (err) {
         console.error("Error fetching transactions:", err);
         setError(err.message);
@@ -121,7 +132,7 @@ const BankTransactions = () => {
         setLoading(false);
       }
     },
-    [pageSize, token]
+    [pageSize, token, isArabic]
   );
 
   useEffect(() => {
@@ -142,11 +153,31 @@ const BankTransactions = () => {
     fetchTransactions(1, searchQuery, filters, model);
   };
 
-  // Handle filter
   const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
+    // Preserve the status filter from the active tab
+    const updatedFilters = { ...newFilters };
+    if (activeTab === "pending") {
+      updatedFilters.status = "pending";
+    }
+    setFilters(updatedFilters);
     setPage(1);
     setFilterAnchor(null);
+  };
+
+  // Handle tab change for Pending/All
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    setPage(1);
+
+    if (newTab === "pending") {
+      // Apply pending status filter, preserve other filters
+      const { status, ...otherFilters } = filters;
+      setFilters({ ...otherFilters, status: "pending" });
+    } else {
+      // Remove status filter for "all", preserve other filters
+      const { status, ...otherFilters } = filters;
+      setFilters(otherFilters);
+    }
   };
 
   // Handle row click
@@ -154,52 +185,136 @@ const BankTransactions = () => {
     navigate(`/bankTransactions/edit/${transaction.id}`);
   };
 
-
   const handleAddClick = () => {
     navigate(`/bankTransactions/add`);
   };
-  // Columns
+
+  // Columns with minWidth for readable headers
   const transactionColumns = [
-    { field: "id", headerName: t("Transaction Id"), include: isV("TransactionIdCol"), searchable: true, flex: 1 },
-    { field: "erpCustId", headerName: t("ERP Customer Id"), include: isV("erpCustIdCol"), searchable: true, flex: 1 },
-    { field: "erpOrderId", headerName: t("ERP Order Id"), include: isV("erpOrderIdCol"), searchable: false, flex: 1 },
-    { field: "orderId", headerName: t("Order Id"), include: isV("OrderIdCol"), searchable: false, flex: 1 },
     {
-      field: isArabic ? "companyNameAr" : "companyNameEn",
-      headerName: t("Customer"),
+      field: "transactionId",
+      headerName: t("Transaction ID"),
+      include: isV("TransactionIdCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 130
+    },
+    {
+      field: "erpCustId",
+      headerName: t("ERP Customer ID"),
+      include: isV("erpCustIdCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 150
+    },
+    {
+      field: "customerName",
+      headerName: t("Customer Name"),
       include: isV("customerCol"),
       searchable: true,
       flex: 2,
+      minWidth: 180
     },
-    { field: "amountTransferred", headerName: t("Amount Transferred"), include: isV("amountTransferredCol"), searchable: false, flex: 1 },
-    { field: "transactionDate", headerName: t("Transaction Date"), include: isV("transactionDateCol"), searchable: false, flex: 1 },
-    { field: "createdAt", headerName: t("Created At"), include: isV("createdAtCol"), searchable: true, flex: 1 },
-        { field: "modifiedByName", headerName: t("verified By"), include: isV("modifiedByNameCol"), searchable: false, flex: 1 },
-    { field: "createdByName", headerName: t("created By"), include: isV("createdByNameCol"), searchable: false, flex: 1 },
-    { field: "status", headerName: t("Transaction Status"), include: isV("statusCol"), searchable: true, flex: 1 },
+    {
+      field: "entity",
+      headerName: t("Business Unit"),
+      include: isV("entityCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 120
+    },
+    {
+      field: "assignedSalesExecutive",
+      headerName: t("Assigned Sales Executive"),
+      include: isV("assignedSalesExecutiveCol"),
+      searchable: true,
+      flex: 1.5,
+      minWidth: 200
+    },
+    {
+      field: "salesPersonRegion",
+      headerName: t("Sales Person Region"),
+      include: isV("salesPersonRegionCol"),
+      searchable: true,
+      flex: 1.5,
+      minWidth: 180
+    },
+    {
+      field: "orderId",
+      headerName: t("Order ID"),
+      include: isV("OrderIdCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 100
+    },
+    {
+      field: "erpOrderId",
+      headerName: t("ERP Order ID"),
+      include: isV("erpOrderIdCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 130
+    },
+    {
+      field: "transactionDate",
+      headerName: t("Transaction Date"),
+      include: isV("transactionDateCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 150
+    },
+    {
+      field: "createdAt",
+      headerName: t("Created Date"),
+      include: isV("createdAtCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 130
+    },
+    {
+      field: "modifiedByName",
+      headerName: t("Verified By"),
+      include: isV("modifiedByNameCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 130
+    },
+    {
+      field: "status",
+      headerName: t("Transaction Status"),
+      include: isV("statusCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 160
+    },
   ];
 
   const visibleColumns = transactionColumns.filter((col) => col.include !== false);
   const searchableFields = visibleColumns.filter((c) => c.searchable).map((c) => c.field);
- const filteredData = visibleColumns?.filter((item) =>
+  const filteredData = visibleColumns?.filter((item) =>
     searchableFields?.includes(item?.field)
   );
-  // Columns mapping for toolbar
+
   const columnsToDisplay = {
-    id: "Transaction Id",
-    erpCustId: "ERP Customer Id",
-    erpOrderId: "ERP Order Id",
-    orderId: "Order Id",
-    companyNameEn: "Customer",
-    amountTransferred: "Amount Transferred",
+    transactionId: "Transaction ID",
+    erpCustId: "ERP Customer ID",
+    customerName: "Customer Name",
+    entity: "Business Unit",
+    assignedSalesExecutive: "Assigned Sales Executive",
+    salesPersonRegion: "Sales Person Region",
+    orderId: "Order ID",
+    erpOrderId: "ERP Order ID",
     transactionDate: "Transaction Date",
-    createdAt: "Created At",
-    status: "Status",
+    createdAt: "Created Date",
+    modifiedByName: "Verified By",
+    status: "Transaction Status",
   };
+
   const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
+
   return (
     <Sidebar title={t("Bank Transactions")}>
       {isV("BankContent") && (
@@ -278,6 +393,7 @@ const BankTransactions = () => {
                     />
                   ),
                 }}
+                
                 sx={{
                         "& .MuiDataGrid-overlay": {
                           display: "none !important", // ✅ hides “No rows” message
