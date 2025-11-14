@@ -278,6 +278,7 @@ const BankTransactions = () => {
                     />
                   ),
                 }}
+                
                 sx={{
                         "& .MuiDataGrid-overlay": {
                           display: "none !important", // ✅ hides “No rows” message

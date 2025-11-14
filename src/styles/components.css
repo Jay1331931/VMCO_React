@@ -1849,7 +1849,7 @@ body.catalog-page #root {
   }
   .order-action-btn {
     /* width: 48%; */
-    padding: 10px 0;
+    padding: 0px 0;
     text-align: center;
   }
   .order-action-btn.approve {
@@ -1861,9 +1861,9 @@ body.catalog-page #root {
   .order-details-title {
     font-size: 1.1rem;
   }
-  .order-details-footer {
+  /* .order-details-footer {
     background-color: #f8f9fa;
-  }
+  } */
 }
 .support-header {
   display: flex;
