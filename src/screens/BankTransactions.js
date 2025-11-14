@@ -268,7 +268,7 @@ const BankTransactions = () => {
                       columnVisibilityModel={columnVisibilityModel}
                       searchPlaceholder={t("Search transactions...")}
                       showColumnVisibility={false}
-                      showFilters={true}
+                      showFilters={false}
                       showExport={false}
                       showUpload={false}
                       showAdd={isV('btnAdd')}

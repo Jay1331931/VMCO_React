@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import LoadingSpinner from "../components/LoadingSpinner";
 import CustomToolbar from "../components/CustomToolbar";
@@ -20,7 +20,7 @@ import {
   useGridApiRef,
 } from "@mui/x-data-grid";
 import TableMobile from "../components/TableMobile";
-
+import MaintenanceCard from "../components/MaintenanceCard";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Status class helper function
@@ -69,7 +69,19 @@ function Maintenance() {
   const pageName = "Maintenance";
   const columnWidthsKey = `${pageName}_${role}_columnWidths`;
   const [columnDimensions, setColumnDimensions] = useState({});
+  const contentRef = useRef(null);
+const [isAtTop, setIsAtTop] = useState(true);
 
+  useEffect(() => {
+      const handleScroll = () => {
+        const scrollTop = contentRef.current?.scrollTop || 0;
+        setIsAtTop(scrollTop < 20); // detect near top
+      };
+  
+      const container = contentRef.current;
+      container?.addEventListener("scroll", handleScroll);
+      return () => container?.removeEventListener("scroll", handleScroll);
+    }, []);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -505,13 +517,24 @@ function Maintenance() {
     <Sidebar title={t("Maintenance")} isV={isV("maintenanceContent")}>
       <div className="maintenance-content">
         {isMobile ? (
-          <div className="table-container">
+          <div className="orders-content">
             {loading ? (
               <LoadingSpinner />
             ) : error ? (
               <div className="error-message">{error}</div>
             ) : (
-              <TableMobile
+              <>
+              <div
+                className="catalog-fixed-header"
+                style={{
+                  top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                  position: "sticky",
+                  zIndex: 20,
+                  transition: "top 0.3s ease",
+                  background: "#fff",
+                }}
+              >
+<TableMobile
                 columns={visibleColumns}
                 allColumns={maintenanceColumns}
                 data={initialTickets}
@@ -525,8 +548,8 @@ function Maintenance() {
                 dataGridComponent={
                   <DataGrid
                     apiRef={gridApiRef}
-                    rows={initialTickets}
-                    columns={visibleColumns}
+                    rows={[]}
+                    columns={[]}
                     pageSize={pageSize}
                     rowCount={total}
                     onRowClick={handleRowClick}
@@ -559,8 +582,8 @@ function Maintenance() {
                         filters: filters,
                         columnVisibilityModel: columnVisibilityModel,
                         searchPlaceholder: "Search maintenance tickets...",
-                        showColumnVisibility: true,
-                        showFilters: true,
+                        showColumnVisibility: false,
+                        showFilters: false,
                         showExport: false,
                         showUpload: false,
                         showAdd: isV("btnAdd") || isE("btnAdd"),
@@ -579,22 +602,59 @@ function Maintenance() {
                       },
                     }}
                     sx={{
-                      "& .MuiDataGrid-row": {
-                        cursor: "pointer",
-                        "&:hover": {
-                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        "& .MuiDataGrid-overlay": {
+                          display: "none !important", // ✅ hides “No rows” message
                         },
-                      },
-                      "& .MuiDataGrid-cell": {
-                        textAlign: "center",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      },
-                    }}
+                        "& .MuiDataGrid-row": {
+                          // cursor: "default",
+                          // "&:hover": {
+                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          // },
+                          display: "none !important",
+                        },
+                        ".MuiDataGrid-cell": {
+                          display: "none !important",
+                        },
+                        "& .MuiDataGrid-main": {
+                          display: "none", // ✅ hides the main grid body
+                        },
+                        "& .MuiDataGrid-toolbar": {
+                          // position: "sticky",
+                          // top: 0,
+                          // zIndex: 10, // keeps it above rows
+                          // backgroundColor: "#fff", // ensures it doesn't become transparent
+                          // borderBottom: "1px solid #e0e0e0",
+                          padding: "0px",
+                          gap: "0px",
+                          border: "none",
+                        },
+
+                        "&.catalog-datagrid": {
+                          border: "2px solid black",
+                          borderRadius: "8px",
+                          backgroundColor: "#f8f9fa",
+                        },
+                        "& .MuiOutlinedInput-root": {
+                          width: "100% !important",
+                          minWidth: "230px !important", 
+                        }
+                      }}
                   />
                 }
               />
+              </div>
+              <MaintenanceCard
+  tickets={initialTickets}
+  setSelectedRow={handleShowAllDetailsClick}
+  // handleViewDetails={(ticket) =>
+  //   navigate("/maintenanceDetails", { state: { ticket, mode: "edit" } })
+  // }
+  // handleAdd={() =>
+  //   navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } })
+  // }
+/>
+
+              </>
             )}
           </div>
         ) : (

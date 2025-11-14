@@ -1357,7 +1357,7 @@ td.file-display-cell {
     margin-top: 20px;
   }
   .customers .text-field.small {
-    width: 250px;
+    width: 280px !important;
   }
   .customers .dropdown {
     width: 280px;
@@ -1449,6 +1449,7 @@ td.file-display-cell {
   .dropdown-header {
     position: relative;
     z-index: 0;
+    width: 275px !important;
   }
   .dropdown-header.mobile{
   display: flex;
@@ -1466,6 +1467,7 @@ td.file-display-cell {
 .dropdown-header.mobile{
     position: relative;
     z-index: 0;
+    width: fit-content !important;
   }
    .dropdown-header.mobile-select-branch{
   display: flex;
@@ -1480,6 +1482,7 @@ td.file-display-cell {
   /* width: fit-content; */
   font-size: 12px;
   margin-top: 10px;
+  width: 250px !important;
 }
 .dropdown-header.mobile-select-branch{
     position: relative;
@@ -1488,6 +1491,11 @@ td.file-display-cell {
   .dropdown-content {
     position: relative;
     z-index: 0;
+    width: 275px !important;
+  }
+
+  .dropdown-search {
+    width: 270px !important;
   }
 
   .dropdown-content.mobile {
@@ -1709,7 +1717,8 @@ td.label-cell {
   }
 
   .products-data-table td{
-    padding: 20px 4px;
+    padding: 4px 12px;
+    font-size: 0.65rem !important;
   }
   .signature-wrapper {
   position: relative;
