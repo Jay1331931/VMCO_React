@@ -2003,7 +2003,7 @@ function FinancialInformation({
               {isLoading ? t("Loading...") : t("Get Credit Balance")}
             </button>
           </div>
-          {isV("isStatementofAccount")&&(<><h3 className="form-header full-width">{t("Account Statement")}</h3>
+          {isV("isStatementofAccount")&& customerData?.erpCustId&&(<><h3 className="form-header full-width">{t("Account Statement")}</h3>
           <div>
             <button
               onClick={() => setOpen(true)}
