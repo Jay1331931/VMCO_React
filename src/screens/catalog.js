@@ -1612,13 +1612,17 @@ function Catalog() {
                   )}
                 </div>
               )}
-            {isLoading && (
+            {isLoading && !isMobile && (
               <div className="loading-container">
                 <LoadingSpinner size="medium" />
               </div>
             )}
           </div>
-
+            {isLoading && isMobile && (
+              <div className="loading-container">
+                <LoadingSpinner size="medium" />
+              </div>
+            )}
           {/* Loading More Indicator */}
           {isLoadingMore && (
             <div className="loading-more-container">

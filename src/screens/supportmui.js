@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import ActionButton from "../components/ActionButton";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -20,6 +20,7 @@ import {
     useGridApiRef,
 } from "@mui/x-data-grid";
 import TableMobile from "../components/TableMobile";
+import SupportCard from "../components/SupportCard";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
@@ -70,7 +71,19 @@ function Support() {
     const gridApiRef = useGridApiRef();
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+    const contentRef = useRef(null);
+    const [isAtTop, setIsAtTop] = useState(true);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = contentRef.current?.scrollTop || 0;
+      setIsAtTop(scrollTop < 20); // detect near top
+    };
+
+    const container = contentRef.current;
+    container?.addEventListener("scroll", handleScroll);
+    return () => container?.removeEventListener("scroll", handleScroll);
+  }, []);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -466,13 +479,25 @@ function Support() {
         <Sidebar title={t("Support")} isV={isV("supportContent")}>
             <div className="support-content">
                 {isMobile ? (
-                    <div className="table-container">
+                    <div className="orders-content">
                         {loading ? (
                             <LoadingSpinner />
                         ) : error ? (
                             <div className="error-message">{error}</div>
                         ) : (
-                            <TableMobile
+                            
+              <>
+              <div
+                className="catalog-fixed-header"
+                style={{
+                  top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                  position: "sticky",
+                  zIndex: 20,
+                  transition: "top 0.3s ease",
+                  background: "#fff",
+                }}
+              >
+                <TableMobile
                                 columns={visibleColumns}
                                 allColumns={supportColumns}
                                 data={initialTickets}
@@ -485,8 +510,10 @@ function Support() {
                                 dataGridComponent={
                                     <DataGrid
                                         apiRef={gridApiRef}
-                                        rows={initialTickets}
-                                        columns={visibleColumns}
+                                        // rows={initialTickets}
+                                        // columns={visibleColumns}
+                                        rows={[]}
+                                        columns={[]}
                                         pageSize={pageSize}
                                         rowCount={total}
                                         onRowClick={(params) => handleRowClick(params.row)}
@@ -519,8 +546,8 @@ function Support() {
                                                 filters: filters,
                                                 columnVisibilityModel: columnVisibilityModel,
                                                 searchPlaceholder: "Search tickets...",
-                                                showColumnVisibility: true,
-                                                showFilters: true,
+                                                showColumnVisibility: false,
+                                                showFilters: false,
                                                 showExport: false,
                                                 showUpload: false,
                                                 showAdd: isV("btnAdd"),
@@ -534,23 +561,57 @@ function Support() {
                                                 openTicketsCount: openTicketsCount,
                                             },
                                         }}
-                                        sx={{
-                                            "& .MuiDataGrid-row": {
-                                                cursor: "pointer",
-                                                "&:hover": {
-                                                    backgroundColor: "rgba(0, 0, 0, 0.04)",
-                                                },
-                                            },
-                                            "& .MuiDataGrid-cell": {
-                                                textAlign: "center",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                            },
-                                        }}
+                                       sx={{
+                        "& .MuiDataGrid-overlay": {
+                          display: "none !important", // ✅ hides “No rows” message
+                        },
+                        "& .MuiDataGrid-row": {
+                          // cursor: "default",
+                          // "&:hover": {
+                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          // },
+                          display: "none !important",
+                        },
+                        ".MuiDataGrid-cell": {
+                          display: "none !important",
+                        },
+                        "& .MuiDataGrid-main": {
+                          display: "none", // ✅ hides the main grid body
+                        },
+                        "& .MuiDataGrid-toolbar": {
+                          // position: "sticky",
+                          // top: 0,
+                          // zIndex: 10, // keeps it above rows
+                          // backgroundColor: "#fff", // ensures it doesn't become transparent
+                          // borderBottom: "1px solid #e0e0e0",
+                          padding: "0px",
+                          gap: "0px",
+                          border: "none",
+                        },
+
+                        "&.catalog-datagrid": {
+                          border: "2px solid black",
+                          borderRadius: "8px",
+                          backgroundColor: "#f8f9fa",
+                        },
+                        "& .MuiOutlinedInput-root": {
+                          width: "100% !important",
+                          minWidth: "230px !important", 
+                        }
+                      }}
                                     />
                                 }
                             />
+              </div>
+              <SupportCard
+  tickets={initialTickets}
+  setSelectedRow={handleShowAllDetailsClick}
+//   handleView={(ticket) => navigate("/supportDetails", { state: { ticket, mode: "view" } })}
+//   handleAddComment={(ticket) => navigate("/supportDetails", { state: { ticket, mode: "comment" } })}
+/>
+
+              </>
+                            
                         )}
                     </div>
                 ) : (

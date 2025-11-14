@@ -69,7 +69,7 @@ function SupportDetails() {
   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || ""));
-
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   // State for entity dropdown
   const [entityOptions, setEntityOptions] = useState([
     { value: Constants.ENTITY.VMCO, displayText: "VMCO" },
@@ -125,6 +125,12 @@ function SupportDetails() {
   // State for saving
   const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false); // Track closing state
+  useEffect(() => {
+          const handleResize = () => setIsMobile(window.innerWidth < 768);
+          console.log("isMobile", isMobile);
+          window.addEventListener("resize", handleResize);
+          return () => window.removeEventListener("resize", handleResize);
+      }, []);
   // Handle image add
   const handleFileUpload = async (e, type) => {
     const file = e.target.files && e.target.files[0];
@@ -1389,7 +1395,7 @@ function SupportDetails() {
         <div className='support-details-container-center'  >
           {isV('assignedTo') && (
             <div className="support-assign">
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '6px' }}>
                 {/* Assigned to Label */}
                 <span>{formMode === "add" ? t("Assign To:") : t("Assigned To:")}</span>
 
