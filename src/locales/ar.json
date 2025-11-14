@@ -811,6 +811,12 @@
     "Will be automatically updated": "سيتم تحديثه تلقائيا",
     "Assign Filters":"تعيين عوامل التصفية",
     "Reporting To Me":"الإبلاغ عني",
-    "Assigned To Me":"مُخصص لي"
+    "Assigned To Me":"مُخصص لي",
+    "Request Statement of Account":"طلب كشف حساب",
+    "If you have already submitted, please wait 15 minutes for the  email.":"إذا كنت قد قمت بالفعل بالتقديم، يرجى الانتظار 15 دقيقة للحصول على البريد الإلكتروني.",
+   "Invalid email format. Use comma-separated values.":"تنسيق البريد الإلكتروني غير صحيح. استخدم قيمًا مفصولة بفواصل.",
+   "Account Statement":"كشف الحساب",
+   "Statement of Account":"كشف حساب"
+
 
 }
