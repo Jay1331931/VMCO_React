@@ -106,7 +106,7 @@ function OrderDetails() {
   const { user, token } = useAuth(); // Get form mode from location state (add, edit, view)
   const formMode = location.state?.mode || "view";
   const orderFromNav = location.state?.order || {};
-const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   console.log("Order details from nav", orderFromNav);
   const salesOrderLinesFromNav =
     orderFromNav &&
@@ -128,11 +128,11 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     products: [],
   });
   useEffect(() => {
-      const handleResize = () => setIsMobile(window.innerWidth < 768);
-      console.log("isMobile", isMobile);
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   // Effect to keep orderId in sync with formData.id
   useEffect(() => {
     setOrderId(formData.id || "");
@@ -2245,12 +2245,13 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
             // Calculate new net amount with updated price
             const netAmount = (unitPrice * quantity + (vatPercentage / 100) * (unitPrice * quantity)).toFixed(2);
 
-            // Update product in array
+            // Update product in array - RESET lineDiscount to 0.00
             updatedProducts[index] = {
               ...product,
               unitPrice: unitPrice.toFixed(2),
               vatPercentage,
               netAmount,
+              lineDiscount: "0.00",
             };
 
             // In edit mode, we don't immediately update the sales order line in the database
@@ -2267,6 +2268,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
         ...prev,
         products: updatedProducts,
       }));
+      setEditingDiscount({});
     } catch (error) {
       console.error("Error updating product prices:", error);
       Swal.fire({
@@ -2275,7 +2277,6 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
         text: t("Failed to update product prices. Please try again."),
         confirmButtonText: t("OK"),
       });
-      // alert(t('Failed to update prices. Please try again.'));
     }
   };
 
@@ -4865,9 +4866,9 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         </div>
                       )}
 
-                    {!isMobile ? 
-                    (formMode !== "add" ||
-                      (formData.products || []).length > 0) && (
+                    {!isMobile ?
+                      (formMode !== "add" ||
+                        (formData.products || []).length > 0) && (
                         <div
                           className="order-products-section"
                           style={{
@@ -4917,156 +4918,156 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         </div>
                       )
                       :
-(formMode !== "add" || (formData.products || []).length > 0) && (
-  <div
-    className="order-products-section"
-    style={{
-      boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-      padding: "16px",
-      borderRadius: "8px",
-      background: "#fff",
-    }}
-  >
-    {(formData.products || []).filter(
-      (p) =>
-        p.id ||
-        p.erpProdId ||
-        p.quantity ||
-        p.unit ||
-        p.unitPrice ||
-        p.lineDiscount ||
-        p.netAmount ||
-        p.vatPercentage
-    ).length > 0 ? (
-      <div className="product-list">
-        {(formData.products || []).map((item, idx) => (
-          
-          <>
-          <div key={item.id || idx} className="cart-item">
-            {/* Product Image */}
-            <div className="item-image">
-              <img
-                src={`https://vmcowebportalprod.blob.core.windows.net/vmco-products/${item.erpProdId}/default.jpg`}
-                alt={item.name}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = `https://vmcowebportalprod.blob.core.windows.net/vmco-products/${item.erpProdId}/default.jpg`;
-                }}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                  borderRadius: 8,
-                }}
-              />
-            </div>
+                      (formMode !== "add" || (formData.products || []).length > 0) && (
+                        <div
+                          className="order-products-section"
+                          style={{
+                            boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+                            padding: "16px",
+                            borderRadius: "8px",
+                            background: "#fff",
+                          }}
+                        >
+                          {(formData.products || []).filter(
+                            (p) =>
+                              p.id ||
+                              p.erpProdId ||
+                              p.quantity ||
+                              p.unit ||
+                              p.unitPrice ||
+                              p.lineDiscount ||
+                              p.netAmount ||
+                              p.vatPercentage
+                          ).length > 0 ? (
+                            <div className="product-list">
+                              {(formData.products || []).map((item, idx) => (
 
-            {/* Product Details */}
-            <div className="item-details" style={{gap: 0, marginTop: 0}}>
-              {/* <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4> */}
-              <p className="item-code">{item.productCode}</p>
-              {item.description && (
-                <p className="item-description">{item.description}</p>
-              )}
+                                <>
+                                  <div key={item.id || idx} className="cart-item">
+                                    {/* Product Image */}
+                                    <div className="item-image">
+                                      <img
+                                        src={`https://vmcowebportalprod.blob.core.windows.net/vmco-products/${item.erpProdId}/default.jpg`}
+                                        alt={item.name}
+                                        onError={(e) => {
+                                          e.target.onerror = null;
+                                          e.target.src = `https://vmcowebportalprod.blob.core.windows.net/vmco-products/${item.erpProdId}/default.jpg`;
+                                        }}
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          objectFit: "contain",
+                                          borderRadius: 8,
+                                        }}
+                                      />
+                                    </div>
 
-              <div className="product-meta">
-                <p>
-                  {t("Unit Price")}:{" "}
-                  <strong>
-                    {Number(item.unitPrice || item.price || 0).toFixed(2)}{" "}
-                    {t("SAR")}
-                  </strong>
-                </p>
-                <p>
-                  {t("Quantity")}: <strong>{item.quantity || 0}</strong>
-                </p>
-                <p>
-                  {t("VAT")}: <strong>{Number(item.vatPercentage)}%</strong>
-                </p>
-                <div
-    className="quantity-controller"
-    style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }}
-  >
-    <QuantityController
-      itemId={item.id || item.productid}
-      quantity={item.quantity}
-      moq={Number(item.moq) || 1}
-      minQuantity={Number(item.moq) || 1}
-      disabled={!isE("quantityCol")}
-      onQuantityChange={(itemId, delta) => {
-        if (!isE("quantityCol")) return;
+                                    {/* Product Details */}
+                                    <div className="item-details" style={{ gap: 0, marginTop: 0 }}>
+                                      {/* <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4> */}
+                                      <p className="item-code">{item.productCode}</p>
+                                      {item.description && (
+                                        <p className="item-description">{item.description}</p>
+                                      )}
 
-        const idx = (formData.products || []).findIndex(
-          (p) => p.id === item.id
-        );
+                                      <div className="product-meta">
+                                        <p>
+                                          {t("Unit Price")}:{" "}
+                                          <strong>
+                                            {Number(item.unitPrice || item.price || 0).toFixed(2)}{" "}
+                                            {t("SAR")}
+                                          </strong>
+                                        </p>
+                                        <p>
+                                          {t("Quantity")}: <strong>{item.quantity || 0}</strong>
+                                        </p>
+                                        <p>
+                                          {t("VAT")}: <strong>{Number(item.vatPercentage)}%</strong>
+                                        </p>
+                                        <div
+                                          className="quantity-controller"
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                          }}
+                                        >
+                                          <QuantityController
+                                            itemId={item.id || item.productid}
+                                            quantity={item.quantity}
+                                            moq={Number(item.moq) || 1}
+                                            minQuantity={Number(item.moq) || 1}
+                                            disabled={!isE("quantityCol")}
+                                            onQuantityChange={(itemId, delta) => {
+                                              if (!isE("quantityCol")) return;
 
-        if (idx !== -1) {
-          const currentQty = parseInt(formData.products[idx].quantity) || 0;
-          const newQty = Math.max(0, currentQty + delta);
-          handleQuantityChange(idx, newQty);
-        }
-      }}
-      onInputChange={(itemId, value) => {
-        if (!isE("products")) return;
+                                              const idx = (formData.products || []).findIndex(
+                                                (p) => p.id === item.id
+                                              );
 
-        const idx = (formData.products || []).findIndex(
-          (p) => p.id === item.id
-        );
+                                              if (idx !== -1) {
+                                                const currentQty = parseInt(formData.products[idx].quantity) || 0;
+                                                const newQty = Math.max(0, currentQty + delta);
+                                                handleQuantityChange(idx, newQty);
+                                              }
+                                            }}
+                                            onInputChange={(itemId, value) => {
+                                              if (!isE("products")) return;
 
-        if (idx !== -1) {
-          handleQuantityChange(idx, value === "" ? "" : value);
-        }
-      }}
-    />
+                                              const idx = (formData.products || []).findIndex(
+                                                (p) => p.id === item.id
+                                              );
 
-    {/* Stock button for VMCO entity */}
-    {isV("stock") &&
-      formData.entity &&
-      formData.entity.toLowerCase() ===
-        Constants.ENTITY.VMCO.toLowerCase() && (
-        <span>
-          <button
-            type="button"
-            style={{
-              background: "#e6f2ef",
-              color: "#0a5640",
-              border: "1px solid #0a5640",
-              borderRadius: "4px",
-              fontSize: "12px",
-              padding: "2px 8px",
-              marginLeft: "6px",
-              marginRight: "6px",
-              cursor: "pointer",
-            }}
-            title={item.unit ? `Stock for ${item.unit}` : "Stock"}
-            onClick={() =>
-              handleStock(
-                item.id,
-                i18n.language === "ar"
-                  ? item.productNameLc ||
-                    item.productnamelc ||
-                    item.productName
-                  : item.productName ||
-                    item.productnameen ||
-                    item.productNameLc
-              )
-            }
-          >
-            {t("Stock")}
-          </button>
-        </span>
-      )}
+                                              if (idx !== -1) {
+                                                handleQuantityChange(idx, value === "" ? "" : value);
+                                              }
+                                            }}
+                                          />
 
-    {InventoryLoading && loadingProductId === item.id && <LoadingSpinner />}
-  </div>
-</div>
+                                          {/* Stock button for VMCO entity */}
+                                          {isV("stock") &&
+                                            formData.entity &&
+                                            formData.entity.toLowerCase() ===
+                                            Constants.ENTITY.VMCO.toLowerCase() && (
+                                              <span>
+                                                <button
+                                                  type="button"
+                                                  style={{
+                                                    background: "#e6f2ef",
+                                                    color: "#0a5640",
+                                                    border: "1px solid #0a5640",
+                                                    borderRadius: "4px",
+                                                    fontSize: "12px",
+                                                    padding: "2px 8px",
+                                                    marginLeft: "6px",
+                                                    marginRight: "6px",
+                                                    cursor: "pointer",
+                                                  }}
+                                                  title={item.unit ? `Stock for ${item.unit}` : "Stock"}
+                                                  onClick={() =>
+                                                    handleStock(
+                                                      item.id,
+                                                      i18n.language === "ar"
+                                                        ? item.productNameLc ||
+                                                        item.productnamelc ||
+                                                        item.productName
+                                                        : item.productName ||
+                                                        item.productnameen ||
+                                                        item.productNameLc
+                                                    )
+                                                  }
+                                                >
+                                                  {t("Stock")}
+                                                </button>
+                                              </span>
+                                            )}
 
-              {/* Optional Quantity Controller (if interactive) */}
-              {/* {typeof handleQuantityChange === "function" && (
+                                          {InventoryLoading && loadingProductId === item.id && <LoadingSpinner />}
+                                        </div>
+                                      </div>
+
+                                      {/* Optional Quantity Controller (if interactive) */}
+                                      {/* {typeof handleQuantityChange === "function" && (
                 <QuantityController
                   itemId={item.id}
                   quantity={quantities[item.id] || item.quantity || 0}
@@ -5077,41 +5078,41 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                   moq={Number(item.moq) || 0}
                 />
               )} */}
-            </div>
+                                    </div>
 
-          </div>
-          <div style={{marginBottom: 10}}>
-          <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
-          </div>
-          {/* Price Summary */}
-            <div className="item-price-panel">
-              <span className="item-price" style={{fontSize: 13}}>
-                {(Number(item.unitPrice || item.price || 0) *
-                  Number(item.quantity || 1)
-                ).toFixed(2)}{" "}
-                <span className="sar-label">{t("SAR")}</span>
-              </span>
+                                  </div>
+                                  <div style={{ marginBottom: 10 }}>
+                                    <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
+                                  </div>
+                                  {/* Price Summary */}
+                                  <div className="item-price-panel">
+                                    <span className="item-price" style={{ fontSize: 13 }}>
+                                      {(Number(item.unitPrice || item.price || 0) *
+                                        Number(item.quantity || 1)
+                                      ).toFixed(2)}{" "}
+                                      <span className="sar-label">{t("SAR")}</span>
+                                    </span>
 
-              <span className="tax-row"style={{fontSize: 13}} >
-                {t("VAT: ")}
-                {Number(item.vatPercentage)}%
-              </span>
+                                    <span className="tax-row" style={{ fontSize: 13 }} >
+                                      {t("VAT: ")}
+                                      {Number(item.vatPercentage)}%
+                                    </span>
 
-              <span className="item-total-price" style={{fontSize: 13}}>
-                {t("Net Amount:")}{" "}
-                {(
-                  Number(item.unitPrice || item.price || 0) *
-                    Number(item.quantity || 1) +
-                  ((Number(item.unitPrice || item.price || 0) *
-                    Number(item.quantity || 1) *
-                    Number(item.vatPercentage)) /
-                    100)
-                ).toFixed(2)}{" "}
-                {t("SAR")}
-              </span>
+                                    <span className="item-total-price" style={{ fontSize: 13 }}>
+                                      {t("Net Amount:")}{" "}
+                                      {(
+                                        Number(item.unitPrice || item.price || 0) *
+                                        Number(item.quantity || 1) +
+                                        ((Number(item.unitPrice || item.price || 0) *
+                                          Number(item.quantity || 1) *
+                                          Number(item.vatPercentage)) /
+                                          100)
+                                      ).toFixed(2)}{" "}
+                                      {t("SAR")}
+                                    </span>
 
-              {/* Remove Button */}
-              {/* <button
+                                    {/* Remove Button */}
+                                    {/* <button
                 className="remove-btn"
                 onClick={() => handleRemoveItem(item)}
                 disabled={processingCategories?.has?.(item.category)}
@@ -5120,33 +5121,33 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                   ? t("Processing...")
                   : t("Remove item")}
               </button> */}
-              {isV("deleteButton") &&
-              isE("deleteCol") && (
-                <button
-                  className="order-action-btn reject"
-                  style={{ padding: "2px 2px", fontSize: 12, width: "90px" }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteProductRow(idx);
-                  }}
-                  type="button"
-                  disabled={
-                    !isE("deleteButton") ||
-                    (formData.status &&
-                      !["open"].includes(formData.status.toLowerCase()))
-                  }
-                >
-                  {t("Delete")}
-                </button>)}
-            </div>
-          </>
-        ))}
-      </div>
-    ) : (
-      <p className="no-data">{t("No products available")}</p>
-    )}
-  </div>
-)}
+                                    {isV("deleteButton") &&
+                                      isE("deleteCol") && (
+                                        <button
+                                          className="order-action-btn reject"
+                                          style={{ padding: "2px 2px", fontSize: 12, width: "90px" }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteProductRow(idx);
+                                          }}
+                                          type="button"
+                                          disabled={
+                                            !isE("deleteButton") ||
+                                            (formData.status &&
+                                              !["open"].includes(formData.status.toLowerCase()))
+                                          }
+                                        >
+                                          {t("Delete")}
+                                        </button>)}
+                                  </div>
+                                </>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="no-data">{t("No products available")}</p>
+                          )}
+                        </div>
+                      )}
 
                   </>
                 )}
