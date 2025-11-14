@@ -2631,7 +2631,7 @@ function Orders() {
                             columnVisibilityModel={columnVisibilityModel}
                             searchPlaceholder="Search orders..."
                             showColumnVisibility={false}
-                            showFilters={true}
+                            showFilters={false}
                             showExport={false}
                             showUpload={isV("uploadButton")}
                             showAdd={isV("addButton")}

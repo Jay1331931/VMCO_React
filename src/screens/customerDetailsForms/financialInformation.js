@@ -8,6 +8,10 @@ import { useAuth } from "../../context/AuthContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import Swal from "sweetalert2";
+import { DataGrid } from "@mui/x-data-grid";
+// import { useTranslation } from "react-i18next";
+import useMediaQuery from "@mui/material/useMediaQuery";
+
 const CUSTOMER_APPROVAL_CHECKLIST_URL = Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const CUSTOMER_APPROVAL_CHECKLIST = Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
@@ -67,11 +71,18 @@ function FinancialInformation({
     customerData?.bankName || ""
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     setBankName(customerData?.bankName || "");
   }, [customerData?.bankName]);
 
+  useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
   // Dropdown state for pricingPolicy
   const dropdownFields = ["pricingPolicy", "bankName", "entity"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
@@ -1667,7 +1678,7 @@ const checkDisabledStatus = (fieldPath) => {
         </>
         )
       }
-      {isCreditBalanceData && (
+      {/* {isCreditBalanceData && (
         <div className="gi-backdrop">
           <dialog className="credit-balance-dialog" open>
             <div className="dialog-header">
@@ -1934,7 +1945,380 @@ const checkDisabledStatus = (fieldPath) => {
       `}
           </style>
         </div>
-      )}
+      )} */}
+
+
+{isCreditBalanceData && (
+  <div className="gi-backdrop">
+    <dialog className="credit-balance-dialog" open>
+      <div className="dialog-header">
+        <h2>{t("Credit Balance")}</h2>
+        <button
+          className="close-dialog"
+          onClick={() => setIsCreditBalanceData(false)}
+        >
+          &times;
+        </button>
+      </div>
+
+      <div className="dialog-content">
+        {/* Detect mobile screen */}
+        {(() => {
+          // const isMobile = useMediaQuery("(max-width: 600px)");
+
+          // Prepare data rows
+          const rows =
+            basicMasterLists?.entity?.map((item, index) => {
+              const creditLimit = creditLimitData?.[item.value]?.limit || 0;
+              const remainingCredit = creditBalanceData?.[item.value] || 0;
+              const dueToPay = parseFloat(creditLimit) - parseFloat(remainingCredit);
+
+              return {
+                id: index + 1,
+                entity:
+                  i18n.language === "en"
+                    ? item.description
+                    : item.descriptionLc,
+                dueToPay,
+                remainingCredit,
+                creditLimit,
+              };
+            }) || [];
+
+          // Define columns for DataGrid
+          const columns = [
+            { field: "entity", headerName: t("Entity"), flex: 1 },
+            {
+              field: "dueToPay",
+              headerName: t("Due to Pay"),
+              flex: 1,
+              renderCell: (params) => (
+                <span
+                  style={{
+                    color:
+                      params.value === 0
+                        ? "#6c757d"
+                        : params.value > 0
+                        ? "#dc3545"
+                        : "#dc3545",
+                  }}
+                >
+                  {params.value.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "SAR",
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              ),
+            },
+            {
+              field: "remainingCredit",
+              headerName: t("Remaining Credit"),
+              flex: 1,
+              renderCell: (params) => (
+                <span
+                  style={{
+                    color:
+                      params.value === 0
+                        ? "#6c757d"
+                        : params.value > 0
+                        ? "#6c757d"
+                        : "#6c757d",
+                  }}
+                >
+                  {params.value.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "SAR",
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              ),
+            },
+            {
+              field: "creditLimit",
+              headerName: t("Credit Limit"),
+              flex: 1,
+              renderCell: (params) => (
+                <span style={{ color: "#6c757d" }}>
+                  {params.value.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "SAR",
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              ),
+            },
+          ];
+
+          if (isMobile) {
+            // 📱 Render MUI DataGrid for Mobile
+            return (
+              <div style={{ height: "auto", width: "100%" }}>
+                <DataGrid
+                  rows={rows}
+                  columns={columns}
+                  pageSize={5}
+                  rowsPerPageOptions={[5]}
+                  disableSelectionOnClick
+                  disableColumnFilter
+                  hideFooter
+                  sx={{
+                    border: "1.5px solid #eee",
+                    borderRadius: "10px",
+                    "& .MuiDataGrid-cell": {
+                      fontSize: "0.9rem",
+                    },
+                    "& .MuiDataGrid-columnHeaders": {
+                      backgroundColor: "#fafafa",
+                      fontWeight: 600,
+                    },
+                  }}
+                />
+              </div>
+            );
+          }
+
+          // 💻 Render classic table for desktop
+          return (
+            <div className="balance-table-container">
+              <table className="balance-table">
+                <thead>
+                  <tr>
+                    <th>{t("Entity")}</th>
+                    <th className="due-to-pay">{t("Due to Pay")}</th>
+                    <th className="balance-amount">{t("Remaining Credit")}</th>
+                    <th className="credit-limit">{t("Credit Limit")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id}>
+                      <td>{row.entity}</td>
+                      <td
+                        className={`due-to-pay ${
+                          row.dueToPay === 0
+                            ? "zero"
+                            : row.dueToPay > 0
+                            ? "positive"
+                            : "negative"
+                        }`}
+                      >
+                        {row.dueToPay.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "SAR",
+                          minimumFractionDigits: 2,
+                        })}
+                      </td>
+                      <td className="balance-amount">
+                        {row.remainingCredit.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "SAR",
+                          minimumFractionDigits: 2,
+                        })}
+                      </td>
+                      <td className="credit-limit">
+                        {row.creditLimit.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "SAR",
+                          minimumFractionDigits: 2,
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
+
+        {(!creditBalanceData ||
+          Object.keys(creditBalanceData)?.length === 0) && (
+          <p className="no-data">{t("No credit balance data available")}</p>
+        )}
+      </div>
+
+      <div className="gi-footer">
+        <button
+          className="gi-close-btn"
+          onClick={() => setIsCreditBalanceData(false)}
+        >
+          {t("Close")}
+        </button>
+
+      </div>
+    </dialog>
+    <style>
+            {`
+        .gi-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.15);
+          z-index: 1000;
+        }
+        .credit-balance-dialog {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 100vw;
+          max-width: 900px;
+          border: 1px solid #ccc;
+          background: #fff;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+          border-radius: 12px;
+          padding: 0;
+          background: #fff;
+          z-index: 1001;
+          overflow: hidden;
+          animation: gi-fadein 0.2s;
+        }
+        [dir="rtl"] .credit-balance-dialog {
+          transform: translate(-25%, -50%);
+        }
+        @keyframes gi-fadein {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+          }
+        }
+        .dialog-header {
+          color: #666;
+          padding: 15px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .dialog-header h2 {
+          font-size: 1.3rem;
+          font-weight: 600;
+          margin: 0;
+        }
+        .close-dialog {
+          background: none;
+          border: none;
+          color: #666;
+          font-size: 1.5rem;
+          cursor: pointer;
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: background-color 0.2s;
+        }
+        .close-dialog:hover {
+          background-color: rgba(255, 255, 255, 0.2);
+        }
+        .dialog-content {
+          padding: 20px;
+          max-height: 70vh;
+          overflow-y: auto;
+        }
+        .customer-info {
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 1px solid #e9ecef;
+        }
+        .customer-info p {
+          margin: 5px 0;
+          color: #6c757d;
+        }
+        .balance-table-container {
+          margin: 10px 28px;
+          padding: 6px;
+          border: 1.9px solid #eee;
+          border-radius: 10px;
+        }
+        .balance-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .balance-table th, .balance-table td {
+          padding: 15px 8px;
+          text-align: left;
+        }
+        [dir="rtl"] .balance-table th, [dir="rtl"] .balance-table td {
+          text-align: right;
+        }
+        .balance-table th {
+          background: #fff;
+          font-weight: 500;
+          border-bottom: 1px solid #eee;
+        }
+        .balance-table tr:not(:last-child) {
+          border-bottom: 1px solid #eee;
+        }
+        .balance-amount, .due-to-pay, .credit-limit {
+          text-align: right;
+          font-weight: 500;
+        }
+        .balance-amount.zero, .credit-limit.zero {
+          color: #6c757d;
+        }
+        .balance-amount.positive, .credit-limit.positive {
+          color: #6c757d;
+        }
+        .balance-amount.negative, .credit-limit.negative {
+          color: #6c757d;
+        }
+        .due-to-pay.zero {
+          color: #6c757d;
+        }
+        .due-to-pay.positive {
+          color: #dc3545;
+        }
+        .due-to-pay.negative {
+          color: #dc3545;
+        }
+        .no-data {
+          text-align: center;
+          padding: 20px;
+          color: #6c757d;
+          font-style: italic;
+        }
+        .gi-footer {
+          display: flex;
+          justify-content: flex-end;
+          padding: 16px 28px 22px 28px;
+        }
+        .gi-close-btn {
+          padding: 7px 28px;
+          border-radius: 6px;
+          border: 1px solid #bbb;
+          background: #fff;
+          color: #222;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .gi-close-btn:hover {
+          background: #f2f2f2;
+        }
+        @media (max-width: 600px) {
+          .credit-balance-dialog {
+            width: 95vw;
+            max-width: none;
+          }
+          .dialog-content {
+            padding: 15px;
+          }
+          .balance-table th, .balance-table td {
+            padding: 8px 10px;
+          }
+        }
+      `}
+          </style>
+  </div>
+)}
+
     </div>
   );
 }
