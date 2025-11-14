@@ -54,7 +54,7 @@ const AddBankTransaction = () => {
   const [orderIds, setOrderIds] = useState();
   const [TemporderIds, setTempOrderIds] = useState();
   const [totalamount, setAmount] = useState(0);
-    const [isSubmitting, setisSubmitting] = useState(null);
+  const [isSubmitting, setisSubmitting] = useState(null);
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -129,11 +129,11 @@ const AddBankTransaction = () => {
   };
 
   const handleSubmit = async () => {
-    setisSubmitting(true)
+    setisSubmitting(true);
     try {
       const errors = {};
       if (!formData.erpCustId) errors.erpCustId = "ERP Customer ID is required";
-      // if (!formData.entity) errors.entity = "Entity is required";
+      if (!formData.entity) errors.entity = "Entity is required";
       if (!formData.transactionDate)
         errors.transactionDate = "Transaction Date is required";
       if (imageUrls?.length === 0)
@@ -149,77 +149,36 @@ const AddBankTransaction = () => {
 
       const payload = {
         ...formData,
-        erpOrderId: formData.erpOrderId
-          ? JSON.stringify(formData.erpOrderId)
-          : [],
+        erpOrderId: formData.erpOrderId ? JSON.stringify(formData.erpOrderId) : [],
         orderId: formData.orderId ? JSON.stringify(formData.orderId) : [],
         bankDocuments: JSON.stringify(imageUrls),
-        // Convert the transaction date to ISO format for storage
-        transactionDate: new Date(formData.transactionDate)
-          .toISOString()
-          .split("T")[0],
+        transactionDate: new Date(formData.transactionDate).toISOString().split("T")[0],
+        entity: formData.entity,
       };
-      delete payload.entity;
 
       const response = await api.post(`/bank-transactions`, payload, {
         headers: { Authorization: `Bearer ${cookieToken}` },
       });
 
-      // if ( response.data.status === "success") {
-      //   Swal.fire({
-      //     title: t("Success"),
-      //     text: t("Transaction created successfully"),
-      //     icon: "success",
-      //     confirmButtonText: t("OK"),
-      //   }).then(() => {
-      //     window.close();
-      //   });
-      // }
-
-      if (response.data.status === "success" ) {
-         Swal.fire({
+      if (response.data.status === "success") {
+        Swal.fire({
           title: t("Success"),
           text: t("Transaction created successfully"),
           icon: "success",
           confirmButtonText: t("OK"),
-        })
-        // if (TemporderIds.length > 0) {
-        //   navigate("/orders");
-        // } else {
-        //   // navigate("/banktransactions");
-            const URL = `${window.location.protocol}//${window.location.host}/orders`;
-   window.location.replace(URL)
-        // }
+        });
+        const URL = `${window.location.protocol}//${window.location.host}/orders`;
+        window.location.replace(URL);
       }
     } catch (error) {
-      // if (error?.response?.status === 401 && orderIds) {
-      //   Swal.fire({
-      //     title: t("Session Expired"),
-      //     text: t("Please click Ok Session will be restarted"),
-      //     icon: "warning",
-      //     confirmButtonText: "OK",
-      //     cancelButtonText: "Close",
-      //   }).then(async (result) => {
-      //     if (result.isConfirmed) {
-      //       try {
-      //         await generateToken();
-      //       } catch (err) {
-      //         console.error("Token regeneration failed:", err);
-      //         window.close();
-      //       }
-      //     } else if (result.dismiss === Swal.DismissReason.cancel) {
-      //       window.close();
-      //     }
-      //   });
-      // }
       console.error("Submission error:", error);
       const msg =
         error?.response?.data?.message ||
         error.message ||
         t("Failed to submit");
       setError(msg);
-    }finally{
-       setisSubmitting(false)
+    } finally {
+      setisSubmitting(false);
     }
   };
 
@@ -240,7 +199,7 @@ const AddBankTransaction = () => {
     setShowCustomerPopup(false);
   };
   const handleUpdate = async (status, id) => {
-     setisSubmitting(true)
+    setisSubmitting(true)
     try {
       const payload = { status };
 
@@ -267,7 +226,7 @@ const AddBankTransaction = () => {
         confirmButtonText: t("OK"),
       });
       console.error("Update failed:", error);
-    }finally{
+    } finally {
       setisSubmitting(false)
     }
   };
@@ -629,7 +588,7 @@ const AddBankTransaction = () => {
             )}
 
             {(formData.entity && formData.erpCustId) ||
-            Object.keys(updateTransaction).length > 0 ? (
+              Object.keys(updateTransaction).length > 0 ? (
               <>
                 <div className="form-group">
                   <label htmlFor="erpOrderId">{t("ERP Order ID")} </label>
@@ -961,9 +920,9 @@ const AddBankTransaction = () => {
               {!id && (
                 <>
                   <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting}
-    >
-      {isSubmitting ? t("Submitting...") : t("Submit")}
-    </button>
+                  >
+                    {isSubmitting ? t("Submitting...") : t("Submit")}
+                  </button>
                   <button className="cancel-btn" onClick={() => handleCancel()}>
                     {t("Cancel")}
                   </button>{" "}
@@ -975,12 +934,12 @@ const AddBankTransaction = () => {
                   <button
                     className="submit-btn"
                     onClick={() => handleUpdate("verified", id)}
-                     disabled={isSubmitting}
-    >
-     
-   {isSubmitting ? t("Verifing...") : t("Verify")}
-                  
-                    {}
+                    disabled={isSubmitting}
+                  >
+
+                    {isSubmitting ? t("Verifing...") : t("Verify")}
+
+                    { }
                   </button>
                 )}
               {isE("btnReject") &&
