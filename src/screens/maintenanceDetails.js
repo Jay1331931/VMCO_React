@@ -1123,7 +1123,7 @@ function MaintenanceDetails() {
 
     try {
       const { data } = await axios.get(
-        `${API_BASE_URL}/warranty-end-date/${ticket.customerId}/${SNo}`,
+        `${API_BASE_URL}/warranty-end-date/${ticket?.erpCustId}/${SNo}`,
         {
           headers: {
             "Content-Type": "application/json",
