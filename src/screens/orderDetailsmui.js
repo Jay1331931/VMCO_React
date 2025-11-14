@@ -4381,12 +4381,10 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         <label>{t("Payment Method")}</label>
                         <input
                           name="paymentMethod"
-                          value={t(
-                            formData.paymentMethod?.toLowerCase() ===
-                              "pre payment"
-                              ? "Card Payment"
-                              : formData.paymentMethod
-                          )}
+                          value={
+                            sampleMode || formData.sampleOrder
+                              ? t("FOC") : t(formData.paymentMethod?.toLowerCase() === "pre payment" ? "Card Payment" : formData.paymentMethod)
+                          }
                           disabled
                         />
                       </div>

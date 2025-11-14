@@ -1123,7 +1123,7 @@ function MaintenanceDetails() {
 
     try {
       const { data } = await axios.get(
-        `${API_BASE_URL}/warranty-end-date/${ticket.customerId}/${SNo}`,
+        `${API_BASE_URL}/warranty-end-date/${ticket?.erpCustId}/${SNo}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -1498,7 +1498,7 @@ function MaintenanceDetails() {
                       {saving ? t("Saving...") : t("Save")}
                     </button>
                   }
-                  {isV('btnCancel') && isE('btnCancel') &&
+                  {/* {isV('btnCancel') && isE('btnCancel') &&
                     <button
                       className="support-action-btn cancel"
                       onClick={handleCancel}
@@ -1506,7 +1506,7 @@ function MaintenanceDetails() {
                     >
                       {t("Cancel")}
                     </button>
-                  }
+                  } */}
                   {isV('btnClose') && isE('btnClose') &&
                     <button
                       className="support-action-btn close"

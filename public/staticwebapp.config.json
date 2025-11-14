@@ -1,6 +1,14 @@
 {
   "routes": [
     {
+      "route": "/.well-known/apple-developer-merchantid-domain-association",
+      "rewrite": "/.well-known/apple-developer-merchantid-domain-association.txt",
+      "headers": {
+        "Content-Type": "text/plain",
+        "Cache-Control": "public, max-age=3600"
+      }
+    },
+    {
       "route": "/static/*",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"

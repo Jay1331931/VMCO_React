@@ -49,7 +49,7 @@ function Maintenance() {
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
   const { token, user, isAuthenticated, logout } = useAuth();
-  const [openTicketsCount, setOpenTicketsCount] = useState(0); // Add this state
+  const [openTicketsCount, setOpenTicketsCount] = useState(0);
 
   // Pagination and filtering state
   const [page, setPage] = useState(1);
@@ -131,7 +131,7 @@ const [isAtTop, setIsAtTop] = useState(true);
         // Add isOpen filter based on isClosedMode
         const filtersWithStatus = {
           ...customFilters,
-          isOpen: isClosedMode === "open", // true for open, false for closed
+          isOpen: isClosedMode === "open",
         };
 
         const params = new URLSearchParams({
@@ -140,7 +140,7 @@ const [isAtTop, setIsAtTop] = useState(true);
           search: searchTerm,
           sortBy: sortedModel[0]?.field || "id",
           sortOrder: sortedModel[0]?.sort || "asc",
-          filters: JSON.stringify(filtersWithStatus), // Use filtersWithStatus
+          filters: JSON.stringify(filtersWithStatus),
         });
 
         let apiUrl;
@@ -220,13 +220,13 @@ const [isAtTop, setIsAtTop] = useState(true);
       isMyTicketsMode,
       token,
       pageSize,
-      isClosedMode, // Add to dependencies
+      isClosedMode,
     ]
   );
 
   // NOTE: For fetching the user again after browser refresh - start
   useEffect(() => {
-    if (loading) return; // Wait while loading
+    if (loading) return;
     console.log("user in maintenance page:", user);
     if (user) {
       fetchMaintenanceTickets(page, searchQuery, filters, sortModel);
@@ -242,7 +242,7 @@ const [isAtTop, setIsAtTop] = useState(true);
     filters,
     sortModel,
     isMyTicketsMode,
-    isClosedMode, // Add to dependencies
+    isClosedMode,
   ]);
 
   // Handle search functionality
@@ -598,7 +598,7 @@ const [isAtTop, setIsAtTop] = useState(true);
                         columnsToDisplay: columnsToDisplay,
                         handleApproval: handleApproval,
                         isApprovalMode: isMyTicketsMode,
-                        openTicketsCount: openTicketsCount, // Pass the count here
+                        openTicketsCount: openTicketsCount,
                       },
                     }}
                     sx={{
@@ -664,134 +664,100 @@ const [isAtTop, setIsAtTop] = useState(true);
             ) : error ? (
               <div className="error-message">{error}</div>
             ) : (
-              <div
-                style={{
-                  height: "400px",
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "column",
+              <DataGrid
+                apiRef={gridApiRef}
+                rows={initialTickets}
+                columns={visibleColumns}
+                pageSize={pageSize}
+                rowCount={total}
+                onRowClick={handleRowClick}
+                columnVisibilityModel={columnVisibilityModel}
+                onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                sortModel={sortModel}
+                onSortModelChange={handleSortModelChange}
+                disableSelectionOnClick
+                disableColumnMenu
+                hideFooter={true}
+                hideFooterPagination={true}
+                pagination={false}
+                autoHeight
+                rowHeight={55}
+                showToolbar
+                onColumnResize={handleColumnResize}
+                slots={{
+                  toolbar: CustomToolbar,
                 }}
-              >
-                <DataGrid
-                  apiRef={gridApiRef}
-                  rows={initialTickets}
-                  columns={visibleColumns}
-                  pageSize={pageSize}
-                  rowCount={total}
-                  onRowClick={handleRowClick}
-                  columnVisibilityModel={columnVisibilityModel}
-                  onColumnVisibilityModelChange={handleColumnVisibilityChange}
-                  sortModel={sortModel}
-                  onSortModelChange={handleSortModelChange}
-                  disableSelectionOnClick
-                  disableColumnMenu
-                  hideFooter={true}
-                  hideFooterPagination={true}
-                  pagination={false}
-                  rowHeight={55}
-                  showToolbar
-                  onColumnResize={handleColumnResize}
-                  slots={{
-                    toolbar: CustomToolbar,
-                  }}
-                  slotProps={{
-                    toolbar: {
-                      searchQuery: searchQuery,
-                      filterAnchor: filterAnchor,
-                      onSearch: handleSearch,
-                      setSearchQuery: setSearchQuery,
-                      setFilterAnchor: setFilterAnchor,
-                      handleFilterChange: handleFilterChange,
-                      onColumnVisibilityChange: setColumnVisibilityModel,
-                      columns: filteredData,
-                      filters: filters,
-                      columnVisibilityModel: columnVisibilityModel,
-                      searchPlaceholder: "Search maintenance tickets...",
-                      showColumnVisibility: true,
-                      showFilters: true,
-                      showExport: false,
-                      showUpload: false,
-                      showAdd: isV("btnAdd") || isE("btnAdd"),
-                      buttonName: t("Add"),
-                      showApproval:
-                        isV("toggleButton") &&
-                        user?.designation === "maintenance head",
-                      showClosed: true,
-                      isClosedMode: isClosedMode,
-                      handleClosedTickets: handleShowClosedTickets,
-                      handleAddClick: handleAdd,
-                      columnsToDisplay: columnsToDisplay,
-                      handleApproval: handleApproval,
-                      isApprovalMode: isMyTicketsMode,
-                      openTicketsCount: openTicketsCount, // Pass the count here
+                slotProps={{
+                  toolbar: {
+                    searchQuery: searchQuery,
+                    filterAnchor: filterAnchor,
+                    onSearch: handleSearch,
+                    setSearchQuery: setSearchQuery,
+                    setFilterAnchor: setFilterAnchor,
+                    handleFilterChange: handleFilterChange,
+                    onColumnVisibilityChange: setColumnVisibilityModel,
+                    columns: filteredData,
+                    filters: filters,
+                    columnVisibilityModel: columnVisibilityModel,
+                    searchPlaceholder: "Search maintenance tickets...",
+                    showColumnVisibility: true,
+                    showFilters: true,
+                    showExport: false,
+                    showUpload: false,
+                    showAdd: isV("btnAdd") || isE("btnAdd"),
+                    buttonName: t("Add"),
+                    showApproval:
+                      isV("toggleButton") &&
+                      user?.designation === "maintenance head",
+                    showClosed: true,
+                    isClosedMode: isClosedMode,
+                    handleClosedTickets: handleShowClosedTickets,
+                    handleAddClick: handleAdd,
+                    columnsToDisplay: columnsToDisplay,
+                    handleApproval: handleApproval,
+                    isApprovalMode: isMyTicketsMode,
+                    openTicketsCount: openTicketsCount,
+                  },
+                }}
+                sx={{
+                  "& .MuiDataGrid-row": {
+                    cursor: "pointer",
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.04)",
                     },
-                  }}
-                  sx={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    "& .MuiDataGrid-toolbar": {
-                      padding: "0px 8px !important",
-                      minHeight: "56px !important",
-                      flexShrink: 0,
-                    },
-                    "& .MuiDataGrid-main": {
-                      flex: 1,
-                      overflow: "hidden",
-                      display: "flex",
-                      flexDirection: "column",
-                    },
-                    "& .MuiDataGrid-virtualScroller": {
-                      overflow: "auto !important",
-                      flex: 1,
-                    },
-                    "& .MuiDataGrid-columnHeaders": {
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1,
-                      backgroundColor: "white",
-                      borderBottom: "1px solid #e0e0e0",
-                      flexShrink: 0,
-                    },
-                    "& .MuiDataGrid-row": {
-                      cursor: "pointer",
-                      "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  },
+                  ...(isArabic
+                    ? {
+                      direction: "rtl",
+                      "& .MuiDataGrid-cell": {
+                        textAlign: "right !important",
                       },
-                    },
-                    ...(isArabic
-                      ? {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        },
-                      }
-                      : {
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "left",
-                        },
-                      }),
-                  }}
-                />
-              </div>
+                      "& .MuiDataGrid-columnHeader": {
+                        textAlign: "right !important",
+                      },
+                      "& .MuiDataGrid-columnHeaderTitle": {
+                        textAlign: "right !important",
+                      },
+                      "& .MuiDataGrid-cellContent": {
+                        textAlign: "right !important",
+                      },
+                    }
+                    : {
+                      "& .MuiDataGrid-cell": {
+                        textAlign: "left",
+                      },
+                      "& .MuiDataGrid-columnHeader": {
+                        textAlign: "left",
+                      },
+                      "& .MuiDataGrid-columnHeaderTitle": {
+                        textAlign: "left",
+                      },
+                      "& .MuiDataGrid-cellContent": {
+                        textAlign: "left",
+                      },
+                    }),
+                }}
+              />
             )}
           </div>
         )}
