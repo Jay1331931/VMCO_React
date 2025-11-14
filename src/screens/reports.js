@@ -21,6 +21,11 @@ function Reports() {
     navigate("/priceListEditor");
   }
 
+  const handleOrderStagingTableClick = () => {
+    // Navigate to the Order Staging Table page
+    navigate("/orderStagingTable");
+  }
+
   return (
     <div>
       <Sidebar title={t("Reports")}>
@@ -38,6 +43,10 @@ function Reports() {
         <a onClick={handlePriceListReportClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Price List Report")}</a>
         </div>
         <break />
+        <break />
+        <div style={{ marginBottom: "40px" }}><h3> {t("Order Staging Table")}</h3>
+        <a onClick={handleOrderStagingTableClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Order Staging Report")}</a>
+        </div>
         <break />
       </Sidebar>
     </div>
