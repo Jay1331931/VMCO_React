@@ -445,6 +445,11 @@ function FinancialInformation({
       // Check if the request was successful
       if (data.success) {
         // Success popup
+        setCcEmail(null)
+        setToDate(dayjs())
+        setFromDate(dayjs())
+        setSelectedEntities([])
+        
         Swal.fire({
           icon: "success",
           title: "Request Submitted",
@@ -2807,7 +2812,12 @@ function FinancialInformation({
                     fullWidth
                     variant="outlined"
                     sx={{ py: 1.3, borderRadius: 2, fontSize: "16px" }}
-                    onClick={() => setOpen(false)}
+                    onClick={() => {setOpen(false)
+                        setCcEmail(null)
+        setToDate(dayjs())
+        setFromDate(dayjs())
+        setSelectedEntities([])
+                    }}
                   >
                     {t("Close")}
                   </Button>
