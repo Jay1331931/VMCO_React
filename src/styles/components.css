@@ -2894,4 +2894,8 @@ display: flex;
   .branch-action-buttons .action-button {
     min-width: 100%;
   }
+
+  .onboarding-container .form-group input {
+    width: 280px !important;
+  }
 }
