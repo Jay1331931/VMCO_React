@@ -67,6 +67,7 @@ function MaintenanceDetails() {
     customerId: ticketRcvd.customerId || (user?.userType === 'customer' ? user.customerId : null),
     // Set maintenance charges from backend charges field in edit mode
     maintenanceCharges: ticketRcvd.charges || ticketRcvd.maintenanceCharges || null,
+    erpCustId:user?.userType === 'customer' ? user.erpCustomerId : null
   });
   const serialNumberDebounceRef = useRef(null);
   // State for branches dropdown
