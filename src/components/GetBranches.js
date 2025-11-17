@@ -248,6 +248,14 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
           max-height: 400px;
           overflow-y: auto;
         }
+        .gb-table-container table th:last-child,
+.gb-table-container table td:last-child {
+  position: sticky;
+  right: 0;
+  background: white;      /* Important: avoids overlap transparency */
+  z-index: 5;             /* Keep above other cells */
+  white-space: nowrap;
+}
         .gb-branch-btn {
           width: 100%;
           text-align: center;
