@@ -1520,7 +1520,7 @@ td.file-display-cell {
     max-height: 50vh;
     border-radius: 12px 12px 0 0;
     z-index: 9999 !important;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -100px 440px rgba(0, 0, 0, 2.2);
   }
   .searchable-dropdown {
   position: relative;
