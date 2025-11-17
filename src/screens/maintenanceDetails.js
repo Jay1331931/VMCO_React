@@ -1134,11 +1134,21 @@ function MaintenanceDetails() {
         }
       );
       const rawDate = data?.details?.warrantdate || "";
-
-      setTicket((prev) => ({
+      if (data?.success){
+ setTicket((prev) => ({
         ...prev,
         warrantyEndDate: formatDateInput(rawDate, "date") || "",
       }));
+      }else{
+        Swal.fire({
+            title: t("Error"),
+            text: data?.message||t("Please enter erpSerialNo Correct"),
+            icon: "warning",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#3085d6"
+          });
+      }
+     
     } catch (error) {
       console.error("Error handling serial number change:", error);
     }
