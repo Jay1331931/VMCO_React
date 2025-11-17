@@ -13,6 +13,7 @@ import Swal from "sweetalert2";
 import "../styles/addBankTransaction.css";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import api from "../utilities/api";
+import Constants from "../constants";
 const getCookie = (name) => {
   // const cookies = document.cookie
   //   .split(";")
@@ -587,7 +588,7 @@ const AddBankTransaction = () => {
               </div>
             )}
 
-            {(formData.entity && formData.erpCustId) ||
+            {([Constants.ENTITY.NAQI?.toLowerCase(),Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
               Object.keys(updateTransaction).length > 0 ? (
               <>
                 <div className="form-group">
