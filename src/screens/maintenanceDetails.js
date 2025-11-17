@@ -67,6 +67,7 @@ function MaintenanceDetails() {
     customerId: ticketRcvd.customerId || (user?.userType === 'customer' ? user.customerId : null),
     // Set maintenance charges from backend charges field in edit mode
     maintenanceCharges: ticketRcvd.charges || ticketRcvd.maintenanceCharges || null,
+    erpCustId:user?.userType === 'customer' ? user.erpCustomerId : null
   });
   const serialNumberDebounceRef = useRef(null);
   // State for branches dropdown
@@ -1133,11 +1134,21 @@ function MaintenanceDetails() {
         }
       );
       const rawDate = data?.details?.warrantdate || "";
-
-      setTicket((prev) => ({
+      if (data?.success){
+ setTicket((prev) => ({
         ...prev,
         warrantyEndDate: formatDateInput(rawDate, "date") || "",
       }));
+      }else{
+        Swal.fire({
+            title: t("Error"),
+            text: data?.message||t("Please enter erpSerialNo Correct"),
+            icon: "warning",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#3085d6"
+          });
+      }
+     
     } catch (error) {
       console.error("Error handling serial number change:", error);
     }
