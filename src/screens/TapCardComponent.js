@@ -230,7 +230,9 @@ const createChargeRequest = async (tokenDATA) => {
 
       if (isMobile) {
         navigate("/orders");
-        window.open(paymentUrl, "_blank", "noopener,noreferrer");
+        // window.open(paymentUrl, "_blank", "noopener,noreferrer");
+        window.open(paymentUrl, "_system");
+
       } else {
         window.location.replace(paymentUrl);
       }

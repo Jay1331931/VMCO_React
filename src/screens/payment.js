@@ -35,10 +35,10 @@ const PaymentPage = () => {
   const paymentId = query.get("paymentId");
 
   const [isLoading, setIsLoading] = useState(false);
-
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const handleCancel = () => {
     // window.close();
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
 
     if (isMobile) {
       window.close();
@@ -233,7 +233,20 @@ const PaymentPage = () => {
                 Payment ID: {paymentId}
               </Typography>
             )}
-
+ {isMobile&&(<Typography
+                variant="body1"
+                sx={{
+                  mt: 1,
+                  wordBreak: "break-all", // ensures long IDs wrap
+                  fontWeight: 500,
+                  color: "rgba(0,0,0,0.7)",
+                  textAlign: "center",
+                }}
+              >
+             
+            Please close this page and open your application to continue.
+   
+              </Typography>)}
             <Button
               variant="contained"
               onClick={handleCancel}
