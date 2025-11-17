@@ -28,6 +28,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
       filteredData.erpCustId=formData.erpCustId;
       filteredData.entity= formData.entity;
       filteredData.paymentStatus="Pending";
+      filteredData.paymentMethod="Pre Payment";
       const filter=JSON.stringify(filteredData);
       const { data } = await api.get(`/sales-order/pagination?page=${pagination?.page}&pageSize=${pagination?.pageSize}&search=${searchQuery}&purpose=banktransactions&filters=${filter}`, {
         headers: { "Authorization": `Bearer ${token}` },
