@@ -60,6 +60,7 @@ function FinancialInformation({
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
   let currentLanguage = i18n.language;
+
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -101,6 +102,7 @@ function FinancialInformation({
   const [toDate, setToDate] = useState(dayjs());
   const [ccEmail, setCcEmail] = useState("");
   const [ccError, setCcError] = useState("");
+  const [isSubmited,setIsSubmited]=useState(false)
   useEffect(() => {
     setBankName(customerData?.bankName || "");
   }, [customerData?.bankName]);
@@ -403,7 +405,30 @@ function FinancialInformation({
   };
   const formatDate = (d) => dayjs(d).format("DD-MM-YYYY");
   const handleSubmit = async () => {
-    setOpen(false);
+    setIsSubmited(true)
+      setOpen(false);
+     const confirm = await Swal.fire({
+    title: "Are you sure?",
+    text: "If you have already submitted, please wait 15 minutes to receive the email.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Continue",
+    cancelButtonText: "Cancel",
+    confirmButtonColor: "#1976d2",
+    cancelButtonColor: "#d33",
+  });
+
+  // If cancel → stop
+  if (!confirm.isConfirmed) {
+       setCcEmail(null)
+        setToDate(dayjs())
+        setFromDate(dayjs())
+        setSelectedEntities([])
+      setIsSubmited(false)
+    return;
+  }
+  
+      setIsSubmited(false)
     if (ccEmail && !validateEmails(ccEmail)) {
       Swal.fire({
         icon: "error",
@@ -425,7 +450,7 @@ function FinancialInformation({
       entity: `{${selectedEntities.map((e) => `"${e}"`).join(",")}}`,
       fromDate: formatDate(fromDate),
       toDate: formatDate(toDate),
-      email: originalCustomerContactsData?.primaryContactEmail || "",
+      email: user?.userType?.toLowerCase() == "employee"? user.email : originalCustomerContactsData?.primaryContactEmail || "",
       cc: ccEmail,
       erpCustomerId: customerData?.erpCustId,
       assignedTo: customerData?.assignedTo,
@@ -477,6 +502,8 @@ function FinancialInformation({
         text: errorMessage,
       });
     }
+    
+    
   };
 
   const validateEmails = (value) => {
@@ -2789,7 +2816,7 @@ function FinancialInformation({
                   whiteSpace: "normal",
                 }}
               >
-                {t("If you have already submitted, please wait 15 minutes for the  email.")}
+                {t("Note :") + t("If you have already submitted, please wait 15 minutes to receive the email")}
               </Typography>
             </Grid>
 
@@ -2802,8 +2829,9 @@ function FinancialInformation({
                     variant="contained"
                     sx={{ py: 1.3, borderRadius: 2, fontSize: "16px" }}
                     onClick={handleSubmit}
+                    disabled={isSubmited}
                   >
-                    {t("Submit")}
+                    {isSubmited ? t('Submitting'):t("Submit")}
                   </Button>
                 </Grid>
 
