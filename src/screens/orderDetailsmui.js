@@ -2302,9 +2302,9 @@ function OrderDetails() {
 
     console.log('Fetching price for discount change:', {
       productId: product.id,
-      customerId: formData.customerId,
-      entity: formData.entity,
-      pricingPolicy: pricingPolicy.toLowerCase(),
+      customerId: formData?.customerId,
+      entity: formData?.entity,
+      pricingPolicy: pricingPolicy?.toLowerCase(),
       discount: discountPercentage
     });
 
