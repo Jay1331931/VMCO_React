@@ -240,7 +240,7 @@ const TapCardPayment = () => {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
-          navigate("/orders");
+          navigate("/catalog");
           // window.open(paymentUrl, "_blank", "noopener,noreferrer");
           window.open(paymentUrl, "_system");
         } else {
