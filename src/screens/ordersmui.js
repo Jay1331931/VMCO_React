@@ -1530,11 +1530,7 @@ function Orders() {
                   paymentStatus: "Pending",
                   status: "approved",
                 },
-                {
-        paymentMethod: "Pre Payment",
-        paymentStatus: "Under Review",
-        status: "approved",
-      },
+                
               ]
               : [
                 {
@@ -1551,12 +1547,7 @@ function Orders() {
                   paymentMethod: "Cash on Delivery",
                   paymentStatus: "Pending",
                   status: "approved",
-                },
-                {
-        paymentMethod: "Pre Payment",
-        paymentStatus: "Under Review",
-        status: "approved",
-      },
+                }
               ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,

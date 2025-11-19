@@ -14,6 +14,7 @@ import "../styles/addBankTransaction.css";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import api from "../utilities/api";
 import Constants from "../constants";
+import LoadingSpinner from "./LoadingSpinner";
 const getCookie = (name) => {
   // const cookies = document.cookie
   //   .split(";")
@@ -33,9 +34,9 @@ const AddBankTransaction = () => {
   const currentLanguage = i18n.language;
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    erpCustId: "",
-    companyNameEn: "",
-    companyNameAr: "",
+    erpCustId: user?.userType === 'customer' ? user?.erpCustomerId: "",
+    companyNameEn:user?.userType === 'customer' ? user?.companyNameEn: "",
+    companyNameAr: user?.userType === 'customer' ? user?.companyNameAr: "",
     amountTransferred: 0,
     transactionDate: "",
     erpOrderId: [],
@@ -56,12 +57,14 @@ const AddBankTransaction = () => {
   const [TemporderIds, setTempOrderIds] = useState();
   const [totalamount, setAmount] = useState(0);
   const [isSubmitting, setisSubmitting] = useState(null);
+  const [isUploading,setIsUploading]=useState(null)
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
     "BankTransactions"
   );
+  console.log("user",user)
   const cookieToken = getCookie("token");
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
@@ -95,13 +98,18 @@ const AddBankTransaction = () => {
   //   }
   // }, [orderId]);
   const handleChange = (e) => {
+   
     const { name, value } = e.target;
+     if(name==="entity"){
+        setFormData((prev) => ({ ...prev, orderId:[],erpOrderId:[],amountTransferred:0}));
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = async (e) => {
     const files = e.target.files;
-
+    
+setIsUploading(true)
     for (let file of files) {
       //file Size less than 30MB
       if (file.size > 10 * 1024 * 1024) {
@@ -127,6 +135,7 @@ const AddBankTransaction = () => {
         console.error("Upload failed", error);
       }
     }
+    setIsUploading(false)
   };
 
   const handleSubmit = async () => {
@@ -751,7 +760,7 @@ const AddBankTransaction = () => {
                     </>
                   )}
                   <div className="scrollable-preview-container">
-                    {fileData?.map((file, index) => {
+                    {isUploading ? <LoadingSpinner/>:<>{fileData?.map((file, index) => {
                       const fileUrl = file.url;
                       const extension = file.fileName
                         .split(".")
@@ -826,7 +835,7 @@ const AddBankTransaction = () => {
                           )}
                         </div>
                       );
-                    })}
+                    })}</>}
                   </div>
                 </div>
               </div>
@@ -883,7 +892,7 @@ const AddBankTransaction = () => {
               </div>
             </div>
           )}
-          <GetCustomers
+          {user?.userType !== 'customer' && (<GetCustomers
             open={showCustomerPopup}
             onClose={() => setShowCustomerPopup(false)}
             onSelectCustomer={handleSelectCustomer}
@@ -896,7 +905,7 @@ const AddBankTransaction = () => {
               sortBy: "id",
               sortOrder: "asc",
             }}
-          />
+          />)}
           <GetSalesOrder
             open={showSalesOrderPopup}
             onClose={() => setshowSalesOrderPopup(false)}

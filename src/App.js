@@ -124,7 +124,7 @@ function App() {
         <Route path="/bankTransactions" element={<BankTransactions />} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
         <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
-        <Route path="/bankTransactions/order/:amount/:orderId" element={<AddBankTransaction />} />
+        <Route path="/bankTransactions/order/:amount/:orderId/:orderType" element={<AddBankTransaction />} />
         <Route path="/admin/upload" element={<BulkUploadBranchAndCustomer />} />
         <Route path="/customerDetails" element={<CustomerDetails />} />
         {/* Catch-all route for 404 Not Found */}

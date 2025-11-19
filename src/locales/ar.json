@@ -819,7 +819,9 @@
     "If you have already submitted, please wait 15 minutes for the  email.":"إذا كنت قد قمت بالفعل بالتقديم، يرجى الانتظار 15 دقيقة للحصول على البريد الإلكتروني.",
    "Invalid email format. Use comma-separated values.":"تنسيق البريد الإلكتروني غير صحيح. استخدم قيمًا مفصولة بفواصل.",
    "Account Statement":"كشف الحساب",
-   "Statement of Account":"كشف حساب"
-
+   "Statement of Account":"كشف حساب",
+   "Please enter a machine serial number and get the Warranty End Date":"الرجاء إدخال الرقم التسلسلي للجهاز والحصول على تاريخ انتهاء الضمان",
+   "If you have already submitted, please wait 15 minutes to receive the email.":"إذا كنت قد قمت بالتقديم بالفعل، يرجى الانتظار 15 دقيقة لتلقي البريد الإلكتروني.",
+   "Note :":"ملحوظة :"
 
 }
