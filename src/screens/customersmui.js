@@ -33,6 +33,7 @@ import IosShareIcon from "@mui/icons-material/IosShare";
 import TableMobile from "../components/TableMobile";
 import Constants from "../constants";
 import CustomerCard from "../components/CustomerCard";
+import { faHeartPulse } from "@fortawesome/free-solid-svg-icons";
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -1859,6 +1860,7 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
                     //   }
                     // }}
                     sx={{
+                      border: "none !important",
                         "& .MuiDataGrid-overlay": {
                           display: "none !important", // ✅ hides “No rows” message
                         },
@@ -1882,7 +1884,7 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
                           // backgroundColor: "#fff", // ensures it doesn't become transparent
                           // borderBottom: "1px solid #e0e0e0",
                           padding: "0px",
-                          gap: "0px",
+                          gap: "10px",
                           border: "none",
                         },
 

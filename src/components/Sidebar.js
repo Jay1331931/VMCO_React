@@ -426,7 +426,7 @@ function Sidebar({ children, title }) {
     const userLoggedOut = user;
 
     logout(true); // Pass true to indicate button was clicked
-
+    
     // Logout successful, redirect to login page
     if (userLoggedOut?.userType === "employee") {
       navigate("/login/employee");

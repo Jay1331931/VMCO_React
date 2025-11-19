@@ -146,7 +146,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     };
     setTemporaryBranches((prev) => [newBranch, ...prev]);
     setBranches((prev) => [newBranch, ...prev]);
-    setExpandedRows([tempId]); // Expand the new branch row
+    !isMobile &&setExpandedRows([tempId]); // Expand the new branch row
   };
   // const handleSearchChange = debounce((e) => {
   //   setSearch(e.target.value)
@@ -1522,7 +1522,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                         border: "1px solid #3D5654",
                       },
-                      width: "150%"
+                      width: i18n.language === "en" ? "150%" : "100%"
                     },
                     "& .css-1uhhrmm-MuiAutocomplete-endAdornment": {
                       display: "none",
@@ -1917,7 +1917,14 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                         )}
                     </td>
                     <td>
-                      <button className="branches-toggle-row-btn">
+                      <button className={`${
+                mode === "edit" &&
+                index === 0 &&
+                String(branch?.id) ===
+                  String(customer?.completeWorkflowData?.workflowData?.id)
+                  ? "branches-toggle-row-btn-first-row-highlight"
+                  : "branches-toggle-row-btn"
+              }`}>
                         {isExpanded(branch.id) ? (
                           <FontAwesomeIcon icon={faChevronDown} />
                         ) : (

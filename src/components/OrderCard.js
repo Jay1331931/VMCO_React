@@ -3,10 +3,11 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import CustomToolbarMobile from "../components/CustomToolbarMobile";
+import { useTranslation } from "react-i18next";
 
 function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }) {
   const navigate = useNavigate();
-
+  const { t, i18n } = useTranslation();
   const handleOrderClick = (order) => setSelectedRow(order);
 
   // 🎨 Status-based color styles
@@ -154,7 +155,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
         width: "100%", // ✅ prevents shrinking when short text
       }}
     >
-      {order?.branchNameEn || order?.companyNameEn || "Unknown Customer"}
+      {i18n.language === "ar" ? order?.branchNameLc || order?.companyNameAr || "Unknown Customer" : order?.branchNameEn || order?.companyNameEn || "Unknown Customer"}
     </Typography>
     <Typography
       fontSize={12}
@@ -195,7 +196,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
         whiteSpace: "nowrap",
       }}
     >
-      {order?.status || "N/A"}
+      {t(order?.status || "N/A")}
     </Typography>
     <Typography
       fontSize={11}
@@ -252,7 +253,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
   >
 <Grid item xs={12} sx={{ px: 2, py: 1.5 }}>
                   <Typography fontSize={14} fontWeight={600} color="textSecondary" >
-                    {`Order #${order?.id}`}
+                    {`${t("Order #")}${order?.id}`}
                   </Typography>
 
                   <Typography
@@ -260,7 +261,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                     color="textSecondary"
                     sx={{ mt: 0.3 }}
                   >
-                    {order?.entity}
+                    {t(order?.entity?.toUpperCase())}
                   </Typography>
 
                   <Typography
@@ -291,7 +292,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                     color="textSecondary"
                     sx={{ mt: 0.3 }}
                   >
-                    {Number(order?.totalAmount || 0).toFixed(2)} SAR
+                    {`${Number(order?.totalAmount || 0).toFixed(2)} ${t("SAR")}`}
                   </Typography>
                 {((order?.paymentStatus?.toLowerCase() === "pending") &&
                   order?.paymentMethod?.toLowerCase() === "pre payment" ) ? (
@@ -330,7 +331,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                       {/* <Tooltip title={("Pay")} arrow>
                                         <AccountBalanceWalletIcon />
                                       </Tooltip> */}
-                                      Pay
+                                      {t("Pay")}
                     </Button>
                   </Grid>
                 ) : (
@@ -339,7 +340,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                     color="textSecondary"
                     sx={{ mt: 0.3 }}
                   >
-                    Payment: {order?.paymentStatus || "N/A"}
+                    {`${t("Payments")}: ${t(order?.paymentStatus) || t("N/A")}`}
                   </Typography>
                 )}
                 </Grid>
