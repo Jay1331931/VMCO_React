@@ -2742,32 +2742,55 @@ function FinancialInformation({
             </Grid>
 
 
+<LocalizationProvider dateAdapter={AdapterDayjs}>
   <Grid container spacing={2}>
 
     {/* FROM DATE */}
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-    <Grid item xs={12} sm={6} xl={6}>
-      <DatePicker
-        label={t("From Date")}
-        value={fromDate}
-        onChange={(newValue) => setFromDate(newValue)}
-        sx={{ width: "100%" }}
-      />
+    <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+      <FormControl fullWidth>
+        <FormLabel>{t("From Date")}</FormLabel>
+        <DatePicker
+          value={fromDate}
+          onChange={(newValue) => setFromDate(newValue)}
+          sx={{ width: "100%" }}
+           slotProps={{
+            textField: {
+              sx: {
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px !important", 
+                },
+              },
+            },
+          }}
+        />
+      </FormControl>
     </Grid>
-    </LocalizationProvider>
-<LocalizationProvider dateAdapter={AdapterDayjs}>
+
     {/* TO DATE */}
-    <Grid item xs={12} sm={6} xl={6}>
-      <DatePicker
-        label={t("To Date")}
-        value={toDate}
-        maxDate={dayjs()} 
-        onChange={(newValue) => setToDate(newValue)}
-        sx={{ width: "100%" }}
-      />
+    <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+      <FormControl fullWidth>
+        <FormLabel>{t("To Date")}</FormLabel>
+        <DatePicker
+          value={toDate}
+          maxDate={dayjs()}
+          onChange={(newValue) => setToDate(newValue)}
+          sx={{ width: "100%" }}
+           slotProps={{
+            textField: {
+              sx: {
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px !important", 
+                },
+              },
+            },
+          }}
+        />
+      </FormControl>
     </Grid>
-</LocalizationProvider>
+
   </Grid>
+</LocalizationProvider>
+
 
 
 
@@ -2777,7 +2800,7 @@ function FinancialInformation({
               <TextField
                 label={t("Email")}
                 value={originalCustomerContactsData?.primaryContactEmail || ""}
-                fullWidth
+                
                 InputProps={{ readOnly: true }}
               />
             </Grid>
@@ -2804,7 +2827,7 @@ function FinancialInformation({
                 }}
                 error={Boolean(ccError)}
                 helperText={t(ccError)}
-                fullWidth
+                
               />
             </Grid>
             <Grid item xs={12}>

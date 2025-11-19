@@ -237,17 +237,17 @@ const PaymentPage = () => {
                 variant="body1"
                 sx={{
                   mt: 1,
-                  wordBreak: "break-all", // ensures long IDs wrap
+                
                   fontWeight: 500,
-                  color: "rgba(0,0,0,0.7)",
+                  color: "#ef7b00",
                   textAlign: "center",
                 }}
               >
              
-            Please close this page and open your application to continue.
+            Note:  Please close this page and open the Talab Point app to continue.
    
               </Typography>)}
-            <Button
+            {!isMobile&&<Button
               variant="contained"
               onClick={handleCancel}
               sx={{
@@ -272,7 +272,7 @@ const PaymentPage = () => {
               }}
             >
               {status === "success" ? "Done" : "Close"}
-            </Button>
+            </Button>}
           </Card>
         </Grow>
       )}
