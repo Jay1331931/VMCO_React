@@ -2,10 +2,15 @@ import React from "react";
 import { Grid, Typography, Button, Tooltip } from "@mui/material";
 import BuildIcon from "@mui/icons-material/Build";
 import { useNavigate } from "react-router-dom";
-
-function MaintenanceCard({ tickets, setSelectedRow, handleViewDetails, handleAdd }) {
+import { useTranslation } from "react-i18next";
+function MaintenanceCard({
+  tickets,
+  setSelectedRow,
+  handleViewDetails,
+  handleAdd,
+}) {
   const navigate = useNavigate();
-
+  const { t, i18n } = useTranslation();
   const handleTicketClick = (ticket) => setSelectedRow(ticket);
 
   // 🎨 Status-based colors
@@ -149,9 +154,11 @@ function MaintenanceCard({ tickets, setSelectedRow, handleViewDetails, handleAdd
                         width: "100%",
                       }}
                     >
-                      {ticket?.companyNameEn || "Unknown Customer"}
+                      {i18n.language === "ar"
+                        ? ticket?.companyNameAr || "Unknown Customer"
+                        : ticket?.companyNameEn || "Unknown Customer"}
                     </Typography>
-                    <Typography
+                    {/* <Typography
                       fontSize={12}
                       color="white"
                       sx={{
@@ -164,7 +171,7 @@ function MaintenanceCard({ tickets, setSelectedRow, handleViewDetails, handleAdd
                       title={ticket?.erpCustomerId}
                     >
                       ERP ID: {ticket?.erpCustomerId || "-"}
-                    </Typography>
+                    </Typography> */}
                   </div>
 
                   {/* Right Side */}
@@ -190,7 +197,7 @@ function MaintenanceCard({ tickets, setSelectedRow, handleViewDetails, handleAdd
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {ticket?.status || "N/A"}
+                      {t(ticket?.status) || t("N/A")}
                     </Typography>
                     <Typography fontSize={11} fontWeight={500} color="white">
                       {formatDate(ticket?.createdAt)}
@@ -226,22 +233,40 @@ function MaintenanceCard({ tickets, setSelectedRow, handleViewDetails, handleAdd
                       marginRight: "8px",
                     }}
                   >
-                    <Typography fontSize={14} fontWeight={600} color="textSecondary">
-                      {`Request #${ticket?.requestId}`}
+                    <Typography
+                      fontSize={14}
+                      fontWeight={600}
+                      color="textSecondary"
+                    >
+                      {`${t("Request #")}${ticket?.requestId}`}
                     </Typography>
-                    <Typography fontSize={12} color="textSecondary" sx={{ mt: 0.3 }}>
-                      Issue: {ticket?.issueName || "-"}
+                    <Typography
+                      fontSize={12}
+                      color="textSecondary"
+                      sx={{ mt: 0.3 }}
+                    >
+                      {`${t("Issue Name")}: ${ticket?.issueName || "-"}`}
                     </Typography>
-                    <Typography fontSize={12} color="textSecondary" sx={{ mt: 0.3 }}>
-                      Type: {ticket?.issueType || "-"}
+                    <Typography
+                      fontSize={12}
+                      color="textSecondary"
+                      sx={{ mt: 0.3 }}
+                    >
+                      {`${t("Issue Type")}: ${ticket?.issueType || "-"}`}
                     </Typography>
-                    <Typography fontSize={12} color="textSecondary" sx={{ mt: 0.3 }}>
-                      Urgency: {ticket?.urgencyLevel || "Normal"}
+                    <Typography
+                      fontSize={12}
+                      color="textSecondary"
+                      sx={{ mt: 0.3 }}
+                    >
+                      {`${t("Urgency Level")}: ${
+                        ticket?.urgencyLevel || t("Normal")
+                      }`}
                     </Typography>
                   </div>
 
                   {/* Right Side */}
-                  <div
+                  {/* <div
                     style={{
                       display: "flex",
                       flexDirection: "column",
@@ -273,7 +298,7 @@ function MaintenanceCard({ tickets, setSelectedRow, handleViewDetails, handleAdd
                     >
                       View
                     </Button>
-                  </div>
+                  </div> */}
                 </Grid>
               </Grid>
             </Grid>

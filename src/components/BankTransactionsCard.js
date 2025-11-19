@@ -3,10 +3,10 @@ import { Grid, Typography, Button, Tooltip } from "@mui/material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import { useNavigate } from "react-router-dom";
-
+import { useTranslation } from "react-i18next";
 function BankTransactionsCard({ transactions, setSelectedRow, handleAddClick }) {
   const navigate = useNavigate();
-
+  const { t, i18n } = useTranslation();
   const handleTransactionClick = (txn) => setSelectedRow?.(txn);
 
   // 🎨 Status-based color styles
@@ -131,10 +131,12 @@ function BankTransactionsCard({ transactions, setSelectedRow, handleAddClick }) 
                       noWrap
                       title={txn?.companyNameEn || txn?.companyNameAr}
                     >
-                      {txn?.companyNameEn || txn?.companyNameAr || "Unknown Customer"}
+                      {i18n.language === "ar"
+                        ? txn?.companyNameAr || "Unknown Customer"
+                        : txn?.companyNameEn || "Unknown Customer"}
                     </Typography>
                     <Typography fontSize={12} color="white" sx={{ opacity: 0.9 }}>
-                      Txn ID: {txn?.id || "-"}
+                      {`${t("Transaction Id")}: ${txn?.id || "-"}`}
                     </Typography>
                   </div>
 
@@ -161,7 +163,7 @@ function BankTransactionsCard({ transactions, setSelectedRow, handleAddClick }) 
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {txn?.status || "N/A"}
+                      {t(txn?.status) || t("N/A")}
                     </Typography>
                     <Typography
                       fontSize={11}
@@ -203,13 +205,13 @@ function BankTransactionsCard({ transactions, setSelectedRow, handleAddClick }) 
                     }}
                   >
                     <Typography fontSize={13} fontWeight={600} color="#333">
-                      Amount: {Number(txn?.amountTransferred || 0).toFixed(2)} SAR
+                      {`${t("Total Amount")}: ${Number(txn?.amountTransferred || 0).toFixed(2)} ${t("SAR")}`}
                     </Typography>
                     <Typography fontSize={12} color="#666">
-                      Order ID: {txn?.orderId || "-"}
+                      {`${t("Order ID")}: ${txn?.orderId || "-"}`}
                     </Typography>
                     <Typography fontSize={12} color="#666">
-                      ERP Order: {txn?.erpOrderId || "-"}
+                      {`${t("ERP Order ID")}: ${txn?.erpOrderId || "-"}`}
                     </Typography>
                   </div>
 

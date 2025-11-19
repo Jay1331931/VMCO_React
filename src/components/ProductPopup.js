@@ -374,6 +374,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                             min-width: 180px;
                             min-height: 180px;
                             max-width: 100%;
+                            background: none !important;
                         }
                     }
                     @media (max-width: 600px) {

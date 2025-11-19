@@ -392,7 +392,8 @@ const BankTransactions = () => {
                             ),
                           }}
                           sx={{
-                            "& .MuiDataGrid-overlay": {
+                      border: "none !important",
+                        "& .MuiDataGrid-overlay": {
                               display: "none !important",
                             },
                             "& .MuiDataGrid-row": {
