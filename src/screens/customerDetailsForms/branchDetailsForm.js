@@ -733,6 +733,7 @@ let branchdata;
               { ...result?.data, id: result?.data?.id },
             ]);
             setExpandedRows([]);
+            setShowAllDetails(false);
             console.log(
               "$$$$ updatedBranchContactsData:",
               updatedBranchContactsData.current

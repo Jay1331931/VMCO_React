@@ -5474,7 +5474,7 @@ function OrderDetails() {
                   </span>
                 </div>
               )}
-              <div className="" style={{ display: "flex", gap: "10px" }}>
+              <div className="" style={{ display: "flex", gap: "10px", width: "100%" }}>
                 {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && formData?.paymentMethod?.toLowerCase() == "pre payment" && formData?.sample_order !== true && (
                   <button
                     className="order-action-btn"

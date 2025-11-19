@@ -1771,6 +1771,15 @@ function Catalog() {
             overflow-x: auto;
             scrollbar-width: none;
           }
+            .no-products-message {
+            display: flex;
+            flex-direction: row;
+            background-color: unset;
+            font-size: 1rem !important;
+      }
+            .products-grid > * {
+            max-width: none !important;
+      }
         }
       `}</style>
     </Sidebar>
