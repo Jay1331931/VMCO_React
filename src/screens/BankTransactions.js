@@ -380,7 +380,7 @@ const BankTransactions = () => {
                                 showFilters={false}
                                 showExport={false}
                                 showUpload={false}
-                                showAdd={isV('btnAdd') || true}
+                                showAdd={isV('btnAdd')}
                                 handleAddClick={handleAddClick}
                                 buttonName={t("add")}
                                 columnsToDisplay={columnsToDisplay}
