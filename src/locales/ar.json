@@ -825,9 +825,10 @@
    "If you have already submitted, please wait 15 minutes to receive the email.":"إذا كنت قد قمت بالتقديم بالفعل، يرجى الانتظار 15 دقيقة لتلقي البريد الإلكتروني.",
    "Note: ":"ملحوظة: ",
    "comma separated emails.":"رسائل البريد الإلكتروني مفصولة بفاصلة.",
-   "Payment Opations":"رسائل البريد الإلكتروني مفصولة بفاصلة.",
+   "Payment Options":"رسائل البريد الإلكتروني مفصولة بفاصلة.",
    "Tap Payment":"اضغط على الدفع",
    "From Date cannot be greater than To Date.":"لا يمكن أن يكون تاريخ من أكبر من تاريخ إلى.",
-   "Invalid Date Range":"نطاق تاريخ غير صالح"
+   "Invalid Date Range":"نطاق تاريخ غير صالح",
+   "Please don't refresh the page.":"من فضلك لا تقم بتحديث الصفحة."
 
 }

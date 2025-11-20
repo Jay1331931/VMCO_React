@@ -407,15 +407,15 @@ function FinancialInformation({
   const handleSubmit = async () => {
     setIsSubmited(true);
     setOpen(false);
-   if (fromDate > toDate) {
-  Swal.fire({
-    icon: "error",
-    title: t("Invalid Date Range"),
-    text: t("From Date cannot be greater than To Date."),
-  });
-  setIsSubmited(false);
-  return;
-}
+    if (fromDate > toDate) {
+      Swal.fire({
+        icon: "error",
+        title: t("Invalid Date Range"),
+        text: t("From Date cannot be greater than To Date."),
+      });
+      setIsSubmited(false);
+      return;
+    }
     const confirm = await Swal.fire({
       title: "Are you sure?",
       text: "If you have already submitted, please wait 15 minutes to receive the email.",
@@ -2755,141 +2755,150 @@ function FinancialInformation({
                 </Grid>
               </FormControl>
             </Grid>
- <Grid container spacing={2}>
-
-  {/* FROM DATE */}
-   <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-    <FormControl fullWidth>
-      <FormLabel>{t("From Date")}</FormLabel>
-      <TextField
-        type="date"
-        value={fromDate}
-         inputProps={{
-          max: dayjs().format("YYYY-MM-DD"), 
-        }}
-        onChange={(e) => setFromDate(e.target.value)}
-        sx={{
-          borderRadius: "12px",
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "12px",
-          },
-          "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":{
-            width:'200px'
-          }
-        }}
-        InputLabelProps={{ shrink: true }}
-      />
-    </FormControl>
-  </Grid>
-
-  {/* TO DATE */}
-   <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-    <FormControl fullWidth>
-      <FormLabel>{t("To Date")}</FormLabel>
-      <TextField
-        type="date"
-        value={toDate}
-        onChange={(e) => setToDate(e.target.value)}
-        inputProps={{
-          max: dayjs().format("YYYY-MM-DD"), // restrict future dates
-        }}
-        sx={{
-          borderRadius: "12px",
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "12px",
-          },
-           "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":{
-            width:'200px'
-          }
-        }}
-        InputLabelProps={{ shrink: true }}
-      />
-    </FormControl>
-  </Grid>
-         <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-               
-            <FormControl fullWidth>
- <FormLabel>{t("Email")}</FormLabel>
-              <TextField
-                value={originalCustomerContactsData?.primaryContactEmail || ""}
-                InputProps={{ readOnly: true }}
-              disabled={true}
-                   sx={{
-                   m:0,
-        "& .MuiOutlinedInput-root": {
-          borderRadius: "12px !important",
-        }, "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":{
-            width:'200px'
-          }
-      }}
-              />
+            <Grid container spacing={2}>
+              {/* FROM DATE */}
+              <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
+                <FormControl fullWidth>
+                  <FormLabel>{t("From Date")}</FormLabel>
+                  <TextField
+                    type="date"
+                    value={fromDate}
+                    inputProps={{
+                      max: dayjs().format("YYYY-MM-DD"),
+                    }}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    sx={{
+                      borderRadius: "12px",
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                      },
+                      "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
+                        {
+                          width: "200px",
+                        },
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                  />
                 </FormControl>
-            </Grid>
+              </Grid>
 
-        <Grid item xs={12} sm={6} md={6} lg={5} xl={6}>
-         
-  <FormControl fullWidth>
-    <FormLabel>{t("CC")}</FormLabel>
+              {/* TO DATE */}
+              <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
+                <FormControl fullWidth>
+                  <FormLabel>{t("To Date")}</FormLabel>
+                  <TextField
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    inputProps={{
+                      max: dayjs().format("YYYY-MM-DD"), // restrict future dates
+                    }}
+                    sx={{
+                      borderRadius: "12px",
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                      },
+                      "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
+                        {
+                          width: "200px",
+                        },
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
+                <FormControl fullWidth>
+                  <FormLabel>{t("Email")}</FormLabel>
+                  <TextField
+                    value={
+                      originalCustomerContactsData?.primaryContactEmail || ""
+                    }
+                    InputProps={{ readOnly: true }}
+                    disabled={true}
+                    sx={{
+                      m: 0,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px !important",
+                      },
+                      "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
+                        {
+                          width: "200px",
+                        },
+                    }}
+                  />
+                </FormControl>
+              </Grid>
 
-    <TextField
-      fullWidth
-      placeholder={t("comma separated emails.")}
-      value={ccEmail}
-    onChange={(e) => {
-                  const value = e.target.value;
+              <Grid item xs={12} sm={6} md={6} lg={5} xl={6}>
+                <FormControl fullWidth>
+                  <FormLabel>{t("CC")}</FormLabel>
 
-                  setCcEmail(value);
+                  <TextField
+                    fullWidth
+                    placeholder={t("comma separated emails.")}
+                    value={ccEmail}
+                    onChange={(e) => {
+                      const value = e.target.value;
 
-                  // validate
-                  if (value && !validateEmails(value)) {
-                    setCcError(
-                      "Invalid email format. Use comma-separated values."
-                    );
-                  } else {
-                    setCcError("");
-                  }
-                }}
-      error={Boolean(ccError)}
-      // helperText={t(ccError)}
-      sx={{
-           m:0,
-        "& .MuiOutlinedInput-root": {
-          borderRadius: "12px !important",
-        }, "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":{
-            width:'200px'
-          }
-      }}
-    />
-   {ccError && (<span style={{ wordBreak: "break-all",width:'200px' ,color:'#C01823'}} >{ccError} </span>)}
-  </FormControl>
- 
-</Grid>
+                      setCcEmail(value);
 
-              
-            <Grid item xs={12}>
-              <Typography
-                variant="body2"
-                sx={{
-                  wordWrap: "break-word",
-                  overflowWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                {t("Note: ") +
-                  t(
-                    "If you have already submitted, please wait 15 minutes to receive the email."
+                      // validate
+                      if (value && !validateEmails(value)) {
+                        setCcError(
+                          "Invalid email format. Use comma-separated values."
+                        );
+                      } else {
+                        setCcError("");
+                      }
+                    }}
+                    error={Boolean(ccError)}
+                    // helperText={t(ccError)}
+                    sx={{
+                      m: 0,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px !important",
+                      },
+                      "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
+                        {
+                          width: "200px",
+                        },
+                    }}
+                  />
+                  {ccError && (
+                    <span
+                      style={{
+                        wordBreak: "break-all",
+                        width: "200px",
+                        color: "#C01823",
+                      }}
+                    >
+                      {ccError}{" "}
+                    </span>
                   )}
-              </Typography>
-            </Grid>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    wordWrap: "break-word",
+                    overflowWrap: "break-word",
+                    whiteSpace: "normal",
+                  }}
+                >
+                  {t("Note: ") +
+                    t(
+                      "If you have already submitted, please wait 15 minutes to receive the email."
+                    )}
+                </Typography>
+              </Grid>
             </Grid>
 
             {/* BUTTONS */}
             <Grid item xs={12}>
-              <Grid
-                container
-            justifyContent="flex-end"
-                spacing={2}
-              >
+              <Grid container justifyContent="flex-end" spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Button
                     fullWidth
@@ -2898,7 +2907,12 @@ function FinancialInformation({
                       py: 1.3,
                       borderRadius: 2,
                       fontSize: "16px",
-                      backgroundColor: "#0B4C45 !important",
+                      backgroundColor: "#009345",
+                      color: "#fff",
+                      "&:hover": {
+                        background: "#004d43",
+                        color: "#fff",
+                      },
                     }}
                     onClick={handleSubmit}
                     disabled={isSubmited}
@@ -2915,8 +2929,12 @@ function FinancialInformation({
                       py: 1.3,
                       borderRadius: 2,
                       fontSize: "16px",
-                      backgroundColor: "#C01823",
-                      color: "#ffff",
+                      background: "#fff",
+                      color: "#222",
+                      "&:hover": {
+                        background: "#f7f8fa",
+                        color: "#00594c",
+                      },
                     }}
                     onClick={() => {
                       setOpen(false);

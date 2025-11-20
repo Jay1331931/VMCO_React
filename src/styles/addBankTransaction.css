@@ -64,15 +64,23 @@
 }
 
 .submit-btn {
-  background-color: #00594c;
-  color: white;
+ background: var(--logo-light-green);
+  color: #fff;
+}
+.submit-btn:hover {
+  background: #004d43;
+  color: #fff;
 }
 
 .cancel-btn {
-  background-color: #f44336;
-  color: white;
+  background: #fff;
+  color: #222;
 }
 
+.cancel-btn:hover {
+  background: #f7f8fa;
+  color: #00594c;
+}
 .form-footer {
   display: flex;
   justify-content: space-between;

@@ -237,7 +237,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         aspect-ratio: 1/1;
                         object-fit: contain;
                         border-radius: 8px;
-                        background: #F3F3F3;
+                        background: var(--bg-transparent, transparent);
                         margin-bottom: 18px;
                         min-width: 280px;
                         min-height: 280px;
