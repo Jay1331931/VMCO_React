@@ -826,6 +826,8 @@
    "Note: ":"ملحوظة: ",
    "comma separated emails.":"رسائل البريد الإلكتروني مفصولة بفاصلة.",
    "Payment Opations":"رسائل البريد الإلكتروني مفصولة بفاصلة.",
-   "Tap Payment":"اضغط على الدفع"
+   "Tap Payment":"اضغط على الدفع",
+   "From Date cannot be greater than To Date.":"لا يمكن أن يكون تاريخ من أكبر من تاريخ إلى.",
+   "Invalid Date Range":"نطاق تاريخ غير صالح"
 
 }
