@@ -39,6 +39,7 @@ const OptionsPage = () => {
   const { token ,user} = useAuth();
   const navigate = useNavigate();
   const cookieToken = getCookie("token");
+  console.log("user",user)
   // if (orderId &&!token ){
   //   try {
   //     const generateToken=async () => {
@@ -761,10 +762,10 @@ console.log("currentEntity",isMatch,currentEntity)
             }}
             onClick={() => handlePayment("CardPay")}
           >
-            Cards Pay
+            Cards Pay 
           </Button>
 
-          {showApplePay && (isMobile || isDesktop) && (
+          {showApplePay && (isMobile || isDesktop)&&(user?.designation?.toLowerCase()=="admin")&& (
             <Button
               fullWidth
               variant="contained"
