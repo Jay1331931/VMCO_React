@@ -239,6 +239,8 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
     maxHeight: 80,
     width: "100%",          // ✅ force full width
     boxSizing: "border-box", // ✅ ensures padding doesn’t shrink width
+    paddingLeft: "0px",
+    paddingRight: "0px",
   }}
 >
   {/* Left Side */}
@@ -250,9 +252,10 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
       flex: 1,
       marginRight: "8px",
       width: "100%", // ✅ ensures left content spans fully if alone
+      // paddingLeft: "10px",
     }}
   >
-<Grid item xs={12} sx={{ px: 2, py: 1.5 }}>
+<Grid item xs={12} sx={{ px: 2, py: 1.5, paddingLeft: "10px" }}>
                   <Typography fontSize={14} fontWeight={600} color="textSecondary" >
                     {`${t("Order #")}${order?.id}`}
                   </Typography>
@@ -283,9 +286,10 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
       justifyContent: "center",
       minWidth: "90px",
       flexShrink: 0, // ✅ prevents right side from squeezing
+      // paddingRight: "10px",
     }}
   >
-    <Grid item xs={12} sx={{ px: 2, py: 1.5 }}>
+    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingRight: "10px" }}>
                 {/* Footer / Action */}
                 <Typography
                     fontSize={14}

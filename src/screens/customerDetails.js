@@ -2264,13 +2264,19 @@ if (uniqueFieldsList.includes(field) && value) {
         }
       );
       console.log("Response", response);
-
       // Keep loading for 3 seconds then reload
       setTimeout(() => {
         setIsSubmitting(false);
         setIsLoading(false);
+        Swal.fire({
+      icon: "success",
+      title: t("Success"),
+      text: t("Your account is under review"),
+      confirmButtonText: t("OK"),
+    }).then(() => {
         window.location.reload(true);
-      }, 3000);
+      });
+    }, 3000);
     } catch (error) {
       setIsSubmitting(false);
       setIsLoading(false);
