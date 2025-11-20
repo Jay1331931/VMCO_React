@@ -762,9 +762,9 @@ console.log("currentEntity",isMatch,currentEntity)
             }}
             onClick={() => handlePayment("CardPay")}
           >
-            Cards Pay {showApplePay}  {isDesktop}
+            Cards Pay 
           </Button>
-{/* //  */}
+
           {showApplePay && (isMobile || isDesktop)&&(user?.designation?.toLowerCase()=="admin")&& (
             <Button
               fullWidth
