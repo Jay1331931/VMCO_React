@@ -595,7 +595,7 @@ body.catalog-page #root {
   border: 1px solid #d9d9d6;
   border-radius: var(--border-radius);
   overflow: hidden;
-  background: white;
+  background: var(--bg-transparent);
   /* min-width: 150px; */
   /* Set minimum width for cards */
   height: 100%;
@@ -616,6 +616,7 @@ body.catalog-page #root {
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: var(--bg-transparent);
 }
 /* .product-img {
   width: 100%;
@@ -631,7 +632,7 @@ body.catalog-page #root {
   position: relative;
   overflow: hidden;
   border-radius: var(--border-radius);
-  background-color: #f0f0f0;
+  background-color: var(--bg-transparent);
 }
 .responsive-product-image {
   width: 100%;
