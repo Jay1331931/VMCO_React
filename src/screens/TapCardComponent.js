@@ -440,7 +440,7 @@ const TapCardPayment = () => {
         justifyContent: "center",
         alignItems: "flex-start",
         minHeight: "90vh",
-        bgcolor: "#f7f9fb",
+        // bgcolor: "#f7f9fb",
         py: 5,
         px: 2,
       }}
@@ -456,7 +456,7 @@ const TapCardPayment = () => {
         }}
       >
         {/* Header */}
-        <CardHeader
+        {/* <CardHeader
           title={
             <Box
               display="flex"
@@ -470,10 +470,10 @@ const TapCardPayment = () => {
               </Typography>
             </Box>
           }
-          subheader={t("Pay securely using your saved or new card")}
+          subheader={t("Please don't refresh the page.")}
           sx={{ textAlign: "center", pb: 0 }}
         />
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 2 }} /> */}
 
         <CardContent>
           {/* Amount */}

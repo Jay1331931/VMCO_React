@@ -244,7 +244,7 @@ const PaymentPage = () => {
                 }}
               >
              
-            Note:  Please close this page and open the Talab Point app to continue.
+            Note:  Please close this window to continue.
    
               </Typography>)}
             {!isMobile&&<Button
