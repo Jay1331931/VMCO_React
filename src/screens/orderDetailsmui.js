@@ -2918,47 +2918,47 @@ function OrderDetails() {
       },
     },
     {
-      field: 'lineDiscount',
-      headerName: t('Discount') + ' %',
-      include: fromApproval && isV('lineDiscountCol'),
+      field: "lineDiscount",
+      headerName: t("Discount"),
+      include: formData.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase(),
       minWidth: 120,
       flex: 1,
-      editable: false,
       renderCell: (params) => {
         const row = params.row;
         const idx = formData.products.findIndex(
           (p) => (p.id || p.productid) === (row.id || row.productid)
         );
-
         const productKey = row.id || row.productid;
-        const displayValue = editingDiscount[productKey] !== undefined
-          ? editingDiscount[productKey]
-          : (row.lineDiscount || 0);
+
+        const displayValue =
+          editingDiscount[productKey] !== undefined
+            ? editingDiscount[productKey]
+            : row.lineDiscount || 0;
+        const isEditable = fromApproval;
 
         return (
           <input
             type="number"
             value={displayValue}
             onChange={(e) => {
-              if (!isE('lineDiscountCol')) return;
+              if (!isEditable) return;
 
               const value = e.target.value;
-
               // Update local state immediately for smooth typing
-              setEditingDiscount(prev => ({
+              setEditingDiscount((prev) => ({
                 ...prev,
-                [productKey]: value
+                [productKey]: value,
               }));
             }}
             onBlur={(e) => {
-              if (!isE('lineDiscountCol')) return;
+              if (!isEditable) return;
 
               const value = parseFloat(e.target.value);
 
               // Validate range
               if (isNaN(value) || value < 0 || value > 100) {
                 // Reset to original value if invalid
-                setEditingDiscount(prev => {
+                setEditingDiscount((prev) => {
                   const newState = { ...prev };
                   delete newState[productKey];
                   return newState;
@@ -2967,12 +2967,9 @@ function OrderDetails() {
               }
 
               if (idx !== -1) {
-                console.log('Line discount changed for index:', idx, 'value:', value);
-                // Call API to update price
+                console.log("Line discount changed for index", idx, "value:", value);
                 handleLineDiscountChange(idx, value);
-
-                // Clear the editing state after API call
-                setEditingDiscount(prev => {
+                setEditingDiscount((prev) => {
                   const newState = { ...prev };
                   delete newState[productKey];
                   return newState;
@@ -2980,23 +2977,25 @@ function OrderDetails() {
               }
             }}
             onKeyPress={(e) => {
-              // Trigger on Enter key
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 e.target.blur();
               }
             }}
-            disabled={!isE('lineDiscountCol')}
+            disabled={!isEditable}
             min={0}
             max={100}
             step={0.01}
             style={{
-              textAlign: 'center',
-              padding: '4px 8px',
-              fontSize: '14px',
-              width: '100%',
-              maxWidth: '80px',
-              border: '1px solid #ddd',
-              borderRadius: '4px'
+              textAlign: "center",
+              padding: "4px 8px",
+              fontSize: "14px",
+              width: "100%",
+              maxWidth: "80px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              cursor: isEditable ? "text" : "not-allowed",
+              backgroundColor: isEditable ? "#fff" : "#f5f5f5",
+              color: isEditable ? "#000" : "#999",
             }}
           />
         );
