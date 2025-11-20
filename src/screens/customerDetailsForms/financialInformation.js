@@ -2715,8 +2715,8 @@ function FinancialInformation({
             p: 3,
           }}
         >
-          <Typography variant="h6" textAlign="center" mb={2}>
-            {t("Request Statement of Account")}
+          <Typography variant="h4" textAlign="center" mb={2}>
+            {t("Account Statement")}
           </Typography>
 
           <Grid container spacing={2}>
@@ -2801,6 +2801,7 @@ function FinancialInformation({
               <TextField
                 value={originalCustomerContactsData?.primaryContactEmail || ""}
                 InputProps={{ readOnly: true }}
+              disabled={true}
                    sx={{
                    m:0,
         "& .MuiOutlinedInput-root": {
@@ -2820,7 +2821,7 @@ function FinancialInformation({
 
     <TextField
       fullWidth
-      placeholder="abs@gmail.com, abs1@gmail.com"
+      placeholder={t("comma separated emails.")}
       value={ccEmail}
     onChange={(e) => {
                   const value = e.target.value;
@@ -2862,9 +2863,9 @@ function FinancialInformation({
                   whiteSpace: "normal",
                 }}
               >
-                {t("Note :") +
+                {t("Note: ") +
                   t(
-                    "If you have already submitted, please wait 15 minutes to receive the email"
+                    "If you have already submitted, please wait 15 minutes to receive the email."
                   )}
               </Typography>
             </Grid>
