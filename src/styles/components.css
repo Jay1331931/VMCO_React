@@ -1062,6 +1062,7 @@ body.catalog-page #root {
 }
 .catalog-fixed-header {
   padding: 20px 0px 10px 0px;
+  border-bottom: none !important;
 }
   .page-header {
     flex-direction: column;
@@ -1139,12 +1140,12 @@ body.catalog-page #root {
     padding: 5px;
   }
   .action-menu {
-    width: 160px;
-    min-width: 160px;
+    /* width: 160px; */
+    /* min-width: 160px; */
     z-index: 100;
   }
   .action-menu-item {
-    padding: 12px 16px;
+    /* padding: 12px 16px; */
     font-size: 1rem;
   }
   .search-section {
@@ -1851,6 +1852,8 @@ body.catalog-page #root {
     /* width: 48%; */
     padding: 0px 0;
     text-align: center;
+    width: 85%;
+    height: 35px;
   }
   .order-action-btn.approve {
     width: 100%;
@@ -2794,6 +2797,7 @@ display: flex;
   color: #222;
   font-weight: 600;
   margin-left: 10px;
+  margin-right: 10px;
 }
 
 .branches-status-badge {

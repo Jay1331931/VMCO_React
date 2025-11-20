@@ -3,8 +3,9 @@ import { Grid, Typography, Button, Tooltip } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import BusinessIcon from "@mui/icons-material/Business";
 import SyncIcon from "@mui/icons-material/Sync";
-
+import { useTranslation } from "react-i18next";
 function CustomerCard({ customers, handleViewDetails, handleSync }) {
+  const { t, i18n } = useTranslation();
   // Status colors (matching your OrderCard style)
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -106,7 +107,7 @@ function CustomerCard({ customers, handleViewDetails, handleSync }) {
                     noWrap
                     title={customer?.companyNameEn || "Unnamed"}
                   >
-                    {customer?.companyNameEn || "Unnamed"}
+                    {i18n.language === "ar" ? customer?.companyNameAr || "Unnamed" : customer?.companyNameEn || "Unnamed"}
                   </Typography>
                   <Typography
                     fontSize={12}
@@ -138,7 +139,7 @@ function CustomerCard({ customers, handleViewDetails, handleSync }) {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {customer?.customerStatus || "Unknown"}
+                    {t(customer?.customerStatus) || t("Unknown")}
                   </Typography>
                 </div>
               </Grid>
@@ -175,13 +176,13 @@ function CustomerCard({ customers, handleViewDetails, handleSync }) {
                       fontSize="small"
                       sx={{ mr: 0.5, verticalAlign: "middle" }}
                     />{" "} */}
-                    {customer?.companyType || "—"}
+                    {t(customer?.companyType) || "—"}
                   </Typography>
                   <Typography fontSize={12} color="#666">
-                    {customer?.typeOfBusiness || "Type N/A"}
+                    {t(customer?.typeOfBusiness) || t("Type N/A")}
                   </Typography>
                   <Typography fontSize={12} color="#666">
-                    Branches: {customer?.branchCount ?? 0}
+                    {`${t("Branches")}: ${customer?.branchCount ?? 0}`}
                   </Typography>
                 </div>
 

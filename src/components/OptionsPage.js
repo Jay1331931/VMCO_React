@@ -572,6 +572,9 @@ const allowedEntities = Object.values({
 const currentEntity = TempOrderDetails?.[0]?.entity?.toLowerCase();
 const isMatch = allowedEntities.includes(currentEntity);
 console.log("currentEntity",isMatch,currentEntity)
+     const isMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+       const Mobile =  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+     const isDesktop = !Mobile;
   return (
     <div className="options-container">
       <div className="button-wrapper">
@@ -599,7 +602,7 @@ console.log("currentEntity",isMatch,currentEntity)
           OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.GMTC?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
-            Constants.ENTITY?.SHC?.toLowerCase() || isMatch) && (
+            Constants.ENTITY?.SHC?.toLowerCase() || isMatch)&&(isMobile || isDesktop) && (
           <button
             onClick={() => handlePayment("Apple Pay")}
             className="option-button black"

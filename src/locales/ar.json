@@ -9,6 +9,7 @@
     "Settings": "الإعدادات",
     "Content goes here": "يتم عرض المحتوى هنا",
     "Talab Point": "نقطة طلب",
+    "Your data is saved successfully.": "تم حفظ بياناتك بنجاح.",
     "Customer": "العميل",
     "customer@consumer": "العميل@المستهلك",
     "Search...": "بحث...",
@@ -106,6 +107,7 @@
     "Upload": "تحميل",
     "Save Changes": "حفظ التغييرات",
     "Block": "حظر",
+    "blocked": "حظر",
     "Customer Approval Checklist": "قائمة مراجعة الموافقة على العميل",
     "Same as Primary Contact Details": "نفس تفاصيل جهة الاتصال الرئيسية",
     "Value": "القيمة",
@@ -169,7 +171,7 @@
     "Sub category": "الفئة الفرعية",
     "ADD TO CART": "أضف إلى السلة",
     "Price: ": " السعر:",
-    "Unit Price:": ": سعر الوحدة",
+    "Unit Price: ": ": سعر الوحدة ",
     "VMCO Machines": "آلات VMCO",
     "VMCO Consumables": "VMCO مستهلكات",
     "VMCO": "في إم سي أو",
@@ -249,6 +251,7 @@
     "Your Cart": "سلتك",
     "Company Type": "نوع الشركة",
     "ERP ID": "معرف ERP",
+    "Customer ERP ID": "معرف تخطيط موارد المؤسسات (ERP) للعميل",
     "Registration ID": "معرف التسجيل",
     "Workflow Name": "اسم سير العمل",
     "Government Registration #": "رقم التسجيل الحكومي",
@@ -532,6 +535,7 @@
     "Your account is under review": "حسابك قید المراجعة ",
     "Click and drag to sign": "انقر واسحب للتوقيع",
     "Save Signature": "حفظ التوقيع",
+    "Confirm Signature": "تأكيد التوقيع",
     "Clear": "واضح",
     "Terms and Conditions": "الشروط والأحكام",
     "Please fix the errors before saving.": "يرجى تصحيح الأخطاء قبل الحفظ.",
@@ -817,7 +821,8 @@
    "Invalid email format. Use comma-separated values.":"تنسيق البريد الإلكتروني غير صحيح. استخدم قيمًا مفصولة بفواصل.",
    "Account Statement":"كشف الحساب",
    "Statement of Account":"كشف حساب",
-   "Please enter a machine serial number and get the Warranty End Date":"الرجاء إدخال الرقم التسلسلي للجهاز والحصول على تاريخ انتهاء الضمان"
-
+   "Please enter a machine serial number and get the Warranty End Date":"الرجاء إدخال الرقم التسلسلي للجهاز والحصول على تاريخ انتهاء الضمان",
+   "If you have already submitted, please wait 15 minutes to receive the email.":"إذا كنت قد قمت بالتقديم بالفعل، يرجى الانتظار 15 دقيقة لتلقي البريد الإلكتروني.",
+   "Note :":"ملحوظة :"
 
 }

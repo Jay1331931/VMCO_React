@@ -2,10 +2,10 @@ import { Button, Grid, Typography, Tooltip } from "@mui/material";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
+import { useTranslation } from "react-i18next";
 function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) {
   const navigate = useNavigate();
-
+  const { t, i18n } = useTranslation();
   const handleTicketClick = (ticket) => setSelectedRow(ticket);
 
   // 🎨 Status-based colors
@@ -139,9 +139,11 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
                         width: "100%",
                       }}
                     >
-                      {ticket?.companyNameEn || "Unknown Customer"}
+                      {i18n.language === "ar"
+                        ? ticket?.companyNameAr || "Unknown Customer"
+                        : ticket?.companyNameEn || "Unknown Customer"}
                     </Typography>
-                    <Typography
+                    {/* <Typography
                       fontSize={12}
                       color="white"
                       sx={{
@@ -154,7 +156,7 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
                       title={ticket?.erpCustId}
                     >
                       ERP ID: {ticket?.erpCustId || "-"}
-                    </Typography>
+                    </Typography> */}
                   </div>
 
                   {/* Right Side */}
@@ -180,7 +182,7 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {ticket?.status || "N/A"}
+                      {t(ticket?.status) || t("N/A")}
                     </Typography>
                     <Typography fontSize={11} fontWeight={500} color="white">
                       {formatDate(ticket?.createdAt)}
@@ -217,13 +219,13 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
                     }}
                   >
                     <Typography fontSize={14} fontWeight={600} color="textSecondary">
-                      {`Ticket #${ticket?.ticketId}`}
+                      {`${t("Ticket #")} ${ticket?.ticketId}`}
                     </Typography>
                     <Typography fontSize={12} color="textSecondary" sx={{ mt: 0.3 }}>
-                      Issue: {ticket?.grievanceName || "-"}
+                      {`${t("Issue Name")}: ${ticket?.grievanceName || "-"}`}
                     </Typography>
                     <Typography fontSize={12} color="textSecondary" sx={{ mt: 0.3 }}>
-                      Type: {ticket?.grievanceType || "-"}
+                      {`${t("Issue Type")}: ${ticket?.grievanceType || "-"}`}
                     </Typography>
                   </div>
 

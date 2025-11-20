@@ -51,7 +51,7 @@ function CustomersOnboarding() {
   const [isOtpLoading, setIsOtpLoading] = useState(false);
   const [isVerifyLoading, setIsVerifyLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -189,6 +189,12 @@ function CustomersOnboarding() {
       fetchInvitationData();
     }
   }, [id]);
+  useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
   const getManagerFromEmployees = async (region) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/employees/random`, {
@@ -285,7 +291,7 @@ function CustomersOnboarding() {
     // Check all required fields are filled
     fields.forEach((field) => {
       if (field.required && !formData[field.name]?.trim()) {
-        newErrors["password"] = t("Please fill out all required fields");
+        newErrors["requiredFields"] = t("Please fill out all required fields");
       }
     });
 
@@ -971,11 +977,16 @@ function CustomersOnboarding() {
                               </button>
                             )}
                           </div>
-                          {errors[field.name] && (
-                            <span className="error-message">
-                              {errors[field.name]}
-                            </span>
-                          )}
+                          <>
+                          <>
+  {errors["requiredFields"] && !isMobile && field.name === "password"
+    ? <span className="error-message">{errors["requiredFields"]}</span>
+    : errors["requiredFields"] && isMobile && field.name === "confirmpassword" ? <span className="error-message">{errors["requiredFields"]}</span> : errors[field.name] &&
+      <span className="error-message">{errors[field.name]}</span>
+  }
+</>
+                          </>
+                          
                         </>
                       )}
                       {field.type === "dropdown" && (

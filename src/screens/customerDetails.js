@@ -1807,7 +1807,7 @@ if (uniqueFieldsList.includes(field) && value) {
     Swal.fire({
       icon: "success",
       title: t("Success"),
-      text: t("Your account is under review"),
+      text: t("Your data is saved successfully."),
       confirmButtonText: t("OK"),
     });
     // alert("Customer data saved successfully.");

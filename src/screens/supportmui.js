@@ -562,6 +562,7 @@ function Support() {
                                             },
                                         }}
                                        sx={{
+                                        border: "none !important",
                         "& .MuiDataGrid-overlay": {
                           display: "none !important", // ✅ hides “No rows” message
                         },
@@ -585,7 +586,7 @@ function Support() {
                           // backgroundColor: "#fff", // ensures it doesn't become transparent
                           // borderBottom: "1px solid #e0e0e0",
                           padding: "0px",
-                          gap: "0px",
+                          gap: "10px",
                           border: "none",
                         },
 
@@ -637,7 +638,7 @@ function Support() {
                                 hideFooter={true}
                                 hideFooterPagination={true}
                                 pagination={false}
-                                autoHeight
+                                // autoHeight
                                 rowHeight={55}
                                 showToolbar
                                 onColumnResize={handleColumnResize}
