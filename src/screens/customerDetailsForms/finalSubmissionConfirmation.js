@@ -400,7 +400,7 @@ const FinalSubmissionConfirmation = ({
                 }
                 className="custom-file-button"
               >
-                {t("Save Signature")}
+                {t("Confirm Signature")}
               </button>
               <button
                 type="button"

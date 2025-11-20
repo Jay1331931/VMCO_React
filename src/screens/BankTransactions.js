@@ -377,7 +377,7 @@ const BankTransactions = () => {
                                 columnVisibilityModel={columnVisibilityModel}
                                 searchPlaceholder={t("Search transactions...")}
                                 showColumnVisibility={false}
-                                showFilters={true}
+                                showFilters={false}
                                 showExport={false}
                                 showUpload={false}
                                 showAdd={isV('btnAdd')}
@@ -407,7 +407,7 @@ const BankTransactions = () => {
                             },
                             "& .MuiDataGrid-toolbar": {
                               padding: "0px",
-                              gap: "0px",
+                              gap: "10px",
                               border: "none",
                             },
                             "&.catalog-datagrid": {

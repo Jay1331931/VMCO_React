@@ -4972,7 +4972,7 @@ function OrderDetails() {
 
                                       <div className="product-meta">
                                         <p>
-                                          {t("Unit Price")}:{" "}
+                                          {t("Unit Price: ")}
                                           <strong>
                                             {Number(item.unitPrice || item.price || 0).toFixed(2)}{" "}
                                             {t("SAR")}
@@ -4982,7 +4982,7 @@ function OrderDetails() {
                                           {t("Quantity")}: <strong>{item.quantity || 0}</strong>
                                         </p>
                                         <p>
-                                          {t("VAT")}: <strong>{Number(item.vatPercentage)}%</strong>
+                                          {t("VAT: ")}<strong>{Number(item.vatPercentage)}%</strong>
                                         </p>
                                         <div
                                           className="quantity-controller"
