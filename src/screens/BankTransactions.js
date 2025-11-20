@@ -272,6 +272,14 @@ const BankTransactions = () => {
       minWidth: 130
     },
     {
+      field: "createdByName",
+      headerName: t("Created By"),
+      include: isV("createdByNameCol"),
+      searchable: true,
+      flex: 1,
+      minWidth: 130
+    },
+    {
       field: "modifiedByName",
       headerName: t("Verified By"),
       include: isV("modifiedByNameCol"),
@@ -306,6 +314,7 @@ const BankTransactions = () => {
     erpOrderId: "ERP Order ID",
     transactionDate: "Transaction Date",
     createdAt: "Created Date",
+    createdByName: "Created By",
     modifiedByName: "Verified By",
     status: "Transaction Status",
   };
@@ -392,8 +401,8 @@ const BankTransactions = () => {
                             ),
                           }}
                           sx={{
-                      border: "none !important",
-                        "& .MuiDataGrid-overlay": {
+                            border: "none !important",
+                            "& .MuiDataGrid-overlay": {
                               display: "none !important",
                             },
                             "& .MuiDataGrid-row": {
