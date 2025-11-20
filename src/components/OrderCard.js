@@ -4,6 +4,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import CustomToolbarMobile from "../components/CustomToolbarMobile";
 import { useTranslation } from "react-i18next";
+import Constants from "../constants";
 
 function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }) {
   const navigate = useNavigate();
@@ -298,7 +299,30 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                   >
                     {`${Number(order?.totalAmount || 0).toFixed(2)} ${t("SAR")}`}
                   </Typography>
-                {((order?.paymentStatus?.toLowerCase() === "pending") &&
+                {( order?.status?.toLowerCase() !== "cancelled" &&
+                            order?.status?.toLowerCase() !== "rejected" &&
+                            order?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+                            order?.paymentMethod?.toLowerCase() !== "credit" &&
+                            order?.paymentStatus?.toLowerCase() !== "paid" &&
+                            ((order?.entity.toLowerCase() ===
+                              Constants.ENTITY.VMCO.toLowerCase() &&
+                              order?.status?.toLowerCase() === "approved") ||
+                              (order?.status?.toLowerCase() === "open" &&
+                                (order?.entity.toLowerCase() ===
+                                  Constants.ENTITY.DAR.toLowerCase() ||
+                                  order?.entity.toLowerCase() ===
+                                  Constants.ENTITY.GMTC.toLowerCase() ||
+                                  order?.entity.toLowerCase() ===
+                                  Constants.ENTITY.SHC.toLowerCase())) ||
+                              (order?.status?.toLowerCase() === "pending" &&
+                                (order?.entity.toLowerCase() ===
+                                  Constants.ENTITY.DAR.toLowerCase() ||
+                                  order?.entity.toLowerCase() ===
+                                  Constants.ENTITY.GMTC.toLowerCase() ||
+                                  order?.entity.toLowerCase() ===
+                                  Constants.ENTITY.SHC.toLowerCase() ||
+                                  order?.entity.toLowerCase() ===
+                                  Constants.ENTITY.NAQI.toLowerCase())))&&
                   order?.paymentMethod?.toLowerCase() === "pre payment" ) ? (
                   <Grid
                     item
