@@ -2661,7 +2661,8 @@ function Orders() {
                             showColumnVisibility={false}
                             showFilters={false}
                             showExport={false}
-                            showUpload={isV("uploadButton")}
+                            // showUpload={isV("uploadButton")}
+                            showUpload={false}
                             showAdd={isV("addButton")}
                             buttonName={t("add")}
                             showApproval={
