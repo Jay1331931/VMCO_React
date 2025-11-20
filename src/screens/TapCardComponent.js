@@ -19,6 +19,7 @@ import {
   Stack,
 } from "@mui/material";
 import { Lock, Payment } from "@mui/icons-material";
+import Sidebar from "../components/Sidebar";
 const TapCardPayment = () => {
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -432,6 +433,7 @@ const TapCardPayment = () => {
     //     </p>
     //   )}
     // </div>
+        <Sidebar title={t("Tap Payment")}>
     <Box
       sx={{
         display: "flex",
@@ -679,7 +681,7 @@ const TapCardPayment = () => {
           </Box>
         </CardContent>
       </Card>
-    </Box>
+    </Box></Sidebar>
   );
 };
 
