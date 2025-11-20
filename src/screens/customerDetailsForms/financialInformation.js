@@ -407,6 +407,15 @@ function FinancialInformation({
   const handleSubmit = async () => {
     setIsSubmited(true);
     setOpen(false);
+   if (fromDate > toDate) {
+  Swal.fire({
+    icon: "error",
+    title: t("Invalid Date Range"),
+    text: t("From Date cannot be greater than To Date."),
+  });
+  setIsSubmited(false);
+  return;
+}
     const confirm = await Swal.fire({
       title: "Are you sure?",
       text: "If you have already submitted, please wait 15 minutes to receive the email.",
@@ -2755,6 +2764,9 @@ function FinancialInformation({
       <TextField
         type="date"
         value={fromDate}
+         inputProps={{
+          max: dayjs().format("YYYY-MM-DD"), 
+        }}
         onChange={(e) => setFromDate(e.target.value)}
         sx={{
           borderRadius: "12px",
