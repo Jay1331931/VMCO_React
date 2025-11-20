@@ -95,12 +95,7 @@ const ActionButton = ({ menuItems = [] }) => {
           .action-menu-container {
             padding: 5px;
           }
-          .action-menu {
-            width: 160px;
-            min-width: 160px;
-          }
           .action-menu-item {
-            padding: 12px 16px;
             font-size: 1rem;
           }
         }

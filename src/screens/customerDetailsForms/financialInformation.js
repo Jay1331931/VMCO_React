@@ -102,7 +102,7 @@ function FinancialInformation({
   const [toDate, setToDate] = useState(dayjs());
   const [ccEmail, setCcEmail] = useState("");
   const [ccError, setCcError] = useState("");
-  const [isSubmited,setIsSubmited]=useState(false)
+  const [isSubmited, setIsSubmited] = useState(false);
   useEffect(() => {
     setBankName(customerData?.bankName || "");
   }, [customerData?.bankName]);
@@ -405,30 +405,30 @@ function FinancialInformation({
   };
   const formatDate = (d) => dayjs(d).format("DD-MM-YYYY");
   const handleSubmit = async () => {
-    setIsSubmited(true)
-      setOpen(false);
-     const confirm = await Swal.fire({
-    title: "Are you sure?",
-    text: "If you have already submitted, please wait 15 minutes to receive the email.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Continue",
-    cancelButtonText: "Cancel",
-    confirmButtonColor: "#1976d2",
-    cancelButtonColor: "#d33",
-  });
+    setIsSubmited(true);
+    setOpen(false);
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "If you have already submitted, please wait 15 minutes to receive the email.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Continue",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#1976d2",
+      cancelButtonColor: "#d33",
+    });
 
-  // If cancel → stop
-  if (!confirm.isConfirmed) {
-       setCcEmail(null)
-        setToDate(dayjs())
-        setFromDate(dayjs())
-        setSelectedEntities([])
-      setIsSubmited(false)
-    return;
-  }
-  
-      setIsSubmited(false)
+    // If cancel → stop
+    if (!confirm.isConfirmed) {
+      setCcEmail(null);
+      setToDate(dayjs());
+      setFromDate(dayjs());
+      setSelectedEntities([]);
+      setIsSubmited(false);
+      return;
+    }
+
+    setIsSubmited(false);
     if (ccEmail && !validateEmails(ccEmail)) {
       Swal.fire({
         icon: "error",
@@ -450,7 +450,10 @@ function FinancialInformation({
       entity: `{${selectedEntities.map((e) => `"${e}"`).join(",")}}`,
       fromDate: formatDate(fromDate),
       toDate: formatDate(toDate),
-      email: user?.userType?.toLowerCase() == "employee"? user.email : originalCustomerContactsData?.primaryContactEmail || "",
+      email:
+        user?.userType?.toLowerCase() == "employee"
+          ? user.email
+          : originalCustomerContactsData?.primaryContactEmail || "",
       cc: ccEmail,
       erpCustomerId: customerData?.erpCustId,
       assignedTo: customerData?.assignedTo,
@@ -470,11 +473,11 @@ function FinancialInformation({
       // Check if the request was successful
       if (data.success) {
         // Success popup
-        setCcEmail(null)
-        setToDate(dayjs())
-        setFromDate(dayjs())
-        setSelectedEntities([])
-        
+        setCcEmail(null);
+        setToDate(dayjs());
+        setFromDate(dayjs());
+        setSelectedEntities([]);
+
         Swal.fire({
           icon: "success",
           title: "Request Submitted",
@@ -502,8 +505,6 @@ function FinancialInformation({
         text: errorMessage,
       });
     }
-    
-    
   };
 
   const validateEmails = (value) => {
@@ -2035,18 +2036,21 @@ function FinancialInformation({
               {isLoading ? t("Loading...") : t("Get Credit Balance")}
             </button>
           </div>
-          {isV("isStatementofAccount")&& customerData?.erpCustId&&(<><h3 className="form-header full-width">{t("Account Statement")}</h3>
-          <div>
-            <button
-              onClick={() => setOpen(true)}
-              className="action-button save"
-            >
-              {t("Statement of Account")}
-            </button>
-          </div></>)
-
-          }
-          
+          {isV("isStatementofAccount") && customerData?.erpCustId && (
+            <>
+              <h3 className="form-header full-width">
+                {t("Account Statement")}
+              </h3>
+              <div>
+                <button
+                  onClick={() => setOpen(true)}
+                  className="action-button save"
+                >
+                  {t("Statement of Account")}
+                </button>
+              </div>
+            </>
+          )}
         </>
       )}
       {/* {isCreditBalanceData && (
@@ -2719,7 +2723,9 @@ function FinancialInformation({
             {/* SELECT ENTITY */}
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <FormLabel sx={{ fontWeight: 600 }}>{t("Select Entity")}</FormLabel>
+                <FormLabel sx={{ fontWeight: 600 }}>
+                  {t("Select Entity")}
+                </FormLabel>
 
                 <Grid container spacing={1} sx={{ mt: 1 }}>
                   {Object.keys(customerData?.assignedToEntityWise || {}).map(
@@ -2740,78 +2746,83 @@ function FinancialInformation({
                 </Grid>
               </FormControl>
             </Grid>
+ <Grid container spacing={2}>
 
-
-<LocalizationProvider dateAdapter={AdapterDayjs}>
-  <Grid container spacing={2}>
-
-    {/* FROM DATE */}
-    <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
-      <FormControl fullWidth>
-        <FormLabel>{t("From Date")}</FormLabel>
-        <DatePicker
-          value={fromDate}
-          onChange={(newValue) => setFromDate(newValue)}
-          sx={{ width: "100%" }}
-           slotProps={{
-            textField: {
-              sx: {
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px !important", 
-                },
-              },
-            },
-          }}
-        />
-      </FormControl>
-    </Grid>
-
-    {/* TO DATE */}
-    <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
-      <FormControl fullWidth>
-        <FormLabel>{t("To Date")}</FormLabel>
-        <DatePicker
-          value={toDate}
-          maxDate={dayjs()}
-          onChange={(newValue) => setToDate(newValue)}
-          sx={{ width: "100%" }}
-           slotProps={{
-            textField: {
-              sx: {
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px !important", 
-                },
-              },
-            },
-          }}
-        />
-      </FormControl>
-    </Grid>
-
+  {/* FROM DATE */}
+   <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
+    <FormControl fullWidth>
+      <FormLabel>{t("From Date")}</FormLabel>
+      <TextField
+        type="date"
+        value={fromDate}
+        onChange={(e) => setFromDate(e.target.value)}
+        sx={{
+          borderRadius: "12px",
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "12px",
+          },
+          "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":{
+            width:'200px'
+          }
+        }}
+        InputLabelProps={{ shrink: true }}
+      />
+    </FormControl>
   </Grid>
-</LocalizationProvider>
 
-
-
-
-
-            {/* EMAIL */}
-            <Grid item xs={12}>
+  {/* TO DATE */}
+   <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
+    <FormControl fullWidth>
+      <FormLabel>{t("To Date")}</FormLabel>
+      <TextField
+        type="date"
+        value={toDate}
+        onChange={(e) => setToDate(e.target.value)}
+        inputProps={{
+          max: dayjs().format("YYYY-MM-DD"), // restrict future dates
+        }}
+        sx={{
+          borderRadius: "12px",
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "12px",
+          },
+           "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":{
+            width:'200px'
+          }
+        }}
+        InputLabelProps={{ shrink: true }}
+      />
+    </FormControl>
+  </Grid>
+         <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
+               
+            <FormControl fullWidth>
+ <FormLabel>{t("Email")}</FormLabel>
               <TextField
-                label={t("Email")}
                 value={originalCustomerContactsData?.primaryContactEmail || ""}
-                
                 InputProps={{ readOnly: true }}
+                   sx={{
+                   m:0,
+        "& .MuiOutlinedInput-root": {
+          borderRadius: "12px !important",
+        }, "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":{
+            width:'200px'
+          }
+      }}
               />
+                </FormControl>
             </Grid>
 
-            {/* CC EMAIL */}
-            <Grid item xs={12}>
-              <TextField
-                label={t("CC")}
-               placeholder="abs@gmail.com, abs1@gmail.com"
-                value={ccEmail}
-                onChange={(e) => {
+        <Grid item xs={12} sm={6} md={6} lg={5} xl={6}>
+         
+  <FormControl fullWidth>
+    <FormLabel>{t("CC")}</FormLabel>
+
+    <TextField
+      fullWidth
+      placeholder="abs@gmail.com, abs1@gmail.com"
+      value={ccEmail}
+    onChange={(e) => {
                   const value = e.target.value;
 
                   setCcEmail(value);
@@ -2825,11 +2836,23 @@ function FinancialInformation({
                     setCcError("");
                   }
                 }}
-                error={Boolean(ccError)}
-                helperText={t(ccError)}
-                
-              />
-            </Grid>
+      error={Boolean(ccError)}
+      // helperText={t(ccError)}
+      sx={{
+           m:0,
+        "& .MuiOutlinedInput-root": {
+          borderRadius: "12px !important",
+        }, "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":{
+            width:'200px'
+          }
+      }}
+    />
+   {ccError && (<span style={{ wordBreak: "break-all",width:'200px' ,color:'#C01823'}} >{ccError} </span>)}
+  </FormControl>
+ 
+</Grid>
+
+              
             <Grid item xs={12}>
               <Typography
                 variant="body2"
@@ -2839,22 +2862,35 @@ function FinancialInformation({
                   whiteSpace: "normal",
                 }}
               >
-                {t("Note :") + t("If you have already submitted, please wait 15 minutes to receive the email")}
+                {t("Note :") +
+                  t(
+                    "If you have already submitted, please wait 15 minutes to receive the email"
+                  )}
               </Typography>
+            </Grid>
             </Grid>
 
             {/* BUTTONS */}
             <Grid item xs={12}>
-              <Grid container spacing={2}>
+              <Grid
+                container
+            justifyContent="flex-end"
+                spacing={2}
+              >
                 <Grid item xs={12} sm={6}>
                   <Button
                     fullWidth
                     variant="contained"
-                    sx={{ py: 1.3, borderRadius: 2, fontSize: "16px" }}
+                    sx={{
+                      py: 1.3,
+                      borderRadius: 2,
+                      fontSize: "16px",
+                      backgroundColor: "#0B4C45 !important",
+                    }}
                     onClick={handleSubmit}
                     disabled={isSubmited}
                   >
-                    {isSubmited ? t('Submitting'):t("Submit")}
+                    {isSubmited ? t("Submitting") : t("Submit")}
                   </Button>
                 </Grid>
 
@@ -2862,12 +2898,19 @@ function FinancialInformation({
                   <Button
                     fullWidth
                     variant="outlined"
-                    sx={{ py: 1.3, borderRadius: 2, fontSize: "16px" }}
-                    onClick={() => {setOpen(false)
-                        setCcEmail(null)
-        setToDate(dayjs())
-        setFromDate(dayjs())
-        setSelectedEntities([])
+                    sx={{
+                      py: 1.3,
+                      borderRadius: 2,
+                      fontSize: "16px",
+                      backgroundColor: "#C01823",
+                      color: "#ffff",
+                    }}
+                    onClick={() => {
+                      setOpen(false);
+                      setCcEmail(null);
+                      setToDate(dayjs());
+                      setFromDate(dayjs());
+                      setSelectedEntities([]);
                     }}
                   >
                     {t("Close")}
