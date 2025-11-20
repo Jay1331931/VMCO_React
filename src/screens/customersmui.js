@@ -35,10 +35,10 @@ import Constants from "../constants";
 import CustomerCard from "../components/CustomerCard";
 import { faHeartPulse } from "@fortawesome/free-solid-svg-icons";
 const getStatusClass = (status) => {
-  switch (status) {
-    case "Approved":
+  switch (status?.toLowerCase()) {
+    case "approved":
       return "status-approved";
-    case "Rejected":
+    case "rejected":
       return "status-rejected";
     default:
       return "status-pending";

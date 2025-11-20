@@ -8,6 +8,12 @@ import { faBuilding, faCreditCard, faMobile } from "@fortawesome/free-solid-svg-
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import api from "../utilities/api"
+import Sidebar from "./Sidebar";
+import { t } from "i18next";
+import { Box, Button, Card, Stack } from "@mui/material";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
   // const cookies = document.cookie
@@ -575,8 +581,27 @@ console.log("currentEntity",isMatch,currentEntity)
      const isMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
        const Mobile =  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
      const isDesktop = !Mobile;
+      const isVMCO =
+    OrderDetails[0]?.entity?.toLowerCase() ===
+    Constants.ENTITY?.VMCO?.toLowerCase();
+
+  const isNAQI =
+    (OrderDetails[0]?.entity?.toLowerCase() ||
+      TempOrderDetails[0]?.entity?.toLowerCase()) ===
+    Constants.ENTITY?.NAQI?.toLowerCase();
+
+  const showApplePay =
+    OrderDetails[0]?.entity?.toLowerCase() ===
+      Constants.ENTITY?.DAR?.toLowerCase() ||
+    OrderDetails[0]?.entity?.toLowerCase() ===
+      Constants.ENTITY?.GMTC?.toLowerCase() ||
+    OrderDetails[0]?.entity?.toLowerCase() ===
+      Constants.ENTITY?.SHC?.toLowerCase() ||
+    isMatch;
+
   return (
-    <div className="options-container">
+     <Sidebar title={t("Payment Options")}>
+    {/* <div className="options-container">
       <div className="button-wrapper">
         {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.VMCO?.toLowerCase() ||
@@ -617,7 +642,7 @@ console.log("currentEntity",isMatch,currentEntity)
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  min-height:80vh;
   padding: 20px;
   background-color: #f3f4f6;
 }
@@ -674,7 +699,95 @@ console.log("currentEntity",isMatch,currentEntity)
 
 `}
       </style>
-    </div>
+    </div> */}
+
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "80vh",
+        // backgroundColor: "#F3F4F6",
+        p: 2,
+      }}
+    >
+      <Card
+        sx={{
+          width: "100%",
+          maxWidth: 400,
+          p: 4,
+          borderRadius: 3,
+          boxShadow: "0px 4px 14px rgba(0,0,0,0.14)",
+        }}
+      >
+        <Stack spacing={3}>
+          {(isVMCO || isNAQI) && (
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={<AccountBalanceIcon />}
+              sx={{
+                py: 2,
+                fontSize: "10px",
+                fontWeight: 600,
+                bgcolor: "#2563eb",
+                borderRadius: 2,
+                "&:hover": { bgcolor: "#1d4ed8" },
+              }}
+              onClick={() =>
+                handleBankTransaction(
+                  amount,
+                  DecodedorderTpe.toLowerCase() === "cart"
+                    ? tempdecodedOrderID
+                    : decodedOrderID
+                )
+              }
+            >
+              Bank Transaction
+            </Button>
+          )}
+
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<CreditCardIcon />}
+            sx={{
+              py: 2,
+              fontSize: "10px",
+              fontWeight: 600,
+              bgcolor: "#0293cc",
+              borderRadius: 2,
+              "&:hover": { bgcolor: "rgb(12, 170, 233)" },
+            }}
+            onClick={() => handlePayment("CardPay")}
+          >
+            Cards Pay
+          </Button>
+
+          {showApplePay && (isMobile || isDesktop) && (
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={<PhoneIphoneIcon />}
+              sx={{
+                py: 2,
+                fontSize: "10px",
+                fontWeight: 600,
+                bgcolor: "#000",
+                color: "#fff",
+                borderRadius: 2,
+                "&:hover": { bgcolor: "#333" },
+              }}
+              onClick={() => handlePayment("Apple Pay")}
+            >
+              Apple Pay
+            </Button>
+          )}
+        </Stack>
+      </Card>
+    </Box>
+
+    </Sidebar>
   );
 };
 

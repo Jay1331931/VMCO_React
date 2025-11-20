@@ -1091,6 +1091,10 @@ setIsUploading(true)
 
 .image-popup-close:hover {
   background: #c00;
+},
+.submit-btn:hover{
+  background: #004d43;
+  color: #fff;
 }
 
 
