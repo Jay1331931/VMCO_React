@@ -2974,6 +2974,13 @@ useEffect(() => {
                                             category.items.map((item, idx) => (
                                                 <>
                                                 <div key={item.id + '-' + idx} className="cart-item">
+                                                    
+                                                    <div className="item-details">
+                                                        <h4 className="item-name">{item.name}</h4>
+                                                        <p className="item-code">{item.productCode}</p>
+                                                        {item.description && <p className="item-description">{item.description}</p>}
+                                                        
+                                                    </div>
                                                     <div className="item-image">
                                                         <img
                                                             src={item.imageUrl || '/placeholder-image.png'}
@@ -2984,11 +2991,6 @@ useEffect(() => {
                                                             }}
                                                             style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }}
                                                         />
-                                                    </div>
-                                                    <div className="item-details">
-                                                        <h4 className="item-name">{item.name}</h4>
-                                                        <p className="item-code">{item.productCode}</p>
-                                                        {item.description && <p className="item-description">{item.description}</p>}
                                                         <QuantityController
                                                             itemId={item.id}
                                                             quantity={quantities[item.id] !== undefined ? quantities[item.id] : 0}
@@ -3015,7 +3017,7 @@ useEffect(() => {
                                                             onClick={() => handleRemoveItem(item)}
                                                             disabled={processingCategories.has(category.category)}
                                                         >
-                                                            {processingCategories.has(category.category) ? t('Processing...') : t('Remove item')}
+                                                            {processingCategories.has(category.category) ? t('Processing...') : t('Delete')}
                                                         </button>
                                                     </div>
                                                     </>

@@ -35,7 +35,8 @@ const ApplePayComponent = () => {
   const amountDecoded = atob(decodeURIComponent(amount));
   const customerIdDecoded = atob(decodeURIComponent(customerId));
   const orderTypeDecoded = atob(decodeURIComponent(orderType));
-
+  const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
+  const TAP_MERCHANT_ID = process.env.REACT_APP_TAP_MERCHANT_ID;
   // Fetch customer details
   useEffect(() => {
     const fetchCustomerDetails = async () => {
@@ -88,12 +89,12 @@ const ApplePayComponent = () => {
     try {
       render(
         {
-          publicKey: "pk_test_FcYVGop4TyCRLb0qBhIHJzmn",
-          environment: Environment.Development,
+          publicKey: TAP_PUIBLIC_KEY, //pk_live_2HRpZ8j0xdA4l1kriu5EJo7B
+          environment: Environment.Production,
           scope: Scope.TapToken,
           merchant: {
-            id: 67979587,
-            domain: "talabpoint.com",
+            id: TAP_MERCHANT_ID,//
+            domain:  window.location.hostname // talabpoint.com,
           },
           transaction: {
             currency: "SAR",

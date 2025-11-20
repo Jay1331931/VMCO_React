@@ -1594,7 +1594,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                   {/* <div className="action-menu-item">
           {t("Export")}
         </div> */}
-                  {isV("btnUploadExcel") && (
+                  {isV("btnUploadExcel") && !isMobile &&(
                     <div
                       className="action-menu-item"
                       onClick={handleButtonClick}
