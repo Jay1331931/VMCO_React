@@ -431,7 +431,7 @@ setIsUploading(true)
         window.close();
       });
     }
-    if (TemporderIds.length > 0) {
+    if (TemporderIds?.length > 0) {
       navigate("/orders");
     } else {
       navigate("/banktransactions");
@@ -1101,13 +1101,13 @@ setIsUploading(true)
       </div>
     );
   };
-  return orderId ? (
-    <div>
-      <h1 style={{ textAlign: "center", padding: "10px" }}>Bank Transaction</h1>
-      {renderTemplate()}
-    </div>
-  ) : (
-    <Sidebar title={t("Bank Transactions")}>
+  // return orderId ? (
+  //   <div>
+  //     <h1 style={{ textAlign: "center", padding: "10px" }}>Bank Transaction</h1>
+  //     {renderTemplate()}
+  //   </div>
+  // ) : (
+    return(<Sidebar title={t("Bank Transactions")}>
       {/* <div className="bank-transaction-form"> */}
       {renderTemplate()}
       {/* </div> */}

@@ -8,6 +8,8 @@ import { faBuilding, faCreditCard, faMobile } from "@fortawesome/free-solid-svg-
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import api from "../utilities/api"
+import Sidebar from "./Sidebar";
+import { t } from "i18next";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
   // const cookies = document.cookie
@@ -576,6 +578,7 @@ console.log("currentEntity",isMatch,currentEntity)
        const Mobile =  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
      const isDesktop = !Mobile;
   return (
+     <Sidebar title={t("Payment Opations")}>
     <div className="options-container">
       <div className="button-wrapper">
         {(OrderDetails[0]?.entity?.toLowerCase() ===
@@ -617,7 +620,7 @@ console.log("currentEntity",isMatch,currentEntity)
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  min-height:80vh;
   padding: 20px;
   background-color: #f3f4f6;
 }
@@ -675,6 +678,7 @@ console.log("currentEntity",isMatch,currentEntity)
 `}
       </style>
     </div>
+    </Sidebar>
   );
 };
 
