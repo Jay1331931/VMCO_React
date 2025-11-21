@@ -523,6 +523,9 @@ body.catalog-page #root {
   display: flex;
   flex-direction: column !important;
   }
+  .search-container .form-control {
+    width: 200px !important;
+  }
   }
 .go-to-cart-btn {
   padding: 0 14px;
@@ -1010,6 +1013,9 @@ body.catalog-page #root {
   .loading-container {
     align-items: center;
     justify-content: center;
+  }
+  .logs-header {
+    flex-direction: column;
   }
 }
 @media (min-width: 420px) and (max-width: 760px) {

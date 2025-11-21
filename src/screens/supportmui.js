@@ -545,7 +545,7 @@ function Support() {
                                                             columnVisibilityModel={columnVisibilityModel}
                                                             searchPlaceholder="Search tickets..."
                                                             showColumnVisibility={false}
-                                                            showFilters={true}
+                                                            showFilters={false}
                                                             showExport={false}
                                                             showUpload={false}
                                                             showAdd={isV("btnAdd")}
