@@ -647,11 +647,19 @@ let branchdata;
       // Keep loading for 3 seconds then reload
       setTimeout(() => {
         setIsSubmitting(false);
+        Swal.fire({
+            icon: "success",
+            title: t("Success"),
+            text: t("Branch is under review."),
+            confirmButtonText: t("OK"),
+          }).then(() => {  
         window.location.reload(true);
+          });
       }, 3000);
     } catch (error) {
       setIsSubmitting(false);
       console.error("Error saving branch:", error);
+      return;
     }
 
     // Create user if primary contact email exists with default password
