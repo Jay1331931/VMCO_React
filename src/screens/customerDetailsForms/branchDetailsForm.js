@@ -57,6 +57,13 @@ const BranchDetailsForm = ({
   const [isBlocking, setIsBlocking] = useState(false);
   const [isUnblocking, setIsUnblocking] = useState(false);
   const { token, user, isAuthenticated, logout } = useAuth();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
   let customerFormMode;
   if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
@@ -481,6 +488,9 @@ const BranchDetailsForm = ({
     // "supervisorContactEmail",
     // "supervisorContactMobile",
   ];
+  const mandatoryFieldsOnSave = [
+    "primaryContactEmail",
+  ]
   const mandatoryFieldsForApproval = [
     "branchNameEn",
     "branchNameLc",
@@ -685,9 +695,9 @@ let branchdata;
     try {
       const isNewBranch = id < 0;
       const errors = await validateData(
-        { ...updatedBranchData.current, ...updatedBranchContactsData.current },
-        false,
-        []
+        {"primaryContactEmail": "", ...updatedBranchData.current, ...updatedBranchContactsData.current },
+        true,
+        mandatoryFieldsOnSave
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
@@ -732,8 +742,8 @@ let branchdata;
               ...prevBranches,
               { ...result?.data, id: result?.data?.id },
             ]);
+            isMobile && setShowAllDetails(false);
             setExpandedRows([]);
-            setShowAllDetails(false);
             console.log(
               "$$$$ updatedBranchContactsData:",
               updatedBranchContactsData.current
@@ -778,7 +788,59 @@ let branchdata;
         // UPDATE existing branch
         // console.log("branchPayload:", branchPayload);
         try {
+      const response = await fetch(
+        `${API_BASE_URL}/customer-contacts/branch/${id}/customer/${customer?.id}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
+          
+        }
+      );
+
+      const result = await response.json();
+
+      if (Object.keys(result?.data).length === 0) {
+        // setBranchContacts(result.data);
+        try {
+              const res = await fetch(
+                `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${id}`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
+                  body: JSON.stringify({
+                    ...updatedBranchContactsData.current,
+                    customer_id: customer.id,
+                    branch_id: id,
+                  }),
+                  
+                }
+              );
+              if (res.ok) {
+                const contactResult = await res.json();
+                if (action !== "submit") {
+                  Swal.fire({
+                    icon: "success",
+                    title: t("Success"),
+                    text: t("Branch saved successfully."),
+                    confirmButtonText: t("OK"),
+                  });
+                }
+                // alert(
+                //   "Branch saved successfully"
+                // );
+              }
+            } catch (error) {
+              console.error("Error saving contacts for new branch:", error);
+            }
+      }
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+    }
+        try {
           // if (Object.keys(branchPayload).length > 0) {
+
           const response = await fetch(
             `${API_BASE_URL}/customer-branches/id/${id}`,
             {

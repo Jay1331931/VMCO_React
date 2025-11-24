@@ -16,6 +16,9 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCopy,
+} from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -33,6 +36,7 @@ import IosShareIcon from "@mui/icons-material/IosShare";
 import TableMobile from "../components/TableMobile";
 import Constants from "../constants";
 import CustomerCard from "../components/CustomerCard";
+import InviteCard from "../components/InviteCard";
 import { faHeartPulse } from "@fortawesome/free-solid-svg-icons";
 const getStatusClass = (status) => {
   switch (status?.toLowerCase()) {
@@ -233,7 +237,7 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
                 value="${result?.data}"
                 readonly
               />
-              <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+              <button id="copy-icon" style="padding: ${isMobile ? '5px' : '18px'} ; border-radius: 5px;">${isMobile ? '📋' : "Copy"}</button>
 
             </div>
           `,
@@ -1452,12 +1456,12 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
   }, []);
   const handleShowAllDetailsClick = async (customer) => {
     let transformedCustomer = await fetchCustomerContacts(
-      customer.id,
+      customer.customerId,
       customer
     );
     navigate(`/customerDetails`, {
       state: {
-        customerId: customer.id,
+        customerId: customer.customerId,
         workflowId: transformedCustomer?.workflowData?.id,
         workflowInstanceId: transformedCustomer?.workflowInstanceId,
         mode: isApprovalMode ? "edit" : "add",
@@ -2125,7 +2129,207 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
         );
 
       case t("invites"):
-        return (
+        return isMobile ? 
+        (
+          <div className="orders-content">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <>
+              <div
+                className="catalog-fixed-header"
+                style={{
+                  top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                  position: "sticky",
+                  zIndex: 20,
+                  transition: "top 0.3s ease",
+                  background: "#fff",
+                }}
+              >
+                <TableMobile
+                columns={inviteColumns}
+                allColumns={inviteColumns}
+                data={paginatedInvites}
+                showAllDetails={true}
+                handleAllDetailsClick={handleShowAllDetailsClick}
+                selectedRow={selectedRow}
+                setSelectedRow={setSelectedRow}
+                showRowPopup={showRowPopup}
+                setShowRowPopup={setShowRowPopup}
+                disableExtendRowFullWidth={true}
+                dataGridComponent={
+                  <DataGrid
+                    apiRef={gridApiRef}
+                    rows={[]}
+                    columns={[]}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    columnVisibilityModel={invitecolumnVisibilityModel}
+                    onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
+                    columnDimensions={columnDimensions}
+                    onColumnResize={handleColumnResize}
+                    sortModel={inviteSortModel}
+                    onSortModelChange={handleInviteSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    disableExtendRowFullWidth={true}
+                    pagination={false}
+                    rowHeight={55}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={handleColumnVisibilityChange}
+                          columns={filertInvites}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search invites..."
+                          showColumnVisibility={false}
+                          showFilters={false}
+                          showExport={false}
+                          showUpload={false}
+                          showApproval={false}
+                          showAdd={isV("btnAddInvite")}
+                          buttonName={t("invite")}
+                          handleAddClick={handleInvite}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={false}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      border: "none !important",
+                        "& .MuiDataGrid-overlay": {
+                          display: "none !important", // ✅ hides “No rows” message
+                        },
+                        "& .MuiDataGrid-row": {
+                          // cursor: "default",
+                          // "&:hover": {
+                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          // },
+                          display: "none !important",
+                        },
+                        ".MuiDataGrid-cell": {
+                          display: "none !important",
+                        },
+                        "& .MuiDataGrid-main": {
+                          display: "none", // ✅ hides the main grid body
+                        },
+                        "& .MuiDataGrid-toolbar": {
+                          // position: "sticky",
+                          // top: 0,
+                          // zIndex: 10, // keeps it above rows
+                          // backgroundColor: "#fff", // ensures it doesn't become transparent
+                          // borderBottom: "1px solid #e0e0e0",
+                          padding: "0px",
+                          gap: "10px",
+                          border: "none",
+                        },
+
+                        "&.catalog-datagrid": {
+                          border: "2px solid black",
+                          borderRadius: "8px",
+                          backgroundColor: "#f8f9fa",
+                        },
+                      }}
+                  />
+                }
+              />
+              </div>
+              <InviteCard
+  invites={paginatedInvites}
+  handleResend={handleResend}
+/>
+              </>
+              // <TableMobile
+              //   columns={customerColumnsToUse}
+              //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
+              //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+              //   showAllDetails={true}
+              //   handleAllDetailsClick={handleShowAllDetailsClick}
+              //   selectedRow={selectedRow}
+              //   setSelectedRow={setSelectedRow}
+              //   showRowPopup={showRowPopup}
+              //   setShowRowPopup={setShowRowPopup}
+              //   dataGridComponent={
+              //     <DataGrid
+              //       rows={[]}
+              //       columns={[]}
+              //       pageSize={pageSize}
+              //       rowCount={total}
+              //       getRowId={(row) => row?.workflowInstanceId || row?.id}
+              //       onRowClick={handleRowClick}
+              //       columnVisibilityModel={columnVisibilityModel}
+              //       onColumnVisibilityModelChange={setColumnVisibilityModel}
+              //       sortModel={sortModel}
+              //       onSortModelChange={handleSortModelChange}
+              //       disableSelectionOnClick
+              //       disableColumnMenu
+              //       hideFooter={true}
+              //       hideFooterPagination={true}
+              //       disableExtendRowFullWidth={true}
+              //       pagination={false}
+              //       autoHeight
+              //       rowHeight={55}
+              //       showToolbar
+              //       slots={{
+              //         toolbar: () => (
+              //           <CustomToolbar
+              //             searchQuery={searchQuery}
+              //             filterAnchor={filterAnchor}
+              //             onSearch={handleSearch}
+              //             setSearchQuery={setSearchQuery}
+              //             setFilterAnchor={setFilterAnchor}
+              //             handleFilterChange={handleFilterChange}
+              //             onColumnVisibilityChange={setColumnVisibilityModel}
+              //             columns={filteredData}
+              //             filters={filters}
+              //             columnVisibilityModel={columnVisibilityModel}
+              //             searchPlaceholder="Search customers..."
+              //             showColumnVisibility={true}
+              //             showFilters={true}
+              //             showExport={false}
+              //             showUpload={false}
+              //             showApproval={true}
+              //             columnsToDisplay={columnsToDisplay}
+              //             handleApproval={handleApproval}
+              //             isApprovalMode={isApprovalMode}
+              //           />
+              //         ),
+              //       }}
+              //       sx={{
+              //         "& .MuiDataGrid-row": {
+              //           cursor: "pointer",
+              //           "&:hover": {
+              //             backgroundColor: "rgba(0, 0, 0, 0.04)",
+              //           },
+              //         },
+              //         '.MuiDataGrid-cell': {
+              //           textAlign: 'center',
+              //           display: 'flex',
+              //           alignItems: 'center',
+              //           justifyContent: 'center',
+              //         }
+              //       }}
+              //     />
+              //   }
+              // />
+            )}
+          </div>
+        )
+        :
+        (
           <div className="table-container">
             {loading ? (
               <LoadingSpinner />

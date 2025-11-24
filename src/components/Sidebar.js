@@ -447,7 +447,7 @@ function Sidebar({ children, title }) {
     { icon: faBank, label: "Bank Transfer", permission: "BankTransfer" },
     { icon: faBuilding, label: "Company" },
     { icon: faCog, label: "Settings" },
-    { icon: faUpload, label: "General" },
+    { icon: faUpload, label: isMobile ? "" : "General", permission: isMobile ? false : "General" },
       { icon: faHistory, label: "Approval History" , permission: "approvalHistory"},
   ];
 
@@ -531,7 +531,7 @@ function Sidebar({ children, title }) {
             {menuItems
               .filter(({ label }) => label.toLowerCase() !== "company")
               .map(({ icon, label, permission }) => (
-                <div
+                isV(permission || label) && label && <div
                   key={label}
                   className={`menu-item ${
                     activeMenu === label ? "active" : ""

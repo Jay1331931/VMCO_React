@@ -491,41 +491,38 @@ function Maintenance() {
                         rowHeight={55}
                         showToolbar
                         slots={{
-                          toolbar: CustomToolbar,
-                        }}
-                        slotProps={{
-                          toolbar: {
-                            searchQuery: searchQuery,
-                            filterAnchor: filterAnchor,
-                            onSearch: handleSearch,
-                            setSearchQuery: setSearchQuery,
-                            setFilterAnchor: setFilterAnchor,
-                            handleFilterChange: handleFilterChange,
-                            onColumnVisibilityChange: setColumnVisibilityModel,
-                            columns: filteredData,
-                            filters: filters,
-                            columnVisibilityModel: columnVisibilityModel,
-                            searchPlaceholder: "Search maintenance tickets...",
-                            showColumnVisibility: false,
-                            showFilters: false,
-                            showExport: user.userType === "employee" ? true : false,
-                            handleExportClick: handleExportToExcel,
-                            exportLoading: exportLoading,
-                            showUpload: false,
-                            showAdd: isV("btnAdd") || isE("btnAdd"),
-                            buttonName: t("Add"),
-                            showApproval:
-                              isV("toggleButton") &&
-                              user?.designation === "maintenance head",
-                            showClosed: true,
-                            isClosedMode: isClosedMode,
-                            handleClosedTickets: handleShowClosedTickets,
-                            handleAddClick: handleAdd,
-                            columnsToDisplay: columnsToDisplay,
-                            handleApproval: handleApproval,
-                            isApprovalMode: isMyTicketsMode,
-                            openTicketsCount: openTicketsCount,
-                          },
+                          toolbar: () => (
+                            <CustomToolbar
+                              searchQuery={searchQuery}
+                              filterAnchor={filterAnchor}
+                              onSearch={handleSearch}
+                              setSearchQuery={setSearchQuery}
+                              setFilterAnchor={setFilterAnchor}
+                              handleFilterChange={handleFilterChange}
+                              onColumnVisibilityChange={setColumnVisibilityModel}
+                              columns={filteredData}
+                              filters={filters}
+                              columnVisibilityModel={columnVisibilityModel}
+                              searchPlaceholder="Search maintenance tickets..."
+                              showColumnVisibility={false}
+                              showFilters={false}
+                              showExport={ user.userType === "employee" ? true : false}
+                              handleExportClick={handleExportToExcel}
+                              exportLoading={exportLoading}
+                              showUpload={false}
+                              showAdd={isV("btnAdd") || isE("btnAdd")}
+                              buttonName={t("Add")}
+                              showApproval={isV("toggleButton") && user?.designation === "maintenance head"}
+                              showClosed={true}
+                              isClosedMode={isClosedMode}
+                              handleClosedTickets={handleShowClosedTickets}
+                              handleAddClick={handleAdd}
+                              columnsToDisplay={columnsToDisplay}
+                              handleApproval={handleApproval}
+                              isApprovalMode={isMyTicketsMode}
+                              openTicketsCount={openTicketsCount}
+                            />
+                          ),
                         }}
                         sx={{
                           "& .MuiDataGrid-overlay": {
