@@ -62,6 +62,7 @@ function Maintenance() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [selectedRow, setSelectedRow] = useState(null);
   const [showRowPopup, setShowRowPopup] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
 
   // Add these state variables near the top of your component
@@ -282,163 +283,88 @@ function Maintenance() {
       return newDimensions;
     });
   };
+  const handleExportToExcel = async () => {
+    setExportLoading(true);
+    try {
+      const filtersWithStatus = {
+        ...filters,
+        isOpen: isClosedMode === "open",
+      };
 
-  // Define columns for the DataGrid
+      const params = new URLSearchParams({
+        search: searchQuery,
+        sortBy: sortModel[0]?.field || "id",
+        sortOrder: sortModel[0]?.sort || "asc",
+        filters: JSON.stringify(filtersWithStatus),
+      });
+
+      let apiUrl;
+      if (user?.designation?.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()) {
+        const accessParam = isMyTicketsMode ? "region" : "all";
+        apiUrl = `${API_BASE_URL}/maintenance/export?${params.toString()}&access=${accessParam}`;
+      } else {
+        apiUrl = `${API_BASE_URL}/maintenance/export?${params.toString()}`;
+      }
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      // Get the blob and create download link
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `maintenance-tickets-${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Failed to export maintenance tickets:", error);
+      setError("Failed to export data");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const maintenanceColumns = [
+    { field: "requestId", headerName: "Request ID", width: 100 },
+    { field: "erpCustomerId", headerName: "Customer ID", width: 120 },
+    { field: "companyNameEn", headerName: "Customer", width: 150 },
+    { field: "brandNameEn", headerName: "Brand Name", width: 140 },
+    { field: "branchNameEn", headerName: "Branch Name", width: 140 },
+    { field: "branchCity", headerName: "Branch City", width: 120 },
+    { field: "assignedSalesExecutive", headerName: "Assigned Sales Executive", width: 160 },
+    { field: "issueType", headerName: "Issue Type", width: 120 },
     {
-      field: "requestId",
-      headerName: t("Request #"),
-      include: isV("requestIdCol"),
-      searchable: true,
-      width: columnDimensions["requestId"]?.width || 100,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: "erpCustomerId",
-      headerName: t("ERP Customer ID"),
-      include: isV("erpCustomerIdCol"),
-      width: 150,
-      searchable: true,
-      sortable: false,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: currentLanguage === "en" ? "companyNameEn" : "companyNameAr",
-      headerName: t("Customer"),
-      include: isV("customerCol"),
-      width:
-        columnDimensions[
-          currentLanguage === "en" ? "companyNameEn" : "companyNameAr"
-        ]?.width || 150,
-      searchable: false,
-      sortable: false,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: "assignedSalesExecutive",
-      headerName: t("Asigned Sales Executive"),
-      include: isV("assignedSalesExecutiveCol"),
-      width: 150,
-      searchable: true,
-      sortable: false,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: currentLanguage === "en" ? "branchNameEn" : "branchNameLc",
-      headerName: t("Branch"),
-      include: isV("branchCol"),
-      width:
-        columnDimensions[
-          currentLanguage === "en" ? "branchNameEn" : "branchNameLc"
-        ]?.width || 150,
-      searchable: false,
-      sortable: false,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: "issueName",
-      headerName: t("Issue Name"),
-      include: isV("issueNameCol"),
-      searchable: true,
-      width: columnDimensions["issueName"]?.width || 100,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: "issueType",
-      headerName: t("Issue Type"),
-      include: isV("issueTypeCol"),
-      searchable: true,
-      width: columnDimensions["issueType"]?.width || 120,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: "createdAt",
-      headerName: t("Created Date"),
-      include: isV("createdDateCol"),
-      searchable: false,
-      width: columnDimensions["createdAt"]?.width || 100,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
+      field: "createdAt", headerName: "Created Date", width: 120,
       renderCell: (params) => (
         <span>
-          {params?.row?.createdAt
-            ? formatDate(params?.row?.createdAt, "DD/MM/YYYY") ||
-            convertToTimezone(
-              params?.row?.createdAt,
-              TIMEZONES.SAUDI_ARABIA,
-              "DD/MM/YYYY"
-            )
+          {params.row?.createdAt
+            ? formatDate(params.row.createdAt, "DD/MM/YYYY")
             : ""}
         </span>
-      ),
+      )
     },
+    { field: "createdByUsername", headerName: "Created By", width: 120 },
+    { field: "assignedTo", headerName: "Assigned To", width: 120 },
     {
-      field: "createdByUsername",
-      headerName: t("Created By"),
-      include: isV("createdByCol"),
-      searchable: false,
-      sortable: false,
-      width: columnDimensions["createdByUsername"]?.width || 100,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: "urgencyLevel",
-      headerName: t("Urgency Level"),
-      include: isV("urgencyLevelCol"),
-      searchable: true,
-      width: columnDimensions["urgencyLevel"]?.width || 120,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: "assignedTo",
-      headerName: t("Assigned To"),
-      include: isV("assignedToCol"),
-      searchable: false,
-      width: columnDimensions["assignedTo"]?.width || 100,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{params.value}</span>,
-    },
-    {
-      field: "status",
-      headerName: t("Status"),
-      include: isV("statusCol"),
-      searchable: true,
-      width: columnDimensions["status"]?.width || 80,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
+      field: "status", headerName: "Status", width: 110,
       cellClassName: (params) => getStatusClass(params.value),
       renderCell: (params) => (
-        <label className={getStatusClass(params.value)}>
-          {t(params.value)}
-        </label>
-      ),
-    },
+        <label className={getStatusClass(params.value)}>{params.value}</label>
+      )
+    }
   ];
 
-  // Filter visible columns
   const visibleColumns = maintenanceColumns.filter(
     (col) => col.include !== false
   );
@@ -580,7 +506,9 @@ function Maintenance() {
                               searchPlaceholder="Search maintenance tickets..."
                               showColumnVisibility={false}
                               showFilters={false}
-                              showExport={false}
+                              showExport={ user.userType === "employee" ? true : false}
+                              handleExportClick={handleExportToExcel}
+                              exportLoading={exportLoading}
                               showUpload={false}
                               showAdd={isV("btnAdd") || isE("btnAdd")}
                               buttonName={t("Add")}
@@ -597,7 +525,6 @@ function Maintenance() {
                           ),
                         }}
                         sx={{
-                          border: "none !important",
                           "& .MuiDataGrid-overlay": {
                             display: "none !important", // ✅ hides “No rows” message
                           },
@@ -621,7 +548,7 @@ function Maintenance() {
                             // backgroundColor: "#fff", // ensures it doesn't become transparent
                             // borderBottom: "1px solid #e0e0e0",
                             padding: "0px",
-                            gap: "10px",
+                            gap: "0px",
                             border: "none",
                           },
 
@@ -676,43 +603,46 @@ function Maintenance() {
                 hideFooter={true}
                 hideFooterPagination={true}
                 pagination={false}
-                // autoHeight
+                autoHeight
                 rowHeight={55}
                 showToolbar
+                onColumnResize={handleColumnResize}
                 slots={{
-                  toolbar: () => (
-                    <CustomToolbar
-                      searchQuery={searchQuery}
-                      filterAnchor={filterAnchor}
-                      onSearch={handleSearch}
-                      setSearchQuery={setSearchQuery}
-                      setFilterAnchor={setFilterAnchor}
-                      handleFilterChange={handleFilterChange}
-                      onColumnVisibilityChange={setColumnVisibilityModel}
-                      columns={filteredData}
-                      filters={filters}
-                      columnVisibilityModel={columnVisibilityModel}
-                      searchPlaceholder="Search maintenance tickets..."
-                      showColumnVisibility={true}
-                      showFilters={true}
-                      showExport={false}
-                      showUpload={false}
-                      showAdd={isV("btnAdd") || isE("btnAdd")}
-                      buttonName={t("Add")}
-                      showApproval={
-                        isV("toggleButton") &&
-                        user?.designation === "maintenance head"
-                      }
-                      showClosed={true}
-                      isClosedMode={isClosedMode}
-                      handleClosedTickets={handleShowClosedTickets}
-                      handleAddClick={handleAdd}
-                      columnsToDisplay={columnsToDisplay}
-                      handleApproval={handleApproval}
-                      isApprovalMode={isMyTicketsMode}
-                      openTicketsCount={openTicketsCount}
-                    />
-                  ),
+                  toolbar: CustomToolbar,
+                }}
+                slotProps={{
+                  toolbar: {
+                    searchQuery: searchQuery,
+                    filterAnchor: filterAnchor,
+                    onSearch: handleSearch,
+                    setSearchQuery: setSearchQuery,
+                    setFilterAnchor: setFilterAnchor,
+                    handleFilterChange: handleFilterChange,
+                    onColumnVisibilityChange: setColumnVisibilityModel,
+                    columns: filteredData,
+                    filters: filters,
+                    columnVisibilityModel: columnVisibilityModel,
+                    searchPlaceholder: "Search maintenance tickets...",
+                    showColumnVisibility: true,
+                    showFilters: true,
+                    showExport: user.userType === "employee" ? true : false,
+                    handleExportClick: handleExportToExcel,
+                    exportLoading: exportLoading,
+                    showUpload: false,
+                    showAdd: isV("btnAdd") || isE("btnAdd"),
+                    buttonName: t("Add"),
+                    showApproval:
+                      isV("toggleButton") &&
+                      user?.designation === "maintenance head",
+                    showClosed: true,
+                    isClosedMode: isClosedMode,
+                    handleClosedTickets: handleShowClosedTickets,
+                    handleAddClick: handleAdd,
+                    columnsToDisplay: columnsToDisplay,
+                    handleApproval: handleApproval,
+                    isApprovalMode: isMyTicketsMode,
+                    openTicketsCount: openTicketsCount,
+                  },
                 }}
                 sx={{
                   "& .MuiDataGrid-row": {
