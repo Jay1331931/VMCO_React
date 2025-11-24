@@ -7,7 +7,7 @@ import Constants from "../constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import RbacManager from "../utilities/rbac";
-
+import { isMobile } from '../utilities/isMobile';
 function Login({ title, userType }) {
   const { login} = useAuth();
   const { t } = useTranslation();
@@ -156,6 +156,10 @@ if (!isLogin){
     e.preventDefault();
     navigate("/login/employee");
   };
+   const handleCustLogin = (e) => {
+    e.preventDefault();
+    navigate("/login");
+  };
   return (
     <div className="login-screen">
       {/* {title === 'Customer Login' ?
@@ -166,7 +170,7 @@ if (!isLogin){
 
       <div className="login-component">
         <div className="login-header-container"><div className="login-header">{t("Login")}</div>
-                 {title === "Customer Login" &&(  <a className="login-employee-link"
+                 {title === "Customer Login" ? (  <a className="login-employee-link"
                 href="#"
                 onClick={isLoading ? (e) => e.preventDefault() : handleNavigation}
                 style={{
@@ -178,6 +182,18 @@ if (!isLogin){
                 }}
               >
                 {t("Employee")}
+              </a>) :(  <a className="login-customer-link"
+                href="#"
+                onClick={isLoading ? (e) => e.preventDefault() : handleCustLogin}
+                style={{
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  opacity: isLoading ? 0.5 : 1,
+                  pointerEvents: isLoading ? "none" : "auto",
+                      
+
+                }}
+              >
+                {t("Customer")}
               </a>)}
               </div>
         <form onSubmit={handleSubmit}>

@@ -30,7 +30,7 @@ import {
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-
+import { isMobile } from "../utilities/isMobile";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function Sidebar({ children, title }) {
@@ -39,13 +39,13 @@ function Sidebar({ children, title }) {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-   useEffect(() => {
-      const handleResize = () => setIsMobile(window.innerWidth < 768);
-      console.log("isMobile", isMobile);
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
+  // const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  //  useEffect(() => {
+  //     const handleResize = () => setIsMobile(window.innerWidth < 768);
+  //     console.log("isMobile", isMobile);
+  //     window.addEventListener("resize", handleResize);
+  //     return () => window.removeEventListener("resize", handleResize);
+  //   }, []);
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
@@ -436,19 +436,19 @@ function Sidebar({ children, title }) {
   };
 
   const menuItems = [
-    { icon: faHouse, label: "Dashboard", default: true },
-    { icon: faBookOpen, label: "Catalog" },
-    { icon: faShoppingCart, label: "Orders" },
-    { icon: faCodeBranch, label: "Branches" },
-    { icon: faUsers, label: "Customers" },
-    { icon: faHeadset, label: "Support" },
-    { icon: faTools, label: "Maintenance" },
-    { icon: faFile, label: "Reports" },
-    { icon: faBank, label: "Bank Transfer", permission: "BankTransfer" },
-    { icon: faBuilding, label: "Company" },
-    { icon: faCog, label: "Settings" },
-    { icon: faUpload, label: isMobile ? "" : "General", permission: isMobile ? false : "General" },
-      { icon: faHistory, label: "Approval History" , permission: "approvalHistory"},
+    { icon: faHouse, label: "Dashboard", default: true ,isVisible:true},
+    { icon: faBookOpen, label: "Catalog" ,isVisible:true},
+    { icon: faShoppingCart, label: "Orders" ,isVisible:true},
+    { icon: faCodeBranch, label: "Branches" ,isVisible:true},
+    { icon: faUsers, label: "Customers" ,isVisible:true},
+    { icon: faHeadset, label: "Support" ,isVisible:true},
+    { icon: faTools, label: "Maintenance" ,isVisible:true},
+    { icon: faFile, label: "Reports" ,isVisible:isMobile ? false :true},
+    { icon: faBank, label: "Bank Transfer", permission: "BankTransfer" ,isVisible:true},
+    { icon: faBuilding, label: "Company" ,isVisible:true},
+    { icon: faCog, label: "Settings" ,isVisible:true},
+    { icon: faUpload, label: isMobile ? "" : "General", permission: isMobile ? false : "General" ,isVisible:isMobile ? false :true},
+      { icon: faHistory, label: "Approval History" , permission: "approvalHistory",isVisible:isMobile ? false :true},
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
@@ -530,8 +530,8 @@ function Sidebar({ children, title }) {
           <div className="main-menu-items">
             {menuItems
               .filter(({ label }) => label.toLowerCase() !== "company")
-              .map(({ icon, label, permission }) => (
-                isV(permission || label) && label && <div
+              .map(({ icon, label, permission,isVisible }) => (
+                isV(permission || label) && label &&isVisible &&<div
                   key={label}
                   className={`menu-item ${
                     activeMenu === label ? "active" : ""

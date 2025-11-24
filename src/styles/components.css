@@ -1399,14 +1399,14 @@ body.catalog-page #root {
   justify-content: space-between;
   width: 100%;
 
-}.login-employee-link{
+}.login-employee-link ,.login-customer-link {
   color: var(--navy-blue);
     text-decoration: none;
     font-size: 0.9rem;
      display: block;
 }
-@media (max-width: 480px) {
-  .login-employee-link{
+@media (min-width: 500px) {
+  .login-customer-link{
     display: none;
   }
 }
