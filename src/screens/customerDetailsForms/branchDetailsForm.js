@@ -57,6 +57,13 @@ const BranchDetailsForm = ({
   const [isBlocking, setIsBlocking] = useState(false);
   const [isUnblocking, setIsUnblocking] = useState(false);
   const { token, user, isAuthenticated, logout } = useAuth();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
   let customerFormMode;
   if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
@@ -688,7 +695,7 @@ let branchdata;
     try {
       const isNewBranch = id < 0;
       const errors = await validateData(
-        { ...updatedBranchData.current, ...updatedBranchContactsData.current },
+        {"primaryContactEmail": "", ...updatedBranchData.current, ...updatedBranchContactsData.current },
         true,
         mandatoryFieldsOnSave
       );
@@ -735,8 +742,8 @@ let branchdata;
               ...prevBranches,
               { ...result?.data, id: result?.data?.id },
             ]);
+            isMobile && setShowAllDetails(false);
             setExpandedRows([]);
-            setShowAllDetails(false);
             console.log(
               "$$$$ updatedBranchContactsData:",
               updatedBranchContactsData.current
