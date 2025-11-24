@@ -13,7 +13,7 @@ import { t } from "i18next";
 import { Box, Button, Card, Stack } from "@mui/material";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
+import  AppleIcon from '@mui/icons-material/Apple'; 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
   // const cookies = document.cookie
@@ -769,7 +769,7 @@ console.log("currentEntity",isMatch,currentEntity)
             <Button
               fullWidth
               variant="contained"
-              startIcon={<PhoneIphoneIcon />}
+              startIcon={<AppleIcon />}
               sx={{
                 py: 2,
                 fontSize: "10px",

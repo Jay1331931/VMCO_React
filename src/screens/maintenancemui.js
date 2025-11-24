@@ -579,7 +579,7 @@ function Maintenance() {
                               columnVisibilityModel={columnVisibilityModel}
                               searchPlaceholder="Search maintenance tickets..."
                               showColumnVisibility={false}
-                              showFilters={true}
+                              showFilters={false}
                               showExport={false}
                               showUpload={false}
                               showAdd={isV("btnAdd") || isE("btnAdd")}

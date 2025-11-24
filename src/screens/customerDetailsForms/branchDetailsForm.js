@@ -481,6 +481,9 @@ const BranchDetailsForm = ({
     // "supervisorContactEmail",
     // "supervisorContactMobile",
   ];
+  const mandatoryFieldsOnSave = [
+    "primaryContactEmail",
+  ]
   const mandatoryFieldsForApproval = [
     "branchNameEn",
     "branchNameLc",
@@ -686,8 +689,8 @@ let branchdata;
       const isNewBranch = id < 0;
       const errors = await validateData(
         { ...updatedBranchData.current, ...updatedBranchContactsData.current },
-        false,
-        []
+        true,
+        mandatoryFieldsOnSave
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
