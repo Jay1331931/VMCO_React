@@ -121,6 +121,16 @@
   background-color: #d32f2f;
 }
 
+.action-button.close {
+  background-color: var(--logo-deep-green);
+  color: var(--bg-white);
+}
+
+.action-button.close:hover {
+  background-color: var(--logo-light-green);
+  color: #fff;
+}
+
 .action-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
