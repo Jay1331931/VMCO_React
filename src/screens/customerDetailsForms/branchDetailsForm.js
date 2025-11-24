@@ -540,7 +540,8 @@ const BranchDetailsForm = ({
 
     if (mandatoryCheckRequired) {
       mandatoryFields.forEach((field) => {
-        if (field in dataToValidate && !dataToValidate[field]) {
+        // if (field in dataToValidate && !dataToValidate[field]) {
+        if(!dataToValidate[field] || dataToValidate[field] === "") {
           errors[field] = "This field is required";
         }
       });
@@ -603,7 +604,7 @@ const BranchDetailsForm = ({
     setIsSubmitting(true);
 let branchdata;
     try {
-      handleSave(id, "submit");
+      await handleSave(id, "submit");
 
       const errors = await validateData(
         { ...branchDetails, ...branchContacts },
@@ -694,8 +695,9 @@ let branchdata;
 
     try {
       const isNewBranch = id < 0;
+      if(action !== "submit") {
       const errors = await validateData(
-        {"primaryContactEmail": "", ...updatedBranchData.current, ...updatedBranchContactsData.current },
+        {"primaryContactEmail": branchContacts?.primaryContactEmail || "", ...updatedBranchData.current, ...updatedBranchContactsData.current },
         true,
         mandatoryFieldsOnSave
       );
@@ -710,6 +712,7 @@ let branchdata;
         });
         return;
       }
+    }
 
       if (isNewBranch) {
         try {
@@ -830,6 +833,9 @@ let branchdata;
                 // alert(
                 //   "Branch saved successfully"
                 // );
+                // setBranchContacts(contactResult.data);
+                const contactsData = await fetchBranchContacts();
+                setBranchContacts(...contactsData, ...updatedBranchContactsData.current);
               }
             } catch (error) {
               console.error("Error saving contacts for new branch:", error);
