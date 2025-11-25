@@ -154,7 +154,10 @@ const ApplePayComponent = () => {
       const { data } = await api.post(`/payment/generate-link`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (data?.data?.url) window.location.replace(data.data.url);
+
+      if(data?.id){
+  await api.get(`/auth/payment/success?tap_id=${data?.id}`)
+      }
     } catch (error) {
       console.error("Failed to create charge request", error);
       Swal.fire({
