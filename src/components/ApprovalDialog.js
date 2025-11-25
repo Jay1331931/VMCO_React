@@ -12,7 +12,8 @@ const ApprovalDialog = ({
   onSubmit, 
   customerName,
   title,
-  subtitle
+  subtitle,
+  placeholder
 }) => {
   const { t } = useTranslation();
   const [comment, setComment] = useState('');
@@ -48,9 +49,7 @@ const ApprovalDialog = ({
       <div className="approval-dialog">
         <div className="approval-dialog-header">
           <h3>
-            {action === 'approve' 
-              ? t(title) 
-              : t(title)}
+            {action === 'approve' ? t(title) : t(title)}
           </h3>
           <button className="close-button" onClick={onClose}>
             <FontAwesomeIcon icon={faXmark} />
@@ -68,11 +67,7 @@ const ApprovalDialog = ({
             className="approval-comment-textarea"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder={
-              action === 'approve' 
-                ? t('Comments...') 
-                : t('Required reason for rejection...')
-            }
+            placeholder={t(placeholder)}
             rows={5}
           />
         </div>
@@ -88,13 +83,9 @@ const ApprovalDialog = ({
           <button
             className={`action-button ${action}`}
             onClick={handleSubmit}
-            disabled={isSubmitting || (action === 'reject' && !comment.trim())}
+            disabled={isSubmitting || (action === 'reject' && !comment.trim()) || (action === 'close' && !comment.trim())}
           >
-            {isSubmitting 
-              ? t('Processing...') 
-              : action === 'approve' 
-                ? t('Approve') 
-                : t('Reject')}
+            {isSubmitting ? t('Processing...') : action === 'approve' ? t('Approve') : action === 'reject' ? t('Reject') : action === 'close' ? t('Close') : ''}
           </button>
         </div>
       </div>
