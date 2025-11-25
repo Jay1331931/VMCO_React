@@ -85,6 +85,13 @@ function MaintenanceDetails() {
   const [isEditing, setIsEditing] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+  }, []);
   // Images state (allow dynamic add) - store both data URL and original filename
   const [images, setImages] = useState([]);
   // File input ref
@@ -1504,6 +1511,7 @@ function MaintenanceDetails() {
                 options={employees.map(emp => ({ name: emp.name, employeeId: emp.employeeId }))}
                 placeholder={t('Select Employee')}
                 loading={loadingEmployees}
+                className={!isMobile ? "" : "mobile-select-branch location-select"}
               />
             </div>
           )}
