@@ -34,9 +34,9 @@ const AddBankTransaction = () => {
   const currentLanguage = i18n.language;
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    erpCustId: user?.userType === 'customer' ? user?.erpCustomerId: "",
-    companyNameEn:user?.userType === 'customer' ? user?.companyNameEn: "",
-    companyNameAr: user?.userType === 'customer' ? user?.companyNameAr: "",
+    erpCustId: user?.userType === 'customer' ? user?.erpCustomerId : "",
+    companyNameEn: user?.userType === 'customer' ? user?.companyNameEn : "",
+    companyNameAr: user?.userType === 'customer' ? user?.companyNameAr : "",
     amountTransferred: 0,
     transactionDate: "",
     erpOrderId: [],
@@ -57,14 +57,14 @@ const AddBankTransaction = () => {
   const [TemporderIds, setTempOrderIds] = useState();
   const [totalamount, setAmount] = useState(0);
   const [isSubmitting, setisSubmitting] = useState(null);
-  const [isUploading,setIsUploading]=useState(null)
+  const [isUploading, setIsUploading] = useState(null)
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
     "BankTransactions"
   );
-  console.log("user",user)
+  console.log("user", user)
   const cookieToken = getCookie("token");
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
@@ -98,18 +98,18 @@ const AddBankTransaction = () => {
   //   }
   // }, [orderId]);
   const handleChange = (e) => {
-   
+
     const { name, value } = e.target;
-     if(name==="entity"){
-        setFormData((prev) => ({ ...prev, orderId:[],erpOrderId:[],amountTransferred:0}));
+    if (name === "entity") {
+      setFormData((prev) => ({ ...prev, orderId: [], erpOrderId: [], amountTransferred: 0 }));
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = async (e) => {
     const files = e.target.files;
-    
-setIsUploading(true)
+
+    setIsUploading(true)
     for (let file of files) {
       //file Size less than 30MB
       if (file.size > 10 * 1024 * 1024) {
@@ -137,6 +137,31 @@ setIsUploading(true)
     }
     setIsUploading(false)
   };
+
+  useEffect(() => {
+    const fetchCurrentDate = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/get-current-date`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const parts = response.data.date.split("/");
+        const formattedDate = `${parts[2]}-${parts[0].padStart(2, "0")}-${parts[1].padStart(2, "0")}`; // YYYY-MM-DD
+        setFormData((prev) => ({
+          ...prev,
+          transactionDate: prev.transactionDate || formattedDate,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch date from API", error);
+      }
+    };
+
+    fetchCurrentDate();
+  }, []);
 
   const handleSubmit = async () => {
     setisSubmitting(true);
@@ -554,11 +579,7 @@ setIsUploading(true)
                 id="transactionDate"
                 name="transactionDate"
                 type="date"
-                value={
-                  formData?.transactionDate ||
-                  updateTransaction?.transactionDate ||
-                  ""
-                }
+                value={formData?.transactionDate || updateTransaction?.transactionDate || ""}
                 onChange={handleChange}
                 disabled={!!updateTransaction?.transactionDate}
                 max={new Date().toISOString().split("T")[0]}
@@ -595,9 +616,9 @@ setIsUploading(true)
                   </div>
                 )}
               </div>
-             )} 
+            )}
 
-            {([Constants.ENTITY.NAQI?.toLowerCase(),Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
+            {([Constants.ENTITY.NAQI?.toLowerCase(), Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
               Object.keys(updateTransaction).length > 0 ? (
               <>
                 <div className="form-group">
@@ -760,7 +781,7 @@ setIsUploading(true)
                     </>
                   )}
                   <div className="scrollable-preview-container">
-                    {isUploading ? <LoadingSpinner/>:<>{fileData?.map((file, index) => {
+                    {isUploading ? <LoadingSpinner /> : <>{fileData?.map((file, index) => {
                       const fileUrl = file.url;
                       const extension = file.fileName
                         .split(".")
@@ -1111,11 +1132,11 @@ setIsUploading(true)
   //     {renderTemplate()}
   //   </div>
   // ) : (
-    return(<Sidebar title={t("Bank Transactions")}>
-      {/* <div className="bank-transaction-form"> */}
-      {renderTemplate()}
-      {/* </div> */}
-    </Sidebar>
+  return (<Sidebar title={t("Bank Transactions")}>
+    {/* <div className="bank-transaction-form"> */}
+    {renderTemplate()}
+    {/* </div> */}
+  </Sidebar>
   );
 };
 
