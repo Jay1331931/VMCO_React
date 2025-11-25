@@ -173,7 +173,7 @@ function Maintenance() {
         if (!response.ok) {
           if (response.status === 401) {
             logout();
-            navigate(user?.userType === "customer" ? "/login" : "/loginemployee");
+            navigate(user?.userType === "customer" ? "/login" : "/login/employee");
             return;
           }
           throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -394,7 +394,7 @@ function Maintenance() {
     if (isAuthenticated) {
       navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } });
     } else {
-      navigate(user?.userType === "customer" ? "/login" : "/loginemployee");
+      navigate(user?.userType === "customer" ? "/login" : "/login/employee");
     }
   };
 

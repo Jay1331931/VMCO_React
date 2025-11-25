@@ -1399,14 +1399,14 @@ body.catalog-page #root {
   justify-content: space-between;
   width: 100%;
 
-}.login-employee-link{
+}.login-employee-link ,.login-customer-link {
   color: var(--navy-blue);
     text-decoration: none;
     font-size: 0.9rem;
      display: block;
 }
-@media (max-width: 480px) {
-  .login-employee-link{
+@media (min-width: 500px) {
+  .login-customer-link{
     display: none;
   }
 }
@@ -2077,8 +2077,21 @@ body.catalog-page #root {
   background: var(--logo-light-green);
   color: #fff;
 }
-.support-action-btn.differ {
+.support-action-btn.save:disabled {
+  background: #5e5e5e;
+  color: #fff;
+}
+.support-action-btn.save:disabled:hover {
+  background: #5e5e5e;
+  color: #fff;
+}
+
+.support-action-btn.reject {
   background: var(--logo-orange);
+  color: #fff;
+}
+.support-action-btn.reject:disabled {
+  background: #5e5e5e;
   color: #fff;
 }
 .support-action-btn.comments {

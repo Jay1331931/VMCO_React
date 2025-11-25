@@ -15,6 +15,8 @@ import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import axios from "axios";
 import Constants from "../constants";
+import ApprovalDialog from "../components/ApprovalDialog";
+
 function MaintenanceDetails() {
   const defaultTicket = {
     id: null,
@@ -67,7 +69,7 @@ function MaintenanceDetails() {
     customerId: ticketRcvd.customerId || (user?.userType === 'customer' ? user.customerId : null),
     // Set maintenance charges from backend charges field in edit mode
     maintenanceCharges: ticketRcvd.charges || ticketRcvd.maintenanceCharges || null,
-    erpCustId:user?.userType === 'customer' ? user.erpCustomerId : null
+    erpCustId: user?.userType === 'customer' ? user.erpCustomerId : null
   });
   const serialNumberDebounceRef = useRef(null);
   // State for branches dropdown
@@ -94,29 +96,19 @@ function MaintenanceDetails() {
   }, []);
   // Images state (allow dynamic add) - store both data URL and original filename
   const [images, setImages] = useState([]);
-  // File input ref
   const fileInputRef = useRef(null);
-
-  // State for video popup
   const [popupVideo, setPopupVideo] = useState(null);
-
-  // Videos state (allow dynamic add) - store both data URL and original filename
   const [videos, setVideos] = useState([]);
   const [videoData, setVideoData] = useState([]);
   const [fileData, setFileData] = useState([]);
-  // File input ref for videos
   const videoInputRef = useRef(null);
-
-  // State for customer popup
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
-
-  // State for branch popup
   const [showBranchPopup, setShowBranchPopup] = useState(false);
-
-  // State for issue type options
   const [issueTypeOptions, setIssueTypeOptions] = useState([]);
-
-
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogSubTitle, setDialogSubTitle] = useState('');
+  const [approvalAction, setApprovalAction] = useState(null);
 
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -500,7 +492,7 @@ function MaintenanceDetails() {
   const isE = rbacMgr.isE.bind(rbacMgr);
 
   // Check if ticket is in read-only state (closed or cancelled)
-  const isReadOnly = ticket.status === "Closed" || ticket.status === "Cancelled";
+  const isReadOnly = ticket.status === "Closed" || ticket.status === "Cancelled" || ticket.status === "Rejected";
 
   console.log("~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n", user);
 
@@ -636,6 +628,7 @@ function MaintenanceDetails() {
 
           body: JSON.stringify({
             status: "Cancelled",
+            isOpen: false,
             comments: ticket.comments // Explicitly preserve comments
           }),
         });
@@ -680,7 +673,73 @@ function MaintenanceDetails() {
     }
   };
 
-  // Open file dialog
+  const handleApprovalDialogSubmit = async (commentText) => {
+    setIsApprovalDialogOpen(false);
+
+    if (!commentText?.trim()) {
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t('Please add a comment.'),
+      });
+      return;
+    }
+    setClosing(true);
+
+    const newComment = {
+      date: formatDate(new Date(), 'DDMMYYYY HHmm'),
+      action: approvalAction === 'close' ? 'close' : 'reject',
+      userId: String(user.userId),
+      message: commentText,
+      userName: user.userName,
+      status: approvalAction === 'close' ? 'Ticket Closed' : 'Ticket Rejected',
+    };
+
+    try {
+      const updatedComments = Array.isArray(ticket.comments)
+        ? [...ticket.comments, newComment] : [newComment];
+      const newStatus = approvalAction === 'close' ? 'Closed' : 'Rejected';
+      const apiUrl = `${API_BASE_URL}/maintenance/id/${ticket.id}`;
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          isOpen: false,
+          comments: updatedComments,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to update ticket status');
+      }
+
+      setTicket(prev => ({
+        ...prev,
+        status: newStatus,
+        comments: updatedComments,
+      }));
+
+      Swal.fire({
+        icon: 'success',
+        title: t('Success'),
+        text: approvalAction === 'close' ? t('Ticket closed successfully!') : t('Ticket rejected successfully!'),
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: error.message || t('Failed to update ticket. Please try again.'),
+      });
+    } finally {
+      setClosing(false);
+    }
+  };
+
   const openFileDialog = () => {
     if (fileInputRef.current) fileInputRef.current.click();
   };
@@ -861,17 +920,17 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-        if (!ticket.warrantyEndDate) {
-      Swal.fire({
-        title: t("Validation Error"),
-        text: t("Please enter a machine serial number and get the Warranty End Date"),
-        icon: "warning",
-        confirmButtonText: t("OK"),
-        confirmButtonColor: "#3085d6"
-      });
-      setSaving(false); // End saving if validation fails
-      return;
-    }
+    // if (!ticket.warrantyEndDate) {
+    //   Swal.fire({
+    //     title: t("Validation Error"),
+    //     text: t("Please enter a machine serial number and get the Warranty End Date"),
+    //     icon: "warning",
+    //     confirmButtonText: t("OK"),
+    //     confirmButtonColor: "#3085d6"
+    //   });
+    //   setSaving(false); // End saving if validation fails
+    //   return;
+    // }
 
     try {
       // Get customer and branch regions
@@ -978,81 +1037,18 @@ function MaintenanceDetails() {
   };
 
   // Handle close ticket
-  const handleCloseTicket = async () => {
-    setClosing(true); // Start closing
-    try {
-      // Show confirmation dialog
-      const result = await Swal.fire({
-        title: t("Close Ticket?"),
-        text: t("Are you sure you want to close this maintenance request? This action cannot be undone."),
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: t("Yes, Close Request"),
-        cancelButtonText: t("Cancel"),
-        confirmButtonColor: "#dc3545",
-        cancelButtonColor: "#6c757d"
-      });
+  const handleCloseTicket = () => {
+    setDialogTitle('Close ticket');
+    setDialogSubTitle('Add closing comment.');
+    setApprovalAction('close');
+    setIsApprovalDialogOpen(true);
+  };
 
-      if (!result.isConfirmed) {
-        return; // User cancelled
-      }
-
-      const endPoint = `/maintenance/id/${ticket.id}`;
-      const apiUrl = `${API_BASE_URL}${endPoint}`;
-
-      const response = await fetch(apiUrl, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-
-        body: JSON.stringify({
-          status: "Closed",
-          isOpen: false,
-          comments: ticket.comments
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error:", errorText);
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const responseResult = await response.json();
-      console.log("Close ticket successful:", responseResult);
-
-      // Show success message
-      await Swal.fire({
-        title: t("Success!"),
-        text: t("Maintenance request closed successfully!"),
-        icon: "success",
-        confirmButtonText: t("OK"),
-        confirmButtonColor: "#28a745"
-      });
-
-      // Update local state and redirect
-      setTicket(prev => ({
-        ...prev,
-        status: "Closed"
-      }));
-      setIsEditing(false);
-      navigate("/maintenance");
-    } catch (error) {
-      console.error("Error closing maintenance request:", error);
-
-      // Show error message
-      await Swal.fire({
-        title: t("Error!"),
-        text: t("Failed to close maintenance request. Please try again."),
-        icon: "error",
-        confirmButtonText: t("OK"),
-        confirmButtonColor: "#dc3545"
-      });
-    } finally {
-      setClosing(false); // End closing
-    }
+  const handleRejectTicket = () => {
+    setDialogTitle('Reject ticket');
+    setDialogSubTitle('Do you want to reject the ticket?');
+    setApprovalAction('reject');
+    setIsApprovalDialogOpen(true);
   };
 
   // Add comment to ticket.comments in correct format and save to backend immediately
@@ -1152,21 +1148,21 @@ function MaintenanceDetails() {
         }
       );
       const rawDate = data?.details?.warrantdate || "";
-      if (data?.success){
- setTicket((prev) => ({
-        ...prev,
-        warrantyEndDate: formatDateInput(rawDate, "date") || "",
-      }));
-      }else{
+      if (data?.success) {
+        setTicket((prev) => ({
+          ...prev,
+          warrantyEndDate: formatDateInput(rawDate, "date") || "",
+        }));
+      } else {
         Swal.fire({
-            title: t("Error"),
-            text: data?.message||t("Please enter erpSerialNo Correct"),
-            icon: "warning",
-            confirmButtonText: t("OK"),
-            confirmButtonColor: "#3085d6"
-          });
+          title: t("Error"),
+          text: data?.message || t("Please enter erpSerialNo Correct"),
+          icon: "warning",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#3085d6"
+        });
       }
-     
+
     } catch (error) {
       console.error("Error handling serial number change:", error);
     }
@@ -1174,71 +1170,71 @@ function MaintenanceDetails() {
   };
 
   const handleAddFeedback = async () => {
-      try {
-        // More robust validation
-        if (!ticket.feedback || !ticket.feedback.trim()) {
-          Swal.fire({
-            title: t("Validation Error"),
-            text: t("Please enter feedback before submitting"),
-            icon: "warning",
-            confirmButtonText: t("OK"),
-            confirmButtonColor: "#3085d6"
-          });
-          return;
-        }
-  
-        if (!ticket.id) {
-          console.error("No ticket ID available");
-          return;
-        }
-
-        const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/maintenance/id/${ticket.id}`;
-
-        const response = await fetch(apiUrl, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            feedbackComment: ticket.feedback.trim()
-          })
-        });
-  
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("API Error:", errorText);
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-  
-        const result = await response.json();
-        console.log("Feedback submitted successfully:", result);
-  
-        await Swal.fire({
-          title: t("Success!"),
-          text: t("Feedback submitted successfully!"),
-          icon: "success",
+    try {
+      // More robust validation
+      if (!ticket.feedback || !ticket.feedback.trim()) {
+        Swal.fire({
+          title: t("Validation Error"),
+          text: t("Please enter feedback before submitting"),
+          icon: "warning",
           confirmButtonText: t("OK"),
-          confirmButtonColor: "#28a745"
+          confirmButtonColor: "#3085d6"
         });
-  
-        setTicket(prev => ({
-          ...prev,
-          feedbackComment: ticket.feedback.trim()
-        }));
-  
-      } catch (error) {
-        console.error("Failed to submit feedback:", error);
-  
-        await Swal.fire({
-          title: t("Error!"),
-          text: t("Failed to submit feedback. Please try again."),
-          icon: "error",
-          confirmButtonText: t("OK"),
-          confirmButtonColor: "#dc3545"
-        });
+        return;
       }
-    };
+
+      if (!ticket.id) {
+        console.error("No ticket ID available");
+        return;
+      }
+
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/maintenance/id/${ticket.id}`;
+
+      const response = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          feedbackComment: ticket.feedback.trim()
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log("Feedback submitted successfully:", result);
+
+      await Swal.fire({
+        title: t("Success!"),
+        text: t("Feedback submitted successfully!"),
+        icon: "success",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#28a745"
+      });
+
+      setTicket(prev => ({
+        ...prev,
+        feedbackComment: ticket.feedback.trim()
+      }));
+
+    } catch (error) {
+      console.error("Failed to submit feedback:", error);
+
+      await Swal.fire({
+        title: t("Error!"),
+        text: t("Failed to submit feedback. Please try again."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+    }
+  };
 
 
   return (
@@ -1338,7 +1334,7 @@ function MaintenanceDetails() {
                   value={ticket.machineSerialNumber || ""}
                   disabled={!isE("machineSerialNumber") || isReadOnly}
                 />
-                {!ticket?.warrantyEndDate &&formMode === "add"&&(
+                {!ticket?.warrantyEndDate && formMode === "add" && (
                   <button
                     type="button"
                     className="machine-button"
@@ -1480,7 +1476,7 @@ function MaintenanceDetails() {
                 disabled={!isE("feedback") || ticket?.feedbackComment}
               />
               {isV('feedbackButton') && !ticket.feedbackComment && (
-                <button className='feedback-btn' onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment }>
+                <button className='feedback-btn' onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment}>
                   {t("Submit Feedback")}
                 </button>
               )}
@@ -1537,13 +1533,22 @@ function MaintenanceDetails() {
                       {t("Cancel")}
                     </button>
                   } */}
+                  {isV('btnReject') && (
+                    <button
+                      className="support-action-btn reject"
+                      onClick={handleRejectTicket}
+                      disabled={saving || closing || isReadOnly}
+                    >
+                      Reject
+                    </button>
+                  )}
                   {isV('btnClose') && isE('btnClose') &&
                     <button
                       className="support-action-btn close"
-                      onClick={handleCloseTicket}
+                      onClick={() => { handleCloseTicket() }}
                       disabled={closing || saving || isReadOnly}
                     >
-                      {closing ? t("Closing...") : t("Close Ticket")}
+                      {closing ? t('Closing...') : t('Close Ticket')}
                     </button>
                   }
                 </>
@@ -1613,6 +1618,15 @@ function MaintenanceDetails() {
         customerId={user?.userType === 'customer' ? user.customerId : ticket.customerId}
         API_BASE_URL={API_BASE_URL}
         t={t}
+      />
+      <ApprovalDialog
+        action={approvalAction}
+        isOpen={isApprovalDialogOpen}
+        onClose={() => setIsApprovalDialogOpen(false)}
+        onSubmit={handleApprovalDialogSubmit}
+        title={dialogTitle}
+        subTitle={dialogSubTitle}
+        placeholder={approvalAction === 'close' ? 'Enter closing comment' : 'Enter rejection reason'}
       />
       <style>
         {
