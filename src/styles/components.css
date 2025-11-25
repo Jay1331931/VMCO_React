@@ -2132,6 +2132,7 @@ body.catalog-page #root {
     font-size: 1.1rem;
   }
   .support-details-container-right {
+    flex-direction: column;
   padding-right: 0px;
 }
 .maintenance-details-container {
@@ -2140,6 +2141,9 @@ body.catalog-page #root {
 }
 .maintenance-details-grid {
   gap: 0px !important;
+}
+.support-assign {
+  flex-direction: column;;
 }
 }
 /* --- Maintenance Details Styles --- */

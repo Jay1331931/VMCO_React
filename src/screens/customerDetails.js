@@ -28,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import constants from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
 import FinalSubmissionConfirmation from "./customerDetailsForms/finalSubmissionConfirmation";
+// import { isMobile } from "../utilities/isMobile";
 import ProtectedRoute from "../components/ProtectedRoute";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -118,32 +119,32 @@ const fetchCurrentDataOfCustomerBranches = async (customerId, token) => {
       sortOrder: "asc",
       // search: search,
       filters: JSON.stringify({
-customer_id: customerId,
+        customer_id: customerId,
       }),
     });
-    
-      const branchResponse = await fetch(
-        `${API_BASE_URL}/customer-branches/pagination?${query.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!branchResponse.ok) {
-        throw new Error("Failed to fetch branches");
+
+    const branchResponse = await fetch(
+      `${API_BASE_URL}/customer-branches/pagination?${query.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       }
-      const data = await branchResponse.json();
-      // setCurrentPage(data.page);
-      // setBranches(data.data);
-      return data?.totalRecords;
+    );
+    if (!branchResponse.ok) {
+      throw new Error("Failed to fetch branches");
+    }
+    const data = await branchResponse.json();
+    // setCurrentPage(data.page);
+    // setBranches(data.data);
+    return data?.totalRecords;
   } catch (error) {
     console.error("Error fetching current customer data:", error);
     throw error;
   }
-}
+};
 
 //TODO: Implement this function to fetch workflow data of a customer from server --WF
 
@@ -404,7 +405,7 @@ const documentFields = [
   "creditApplicationNaqi",
   "creditApplicationVmco",
   "creditApplicationDar",
-  "creditApplicationGmtc"
+  "creditApplicationGmtc",
 ];
 
 // Helper to count updated document fields (excluding nonTradingDocuments)
@@ -444,7 +445,11 @@ function CustomerDetails() {
   const location = useLocation();
   const activeTabRequired = location?.state?.activeTabRequired;
   const [activeTab, setActiveTab] = useState(
-    user?.roles[0] === "branch_primary" ? "Branches" : activeTabRequired ? activeTabRequired : "Business Details"
+    user?.roles[0] === "branch_primary"
+      ? "Branches"
+      : activeTabRequired
+      ? activeTabRequired
+      : "Business Details"
   );
   const customerId = location?.state?.customerId;
   const workflowId = location?.state?.workflowId;
@@ -502,24 +507,26 @@ function CustomerDetails() {
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-    // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
-    useEffect(() => {
-      const handleResize = () => setIsMobile(window.innerWidth < 768);
-      console.log("isMobile", isMobile);
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
-    useEffect(() => {
-  const activeTab = document.querySelector(".customer-onboarding-tabs-vertical .tab.active");
-  if (activeTab) {
-    activeTab.scrollIntoView({
-      behavior: "smooth",
-      inline: "center",
-      block: "nearest",
-    });
-  }
-}, [activeTab]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 439);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 439);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  useEffect(() => {
+    const activeTab = document.querySelector(
+      ".customer-onboarding-tabs-vertical .tab.active"
+    );
+    if (activeTab) {
+      activeTab.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [activeTab]);
   const fetchWorkflowDataOfCustomer = async (workflowId) => {
     try {
       const response = await fetch(
@@ -562,7 +569,7 @@ function CustomerDetails() {
       }
       const resp = await fetchCurrentDataOfCustomer(customerId, token);
       const total = await fetchCurrentDataOfCustomerBranches(customerId, token);
-      setBranchTotal(total)
+      setBranchTotal(total);
       const customerContacts = await fetchCurrentDataOfCustomerContacts(
         customerId,
         token
@@ -571,7 +578,10 @@ function CustomerDetails() {
       console.log("@@@@@@customerId:", customerId);
       console.log("@@@@@workflowId:", workflowId);
       console.log("@@@@@mode:", mode);
-      console.log("!!!!mandatoryFieldsAfterApproval", mandatoryFieldsAfterApproval);
+      console.log(
+        "!!!!mandatoryFieldsAfterApproval",
+        mandatoryFieldsAfterApproval
+      );
       let isUnderApproval = false;
       // Check if the customer is under approval
       isUnderApproval = await checkInApproval(customerId, "customer", token);
@@ -586,7 +596,7 @@ function CustomerDetails() {
         setOriginalCustomerContactsData(customerContacts);
         const wfData = await fetchWorkflowDataOfCustomer(workflowInstanceId);
         setWfCustomerData(wfData);
-        console.log("wfData", wfData)
+        console.log("wfData", wfData);
         // setWorkflowHistory(wfHistory);
         if (wfData?.customer?.nonTradingDocuments) {
           wfData.customer.nonTradingDocuments = JSON.parse(
@@ -598,9 +608,12 @@ function CustomerDetails() {
       } else if (workflowInstanceId) {
         const wfData = await fetchWorkflowDataOfCustomer(workflowInstanceId);
         setWfCustomerData(wfData);
-        console.log("wfData", wfData)
+        console.log("wfData", wfData);
       }
-      setInApproval(isUnderApproval && !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false));
+      setInApproval(
+        isUnderApproval &&
+          !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false)
+      );
       setCustomerData(isUnderApproval ? { ...resp, ...temp?.customer } : resp);
       setOriginalCustomerData(resp);
       const conRes = await fetchCurrentDataOfCustomerContacts(
@@ -608,7 +621,10 @@ function CustomerDetails() {
         token
       );
       setCustomerContactsData(
-        isUnderApproval && !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false) ? { ...conRes, ...temp?.contacts } : conRes
+        isUnderApproval &&
+          !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false)
+          ? { ...conRes, ...temp?.contacts }
+          : conRes
       );
       setOriginalCustomerContactsData(conRes);
       const paymentMethodsRes = await fetchCurrentPaymentMetods(
@@ -772,7 +788,7 @@ function CustomerDetails() {
       },
     };
   };
-const handleVerifiedDataChange = (e) => {
+  const handleVerifiedDataChange = (e) => {
     const { name } = e.target;
     updatedVerifiedData.current[name] = e.target.checked;
     setVerifiedData((prev) => ({ ...prev, [name]: e.target.checked }));
@@ -908,13 +924,28 @@ const handleVerifiedDataChange = (e) => {
     "purchasingHeadEmail",
     "purchasingHeadMobile",
     "purchasingHeadDesignation",
-  customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationShc" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationVmco" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationDar" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationNaqi" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationGmtc" : null,
-].filter(Boolean); 
-const mandatoryFieldsAfterApproval = [
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationShc"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationVmco"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationDar"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationNaqi"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationGmtc"
+      : null,
+  ].filter(Boolean);
+  const mandatoryFieldsAfterApproval = [
     "companyNameEn",
     "companyNameAr",
     "companyType",
@@ -979,12 +1010,27 @@ const mandatoryFieldsAfterApproval = [
     "purchasingHeadEmail",
     "purchasingHeadMobile",
     "purchasingHeadDesignation",
-  customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationShc" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationVmco" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationDar" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationNaqi" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed && user?.userType?.toLowerCase()==="employee"  ? "creditApplicationGmtc" : null,
-].filter(Boolean); 
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationShc"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationVmco"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationDar"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationNaqi"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+      ?.isAllowed && user?.userType?.toLowerCase() === "employee"
+      ? "creditApplicationGmtc"
+      : null,
+  ].filter(Boolean);
   const mandatoryFieldsForApproval = [
     "companyNameEn",
     "companyNameAr",
@@ -1052,20 +1098,37 @@ const mandatoryFieldsAfterApproval = [
     "purchasingHeadMobile",
     "purchasingHeadDesignation",
     "branch",
-  customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed  ? "creditApplicationShc" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed  ? "creditApplicationVmco" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed  ? "creditApplicationDar" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed  ? "creditApplicationNaqi" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed  ? "creditApplicationGmtc" : null,
-].filter(Boolean); 
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+      ?.isAllowed
+      ? "creditApplicationShc"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+      ?.isAllowed
+      ? "creditApplicationVmco"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+      ?.isAllowed
+      ? "creditApplicationDar"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+      ?.isAllowed
+      ? "creditApplicationNaqi"
+      : null,
+    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+      ?.isAllowed
+      ? "creditApplicationGmtc"
+      : null,
+  ].filter(Boolean);
 
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
 
   const isEnglishText = (text) => {
-  return /^[\u0000-\u007F\u0080-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\u2C60-\u2C7F\uA720-\uA7FF]+$/.test(text);
-};
+    return /^[\u0000-\u007F\u0080-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\u2C60-\u2C7F\uA720-\uA7FF]+$/.test(
+      text
+    );
+  };
 
   const validateData = async (
     dataToValidate,
@@ -1073,7 +1136,7 @@ const mandatoryFieldsAfterApproval = [
     mandatoryFields = mandatoryFields
   ) => {
     const errors = {};
-    console.log(":::::",dataToValidate);
+    console.log(":::::", dataToValidate);
     const arabicList = ["companyNameAr", "brandNameAr"];
     const englishList = ["companyNameEn", "brandNameEn"];
     const tradingDocumentList = [
@@ -1085,12 +1148,27 @@ const mandatoryFieldsAfterApproval = [
       "nationalAddress",
       "contractAgreement",
       "creditApplication",
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed  ? "creditApplicationShc" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed  ? "creditApplicationVmco" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed  ? "creditApplicationDar" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed  ? "creditApplicationNaqi" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed  ? "creditApplicationGmtc" : null,
-].filter(Boolean); 
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+        ?.isAllowed
+        ? "creditApplicationShc"
+        : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+        ?.isAllowed
+        ? "creditApplicationVmco"
+        : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+        ?.isAllowed
+        ? "creditApplicationDar"
+        : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+        ?.isAllowed
+        ? "creditApplicationNaqi"
+        : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+        ?.isAllowed
+        ? "creditApplicationGmtc"
+        : null,
+    ].filter(Boolean);
     const nonTradingDocumentList = [
       "acknowledgementSignature",
       "nationalId",
@@ -1098,12 +1176,27 @@ const mandatoryFieldsAfterApproval = [
       "nationalAddress",
       "contractAgreement",
       "creditApplication",
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed  ? "creditApplicationShc" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed  ? "creditApplicationVmco" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed  ? "creditApplicationDar" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed  ? "creditApplicationNaqi" : null,
-      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed  ? "creditApplicationGmtc" : null,
-].filter(Boolean); 
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+        ?.isAllowed
+        ? "creditApplicationShc"
+        : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+        ?.isAllowed
+        ? "creditApplicationVmco"
+        : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+        ?.isAllowed
+        ? "creditApplicationDar"
+        : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+        ?.isAllowed
+        ? "creditApplicationNaqi"
+        : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+        ?.isAllowed
+        ? "creditApplicationGmtc"
+        : null,
+    ].filter(Boolean);
 
     const documentList =
       customerData?.companyType === "trading"
@@ -1130,7 +1223,13 @@ const mandatoryFieldsAfterApproval = [
     );
     if (mandatoryCheckRequired) {
       mandatoryFields?.forEach((field) => {
-        if (field === "assignedToEntityWise" || (field === "crNumber" && customerData?.companyType?.toLowerCase() !== "trading") || (field === "vatNumber" && customerData?.companyType?.toLowerCase() !== "trading")) {
+        if (
+          field === "assignedToEntityWise" ||
+          (field === "crNumber" &&
+            customerData?.companyType?.toLowerCase() !== "trading") ||
+          (field === "vatNumber" &&
+            customerData?.companyType?.toLowerCase() !== "trading")
+        ) {
           // Skip here, handle below
           return;
         }
@@ -1207,7 +1306,7 @@ const mandatoryFieldsAfterApproval = [
         errors[field] = "Please enter Arabic text.";
       }
 
-      if(englishList.includes(field) && value && !isEnglishText(value)) {
+      if (englishList.includes(field) && value && !isEnglishText(value)) {
         errors[field] = "Please enter English text.";
       }
 
@@ -1371,59 +1470,67 @@ const mandatoryFieldsAfterApproval = [
       //     }
       //   }
       // }
-// In your frontend validation function, modify the uniqueFieldsList check:
+      // In your frontend validation function, modify the uniqueFieldsList check:
 
-if (uniqueFieldsList.includes(field) && value) {
-    // Special handling for VAT and CR numbers
-    if (field === 'vatNumber' || field === 'crNumber') {
-        const additionalData = {
-            vatNumber: field === 'crNumber' ? dataToValidate.vatNumber : value,
-            crNumber: field === 'vatNumber' ? dataToValidate.crNumber : value
-        };
+      if (uniqueFieldsList.includes(field) && value) {
+        // Special handling for VAT and CR numbers
+        if (field === "vatNumber" || field === "crNumber") {
+          const additionalData = {
+            vatNumber: field === "crNumber" ? dataToValidate.vatNumber : value,
+            crNumber: field === "vatNumber" ? dataToValidate.crNumber : value,
+          };
 
-        const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
-            method: "POST",
-            headers: {
+          const res = await fetch(
+            `${API_BASE_URL}/customers/checkUniqueField`,
+            {
+              method: "POST",
+              headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ 
-                customerId, 
-                field, 
+              },
+              body: JSON.stringify({
+                customerId,
+                field,
                 value,
-                additionalData 
-            }),
-        });
+                additionalData,
+              }),
+            }
+          );
 
-        if (res.ok) {
+          if (res.ok) {
             const data = await res.json();
             if (data.data.isUnique) {
-                // Field combination is valid
+              // Field combination is valid
             } else {
-                errors[field] = t("Combination of VAT & CR no is already registered.");
+              errors[field] = t(
+                "Combination of VAT & CR no is already registered."
+              );
             }
-        }
-    } else {
-        // Original logic for other unique fields
-        const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
-            method: "POST",
-            headers: {
+          }
+        } else {
+          // Original logic for other unique fields
+          const res = await fetch(
+            `${API_BASE_URL}/customers/checkUniqueField`,
+            {
+              method: "POST",
+              headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ customerId, field, value }),
-        });
+              },
+              body: JSON.stringify({ customerId, field, value }),
+            }
+          );
 
-        if (res.ok) {
+          if (res.ok) {
             const data = await res.json();
             if (data.data.isUnique) {
-                // Field is valid
+              // Field is valid
             } else {
-                errors[field] = t("This number is registered.");
+              errors[field] = t("This number is registered.");
             }
+          }
         }
-    }
-}
+      }
       if (
         dataToValidate?.typeOfBusiness?.toLowerCase() === "others (specify)" &&
         !dataToValidate?.typeOfBusinessOther
@@ -1446,18 +1553,18 @@ if (uniqueFieldsList.includes(field) && value) {
       if (!fileData) {
         throw new Error("No file data provided");
       }
-    const fileToUpload = fieldName === "nonTradingDocuments" 
-      ? new File([fileData], fileData.originalname, {
-          type: fileData.type,
-          lastModified: fileData.lastModified
-        })
-      : fileData;
+      const fileToUpload =
+        fieldName === "nonTradingDocuments"
+          ? new File([fileData], fileData.originalname, {
+              type: fileData.type,
+              lastModified: fileData.lastModified,
+            })
+          : fileData;
 
-    const formData = new FormData();
-    formData.append("file", fileToUpload);
-    formData.append("fileType", fieldName);
-    
-      
+      const formData = new FormData();
+      formData.append("file", fileToUpload);
+      formData.append("fileType", fieldName);
+
       const res = await fetch(`${API_BASE_URL}/customers/file/${customerId}`, {
         method: "POST",
         headers: {
@@ -1863,8 +1970,8 @@ if (uniqueFieldsList.includes(field) && value) {
           ...updatedCustomerPaymentMethodsData.current,
         },
         true,
-        mandatoryFields,
-      )
+        mandatoryFields
+      );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
@@ -1962,12 +2069,22 @@ if (uniqueFieldsList.includes(field) && value) {
           wfCustomerData.customer.nonTradingDocuments
         );
       }
-      if(customerData?.customerStatus?.toLowerCase() === "pending" && user?.designation === constants.DESIGNATIONS.OPS_COORDINATOR) {
-        updatedCustomerData.current.verified = new Date()?.toLocaleDateString("en-CA");
+      if (
+        customerData?.customerStatus?.toLowerCase() === "pending" &&
+        user?.designation === constants.DESIGNATIONS.OPS_COORDINATOR
+      ) {
+        updatedCustomerData.current.verified = new Date()?.toLocaleDateString(
+          "en-CA"
+        );
         updatedCustomerData.current.verifiedBy = user.userName;
       }
-      if(customerData?.customerStatus?.toLowerCase() === "pending" && user?.designation === constants.DESIGNATIONS.OPS_MANAGER) {
-        updatedCustomerData.current.approved = new Date()?.toLocaleDateString("en-CA");
+      if (
+        customerData?.customerStatus?.toLowerCase() === "pending" &&
+        user?.designation === constants.DESIGNATIONS.OPS_MANAGER
+      ) {
+        updatedCustomerData.current.approved = new Date()?.toLocaleDateString(
+          "en-CA"
+        );
       }
       const mergedData = {
         updates: {
@@ -1998,14 +2115,14 @@ if (uniqueFieldsList.includes(field) && value) {
       }
       console.log("Data to be validated:", dataToBeValidated);
       let errors = {};
-      if(approvalAction === "approve") {
-      errors = await validateData(
-        dataToBeValidated,
-        true,
-        mandatoryFieldsForApproval
-      );
-      setFormErrors(errors);
-    }
+      if (approvalAction === "approve") {
+        errors = await validateData(
+          dataToBeValidated,
+          true,
+          mandatoryFieldsForApproval
+        );
+        setFormErrors(errors);
+      }
 
       if (Object.keys(errors).length > 0) {
         setIsApproving(false);
@@ -2269,14 +2386,14 @@ if (uniqueFieldsList.includes(field) && value) {
         setIsSubmitting(false);
         setIsLoading(false);
         Swal.fire({
-      icon: "success",
-      title: t("Success"),
-      text: t("Your account is under review"),
-      confirmButtonText: t("OK"),
-    }).then(() => {
-        window.location.reload(true);
-      });
-    }, 3000);
+          icon: "success",
+          title: t("Success"),
+          text: t("Your account is under review"),
+          confirmButtonText: t("OK"),
+        }).then(() => {
+          window.location.reload(true);
+        });
+      }, 3000);
     } catch (error) {
       setIsSubmitting(false);
       setIsLoading(false);
@@ -2360,8 +2477,10 @@ if (uniqueFieldsList.includes(field) && value) {
           }`}
         >
           <div className="customer-onboarding-details">
-            <div className="customer-onboarding-body"
-            style={!isMobile ? { height: tabsHeight } : {}}>
+            <div
+              className="customer-onboarding-body"
+              style={!isMobile ? { height: tabsHeight } : {}}
+            >
               <div
                 className="customer-onboarding-tabs-vertical"
                 style={!isMobile ? { height: tabsHeight } : {}}
@@ -2438,7 +2557,8 @@ if (uniqueFieldsList.includes(field) && value) {
 
                 {(isV("finalSubmissionTab") ||
                   customerData?.customerStatus?.toLowerCase() === "new" ||
-                  customerData?.customerStatus?.toLowerCase() === "pending") && (
+                  customerData?.customerStatus?.toLowerCase() ===
+                    "pending") && (
                   <div
                     key={"Final Submission"}
                     className={`tab ${
@@ -2476,26 +2596,29 @@ if (uniqueFieldsList.includes(field) && value) {
                     >
                       {t("Branches")}
                       {wfCustomerData?.branch?.customerId ===
-                        originalCustomerData?.id &&
-                        mode === "edit" ? (
-                          <span
-                            className="update-badge"
-                            style={{ marginLeft: 8 }}
-                          >
-                            {1}
-                          </span>
-                        ) : (
-                          <span
-                            className="update-badge"
-                            style={{ marginLeft: 8, background: "blue", color: "white" }}
-                          >
-                            {branchTotal}
-                          </span>
-                        )}
+                        originalCustomerData?.id && mode === "edit" ? (
+                        <span
+                          className="update-badge"
+                          style={{ marginLeft: 8 }}
+                        >
+                          {1}
+                        </span>
+                      ) : (
+                        <span
+                          className="update-badge"
+                          style={{
+                            marginLeft: 8,
+                            background: "blue",
+                            color: "white",
+                          }}
+                        >
+                          {branchTotal}
+                        </span>
+                      )}
                     </div>
                   )}
 
-                  {/* {user?.userType?.toLowerCase() === "employee" && customerData?.erpCustId && (
+                {/* {user?.userType?.toLowerCase() === "employee" && customerData?.erpCustId && (
                     <span
                             // className="update-badge"
                             style={{ marginTop: "10px", color: "blue" }}
@@ -2567,8 +2690,8 @@ if (uniqueFieldsList.includes(field) && value) {
                     setTabsHeight={setTabsHeight}
                     formErrors={formErrors}
                     completeWorkflowData={completeWorkflowData}
-                        customerContactsData={customerContactsData}
-                  originalCustomerContactsData={originalCustomerContactsData}
+                    customerContactsData={customerContactsData}
+                    originalCustomerContactsData={originalCustomerContactsData}
                   />
                 )}
               {activeTab === "Documents" && isV("documentsTab") && (
@@ -2628,7 +2751,9 @@ if (uniqueFieldsList.includes(field) && value) {
               style={{ display: "flex", alignItems: "center", gap: "8px" }}
             >
               <span className="status-label">{t("Status")}:</span>
-              <span className={`status-${customerData?.customerStatus?.toLowerCase()}`}>
+              <span
+                className={`status-${customerData?.customerStatus?.toLowerCase()}`}
+              >
                 {t(customerData?.customerStatus) || t("Pending")}
               </span>
             </div>
@@ -2650,42 +2775,47 @@ if (uniqueFieldsList.includes(field) && value) {
               "Final Submission",
             ].includes(activeTab) && (
               <div className="action-buttons">
-                {isV("btnSave") && customerData?.customerStatus?.toLowerCase() === "new" && (
-                  <button
-                    className="save"
-                    onClick={() => handleSave("save")}
-                    disabled={
-                      isSaving ||
-                      isSubmitting ||
-                      isSavingChanges ||
-                      isApproving ||
-                      isRejecting ||
-                      isBlocking ||
-                      isUnblocking
-                    }
-                    hidden={user?.userType==="employee" && user?.employeeId !== originalCustomerData?.assignedTo}
-                  >
-                    {isSaving ? t("Saving...") : t("Save")}
-                  </button>
-                )}
-                {isV("btnSubmit") && customerData?.customerStatus?.toLowerCase() === "new" && (
-                  <button
-                    className="save"
-                    onClick={() => handleSubmit("save")}
-                    disabled={
-                      isSaving ||
-                      isSubmitting ||
-                      isSavingChanges ||
-                      isApproving ||
-                      isRejecting ||
-                      isBlocking ||
-                      isUnblocking ||
-                      activeTab !== "Final Submission"
-                    }
-                  >
-                    {isSubmitting ? t("Submitting...") : t("Submit")}
-                  </button>
-                )}
+                {isV("btnSave") &&
+                  customerData?.customerStatus?.toLowerCase() === "new" && (
+                    <button
+                      className="save"
+                      onClick={() => handleSave("save")}
+                      disabled={
+                        isSaving ||
+                        isSubmitting ||
+                        isSavingChanges ||
+                        isApproving ||
+                        isRejecting ||
+                        isBlocking ||
+                        isUnblocking
+                      }
+                      hidden={
+                        user?.userType === "employee" &&
+                        user?.employeeId !== originalCustomerData?.assignedTo
+                      }
+                    >
+                      {isSaving ? t("Saving...") : t("Save")}
+                    </button>
+                  )}
+                {isV("btnSubmit") &&
+                  customerData?.customerStatus?.toLowerCase() === "new" && (
+                    <button
+                      className="save"
+                      onClick={() => handleSubmit("save")}
+                      disabled={
+                        isSaving ||
+                        isSubmitting ||
+                        isSavingChanges ||
+                        isApproving ||
+                        isRejecting ||
+                        isBlocking ||
+                        isUnblocking ||
+                        activeTab !== "Final Submission"
+                      }
+                    >
+                      {isSubmitting ? t("Submitting...") : t("Submit")}
+                    </button>
+                  )}
 
                 {isV("btnSaveChanges") &&
                   customerData?.customerStatus?.toLowerCase() !== "new" && (
@@ -2721,9 +2851,15 @@ if (uniqueFieldsList.includes(field) && value) {
                         isApproving ||
                         isRejecting ||
                         isBlocking ||
-                        isUnblocking  || (customerData?.customerStatus?.toLowerCase() === "pending" && activeTab !== "Final Submission")
+                        isUnblocking ||
+                        (customerData?.customerStatus?.toLowerCase() ===
+                          "pending" &&
+                          activeTab !== "Final Submission")
                       }
-                      hidden={(customerData?.customerStatus?.toLowerCase() === "pending" && activeTab !== "Final Submission")}
+                      hidden={
+                        customerData?.customerStatus?.toLowerCase() ===
+                          "pending" && activeTab !== "Final Submission"
+                      }
                     >
                       {isApproving ? t("Approving...") : t("Approve")}
                     </button>
@@ -2742,9 +2878,15 @@ if (uniqueFieldsList.includes(field) && value) {
                         isApproving ||
                         isRejecting ||
                         isBlocking ||
-                        isUnblocking || (customerData?.customerStatus?.toLowerCase() === "pending" && activeTab !== "Final Submission")
+                        isUnblocking ||
+                        (customerData?.customerStatus?.toLowerCase() ===
+                          "pending" &&
+                          activeTab !== "Final Submission")
                       }
-                      hidden={(customerData?.customerStatus?.toLowerCase() === "pending" && activeTab !== "Final Submission")}
+                      hidden={
+                        customerData?.customerStatus?.toLowerCase() ===
+                          "pending" && activeTab !== "Final Submission"
+                      }
                     >
                       {isRejecting ? t("Rejecting...") : t("Reject")}
                     </button>
