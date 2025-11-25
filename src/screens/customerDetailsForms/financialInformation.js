@@ -2728,7 +2728,7 @@ const getDisplayName = (key) => {
             p: 3,
           }}
         >
-          <Typography variant="h4" textAlign="center" mb={2}>
+          <Typography variant="h6" textAlign="center" mb={2}>
             {t("Account Statement")}
           </Typography>
 
