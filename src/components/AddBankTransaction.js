@@ -570,7 +570,7 @@ setIsUploading(true)
               )}
             </div>
 
-            {Object.keys(updateTransaction).length === 0 && (
+            {Object.keys(updateTransaction)?.length === 0 && (
               <div className="form-group">
                 <label htmlFor="entity">
                   {t("Entity")} <span style={{ color: "red" }}> *</span>
@@ -578,7 +578,7 @@ setIsUploading(true)
                 <select
                   id="entity"
                   name="entity"
-                  value={formData.entity}
+                  value={formData.entity || updateTransaction?.entity || ""}
                   onChange={handleChange}
                   disabled={orderId}
                 >
@@ -595,7 +595,7 @@ setIsUploading(true)
                   </div>
                 )}
               </div>
-            )}
+             )} 
 
             {([Constants.ENTITY.NAQI?.toLowerCase(),Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
               Object.keys(updateTransaction).length > 0 ? (
