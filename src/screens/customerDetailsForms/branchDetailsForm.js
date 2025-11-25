@@ -540,8 +540,8 @@ const BranchDetailsForm = ({
 
     if (mandatoryCheckRequired) {
       mandatoryFields.forEach((field) => {
-        // if (field in dataToValidate && !dataToValidate[field]) {
-        if(!dataToValidate[field] || dataToValidate[field] === "") {
+        if ((branch?.branchStatus?.toLowerCase() === "approved"  ? field in dataToValidate : true) && (!dataToValidate[field] || dataToValidate[field] === "")) {
+        // if(!dataToValidate[field] || dataToValidate[field] === "") {
           errors[field] = "This field is required";
         }
       });
@@ -607,7 +607,7 @@ let branchdata;
       await handleSave(id, "submit");
 
       const errors = await validateData(
-        { ...branchDetails, ...branchContacts },
+        { ...branchDetails, ...updatedBranchData.current, ...branchContacts, ...updatedBranchContactsData.current },
         true,
         mandatoryFields
       );
