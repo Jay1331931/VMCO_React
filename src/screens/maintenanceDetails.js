@@ -16,6 +16,7 @@ import SearchableDropdown from "../components/SearchableDropdown";
 import axios from "axios";
 import Constants from "../constants";
 import ApprovalDialog from "../components/ApprovalDialog";
+import GetProducts from '../components/GetProducts';
 
 function MaintenanceDetails() {
   const defaultTicket = {
@@ -72,12 +73,9 @@ function MaintenanceDetails() {
     erpCustId: user?.userType === 'customer' ? user.erpCustomerId : null
   });
   const serialNumberDebounceRef = useRef(null);
-  // State for branches dropdown
   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || ""));
-
-  // State for employees dropdown
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -101,6 +99,10 @@ function MaintenanceDetails() {
   const [dialogTitle, setDialogTitle] = useState('');
   const [dialogSubTitle, setDialogSubTitle] = useState('');
   const [approvalAction, setApprovalAction] = useState(null);
+  const [showGetProducts, setShowGetProducts] = useState(false);
+  const [selectedMachine, setSelectedMachine] = useState('');
+  const [manualMachineName, setManualMachineName] = useState('');
+  const [allowManualMachineInput, setAllowManualMachineInput] = useState(false);
 
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -493,9 +495,9 @@ function MaintenanceDetails() {
     { key: "requestId", header: "Request #", include: isV('requestIdCol') },
     { key: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", header: "Customer", include: isV('customerCol') },
     { key: currentLanguage === "en" ? "branchNameEn" : "branchNameAr", header: "Branch", include: isV('branchCol') },
-    { key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
+    //{ key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
     { key: "issueType", header: "Issue Type", include: isV('issueTypeCol') },
-    { key: "urgencyLevel", header: "Urgency Level", include: isV('urgencyLevelCol') },
+    //{ key: "urgencyLevel", header: "Urgency Level", include: isV('urgencyLevelCol') },
     { key: "assignedTo", header: "Assigned To", include: isV('assignedToCol') },
     { key: "status", header: "Status", include: isV('statusCol') },
   ];
@@ -665,6 +667,7 @@ function MaintenanceDetails() {
     }
   };
 
+
   const handleApprovalDialogSubmit = async (commentText) => {
     setIsApprovalDialogOpen(false);
 
@@ -730,6 +733,28 @@ function MaintenanceDetails() {
     } finally {
       setClosing(false);
     }
+  };
+
+  // Open GetProducts popup on machine input click
+  const handleMachineInputClick = () => {
+    setShowGetProducts(true);
+  };
+
+  // Handle selected product(s) from GetProducts popup
+  const handleSelectProduct = (products) => {
+    if (products.length === 0) return;
+    const selected = products[0];
+
+    if (selected.productName.toLowerCase() === 'others') {
+      setSelectedMachine('Others');
+      setAllowManualMachineInput(true);
+      setManualMachineName('');
+    } else {
+      setSelectedMachine(selected.productName || '');
+      setAllowManualMachineInput(false);
+      setManualMachineName('');
+    }
+    setShowGetProducts(false);
   };
 
   const openFileDialog = () => {
@@ -868,17 +893,6 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-    if (!ticket.issueName?.trim()) {
-      Swal.fire({
-        title: t("Validation Error"),
-        text: t("Please enter an issue name"),
-        icon: "warning",
-        confirmButtonText: t("OK"),
-        confirmButtonColor: "#3085d6"
-      });
-      setSaving(false); // End saving if validation fails
-      return;
-    }
     if (!ticket.issueDetails?.trim()) {
       Swal.fire({
         title: t("Validation Error"),
@@ -890,17 +904,17 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-    if (!ticket.urgencyLevel) {
-      Swal.fire({
-        title: t("Validation Error"),
-        text: t("Please select an urgency level"),
-        icon: "warning",
-        confirmButtonText: t("OK"),
-        confirmButtonColor: "#3085d6"
-      });
-      setSaving(false); // End saving if validation fails
-      return;
-    }
+    // if (!ticket.urgencyLevel) {
+    //   Swal.fire({
+    //     title: t("Validation Error"),
+    //     text: t("Please select an urgency level"),
+    //     icon: "warning",
+    //     confirmButtonText: t("OK"),
+    //     confirmButtonColor: "#3085d6"
+    //   });
+    //   setSaving(false); // End saving if validation fails
+    //   return;
+    // }
     if (!ticket.machineSerialNumber?.trim()) {
       Swal.fire({
         title: t("Validation Error"),
@@ -923,6 +937,28 @@ function MaintenanceDetails() {
     //   setSaving(false); // End saving if validation fails
     //   return;
     // }
+    if (!selectedMachine || selectedMachine.trim() === '') {
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select a machine"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false);
+      return;
+    }
+    if (selectedMachine === "Others" && (!manualMachineName || manualMachineName.trim() === '')) {
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select a machine"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false);
+      return;
+    }
 
     try {
       // Get customer and branch regions
@@ -944,6 +980,8 @@ function MaintenanceDetails() {
         charges: ticket.maintenanceCharges || null,
         customerRegion: customerRegion,
         branchRegion: branchRegion,
+        machine: selectedMachine,
+        machineOthers: selectedMachine.toLowerCase() === "others" ? manualMachineName.trim() : "",
       };
 
       if (ticketData.assignedTeamMember && ticketData.assignedTeamMember.trim() !== "") {
@@ -1289,7 +1327,7 @@ function MaintenanceDetails() {
                 </select>
               </div>
             )}
-            {isV('issueName') && (
+            {/* {isV('issueName') && (
               <div className='maintenance-details-field'>
                 <label>{t("Issue Name")} *</label>
                 <input id='issueName' name='issueName' onChange={handleInputChange} value={ticket.issueName || ""} disabled={!isE("issueName") || isReadOnly} />
@@ -1313,6 +1351,33 @@ function MaintenanceDetails() {
                   <option value="Medium" style={{ color: 'inherit' }}>{t("Medium")}</option>
                   <option value="High" style={{ color: 'inherit' }}>{t("High")}</option>
                 </select>
+              </div>
+            )} */}
+            {isV('machine') && (
+              <div className='maintenance-details-field'>
+                <label>{t("Machine")} *</label>
+                <input
+                  id="machineInput"
+                  type="text"
+                  placeholder="Select a machine"
+                  readOnly={!allowManualMachineInput}
+                  value={selectedMachine}
+                  onClick={handleMachineInputClick}
+                  onChange={allowManualMachineInput ? (e) => setManualMachineName(e.target.value) : undefined}
+                  style={{ cursor: allowManualMachineInput ? 'text' : 'pointer' }}
+                />
+              </div>
+            )}
+            {isV('machineOthers') && allowManualMachineInput && (
+              <div className='maintenance-details-field'>
+                <label>{t("Machine (Others)")}</label>
+                <input
+                  id='machineOthers'
+                  name='machineOthers'
+                  onChange={allowManualMachineInput ? (e) => setManualMachineName(e.target.value) : undefined}
+                  value={manualMachineName || ""}
+                  disabled={!isE("machineOthers") || isReadOnly}
+                />
               </div>
             )}
             {isV('machineSerialNumber') && (
@@ -1619,6 +1684,19 @@ function MaintenanceDetails() {
         subTitle={dialogSubTitle}
         placeholder={approvalAction === 'close' ? 'Enter closing comment' : 'Enter rejection reason'}
       />
+      {showGetProducts && (
+        <GetProducts
+          open={true}
+          onClose={() => setShowGetProducts(false)}
+          onSelectProduct={handleSelectProduct}
+          API_BASE_URL={API_BASE_URL}
+          token={token}
+          customerId={user?.userType === 'customer' ? user.customerId : ticket.customerId}
+          entity={Constants.ENTITY.VMCO}
+          category={Constants.CATEGORY.VMCO_MACHINES}
+          machineMode={true}
+        />
+      )}
       <style>
         {
           `
