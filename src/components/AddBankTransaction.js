@@ -929,7 +929,7 @@ setIsUploading(true)
             <div className="form-actions">
               {!id && (
                 <>
-                  <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting}
+                  <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting || isUploading}
                   >
                     {isSubmitting ? t("Submitting...") : t("Submit")}
                   </button>
