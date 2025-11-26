@@ -403,6 +403,10 @@ function FinancialInformation({
       prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
     );
   };
+  const ORDERED_KEYS = ["VMCO", "SHC", "GMTC", "NAQI", "DAR"];
+const getDisplayName = (key) => {
+    return Constants.TAB_NAMES[key?.toUpperCase()] || key?.toUpperCase();
+};
   const formatDate = (d) => dayjs(d).format("DD-MM-YYYY");
   const handleSubmit = async () => {
     setIsSubmited(true);
@@ -463,7 +467,7 @@ function FinancialInformation({
         user?.userType?.toLowerCase() == "employee"
           ? user.email
           : originalCustomerContactsData?.primaryContactEmail || "",
-      cc: ccEmail,
+      cc: ccEmail.replace(",",";"),
       erpCustomerId: customerData?.erpCustId,
       assignedTo: customerData?.assignedTo,
     };
@@ -2715,7 +2719,7 @@ function FinancialInformation({
             left: "50%",
             transform: "translate(-50%, -50%)",
             width: "90%",
-            maxWidth: 560,
+            maxWidth: 565,
             maxHeight: "90vh", // 🔥 IMPORTANT
             overflowY: "auto",
             bgcolor: "background.paper",
@@ -2724,7 +2728,7 @@ function FinancialInformation({
             p: 3,
           }}
         >
-          <Typography variant="h4" textAlign="center" mb={2}>
+          <Typography variant="h6" textAlign="center" mb={2}>
             {t("Account Statement")}
           </Typography>
 
@@ -2737,21 +2741,22 @@ function FinancialInformation({
                 </FormLabel>
 
                 <Grid container spacing={1} sx={{ mt: 1 }}>
-                  {Object.keys(customerData?.assignedToEntityWise || {}).map(
-                    (key) => (
-                      <Grid item xs={12} sm={6} md={4} key={key}>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={selectedEntities.includes(key)}
-                              onChange={() => handleEntityChange(key)}
-                            />
-                          }
-                          label={key}
-                        />
-                      </Grid>
-                    )
-                  )}
+                  
+                 {ORDERED_KEYS?.map(key => (
+    <Grid item xs={12} sm={6} md={4} key={key}>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={selectedEntities.includes(key)}
+            onChange={() => handleEntityChange(key)}
+          />
+        }
+        label={getDisplayName(key)}
+      />
+    </Grid>
+  ))
+}
+
                 </Grid>
               </FormControl>
             </Grid>

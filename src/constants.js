@@ -31,7 +31,8 @@ const Constants = {
         SHC: 'Sandwiches, Bakery & Pastry',
         GMTC: 'Fresh Vegetables & Fruits',
         NAQI: 'Hygiene Chemicals',
-        DAR: 'DAR Company'
+        DAR: 'DAR Company',
+        VMCO:'Vending Machine Company'
     },
     FAVORITES: 'Favorites',
     CATEGORY:{

@@ -1,14 +1,16 @@
 import { Button, Grid, Typography, Tooltip } from "@mui/material";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import React from "react";
+import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomToolbarMobile from "../components/CustomToolbarMobile";
 import { useTranslation } from "react-i18next";
 import Constants from "../constants";
+import { useAuth } from "../context/AuthContext";
 
 function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { user, token, logout } = useAuth();
   const handleOrderClick = (order) => setSelectedRow(order);
 
   // 🎨 Status-based color styles
@@ -299,7 +301,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                   >
                     {`${Number(order?.totalAmount || 0).toFixed(2)} ${t("SAR")}`}
                   </Typography>
-                {( order?.status?.toLowerCase() !== "cancelled" &&
+                {( user.userType?.toLowerCase() === 'customer'&&order?.status?.toLowerCase() !== "cancelled" &&
                             order?.status?.toLowerCase() !== "rejected" &&
                             order?.paymentMethod?.toLowerCase() != "cash on delivery" &&
                             order?.paymentMethod?.toLowerCase() !== "credit" &&
