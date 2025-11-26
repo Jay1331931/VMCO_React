@@ -13,7 +13,8 @@ function ProductPopup({
     onInputChange,
     onClose,
     onAddToCart,
-    onToggleFavorite
+    onToggleFavorite,
+    isAdding
 }) {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
@@ -174,8 +175,8 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         padding: '10px 10px', borderRadius: '4px', alignItems: 'center',
                         border: 'none', cursor: 'pointer',
                         fontSize: '0.7rem',
-                        fontWeight: 600, height: '30px', marginTop: '10px' }}                                >
-                                    {t('Add to Cart')}
+                        fontWeight: 600, height: '30px', marginTop: '10px' }}     disabled={isAdding}    >
+                                    {isAdding === product?.id ? t('ADDING...'):t('Add to Cart')}
                                 </button>
                             </div>
                         )}
@@ -198,8 +199,8 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                                 <button
                                     className="add-to-cart-btn"
                                     onClick={handleAddToCart}
-                                    style={{ backgroundColor: '#0a5640', color: '#ffffff', width: '100%' }}                                >
-                                    {t('Add to Cart')}
+                                    style={{ backgroundColor: '#0a5640', color: '#ffffff', width: '100%' }} disabled={isAdding}    >
+                                    {isAdding === product?.id ? t('ADDING...'):t('Add to Cart')}
                                 </button>
                             </div>
                         )}

@@ -1659,6 +1659,7 @@ function Catalog() {
               })
             }
             onClose={handleClosePopup}
+            isAdding={isAdding}
           />
         )}
       </div>
