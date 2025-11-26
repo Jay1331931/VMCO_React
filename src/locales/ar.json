@@ -809,7 +809,7 @@
     "Product quantity updated successfully":"تم تحديث كمية المنتج بنجاح",
     "Update cancelled":"تم إلغاء التحديث",
     "This item already has a quantity of":"هذا العنصر لديه بالفعل كمية من",
-    "VMCO / SHC Category":  "SHC /فئة في /إم سي أو",
+    "VMCO / SHC Category":  "فئة VMCO / SHC",
     "Applicable for VMCO or SHC": "ينطبق على VMCO أو SHC",
     "SHC - Fresh": "إس إتش سي - طازج",
     "SHC - Frozen": "SHC - مجمدة",
@@ -830,6 +830,7 @@
    "Tap Payment":"اضغط على الدفع",
    "From Date cannot be greater than To Date.":"لا يمكن أن يكون تاريخ من أكبر من تاريخ إلى.",
    "Invalid Date Range":"نطاق تاريخ غير صالح",
-   "Please don't refresh the page.":"من فضلك لا تقم بتحديث الصفحة."
+   "Please don't refresh the page.":"من فضلك لا تقم بتحديث الصفحة.",
+   "Please select an Category first":"الرجاء تحديد الفئة أولاً"
 
 }
