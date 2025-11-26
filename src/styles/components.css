@@ -194,8 +194,8 @@
 .action-menu {
   top: 100%;
   right: 0;
-  width: 160px;
-  min-width: 160px;
+  /* width: 160px; */
+  /* min-width: 160px; */
   position: absolute;
   background-color: var(--bg-white);
   border: 1px solid var(--cool-grey);
@@ -998,6 +998,7 @@ body.catalog-page #root {
   }
   .checkout-btn {
     width: 100%;
+    padding: 5px 18px;
   }
   .total-amount {
     padding: 20px 10px;
@@ -1065,7 +1066,10 @@ body.catalog-page #root {
 /* Responsive styles for popup */
 @media (max-width: 768px) {
   .category-title {
-  font-size: 1rem !important;
+  font-size: 0.84rem !important;
+}
+.category-count {
+  font-size: 0.8rem !important;
 }
 .catalog-fixed-header {
   padding: 20px 0px 10px 0px;
@@ -1275,7 +1279,7 @@ body.catalog-page #root {
   .item-price-panel {
     flex-direction: row;
     align-items: flex-start;
-    border-bottom: 1px solid #f0f0f0;
+    /* border-bottom: 1px solid #f0f0f0; */
   }
   .checkout-row {
     flex-direction: column !important;

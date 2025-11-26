@@ -507,10 +507,10 @@ function CustomerDetails() {
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 439);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 950);
   // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 439);
+    const handleResize = () => setIsMobile(window.innerWidth < 950);
     console.log("isMobile", isMobile);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
