@@ -80,7 +80,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [nextTempId, setNextTempId] = useState(-1);
   const [isFirstBranch, setIsFirstBranch] = useState(false);
   const [search, setSearch] = useState("");
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1100);
   const [pageSize, setPageSize] = useState(isMobile ? 5 : 6);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
@@ -153,7 +153,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   //   setCurrentPage(1);
   // }, 400);
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1100);
     console.log("isMobile", isMobile);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -369,6 +369,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     }
   };
   const fetchBranches = useCallback(async () => {
+    setLoading(true);
     console.log("~~~~~Fetching branches for customer:", customer);
     setError(null);
     console.log(customer);
@@ -1522,7 +1523,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                         border: "1px solid #3D5654",
                       },
-                      width: i18n.language === "en" ? "120%" : "100%"
+                      width: i18n.language === "en" ? "var(--branches-list-width)" : "80%"
                     },
                     "& .css-1uhhrmm-MuiAutocomplete-endAdornment": {
                       display: "none",
@@ -1701,6 +1702,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       ) : */}
       {isMobile ? (
         <>
+        {loading && (
+              <div style={{ padding: 24 }}>
+                <LoadingSpinner />
+              </div>
+        )}
           {!showAllDetails && (
             <div className="branches-list">
               {currentItems.map((branch) => (

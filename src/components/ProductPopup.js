@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
 import FavButton from './FavButton';
+import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
 function ProductPopup({
     product,
@@ -148,6 +149,39 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         </p>
 
                         <h4 className="unit-price">{(t('Unit Price: '))}{(product.unitPrice).toFixed(2)} {t('SAR')}</h4>
+                        {isMobile ? 
+                        (
+                            <div className='' style={{display: 'flex', flexDirection: 'column' }}>
+{isV('quantityController') && (
+    <div className = "" style={{ display: 'flex', justifyContent: 'center'}}>
+                            <QuantityController
+                                itemId={product.id}
+                                quantity={quantities[product.id] || 0}
+                                onQuantityChange={onQuantityChange}
+                                onInputChange={onInputChange}
+                                stopPropagation={true}
+                                minQuantity={Number(product.moq) || 0}
+                                moq={Number(product.moq) || 0}
+                            />
+                            </div>
+                        )}
+                        {isV('addToCart') && (
+                            <div className='addtocartbutton'>
+                                <button
+                                    // className="add-to-cart-btn"
+                                    onClick={handleAddToCart}
+                                    style={{ backgroundColor: '#0a5640', color: '#ffffff', width: '100%', height: '30px',
+                        padding: '10px 10px', borderRadius: '4px', alignItems: 'center',
+                        border: 'none', cursor: 'pointer',
+                        fontSize: '0.7rem',
+                        fontWeight: 600, height: '30px', marginTop: '10px' }}                                >
+                                    {t('Add to Cart')}
+                                </button>
+                            </div>
+                        )}
+                            </div>
+                        ): 
+                        <>
                         {isV('quantityController') && (
                             <QuantityController
                                 itemId={product.id}
@@ -169,6 +203,9 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                                 </button>
                             </div>
                         )}
+                        </>
+                    }
+
                     </div>
                 </div>
                 <style>{`
