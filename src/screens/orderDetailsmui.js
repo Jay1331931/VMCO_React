@@ -2196,6 +2196,8 @@ function OrderDetails() {
       e.target.value = "";
       return;
     }
+    setFormData((prev) => ({
+        ...prev,category:""}))
 
     // Customer is selected, proceed with normal input handling
     handleInputChange(e);
@@ -4822,7 +4824,7 @@ function OrderDetails() {
                                       confirmButtonText: t("OK"),
                                     });
                                     return;
-                                  } else if (['vmco','shc'].includes(formData?.entity?.toLowerCase())){
+                                  } else if (['vmco','shc'].includes(formData?.entity?.toLowerCase()) && !formData?.category){
                                     Swal.fire({
                                       title: t("VMCO / SHC Category"),
                                       text: t("Please select an Category first"),
