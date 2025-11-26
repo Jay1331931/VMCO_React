@@ -4,237 +4,108 @@ import Constants from "../constants";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBuilding, faCreditCard, faMobile } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBuilding,
+  faCreditCard,
+  faMobile,
+} from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import api from "../utilities/api"
+import api from "../utilities/api";
 import Sidebar from "./Sidebar";
 import { t } from "i18next";
 import { Box, Button, Card, Stack } from "@mui/material";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import  AppleIcon from '@mui/icons-material/Apple'; 
+import AppleIcon from "@mui/icons-material/Apple";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
-  // const cookies = document.cookie
-  //   .split(";")
-  //   .map(cookie => cookie.trim())
-  //   .reduce((acc, cookie) => {
-  //     const [key, ...rest] = cookie.split("=");
-  //     acc[key] = decodeURIComponent(rest.join("="));
-  //     return acc;
-  //   }, {});
-  // return cookies[name] || null;
   return localStorage.getItem(name);
 };
 const OptionsPage = () => {
   const [OrderDetails, setOrderDetails] = useState([]);
-   const [TempOrderDetails, setTempOrderDetails] = useState([]);
-  const { orderId ,orderType} = useParams();
+  const [TempOrderDetails, setTempOrderDetails] = useState([]);
+  const { orderId, orderType } = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
   const [tempdecodedOrderID, setTempDecodedOrderID] = useState(null);
-  const  [DecodedorderTpe,setDecodedOrderType]=useState(null)
+  const [DecodedorderTpe, setDecodedOrderType] = useState(null);
   const [amount, setAmount] = useState(0);
 
-  const { token ,user} = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
   const cookieToken = getCookie("token");
-  console.log("user",user)
-  // if (orderId &&!token ){
-  //   try {
-  //     const generateToken=async () => {
+  console.log("user", user);
 
-  //       const response = await axios.post(`/auth/temporary-token-generation`,{"role":"Guest","userId":0,"userName":"payment" });
-  //       return response?.data?.details;
-  //     }
-
-  //   } catch (error) {
-  //     console.error("Error generating token:", error);
-  //   }
-
-  // }
-  console.log("orderType",orderType)
+  console.log("orderType", orderType);
   const fetchDecodeddata = useCallback(async () => {
-  try {
-    const token = localStorage.getItem("token"); // always use latest
-    const { data } = await api.get(
-      `/decode-ids?encryptedorderIds=${orderId}&salesOrderType=${orderType}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if(data?.details?.orderType?.toLowerCase()==="cart"){
-      setDecodedOrderType(data?.details?.orderType)
-      setTempDecodedOrderID(data?.details?.orderIds)
-    }else{
- setDecodedOrderID(data?.details?.orderIds);
-    setDecodedOrderType(data?.details?.orderType)
+    try {
+      const token = localStorage.getItem("token"); // always use latest
+      const { data } = await api.get(
+        `/decode-ids?encryptedorderIds=${orderId}&salesOrderType=${orderType}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data?.details?.orderType?.toLowerCase() === "cart") {
+        setDecodedOrderType(data?.details?.orderType);
+        setTempDecodedOrderID(data?.details?.orderIds);
+      } else {
+        setDecodedOrderID(data?.details?.orderIds);
+        setDecodedOrderType(data?.details?.orderType);
+      }
+    } catch (error) {
+      console.error("Failed to fetch decoded data", error);
     }
+  }, [orderId]);
 
-   
-  } catch (error) {
-    console.error("Failed to fetch decoded data", error);
+  const fetchSaleOrder = useCallback(async () => {
+    try {
+      if (!decodedOrderID) return;
 
-    // if (error.response?.status === 401) {
-    //   console.warn("Token invalid. Generating a new one...");
+      const token = localStorage.getItem("token"); // always use latest
+      const ids = decodedOrderID.toString().split(",");
+      console.log("Decoded Order ID(s):", ids);
 
-    //   const newToken = await generateToken();
-    //   if (newToken) {
-    //     try {
-    //       const { data } = await axios.get(
-    //         `/decode-ids?encryptedorderIds=${orderId}`,
-    //         { headers: { Authorization: `Bearer ${newToken}` } }
-    //       );
-    //       setDecodedOrderID(data?.details?.orderIds);
-    //     } catch (retryError) {
-    //       console.error("Retry after new token failed:", retryError);
-    //     }
-    //   }
-    // }
-  }
-}, [orderId]);
+      const results = await Promise.all(
+        ids.map((id) =>
+          api.get(`/sales-order/id/${parseInt(id)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        )
+      );
 
-const fetchSaleOrder = useCallback(async () => {
-  try {
-    if (!decodedOrderID) return;
+      const allOrders = results.map((res) => res.data.data);
+      setOrderDetails(allOrders);
+      console.log("Sale Order Data:", allOrders);
+    } catch (error) {
+      console.error("Failed to fetch sale order", error);
+    }
+  }, [decodedOrderID]);
+  const fetchtempSaleOrder = useCallback(async () => {
+    try {
+      if (!tempdecodedOrderID) return;
 
-    const token = localStorage.getItem("token"); // always use latest
-    const ids = decodedOrderID.toString().split(",");
-    console.log("Decoded Order ID(s):", ids);
+      const token = localStorage.getItem("token"); // always use latest
+      const ids = tempdecodedOrderID.toString().split(",");
+      console.log("Decoded Order ID(s):", ids);
 
-    const results = await Promise.all(
-      ids.map((id) =>
-        api.get(`/sales-order/id/${parseInt(id)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      )
-    );
+      const results = await Promise.all(
+        ids.map((id) =>
+          api.get(`/temp-sales-order/id/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        )
+      );
 
-    const allOrders = results.map((res) => res.data.data);
-    setOrderDetails(allOrders);
-    console.log("Sale Order Data:", allOrders);
-  } catch (error) {
-    console.error("Failed to fetch sale order", error);
-
-    // if (error.response?.status === 401) {
-    //   console.warn("Token invalid in sale order. Generating a new one...");
-
-    //   const newToken = await generateToken();
-    //   if (newToken) {
-    //     try {
-    //       const ids = decodedOrderID.toString().split(",");
-    //       const results = await Promise.all(
-    //         ids.map((id) =>
-    //           axios.get(`/sales-order/id/${parseInt(id)}`, {
-    //             headers: { Authorization: `Bearer ${newToken}` },
-    //           })
-    //         )
-    //       );
-
-    //       const allOrders = results.map((res) => res.data.data);
-    //       setOrderDetails(allOrders);
-    //     } catch (retryError) {
-    //       console.error("Retry after new token failed:", retryError);
-    //     }
-    //   }
-    // }
-  }
-}, [decodedOrderID]);
-const fetchtempSaleOrder = useCallback(async () => {
-  try {
-    if (!tempdecodedOrderID) return;
-
-    const token = localStorage.getItem("token"); // always use latest
-    const ids = tempdecodedOrderID.toString().split(",");
-    console.log("Decoded Order ID(s):", ids);
-
-    const results = await Promise.all(
-      ids.map((id) =>
-        api.get(`/temp-sales-order/id/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      )
-    );
-
-    const allOrders = results.map((res) => res.data.data);
-    setTempOrderDetails(allOrders);
-    console.log("Sale Order Data:", allOrders);
-  } catch (error) {
-    console.error("Failed to fetch sale order", error);
-
-    // if (error.response?.status === 401) {
-    //   console.warn("Token invalid in sale order. Generating a new one...");
-
-    //   const newToken = await generateToken();
-    //   if (newToken) {
-    //     try {
-    //       const ids = decodedOrderID.toString().split(",");
-    //       const results = await Promise.all(
-    //         ids.map((id) =>
-    //           axios.get(`/sales-order/id/${parseInt(id)}`, {
-    //             headers: { Authorization: `Bearer ${newToken}` },
-    //           })
-    //         )
-    //       );
-
-    //       const allOrders = results.map((res) => res.data.data);
-    //       setOrderDetails(allOrders);
-    //     } catch (retryError) {
-    //       console.error("Retry after new token failed:", retryError);
-    //     }
-    //   }
-    // }
-  }
-}, [tempdecodedOrderID]);
-
-//  const generateToken = async () => {
-//       try {
-//         const { data } = await axios.post(
-//           `/auth/temporary-token-generation`,
-//           {
-//             role: "Guest",
-//             userId: 0,
-//             userName: "payment",
-//           }
-//         );
-//         const newToken = data?.details?.token;
-//     if (newToken) {
-//       localStorage.setItem("token", newToken);
-     
-//       return newToken;
-//     }
-//         console.log("Temporary Token Response:", data.details);
-//       } catch (error) {
-//         console.error("Error generating temporary token:", error);
-//       }
-//     };
-//   useEffect(() => {
-//     if(!orderId){
-//       return;
-//     }
-//     if (orderId && !cookieToken) {
-//       generateToken();
-//     } 
-//   }, [orderId, token]);
+      const allOrders = results.map((res) => res.data.data);
+      setTempOrderDetails(allOrders);
+      console.log("Sale Order Data:", allOrders);
+    } catch (error) {
+      console.error("Failed to fetch sale order", error);
+    }
+  }, [tempdecodedOrderID]);
 
   useEffect(() => {
     fetchDecodeddata();
   }, [fetchDecodeddata]);
-  // const fetchSaleOrder = useCallback(async () => {
-  //   try {
-  //     if (!decodedOrderID) return;
-  //    console.log("Decoded Order ID:", decodedOrderID);
-  //     const { data } = await axios.get(
-  //       `/sales-order/id/${decodedOrderID}`,
-  //       {
-  //        
-  //       }
-  //     );
-
-  //     setOrderDetails(data.data);
-  //     console.log("Sale Order Data:", data.data);
-  //   } catch (error) {
-  //     console.error("Failed to fetch sales order", error);
-  //   }
-  // }, [decodedOrderID]);
 
   useEffect(() => {
     if (decodedOrderID) {
@@ -247,8 +118,8 @@ const fetchtempSaleOrder = useCallback(async () => {
       fetchtempSaleOrder();
     }
   }, [tempdecodedOrderID, fetchtempSaleOrder]);
- 
-      useEffect(() => {
+
+  useEffect(() => {
     console.log("OrderDetails:", TempOrderDetails);
     if (!TempOrderDetails || TempOrderDetails.length === 0) return;
 
@@ -257,8 +128,8 @@ const fetchtempSaleOrder = useCallback(async () => {
       (sum, order) => sum + (parseFloat(order.totalAmount) || 0),
       0
     );
-setAmount(parseFloat(totalAmount));
-    console.log("Amount match:", 0 == null,totalAmount);
+    setAmount(parseFloat(totalAmount));
+    console.log("Amount match:", 0 == null, totalAmount);
   }, [TempOrderDetails]);
   useEffect(() => {
     console.log("OrderDetails:", OrderDetails);
@@ -274,49 +145,42 @@ setAmount(parseFloat(totalAmount));
       0
     );
 
-    // Check if all orders are fully paid
-    // const allPaid = OrderDetails.every(
-    //   (order) =>
-    //     order.paymentStatus?.toLowerCase() === "paid" &&
-    //     parseFloat(order.paidAmount) >= parseFloat(order.totalAmount)
-    // );
     const allPaid = OrderDetails.every(
-  (order) =>
-    order.paymentStatus?.toLowerCase() === "paid" &&
-    Math.floor(Number(order.paidAmount)) >= Math.floor(Number(order.totalAmount))
-);
-
+      (order) =>
+        order.paymentStatus?.toLowerCase() === "paid" &&
+        Math.floor(Number(order.paidAmount)) >=
+          Math.floor(Number(order.totalAmount))
+    );
 
     // Check if all orders have 100% payment config and none are paid yet
-   const allZeroPaidAndFullPayment = OrderDetails.every(
-  (order) =>
-    Math.floor(Number(order.paidPercentage || 0)) === 0 &&
-    Math.floor(Number(order.paymentPercentage || 0)) === 100 &&
-    order.paymentStatus?.toLowerCase() !== "paid"
-);
-
+    const allZeroPaidAndFullPayment = OrderDetails.every(
+      (order) =>
+        Math.floor(Number(order.paidPercentage || 0)) === 0 &&
+        Math.floor(Number(order.paymentPercentage || 0)) === 100 &&
+        order.paymentStatus?.toLowerCase() !== "paid"
+    );
 
     // Check if entity is VMCO and all orders are unpaid and paymentPercentage = 30
-   const allUnpaidVMCO = OrderDetails.every(
-  (order) =>
-    (Number(order.paidAmount) === 0 || order.paidAmount == null) &&
-    Math.floor(Number(order.paymentPercentage || 0)) === 30 &&
-    order.entity?.toLowerCase() === Constants.ENTITY?.VMCO?.toLowerCase()
-);
+    const allUnpaidVMCO = OrderDetails.every(
+      (order) =>
+        (Number(order.paidAmount) === 0 || order.paidAmount == null) &&
+        Math.floor(Number(order.paymentPercentage || 0)) === 30 &&
+        order.entity?.toLowerCase() === Constants.ENTITY?.VMCO?.toLowerCase()
+    );
 
     console.log("Amount match:", 0 == null);
     // Mixed condition: paid partially and paymentPercentage is 30 and 70% amount is not paid
-   const somePaid30 = OrderDetails.every(
-  (order) =>
-    (Number(order.paidAmount || 0) > 0 || order.paidAmount == null) &&
-    Math.floor(Number(order.paymentPercentage || 0)) === 30
-);
-const paidOrders = OrderDetails.filter(
-  (order) =>
-    order.paymentStatus?.toLowerCase() === "paid" &&
-    Math.floor(Number(order.paidAmount)) >= Math.floor(Number(order.totalAmount))
-);
-
+    const somePaid30 = OrderDetails.every(
+      (order) =>
+        (Number(order.paidAmount || 0) > 0 || order.paidAmount == null) &&
+        Math.floor(Number(order.paymentPercentage || 0)) === 30
+    );
+    const paidOrders = OrderDetails.filter(
+      (order) =>
+        order.paymentStatus?.toLowerCase() === "paid" &&
+        Math.floor(Number(order.paidAmount)) >=
+          Math.floor(Number(order.totalAmount))
+    );
 
     if (paidOrders.length > 0) {
       const paidIds = paidOrders.map((order) => order.id).join(", ");
@@ -352,116 +216,67 @@ const paidOrders = OrderDetails.filter(
     }
   }, [OrderDetails]);
 
-
-
-
- const handleBankTransaction = async (amount, decodedOrderID) => {
-  try {
-    const { data } = await api.post(
-      `/generatePayment-link`,
-      {
-        id: decodedOrderID,
-        endPoint: "bankTransactions/order",
-        amount: amount,
-      },
-      {
-        headers: { "Authorization": `Bearer ${cookieToken}` },
-      }
-    );
-
-    console.log("Payment link generated:", data);
-
-    if (!data || !data.details) {
-      Swal.fire({
-        title: "Error",
-        text: "Failed to generate payment link.",
-        icon: "error",
-        confirmButtonText: "OK",
-      }).then(() => {
-        window.close();
-      });
-      return;
-    }
-
-    window.location.replace(data.details.url);
-    // window.close();
-  } catch (error) {
-    console.error("Error generating bank transaction link:", error);
-
-    if (error?.response?.status === 401) {
-      Swal.fire({
-        title: "Session Expired",
-        text: "Please refresh the page to continue.",
-        icon: "info",
-        showCancelButton: true,
-        confirmButtonText: "Reload Page",
-        cancelButtonText: "Close",
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-    //       try {
-    //        const responseToken= await generateToken();
-    //         const { data } = await api.post(
-    //   `/generatePayment-link`,
-    //   {
-    //     id: decodedOrderID,
-    //     endPoint: "bankTransactions/order",
-    //     amount: amount,
-    //   },
-    //   {
-    //     headers: { "Authorization": `Bearer ${responseToken}` },
-    //   }
-    // );
-
-    // console.log("Payment link generated:", data);
-
-    // if (!data || !data.details) {
-    //   Swal.fire({
-    //     title: "Error",
-    //     text: "Failed to generate payment link.",
-    //     icon: "error",
-    //     confirmButtonText: "OK",
-    //   }).then(() => {
-    //     window.close();
-    //   });
-    //   return;
-    // }
-
-    // window.location.replace(data.details.url);
-
-    //       } catch (err) {
-    //         console.error("Token regeneration failed:", err);
-    //           window.close();
-    //       }
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-          window.close();
+  const handleBankTransaction = async (amount, decodedOrderID) => {
+    try {
+      const { data } = await api.post(
+        `/generatePayment-link`,
+        {
+          id: decodedOrderID,
+          endPoint: "bankTransactions/order",
+          amount: amount,
+        },
+        {
+          headers: { Authorization: `Bearer ${cookieToken}` },
         }
-      });
-    } else {
-      Swal.fire({
-        title: "Error",
-        text: "Something went wrong. Please try again later.",
-        icon: "error",
-        confirmButtonText: "OK",
-      }).then(() => {
-        window.close(); // Close the current window/tab after OK
-      })
-    }
-  }
-};
-  const handlePayment = async (paymentType) => {
- 
-//    if (paymentType) {
-//   Swal.fire({
-//     title: 'Card Payment Coming Soon',
-//     text: 'Please contact your sales executive for more details.',
-//     icon: 'info',
-//     confirmButtonText: 'OK',
-//     confirmButtonColor: '#1976d2', // optional: match your theme
-//   });
-//   return;
-// }
+      );
 
-    console.log("paymentType",amount)
+      console.log("Payment link generated:", data);
+
+      if (!data || !data.details) {
+        Swal.fire({
+          title: "Error",
+          text: "Failed to generate payment link.",
+          icon: "error",
+          confirmButtonText: "OK",
+        }).then(() => {
+          window.close();
+        });
+        return;
+      }
+
+      window.location.replace(data.details.url);
+      // window.close();
+    } catch (error) {
+      console.error("Error generating bank transaction link:", error);
+
+      if (error?.response?.status === 401) {
+        Swal.fire({
+          title: "Session Expired",
+          text: "Please refresh the page to continue.",
+          icon: "info",
+          showCancelButton: true,
+          confirmButtonText: "Reload Page",
+          cancelButtonText: "Close",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            window.close();
+          }
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: "Something went wrong. Please try again later.",
+          icon: "error",
+          confirmButtonText: "OK",
+        }).then(() => {
+          window.close(); // Close the current window/tab after OK
+        });
+      }
+    }
+  };
+  const handlePayment = async (paymentType) => {
+    console.log("paymentType", amount);
     if (amount <= 0) {
       Swal.fire({
         title: "Invalid Amount",
@@ -474,115 +289,88 @@ const paidOrders = OrderDetails.filter(
       return;
     }
 
-//     let payload;
-//     if(DecodedorderTpe?.toLowerCase()==="cart"){
-//  payload = {
-//       salesOrderId: tempdecodedOrderID,
-//       amount,
-//       customerName: TempOrderDetails[0]?.orderDetails?.companyNameEn,
-//       paymentType,
-//       orderType:DecodedorderTpe
-//     };
-//     }else{
-//  payload = {
-//       salesOrderId: decodedOrderID,
-//       amount,
-//       customerName: OrderDetails[0].companyNameEn,
-//       paymentType,
-//     };
-//     }
-    
-    console.log("OrderDetails", OrderDetails,user);
-    // const { data } = await axios.post(
-    //   `/payment/generate-link`,
-    //   payload,
-    //   {
-    //    
-    //   }
-    // );
-  //    const makeRequest = async () => {
-  //   const { data } = await api.post(
-  //     `/payment/generate-link`,
-  //     payload,
-  //     {
-  //       headers: { "Authorization": `Bearer ${token}` },
-  //     }
-  //   );
-  //   return data;
-  // };
-
-try {
-  const orderIdEncoded =DecodedorderTpe?.toLowerCase()==="cart" ? encodeURIComponent(btoa(tempdecodedOrderID)) :  encodeURIComponent(btoa(decodedOrderID));
-const amountEncoded = encodeURIComponent(btoa(amount.toString()));
-// const emailEncoded = encodeURIComponent(btoa(CustomerDetails?.contact_email));
-// const companyEncoded = encodeURIComponent(btoa(OrderDetails[0]?.companyNameEn));
-const customerIdEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURIComponent(btoa(TempOrderDetails[0]?.orderDetails?.customerId)) :encodeURIComponent(btoa(OrderDetails[0]?.customerId))
-const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURIComponent(btoa(DecodedorderTpe)):encodeURIComponent(btoa("orders"))
-    // const response = await makeRequest();
-
-  let URL 
-  if(paymentType?.toLowerCase()=='cardpay'){
- URL= `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
-  
-  }else{
-     URL= `${window.location.protocol}//${window.location.host}/apple-pay/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
-  
-  }
-  window.location.replace(URL)
-    // window.close();
-    // navigate(URL)
-  } catch (error) {
-    console.error("Error generating payment link:", error);
-     if (error.response && error.response.status === 401) {
-     Swal.fire({
-  title: "Session Expired",
-  text: "Please refresh the page to continue.",
-  icon: "info",
-  showCancelButton: true,
-  confirmButtonText: "Reload Page",
-  cancelButtonText: "Close",
-}).then(async (result) => {
-  if (result.isConfirmed) {
     try {
-      // await generateToken(); // Call your API to get new token
-     
-    } catch (error) {
-      console.error("Token regeneration failed:", error);
-      Swal.fire("Error", "Unable to refresh session. Please try again.", "error");
-      window.close();
-    }
-  } else if (result.dismiss === Swal.DismissReason.cancel) {
-    window.close(); // Close the tab
-  }
-});
+      const orderIdEncoded =
+        DecodedorderTpe?.toLowerCase() === "cart"
+          ? encodeURIComponent(btoa(tempdecodedOrderID))
+          : encodeURIComponent(btoa(decodedOrderID));
+      const amountEncoded = encodeURIComponent(btoa(amount.toString()));
+      // const emailEncoded = encodeURIComponent(btoa(CustomerDetails?.contact_email));
+      // const companyEncoded = encodeURIComponent(btoa(OrderDetails[0]?.companyNameEn));
+      const customerIdEncoded =
+        DecodedorderTpe?.toLowerCase() === "cart"
+          ? encodeURIComponent(
+              btoa(TempOrderDetails[0]?.orderDetails?.customerId)
+            )
+          : encodeURIComponent(btoa(OrderDetails[0]?.customerId));
+      const orderTypeEncoded =
+        DecodedorderTpe?.toLowerCase() === "cart"
+          ? encodeURIComponent(btoa(DecodedorderTpe))
+          : encodeURIComponent(btoa("orders"));
+      // const response = await makeRequest();
 
-    } else {
-      Swal.fire({
-        title: "Error",
-        text: "Failed to generate payment link. Please try again later.",
-        icon: "error",
-        confirmButtonText: "OK",
-      }).then(() => {
-        window.close(); // Close the current window/tab after OK
-      });
+      let URL;
+      if (paymentType?.toLowerCase() == "cardpay") {
+        URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
+      } else {
+        URL = `${window.location.protocol}//${window.location.host}/apple-pay/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
+      }
+      window.location.replace(URL);
+      // window.close();
+      // navigate(URL)
+    } catch (error) {
+      console.error("Error generating payment link:", error);
+      if (error.response && error.response.status === 401) {
+        Swal.fire({
+          title: "Session Expired",
+          text: "Please refresh the page to continue.",
+          icon: "info",
+          showCancelButton: true,
+          confirmButtonText: "Reload Page",
+          cancelButtonText: "Close",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            try {
+              // await generateToken(); // Call your API to get new token
+            } catch (error) {
+              console.error("Token regeneration failed:", error);
+              Swal.fire(
+                "Error",
+                "Unable to refresh session. Please try again.",
+                "error"
+              );
+              window.close();
+            }
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            window.close(); // Close the tab
+          }
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: "Failed to generate payment link. Please try again later.",
+          icon: "error",
+          confirmButtonText: "OK",
+        }).then(() => {
+          window.close(); // Close the current window/tab after OK
+        });
+      }
     }
-    
-  }
     // navigate(data?.data?.InvoiceURL)
   };
-const allowedEntities = Object.values({
-  SHC: Constants.ENTITY?.SHC,
-  GMTC: Constants.ENTITY?.GMTC,
-  DAR: Constants.ENTITY?.DAR
-}).map(e => e?.toLowerCase());
+  const allowedEntities = Object.values({
+    SHC: Constants.ENTITY?.SHC,
+    GMTC: Constants.ENTITY?.GMTC,
+    DAR: Constants.ENTITY?.DAR,
+  }).map((e) => e?.toLowerCase());
 
-const currentEntity = TempOrderDetails?.[0]?.entity?.toLowerCase();
-const isMatch = allowedEntities.includes(currentEntity);
-console.log("currentEntity",isMatch,currentEntity)
-     const isMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-       const Mobile =  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-     const isDesktop = !Mobile;
-      const isVMCO =
+  const currentEntity = TempOrderDetails?.[0]?.entity?.toLowerCase();
+  const isMatch = allowedEntities.includes(currentEntity);
+  console.log("currentEntity", isMatch, currentEntity);
+  const isMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const Mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isDesktop = !Mobile;
+  const isVMCO =
     OrderDetails[0]?.entity?.toLowerCase() ===
     Constants.ENTITY?.VMCO?.toLowerCase();
 
@@ -601,193 +389,92 @@ console.log("currentEntity",isMatch,currentEntity)
     isMatch;
 
   return (
-     <Sidebar title={t("Payment Options")}>
-    {/* <div className="options-container">
-      <div className="button-wrapper">
-        {(OrderDetails[0]?.entity?.toLowerCase() ===
-          Constants.ENTITY?.VMCO?.toLowerCase() ||
-         ( OrderDetails[0]?.entity?.toLowerCase()|| TempOrderDetails[0]?.entity?.toLowerCase()) ===
-            Constants.ENTITY?.NAQI?.toLowerCase()) && (
-          <button
-            onClick={() => handleBankTransaction(amount, DecodedorderTpe.toLowerCase()==="cart" ?  tempdecodedOrderID :decodedOrderID)}
-            className="option-button blue"
-          >
-            <FontAwesomeIcon icon={faBuilding} style={{ marginRight: "10px" }} />
-            Bank Transaction
-          </button>
-        )}
-        <button
-          onClick={() => handlePayment("CardPay")}
-          className="option-button card"
-        >
-          <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: "10px" }} />
-          Cards Pay
-        </button>
-        {(OrderDetails[0]?.entity?.toLowerCase() ===
-          Constants.ENTITY?.DAR?.toLowerCase() ||
-          OrderDetails[0]?.entity?.toLowerCase() ===
-            Constants.ENTITY?.GMTC?.toLowerCase() ||
-          OrderDetails[0]?.entity?.toLowerCase() ===
-            Constants.ENTITY?.SHC?.toLowerCase() || isMatch)&&(isMobile || isDesktop) && (
-          <button
-            onClick={() => handlePayment("Apple Pay")}
-            className="option-button black"
-          >
-            <FontAwesomeIcon icon={faMobile} style={{ marginRight: "10px" }} />
-            Apple Pay
-          </button>
-        )}
-      </div>
-      <style>
-        {`.options-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height:80vh;
-  padding: 20px;
-  background-color: #f3f4f6;
-}
-
-.button-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  padding: 50px;
-    background-color: #ffffff;
-}
-
-.option-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 15px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-
-.option-button.blue {
-  background-color: #2563eb;
-}
-
-.option-button.blue:hover {
-  background-color: #1d4ed8;
-}
-
-.option-button.card {
-  background-color: #0293cc;
-}
-
-.option-button.card:hover {
-  background-color:rgb(12, 170, 233);
-}
-
-.option-button.black {
-  background-color: #000;;
-}
-
-`}
-      </style>
-    </div> */}
-
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "80vh",
-        // backgroundColor: "#F3F4F6",
-        p: 2,
-      }}
-    >
-      <Card
+    <Sidebar title={t("Payment Options")}>
+      <Box
         sx={{
-          width: "100%",
-          maxWidth: 400,
-          p: 4,
-          borderRadius: 3,
-          boxShadow: "0px 4px 14px rgba(0,0,0,0.14)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "80vh",
+          // backgroundColor: "#F3F4F6",
+          p: 2,
         }}
       >
-        <Stack spacing={3}>
-          {(isVMCO || isNAQI) && (
+        <Card
+          sx={{
+            width: "100%",
+            maxWidth: 400,
+            p: 4,
+            borderRadius: 3,
+            boxShadow: "0px 4px 14px rgba(0,0,0,0.14)",
+          }}
+        >
+          <Stack spacing={3}>
+            {(isVMCO || isNAQI) && (
+              <Button
+                fullWidth
+                variant="contained"
+                startIcon={<AccountBalanceIcon />}
+                sx={{
+                  py: 2,
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  bgcolor: "#2563eb",
+                  borderRadius: 2,
+                  "&:hover": { bgcolor: "#1d4ed8" },
+                }}
+                onClick={() =>
+                  handleBankTransaction(
+                    amount,
+                    DecodedorderTpe.toLowerCase() === "cart"
+                      ? tempdecodedOrderID
+                      : decodedOrderID
+                  )
+                }
+              >
+                Bank Transaction
+              </Button>
+            )}
+
             <Button
               fullWidth
               variant="contained"
-              startIcon={<AccountBalanceIcon />}
+              startIcon={<CreditCardIcon />}
               sx={{
                 py: 2,
                 fontSize: "10px",
                 fontWeight: 600,
-                bgcolor: "#2563eb",
+                bgcolor: "#0293cc",
                 borderRadius: 2,
-                "&:hover": { bgcolor: "#1d4ed8" },
+                "&:hover": { bgcolor: "rgb(12, 170, 233)" },
               }}
-              onClick={() =>
-                handleBankTransaction(
-                  amount,
-                  DecodedorderTpe.toLowerCase() === "cart"
-                    ? tempdecodedOrderID
-                    : decodedOrderID
-                )
-              }
+              onClick={() => handlePayment("CardPay")}
             >
-              Bank Transaction
+              Cards Pay
             </Button>
-          )}
 
-          <Button
-            fullWidth
-            variant="contained"
-            startIcon={<CreditCardIcon />}
-            sx={{
-              py: 2,
-              fontSize: "10px",
-              fontWeight: 600,
-              bgcolor: "#0293cc",
-              borderRadius: 2,
-              "&:hover": { bgcolor: "rgb(12, 170, 233)" },
-            }}
-            onClick={() => handlePayment("CardPay")}
-          >
-            Cards Pay 
-          </Button>
-
-          {showApplePay && (isMobile || isDesktop)&&(user?.designation?.toLowerCase()=="admin")&& (
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={<AppleIcon />}
-              sx={{
-                py: 2,
-                fontSize: "10px",
-                fontWeight: 600,
-                bgcolor: "#000",
-                color: "#fff",
-                borderRadius: 2,
-                "&:hover": { bgcolor: "#333" },
-              }}
-              onClick={() => handlePayment("Apple Pay")}
-            >
-              Apple Pay
-            </Button>
-          )}
-        </Stack>
-      </Card>
-    </Box>
-
+            {showApplePay && (isMobile || isDesktop) && (
+              <Button
+                fullWidth
+                variant="contained"
+                startIcon={<AppleIcon />}
+                sx={{
+                  py: 2,
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  bgcolor: "#000",
+                  color: "#fff",
+                  borderRadius: 2,
+                  "&:hover": { bgcolor: "#333" },
+                }}
+                onClick={() => handlePayment("Apple Pay")}
+              >
+                Apple Pay
+              </Button>
+            )}
+          </Stack>
+        </Card>
+      </Box>
     </Sidebar>
   );
 };
