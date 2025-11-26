@@ -93,8 +93,8 @@ const ApplePayComponent = () => {
           environment: Environment.Production,
           scope: Scope.TapToken,
           merchant: {
-            id: TAP_MERCHANT_ID,//
-            domain:  window.location.hostname // talabpoint.com,
+            id: TAP_MERCHANT_ID, //
+            domain: window.location.hostname, // talabpoint.com,
           },
           transaction: {
             currency: "SAR",
@@ -154,26 +154,8 @@ const ApplePayComponent = () => {
       const { data } = await api.post(`/payment/generate-link`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (
-              data?.status?.toLowerCase() === "error" &&
-              data?.details?.errors?.length > 0
-            ) {
-              const errorMessage = data.details.errors
-                .map((err) => `${err.code} - ${err.description}`)
-                .join("\n");
-      
-              Swal.fire({
-                icon: "error",
-                title: "Payment Error",
-                text: errorMessage || "Something went wrong during payment.",
-                confirmButtonColor: "#0b4c45",
-              });
-      
-              return;
-            }
-     
-  await api.get(`/auth/payment/success?tap_id=${data?.id}`)
-     
+
+      await api.get(`/auth/payment/success?tap_id=${data?.data?.id}`);
     } catch (error) {
       console.error("Failed to create charge request", error);
       Swal.fire({
@@ -188,108 +170,114 @@ const ApplePayComponent = () => {
   };
 
   return (
-   
-      <Box
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        minHeight: "90vh",
+        bgcolor: "#f7f9fb",
+        py: 5,
+        px: 2,
+      }}
+    >
+      <Card
         sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          minHeight: "90vh",
-          bgcolor: "#f7f9fb",
-          py: 5,
-          px: 2,
+          maxWidth: 800,
+          width: "100%",
+          borderRadius: 4,
+          boxShadow: 6,
+          transition: "0.3s ease",
+          "&:hover": { boxShadow: 10 },
         }}
       >
-        <Card
-          sx={{
-            maxWidth: 800,
-            width: "100%",
-            borderRadius: 4,
-            boxShadow: 6,
-            transition: "0.3s ease",
-            "&:hover": { boxShadow: 10 },
-          }}
-        >
-          <CardHeader
-            title={
-              <Box display="flex" alignItems="center" justifyContent='center' gap={1}>
-                <Payment color="primary" />
-                <Typography variant="h5" fontWeight={700}>
-                  Apple Payment
+        <CardHeader
+          title={
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              gap={1}
+            >
+              <Payment color="primary" />
+              <Typography variant="h5" fontWeight={700}>
+                Apple Payment
+              </Typography>
+            </Box>
+          }
+          subheader="Complete your payment securely using Tap Apple Pay"
+          sx={{ textAlign: "center", pb: 0 }}
+        />
+        <Divider sx={{ my: 2 }} />
+
+        <CardContent>
+          {!customerDetails ? (
+            <Box textAlign="center" py={5}>
+              <CircularProgress />
+              <Typography sx={{ mt: 2 }}>
+                Loading customer details...
+              </Typography>
+            </Box>
+          ) : (
+            <Grid container spacing={4}>
+              {/* Payment Info */}
+              <Grid item xs={12} md={6}>
+                <Typography variant="h6" fontWeight={600}>
+                  Payment Details
                 </Typography>
-              </Box>
-            }
-            subheader="Complete your payment securely using Tap Apple Pay"
-            sx={{ textAlign: "center", pb: 0 }}
-          />
-          <Divider sx={{ my: 2 }} />
+                <Divider sx={{ mb: 2, mt: 1 }} />
 
-          <CardContent>
-            {!customerDetails ? (
-              <Box textAlign="center" py={5}>
-                <CircularProgress />
-                <Typography sx={{ mt: 2 }}>Loading customer details...</Typography>
-              </Box>
-            ) : (
-              <Grid container spacing={4}>
-                {/* Payment Info */}
-                <Grid item xs={12} md={6}>
-                  <Typography variant="h6" fontWeight={600}>
-                    Payment Details
+                <Box sx={{ lineHeight: 2 }}>
+                  <Typography>
+                    <strong>Amount:</strong> {amountDecoded} SAR
                   </Typography>
-                  <Divider sx={{ mb: 2, mt: 1 }} />
-
-                  <Box sx={{ lineHeight: 2 }}>
-                    <Typography>
-                      <strong>Amount:</strong> {amountDecoded} SAR
-                    </Typography>
-                    <Typography>
-                      <strong>Currency:</strong> Saudi Riyal (SAR)
-                    </Typography>
-                    <Typography>
-                      <strong>Customer:</strong>{" "}
-                      {customerDetails?.company_name_en || "N/A"}
-                    </Typography>
-                    <Typography>
-                      <strong>Phone:</strong>{" "}
-                      {customerDetails?.contact_phone || "Not available"}
-                    </Typography>
-                    <Typography>
-                      <strong>Email:</strong>{" "}
-                      {customerDetails?.contact_email || "Not available"}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                {/* Apple Pay Button */}
-                <Grid item xs={12} md={6} textAlign="center">
-                  <Typography variant="h6" fontWeight={600}>
-                    Apple Pay Information
+                  <Typography>
+                    <strong>Currency:</strong> Saudi Riyal (SAR)
                   </Typography>
-                  <Divider sx={{ mb: 2, mt: 1 }} />
-                  <div
-                    id="apple-pay-button"
-                    ref={AppleContainerRef}
-                    style={{
-                      display: sdkLoaded ? "block" : "none",
-                      minHeight: "60px",
-                      opacity: initialized ? 1 : 0.3,
-                      transition: "opacity 0.4s ease",
-                      pointerEvents: initialized ? "auto" : "none",
-                    }}
-                  />
-                  {!initialized && sdkLoaded && (
-                    <Typography color="text.secondary" mt={1}>
-                      Preparing Apple Pay...
-                    </Typography>
-                  )}
-                </Grid>
+                  <Typography>
+                    <strong>Customer:</strong>{" "}
+                    {customerDetails?.company_name_en || "N/A"}
+                  </Typography>
+                  <Typography>
+                    <strong>Phone:</strong>{" "}
+                    {customerDetails?.contact_phone || "Not available"}
+                  </Typography>
+                  <Typography>
+                    <strong>Email:</strong>{" "}
+                    {customerDetails?.contact_email || "Not available"}
+                  </Typography>
+                </Box>
               </Grid>
-            )}
 
-            {/* Footer Note */}
-            <Divider sx={{ mt: 4, mb: 2 }} />
-            {/* <Box textAlign="center">
+              {/* Apple Pay Button */}
+              <Grid item xs={12} md={6} textAlign="center">
+                <Typography variant="h6" fontWeight={600}>
+                  Apple Pay Information
+                </Typography>
+                <Divider sx={{ mb: 2, mt: 1 }} />
+                <div
+                  id="apple-pay-button"
+                  ref={AppleContainerRef}
+                  style={{
+                    display: sdkLoaded ? "block" : "none",
+                    minHeight: "60px",
+                    opacity: initialized ? 1 : 0.3,
+                    transition: "opacity 0.4s ease",
+                    pointerEvents: initialized ? "auto" : "none",
+                  }}
+                />
+                {!initialized && sdkLoaded && (
+                  <Typography color="text.secondary" mt={1}>
+                    Preparing Apple Pay...
+                  </Typography>
+                )}
+              </Grid>
+            </Grid>
+          )}
+
+          {/* Footer Note */}
+          <Divider sx={{ mt: 4, mb: 2 }} />
+          {/* <Box textAlign="center">
               <Lock sx={{ verticalAlign: "middle", color: "success.main" }} />
               <Typography
                 variant="body2"
@@ -306,19 +294,18 @@ const ApplePayComponent = () => {
               />
             </Box> */}
 
-            {/* Processing State */}
-            {isProcessing && (
-              <Box textAlign="center" mt={3}>
-                <CircularProgress color="success" />
-                <Typography mt={2} color="success.main" fontWeight={500}>
-                  {t("Processing your payment...")}
-                </Typography>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-      </Box>
-  
+          {/* Processing State */}
+          {isProcessing && (
+            <Box textAlign="center" mt={3}>
+              <CircularProgress color="success" />
+              <Typography mt={2} color="success.main" fontWeight={500}>
+                {t("Processing your payment...")}
+              </Typography>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 
