@@ -5483,7 +5483,7 @@ function OrderDetails() {
                   </span>
                 </div>
               )}
-              <div className="" style={{ display: "flex", gap: "10px",    alignItems: 'center', 'justifySelf': 'start' }}>
+              <div className="" style={{ display: "flex", gap: "10px",    alignItems: 'center', 'justifySelf': 'start', width: isMobile ? '100%' : 'auto' }}>
                 {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && formData?.paymentMethod?.toLowerCase() == "pre payment" && formData?.sample_order !== true && (
                   <button
                     className="order-action-btn"
@@ -5501,7 +5501,7 @@ function OrderDetails() {
                     onClick={() => handleSave("save")}
                     disabled={saving || (formData.status && !["open"].includes(formData.status.toLowerCase()))}
                   >
-                    {saving ? t("Saving...") : t("Save Changes")}
+                    {saving ? t("Saving...") : t("Save")}
                   </button>
                 )}
 
@@ -5515,7 +5515,7 @@ function OrderDetails() {
                         !["open"].includes(formData.status.toLowerCase()))
                     }
                   >
-                    {cancelling ? t("Cancelling...") : t("Cancel Order")}
+                    {cancelling ? t("Cancelling...") : t("Cancel")}
                   </button>
                 )}
 
@@ -5534,7 +5534,7 @@ function OrderDetails() {
                         )
                       }
                     >
-                      {t("Download Invoice")}
+                      {t("Invoice")}
                     </button>
                   )}
 

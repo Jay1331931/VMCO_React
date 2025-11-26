@@ -2847,6 +2847,21 @@ useEffect(() => {
                                     onClick={() => toggleCategory(category.category)}
                                     style={{ cursor: 'pointer' }}
                                 >
+                                    {isMobile ? 
+                                    (
+                                        <div className="" style={{ display: 'flex', width: '100%', marginBottom: '10px', alignItems: 'center'}}>
+<div className="category-title">
+                                        <FontAwesomeIcon
+                                            icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
+                                        />
+                                        <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
+                                    </div>
+                                    <span className="category-count">{category.items.length} {t("Items")}</span>
+                                        
+                                        </div>
+                                    )
+                                    :
+                                    (<>
                                     <div className="category-title">
                                         <FontAwesomeIcon
                                             icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
@@ -2854,7 +2869,8 @@ useEffect(() => {
                                         <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
                                     </div>
                                     <span className="category-count">{category.items.length} {t("Items")}</span>
-
+                                    </>)}
+                                    
                                     {/* Only show Place Order button when category is collapsed */}
                                     {collapsedCategories.has(category.category) && (
                                         <button
@@ -3002,7 +3018,8 @@ useEffect(() => {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="item-price-panel">                                                        <span className="item-price">
+                                                <div className="item-price-panel">
+                                                                                                            <span className="item-price">
                                                         {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1)).toFixed(2)}
                                                         <span className="sar-label"> {t("SAR")}</span>
                                                     </span>
@@ -3020,6 +3037,10 @@ useEffect(() => {
                                                             {processingCategories.has(category.category) ? t('Processing...') : t('Delete')}
                                                         </button>
                                                     </div>
+                                                    <hr style={{marginTop: "10px",
+    height: "1px",
+    backgroundColor: "#f0f0f0",
+    border: "none",}}></hr>
                                                     </>
                                             ))
                                         )}

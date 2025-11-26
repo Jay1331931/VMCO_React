@@ -45,6 +45,7 @@
     "Differ": "تأجيل",
     "Save": "حفظ",
     "Download Invoice": "تحميل الفاتورة",
+    "Invoice": "الفاتورة",
     "Get Inventory": "الحصول على المخزون",
     "Continue Shopping": "متابعة التسوق",
     "Pay": "دفع",
@@ -831,6 +832,7 @@
    "From Date cannot be greater than To Date.":"لا يمكن أن يكون تاريخ من أكبر من تاريخ إلى.",
    "Invalid Date Range":"نطاق تاريخ غير صالح",
    "Please don't refresh the page.":"من فضلك لا تقم بتحديث الصفحة.",
-   "Please select an Category first":"الرجاء تحديد الفئة أولاً"
+   "Please select an Category first":"الرجاء تحديد الفئة أولاً",
+   "ADDING...":"جارٍ الإضافة..."
 
 }

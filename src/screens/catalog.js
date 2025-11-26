@@ -96,7 +96,7 @@ function Catalog() {
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState([]);
   const [entityDescriptions, setEntityDescriptions] = useState([]);
-
+  const [isAdding,setIsAdding]=useState(null)
   // Refs for pagination and observer
   const currentPageRef = useRef(1);
   const isLoadingRef = useRef(false);
@@ -957,6 +957,9 @@ function Catalog() {
   //  Add to cart functionality
   const handleAddToCart = async (productId) => {
     console.log("Adding product to cart:", productId);
+       setIsAdding(productId)
+      
+       
     try {
       // Check if a branch is selected
       if (!selectedLocation) {
@@ -1150,6 +1153,8 @@ function Catalog() {
         text: t("Failed to add product to cart. Please try again."),
         confirmButtonText: t("OK"),
       });
+    } finally{
+       setIsAdding(null)
     }
   };
 
@@ -1596,6 +1601,7 @@ function Catalog() {
                   onProductClick={() => handleProductClick(product)}
                   setQuantities={setQuantities}
                   onToggleFavorite={handleToggleFavorite}
+                  isAdding={isAdding}
                 />
               ))
               : !isLoading && (
