@@ -154,10 +154,26 @@ const ApplePayComponent = () => {
       const { data } = await api.post(`/payment/generate-link`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if(data?.id){
+      if (
+              data?.status?.toLowerCase() === "error" &&
+              data?.details?.errors?.length > 0
+            ) {
+              const errorMessage = data.details.errors
+                .map((err) => `${err.code} - ${err.description}`)
+                .join("\n");
+      
+              Swal.fire({
+                icon: "error",
+                title: "Payment Error",
+                text: errorMessage || "Something went wrong during payment.",
+                confirmButtonColor: "#0b4c45",
+              });
+      
+              return;
+            }
+     
   await api.get(`/auth/payment/success?tap_id=${data?.id}`)
-      }
+     
     } catch (error) {
       console.error("Failed to create charge request", error);
       Swal.fire({
