@@ -236,8 +236,8 @@ const TapCardPayment = () => {
 
         return;
       }
-      if (data?.data?.url) {
-        const paymentUrl = data.data.url;
+      if (data?.data?.transaction?.url) {
+        const paymentUrl = data.data?.transaction?.url;
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
