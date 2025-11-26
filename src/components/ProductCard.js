@@ -12,7 +12,8 @@ const ProductCard = ({
     onProductClick,
     setQuantities,
     onAddToCart,
-    onToggleFavorite
+    onToggleFavorite,
+    isAdding
 }) => {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
@@ -56,8 +57,10 @@ const ProductCard = ({
     };
 
     const handleAddToCart = (e) => {
+      
         e.stopPropagation();
         onAddToCart(product.id);
+
     }
 
     const handleFavoriteToggle = (newState) => {
@@ -116,8 +119,9 @@ const ProductCard = ({
                             className="add-to-cart-btn"
                             onClick={(e) => handleAddToCart(e)}
                             style={{ backgroundColor: '#01594C', color: "#ffffff" }}
+                            disabled={isAdding}
                         >
-                            {t('ADD TO CART')}
+                            {isAdding === product?.id ? t('ADDING...'):t('ADD TO CART')}
                         </button>
                     )}
                 </div>
