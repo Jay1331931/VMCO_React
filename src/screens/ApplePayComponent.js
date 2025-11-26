@@ -37,6 +37,7 @@ const ApplePayComponent = () => {
   const orderTypeDecoded = atob(decodeURIComponent(orderType));
   const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
   const TAP_MERCHANT_ID = process.env.REACT_APP_TAP_MERCHANT_ID;
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   // Fetch customer details
   useEffect(() => {
     const fetchCustomerDetails = async () => {
@@ -154,8 +155,8 @@ const ApplePayComponent = () => {
       const { data } = await api.post(`/payment/generate-link`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      await api.get(`/auth/payment/success?tap_id=${data?.data?.id}`);
+      window.location.replace(`${API_BASE_URL}/auth/payment/success?tap_id=${data?.data?.id}`)
+      // await api.get(`/auth/payment/success?tap_id=${data?.data?.id}`);
     } catch (error) {
       console.error("Failed to create charge request", error);
       Swal.fire({
@@ -200,8 +201,8 @@ const ApplePayComponent = () => {
               gap={1}
             >
               <Payment color="primary" />
-              <Typography variant="h5" fontWeight={700}>
-                Apple Payment
+              <Typography variant="h5" fontWeight={700}  onClick={() => handleSuccess("data")}>
+                Apple Payment 1
               </Typography>
             </Box>
           }
