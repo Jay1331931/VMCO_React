@@ -525,6 +525,7 @@ function Maintenance() {
                           ),
                         }}
                         sx={{
+                          border: "none !important",
                           "& .MuiDataGrid-overlay": {
                             display: "none !important", // ✅ hides “No rows” message
                           },
