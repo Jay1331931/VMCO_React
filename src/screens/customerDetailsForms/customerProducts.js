@@ -571,7 +571,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             style={{
               padding: "10px 15px",
               width: "250px",
-              border: "2px solid #00205b",
+              border: "0px solid lightgray",
               borderRadius: "8px",
               fontSize: "1rem",
               backgroundColor: "#fff",

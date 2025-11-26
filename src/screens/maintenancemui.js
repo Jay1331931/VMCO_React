@@ -66,7 +66,8 @@ function Maintenance() {
   const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
 
   // Add these state variables near the top of your component
-  const role = user?.userType === "employee" ? user?.designation : user?.roles[0];
+  const role =
+    user?.userType === "employee" ? user?.designation : user?.roles[0];
   const pageName = "Maintenance";
   const columnWidthsKey = `${pageName}_${role}_columnWidths`;
   const [columnDimensions, setColumnDimensions] = useState({});
@@ -147,7 +148,9 @@ function Maintenance() {
         let apiUrl;
         // Only include access parameter if user is maintenance head
         if (
-          user?.designation?.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()) {
+          user?.designation?.toLowerCase() ===
+          Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()
+        ) {
           const accessParam = isMyTicketsMode ? "region" : "all";
           apiUrl = `${API_BASE_URL}/maintenance/pagination?${params.toString()}&access=${accessParam}`;
         } else {
@@ -173,7 +176,9 @@ function Maintenance() {
         if (!response.ok) {
           if (response.status === 401) {
             logout();
-            navigate(user?.userType === "customer" ? "/login" : "/login/employee");
+            navigate(
+              user?.userType === "customer" ? "/login" : "/login/employee"
+            );
             return;
           }
           throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -191,7 +196,10 @@ function Maintenance() {
           );
 
           setTickets(processedTickets);
-          const totalRecords = resp.data?.totalRecords || resp.totalRecords || processedTickets.length;
+          const totalRecords =
+            resp.data?.totalRecords ||
+            resp.totalRecords ||
+            processedTickets.length;
           setTotal(totalRecords);
 
           // Store open tickets count when in open mode
@@ -299,7 +307,10 @@ function Maintenance() {
       });
 
       let apiUrl;
-      if (user?.designation?.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()) {
+      if (
+        user?.designation?.toLowerCase() ===
+        Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()
+      ) {
         const accessParam = isMyTicketsMode ? "region" : "all";
         apiUrl = `${API_BASE_URL}/maintenance/export?${params.toString()}&access=${accessParam}`;
       } else {
@@ -322,7 +333,9 @@ function Maintenance() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `maintenance-tickets-${new Date().toISOString().split("T")[0]}.xlsx`;
+      a.download = `maintenance-tickets-${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -342,27 +355,35 @@ function Maintenance() {
     { field: "brandNameEn", headerName: "Brand Name", width: 140 },
     { field: "branchNameEn", headerName: "Branch Name", width: 140 },
     { field: "branchCity", headerName: "Branch City", width: 120 },
-    { field: "assignedSalesExecutive", headerName: "Assigned Sales Executive", width: 160 },
+    {
+      field: "assignedSalesExecutive",
+      headerName: "Assigned Sales Executive",
+      width: 160,
+    },
     { field: "issueType", headerName: "Issue Type", width: 120 },
     {
-      field: "createdAt", headerName: "Created Date", width: 120,
+      field: "createdAt",
+      headerName: "Created Date",
+      width: 120,
       renderCell: (params) => (
         <span>
           {params.row?.createdAt
             ? formatDate(params.row.createdAt, "DD/MM/YYYY")
             : ""}
         </span>
-      )
+      ),
     },
     { field: "createdByUsername", headerName: "Created By", width: 120 },
     { field: "assignedTo", headerName: "Assigned To", width: 120 },
     {
-      field: "status", headerName: "Status", width: 110,
+      field: "status",
+      headerName: "Status",
+      width: 110,
       cellClassName: (params) => getStatusClass(params.value),
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{params.value}</label>
-      )
-    }
+      ),
+    },
   ];
 
   const visibleColumns = maintenanceColumns.filter(
@@ -375,7 +396,9 @@ function Maintenance() {
     .map((item) => item.field);
 
   const handleShowAllDetailsClick = async (ticket) => {
-    navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
+    navigate("/maintenanceDetails", {
+      state: { ticket: ticket, mode: "edit" },
+    });
   };
 
   // Handle row click to navigate to Maintenance details page with ticket details
@@ -385,7 +408,9 @@ function Maintenance() {
       setSelectedRow(ticket);
       setShowRowPopup(true);
     } else {
-      navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
+      navigate("/maintenanceDetails", {
+        state: { ticket: ticket, mode: "edit" },
+      });
     }
   };
 
@@ -428,7 +453,10 @@ function Maintenance() {
 
   // Pagination calculation - same as Orders and Support pages
   const totalPages =
-    Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0
+    Number.isFinite(total) &&
+    Number.isFinite(pageSize) &&
+    total > 0 &&
+    pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -499,20 +527,27 @@ function Maintenance() {
                               setSearchQuery={setSearchQuery}
                               setFilterAnchor={setFilterAnchor}
                               handleFilterChange={handleFilterChange}
-                              onColumnVisibilityChange={setColumnVisibilityModel}
+                              onColumnVisibilityChange={
+                                setColumnVisibilityModel
+                              }
                               columns={filteredData}
                               filters={filters}
                               columnVisibilityModel={columnVisibilityModel}
                               searchPlaceholder="Search maintenance tickets..."
                               showColumnVisibility={false}
                               showFilters={false}
-                              showExport={ user.userType === "employee" ? true : false}
+                              showExport={
+                                user.userType === "employee" ? true : false
+                              }
                               handleExportClick={handleExportToExcel}
                               exportLoading={exportLoading}
                               showUpload={false}
                               showAdd={isV("btnAdd") || isE("btnAdd")}
                               buttonName={t("Add")}
-                              showApproval={isV("toggleButton") && user?.designation === "maintenance head"}
+                              showApproval={
+                                isV("toggleButton") &&
+                                user?.designation === "maintenance head"
+                              }
                               showClosed={true}
                               isClosedMode={isClosedMode}
                               handleClosedTickets={handleShowClosedTickets}
@@ -525,6 +560,7 @@ function Maintenance() {
                           ),
                         }}
                         sx={{
+                          border: "none !important",
                           "& .MuiDataGrid-overlay": {
                             display: "none !important", // ✅ hides “No rows” message
                           },
@@ -560,7 +596,7 @@ function Maintenance() {
                           "& .MuiOutlinedInput-root": {
                             width: "100% !important",
                             minWidth: "230px !important",
-                          }
+                          },
                         }}
                       />
                     }
@@ -569,14 +605,13 @@ function Maintenance() {
                 <MaintenanceCard
                   tickets={initialTickets}
                   setSelectedRow={handleShowAllDetailsClick}
-                // handleViewDetails={(ticket) =>
-                //   navigate("/maintenanceDetails", { state: { ticket, mode: "edit" } })
-                // }
-                // handleAdd={() =>
-                //   navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } })
-                // }
+                  // handleViewDetails={(ticket) =>
+                  //   navigate("/maintenanceDetails", { state: { ticket, mode: "edit" } })
+                  // }
+                  // handleAdd={() =>
+                  //   navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } })
+                  // }
                 />
-
               </>
             )}
           </div>
@@ -653,34 +688,34 @@ function Maintenance() {
                   },
                   ...(isArabic
                     ? {
-                      direction: "rtl",
-                      "& .MuiDataGrid-cell": {
-                        textAlign: "right !important",
-                      },
-                      "& .MuiDataGrid-columnHeader": {
-                        textAlign: "right !important",
-                      },
-                      "& .MuiDataGrid-columnHeaderTitle": {
-                        textAlign: "right !important",
-                      },
-                      "& .MuiDataGrid-cellContent": {
-                        textAlign: "right !important",
-                      },
-                    }
+                        direction: "rtl",
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "right !important",
+                        },
+                      }
                     : {
-                      "& .MuiDataGrid-cell": {
-                        textAlign: "left",
-                      },
-                      "& .MuiDataGrid-columnHeader": {
-                        textAlign: "left",
-                      },
-                      "& .MuiDataGrid-columnHeaderTitle": {
-                        textAlign: "left",
-                      },
-                      "& .MuiDataGrid-cellContent": {
-                        textAlign: "left",
-                      },
-                    }),
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "left",
+                        },
+                      }),
                 }}
               />
             )}
