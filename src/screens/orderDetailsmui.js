@@ -4822,6 +4822,14 @@ function OrderDetails() {
                                       confirmButtonText: t("OK"),
                                     });
                                     return;
+                                  } else if (['vmco','shc'].includes(formData?.entity?.toLowerCase())){
+                                    Swal.fire({
+                                      title: t("VMCO / SHC Category"),
+                                      text: t("Please select an Category first"),
+                                      icon: "warning",
+                                      confirmButtonText: t("OK"),
+                                    });
+                                    return;
                                   }
                                 }
                                 // In edit mode, always use values from formData (order state)
