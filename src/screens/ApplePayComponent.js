@@ -201,8 +201,8 @@ const ApplePayComponent = () => {
               gap={1}
             >
               <Payment color="primary" />
-              <Typography variant="h5" fontWeight={700}  onClick={() => handleSuccess("data")}>
-                Apple Payment 1
+              <Typography variant="h5" fontWeight={700}>
+                Apple Payment
               </Typography>
             </Box>
           }
