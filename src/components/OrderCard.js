@@ -305,7 +305,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                             order?.status?.toLowerCase() !== "rejected" &&
                             order?.paymentMethod?.toLowerCase() != "cash on delivery" &&
                             order?.paymentMethod?.toLowerCase() !== "credit" &&
-                            order?.paymentStatus?.toLowerCase() !== "paid" &&
+                           ( order?.paymentStatus?.toLowerCase() !== "paid" || order?.paymentStatus?.toLowerCase() !== "under review") &&
                             ((order?.entity.toLowerCase() ===
                               Constants.ENTITY.VMCO.toLowerCase() &&
                               order?.status?.toLowerCase() === "approved") ||

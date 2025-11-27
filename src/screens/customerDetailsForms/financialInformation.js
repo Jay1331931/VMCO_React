@@ -2745,6 +2745,9 @@ const getDisplayName = (key) => {
                  {ORDERED_KEYS?.map(key => (
     <Grid item xs={12} sm={6} md={4} key={key}>
       <FormControlLabel
+     sx={{
+    "& .MuiFormControlLabel-label": {
+      fontSize: "15px",}}}
         control={
           <Checkbox
             checked={selectedEntities.includes(key)}
@@ -2763,7 +2766,7 @@ const getDisplayName = (key) => {
             <Grid container spacing={2}>
               {/* FROM DATE */}
               <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl fullWidth>
+                <FormControl width={'200px'}>
                   <FormLabel>{t("From Date")}</FormLabel>
                   <TextField
                     type="date"
@@ -2789,7 +2792,7 @@ const getDisplayName = (key) => {
 
               {/* TO DATE */}
               <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl fullWidth>
+                <FormControl width={'200px'}>
                   <FormLabel>{t("To Date")}</FormLabel>
                   <TextField
                     type="date"
@@ -2813,7 +2816,7 @@ const getDisplayName = (key) => {
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl fullWidth>
+                <FormControl width={'200px'}>
                   <FormLabel>{t("Email")}</FormLabel>
                   <TextField
                     value={
@@ -2836,11 +2839,11 @@ const getDisplayName = (key) => {
               </Grid>
 
               <Grid item xs={12} sm={6} md={6} lg={5} xl={6}>
-                <FormControl fullWidth>
+                <FormControl width={'200px'}>
                   <FormLabel>{t("CC")}</FormLabel>
 
                   <TextField
-                    fullWidth
+                    
                     placeholder={t("comma separated emails.")}
                     value={ccEmail}
                     onChange={(e) => {
@@ -2888,6 +2891,7 @@ const getDisplayName = (key) => {
                 <Typography
                   variant="body2"
                   sx={{
+                    width:"200px",
                     wordWrap: "break-word",
                     overflowWrap: "break-word",
                     whiteSpace: "normal",
