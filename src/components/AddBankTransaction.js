@@ -196,14 +196,20 @@ const AddBankTransaction = () => {
       });
 
       if (response.data.status === "success") {
-        Swal.fire({
+     Swal.fire({
           title: t("Success"),
           text: t("Transaction created successfully"),
           icon: "success",
           confirmButtonText: t("OK"),
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+        }).then((result) => {
+          if (result.isConfirmed || result.isDismissed) {
+            const URL = `${window.location.protocol}//${window.location.host}/orders`;
+            window.location.replace(URL);
+          }
         });
-        const URL = `${window.location.protocol}//${window.location.host}/orders`;
-        window.location.replace(URL);
+
       }
     } catch (error) {
       console.error("Submission error:", error);

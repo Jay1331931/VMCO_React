@@ -18,6 +18,7 @@ import { Box, Button, Card, Stack } from "@mui/material";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AppleIcon from "@mui/icons-material/Apple";
+import LoadingSpiner from "./LoadingSpinner"
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
   return localStorage.getItem(name);
@@ -390,7 +391,7 @@ const OptionsPage = () => {
 
   return (
     <Sidebar title={t("Payment Options")}>
-      <Box
+      { (isVMCO || isNAQI || showApplePay  ) ?  <Box
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -474,7 +475,8 @@ const OptionsPage = () => {
             )}
           </Stack>
         </Card>
-      </Box>
+      </Box>:<LoadingSpiner/>  }
+     
     </Sidebar>
   );
 };
