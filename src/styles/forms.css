@@ -1991,7 +1991,8 @@ td.file-display-cell {
   border-bottom: none;
 }
 .location-picker-button {
-  right: 8px;
+  position: relative;
+  right: 10px;
   background: none;
   border: none;
   font-size: 1.2em;
@@ -1999,7 +2000,7 @@ td.file-display-cell {
   padding: 5px;
 }
 [dir="rtl"] .location-picker-button {
-  left: 8px;
+  left: 10px;
   right: auto;
 }
 .map-modal {
