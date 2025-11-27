@@ -175,7 +175,8 @@ const AddBankTransaction = () => {
         errors.bankDocuments = "Bank Documents are required";
       if (!formData.amountTransferred)
         errors.amountTransferred = "Amount Transferred is required";
-
+      if(isUploading)
+        errors.bankDocuments = "Bank Documents are uploading";
       setFieldErrors(errors);
       if (Object.keys(errors).length > 0) {
         setError(t("Please fill all required fields"));
@@ -201,14 +202,16 @@ const AddBankTransaction = () => {
           text: t("Transaction created successfully"),
           icon: "success",
           confirmButtonText: t("OK"),
-          allowOutsideClick: true,
-          allowEscapeKey: true,
-        }).then((result) => {
-          if (result.isConfirmed || result.isDismissed) {
-            const URL = `${window.location.protocol}//${window.location.host}/orders`;
+          // allowOutsideClick: true,
+          // allowEscapeKey: true,
+        })
+        // .then((result) => {
+        //   if (result.isConfirmed || result.isDismissed) {
+            
+        //   }
+        // });\
+      const URL = `${window.location.protocol}//${window.location.host}/orders`;
             window.location.replace(URL);
-          }
-        });
 
       }
     } catch (error) {
@@ -956,9 +959,9 @@ const AddBankTransaction = () => {
             <div className="form-actions">
               {!id && (
                 <>
-                  <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting || isUploading}
+                  <button className="submit-btn" onClick={handleSubmit} disabled={isUploading || isSubmitting }
                   >
-                    {isSubmitting ? t("Submitting...") : t("Submit")}
+                    {isSubmitting   ? t("Submitting...") : t("Submit")}
                   </button>
                   <button className="cancel-btn" onClick={() => handleCancel()}>
                     {t("Cancel")}
