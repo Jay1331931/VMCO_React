@@ -876,6 +876,7 @@ setIsUploading(true)
               <textarea
                 id="description"
                 name="description"
+                className="description"
                 placeholder={t("Description")}
                 rows={3}
                 value={
@@ -994,7 +995,9 @@ setIsUploading(true)
           {`.full-width {
   width: 100%;
 }
-
+.description{
+  border: 1px solid #ccc;
+}
 .bank-doc-upload-wrapper {
   display: flex;
   align-items: center;
