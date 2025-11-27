@@ -660,7 +660,7 @@ function Maintenance() {
                     searchPlaceholder: "Search maintenance tickets...",
                     showColumnVisibility: true,
                     showFilters: true,
-                    showExport: user.userType === "employee" ? true : false,
+                    showExport: user?.userType === "employee" ? true : false,
                     handleExportClick: handleExportToExcel,
                     exportLoading: exportLoading,
                     showUpload: false,
