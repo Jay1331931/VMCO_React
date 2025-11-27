@@ -171,7 +171,7 @@ function BankTransactionsCard({ transactions, setSelectedRow, handleAddClick }) 
                       color="white"
                       sx={{ mt: 0.3 }}
                     >
-                      {formatDate(txn?.createdAt)}
+                      {txn?.createdAt}
                     </Typography>
                   </div>
                 </Grid>
