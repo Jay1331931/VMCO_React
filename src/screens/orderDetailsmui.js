@@ -5509,10 +5509,9 @@ function OrderDetails() {
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder("cancel order")}
-                    disabled={
-                      cancelling ||
-                      (formData.status &&
-                        !["open"].includes(formData.status.toLowerCase()))
+                    disabled={cancelling || 
+                      (formData.status && !["open"].includes(formData.status.toLowerCase())) || 
+                      (formData.paymentStatus && ["paid", "under review"].includes(formData.paymentStatus.toLowerCase()))
                     }
                   >
                     {cancelling ? t("Cancelling...") : t("Cancel")}
