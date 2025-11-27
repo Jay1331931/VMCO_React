@@ -584,7 +584,7 @@ function Maintenance() {
                             // backgroundColor: "#fff", // ensures it doesn't become transparent
                             // borderBottom: "1px solid #e0e0e0",
                             padding: "0px",
-                            gap: "0px",
+                            gap: "10px",
                             border: "none",
                           },
 
