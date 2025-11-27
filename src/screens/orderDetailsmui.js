@@ -5509,10 +5509,9 @@ function OrderDetails() {
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder("cancel order")}
-                    disabled={
-                      cancelling ||
-                      (formData.status &&
-                        !["open"].includes(formData.status.toLowerCase()))
+                    disabled={cancelling || 
+                      (formData.status && !["open"].includes(formData.status.toLowerCase())) || 
+                      (formData.paymentStatus && ["paid", "under review"].includes(formData.paymentStatus.toLowerCase()))
                     }
                   >
                     {cancelling ? t("Cancelling...") : t("Cancel")}
@@ -5552,7 +5551,7 @@ function OrderDetails() {
                   formData?.status?.toLowerCase() !== "cancelled" && formData?.status?.toLowerCase() !== "rejected" &&
                   formData?.paymentMethod?.toLowerCase() != "cash on delivery" &&
                   formData?.paymentMethod?.toLowerCase() !== "credit" &&
-                  formData?.paymentStatus?.toLowerCase() !== "paid" &&
+                  (formData?.paymentStatus?.toLowerCase() !== "paid" ||  formData?.paymentStatus?.toLowerCase() !== "under review") &&
                   (
                     (formData?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
                       formData?.status?.toLowerCase() === "approved") ||

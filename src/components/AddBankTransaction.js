@@ -34,9 +34,9 @@ const AddBankTransaction = () => {
   const currentLanguage = i18n.language;
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    erpCustId: user?.userType === 'customer' ? user?.erpCustomerId : "",
-    companyNameEn: user?.userType === 'customer' ? user?.companyNameEn : "",
-    companyNameAr: user?.userType === 'customer' ? user?.companyNameAr : "",
+    erpCustId: user?.userType === 'customer' ? user?.erpCustomerId: "",
+    companyNameEn:user?.userType === 'customer' ? user?.companyNameEn: "",
+    companyNameAr: user?.userType === 'customer' ? user?.companyNameAr: "",
     amountTransferred: 0,
     transactionDate: "",
     erpOrderId: [],
@@ -57,14 +57,14 @@ const AddBankTransaction = () => {
   const [TemporderIds, setTempOrderIds] = useState();
   const [totalamount, setAmount] = useState(0);
   const [isSubmitting, setisSubmitting] = useState(null);
-  const [isUploading, setIsUploading] = useState(null)
+  const [isUploading,setIsUploading]=useState(null)
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
     "BankTransactions"
   );
-  console.log("user", user)
+  console.log("user",user)
   const cookieToken = getCookie("token");
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
@@ -98,18 +98,18 @@ const AddBankTransaction = () => {
   //   }
   // }, [orderId]);
   const handleChange = (e) => {
-
+   
     const { name, value } = e.target;
-    if (name === "entity") {
-      setFormData((prev) => ({ ...prev, orderId: [], erpOrderId: [], amountTransferred: 0 }));
+     if(name==="entity"){
+        setFormData((prev) => ({ ...prev, orderId:[],erpOrderId:[],amountTransferred:0}));
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = async (e) => {
     const files = e.target.files;
-
-    setIsUploading(true)
+    
+setIsUploading(true)
     for (let file of files) {
       //file Size less than 30MB
       if (file.size > 10 * 1024 * 1024) {
@@ -141,7 +141,7 @@ const AddBankTransaction = () => {
   useEffect(() => {
     const fetchCurrentDate = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/get-current-date`,
+        const response = await api.get(`/get-current-date`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -175,8 +175,7 @@ const AddBankTransaction = () => {
         errors.bankDocuments = "Bank Documents are required";
       if (!formData.amountTransferred)
         errors.amountTransferred = "Amount Transferred is required";
-      if(isUploading)
-        errors.bankDocuments = "Bank Documents are uploading";
+
       setFieldErrors(errors);
       if (Object.keys(errors).length > 0) {
         setError(t("Please fill all required fields"));
@@ -197,22 +196,14 @@ const AddBankTransaction = () => {
       });
 
       if (response.data.status === "success") {
-     Swal.fire({
+        Swal.fire({
           title: t("Success"),
           text: t("Transaction created successfully"),
           icon: "success",
           confirmButtonText: t("OK"),
-          // allowOutsideClick: true,
-          // allowEscapeKey: true,
-        })
-        // .then((result) => {
-        //   if (result.isConfirmed || result.isDismissed) {
-            
-        //   }
-        // });\
-      const URL = `${window.location.protocol}//${window.location.host}/orders`;
-            window.location.replace(URL);
-
+        });
+        const URL = `${window.location.protocol}//${window.location.host}/orders`;
+        window.location.replace(URL);
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -588,7 +579,11 @@ const AddBankTransaction = () => {
                 id="transactionDate"
                 name="transactionDate"
                 type="date"
-                value={formData?.transactionDate || updateTransaction?.transactionDate || ""}
+                value={
+                  formData?.transactionDate ||
+                  updateTransaction?.transactionDate ||
+                  ""
+                }
                 onChange={handleChange}
                 disabled={!!updateTransaction?.transactionDate}
                 max={new Date().toISOString().split("T")[0]}
@@ -625,9 +620,9 @@ const AddBankTransaction = () => {
                   </div>
                 )}
               </div>
-            )}
+             )} 
 
-            {([Constants.ENTITY.NAQI?.toLowerCase(), Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
+            {([Constants.ENTITY.NAQI?.toLowerCase(),Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
               Object.keys(updateTransaction).length > 0 ? (
               <>
                 <div className="form-group">
@@ -790,7 +785,7 @@ const AddBankTransaction = () => {
                     </>
                   )}
                   <div className="scrollable-preview-container">
-                    {isUploading ? <LoadingSpinner /> : <>{fileData?.map((file, index) => {
+                    {isUploading ? <LoadingSpinner/>:<>{fileData?.map((file, index) => {
                       const fileUrl = file.url;
                       const extension = file.fileName
                         .split(".")
@@ -959,9 +954,9 @@ const AddBankTransaction = () => {
             <div className="form-actions">
               {!id && (
                 <>
-                  <button className="submit-btn" onClick={handleSubmit} disabled={isUploading || isSubmitting }
+                  <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting || isUploading}
                   >
-                    {isSubmitting   ? t("Submitting...") : t("Submit")}
+                    {isSubmitting ? t("Submitting...") : t("Submit")}
                   </button>
                   <button className="cancel-btn" onClick={() => handleCancel()}>
                     {t("Cancel")}
@@ -1141,11 +1136,11 @@ const AddBankTransaction = () => {
   //     {renderTemplate()}
   //   </div>
   // ) : (
-  return (<Sidebar title={t("Bank Transactions")}>
-    {/* <div className="bank-transaction-form"> */}
-    {renderTemplate()}
-    {/* </div> */}
-  </Sidebar>
+    return(<Sidebar title={t("Bank Transactions")}>
+      {/* <div className="bank-transaction-form"> */}
+      {renderTemplate()}
+      {/* </div> */}
+    </Sidebar>
   );
 };
 
