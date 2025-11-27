@@ -141,7 +141,7 @@ const AddBankTransaction = () => {
   useEffect(() => {
     const fetchCurrentDate = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/get-current-date`,
+        const response = await api.get(`/get-current-date`,
           {
             headers: {
               "Content-Type": "application/json",
