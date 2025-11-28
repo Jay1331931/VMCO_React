@@ -42,12 +42,17 @@ function GetProducts({
   const debounceTimeout = useRef();
   const categoryDropdownRef = useRef();
   const subcategoryDropdownRef = useRef();
-
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   // Clear selected products when modal closes
   useEffect(() => {
     if (!open) setSelectedProducts([]);
   }, [open]);
-
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   // For single-selection mode (machineMode), only allow one selected product
   const handleProductCheck = (product, isChecked) => {
     if (machineMode) {
@@ -367,7 +372,7 @@ function GetProducts({
                 id="category-filter"
                 name="categoryFilter"
                 options={categories}
-                className="category-filter"
+                className={isMobile ? "mobile-select-branch location-select" : "category-filter"}
                 placeholder={t("Category")}
                 value={selectedCategory}
                 onChange={e => {
@@ -382,7 +387,7 @@ function GetProducts({
                 id="subcategory-filter"
                 name="subCategoryFilter"
                 options={subcategories}
-                className="category-filter"
+                className={isMobile ? "mobile-select-branch location-select" : "category-filter"}
                 placeholder={!selectedCategory ? t("Select category first") : t("Sub category")}
                 value={selectedSubcategory}
                 onChange={e => setSelectedSubcategory(e.target.value)}
@@ -442,7 +447,7 @@ function GetProducts({
                         style={{
                           flex: 1,
                           textAlign: isRTL ? 'right' : 'left',
-                          fontSize: "1rem"
+                          fontSize: isMobile ? "0.7rem":"1rem"
                         }}
                       >
                         {i18n.language === 'ar' ?
@@ -517,12 +522,12 @@ function GetProducts({
           gap: 8px;
         }
         .gp-select-btn {
-          padding: 7px 18px;
+          padding: 7px 10px;
           border-radius: 6px;
           border: 1px solid var(--logo-deep-green);
           background: var(--logo-deep-green);
           color: white;
-          font-size: 1rem;
+          font-size: 0.8rem;
           cursor: pointer;
           transition: background 0.15s;
         }
@@ -642,12 +647,12 @@ function GetProducts({
           gap: 12px;
         }
         .gp-close-btn {
-          padding: 7px 18px;
+          padding: 7px 10px;
           border-radius: 6px;
           border: 1px solid #bbb;
           background: #fff;
           color: #222;
-          font-size: 1rem;
+          font-size: 0.8rem;
           cursor: pointer;
           transition: background 0.15s;
         }
@@ -657,6 +662,13 @@ function GetProducts({
         }
         .gp-close-btn:hover:not(:disabled) {
           background: #f2f2f2;
+        }
+        @media(max-width: 768px) {
+          .gp-filters-row {
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+          }
         }
       `}</style>
     </div>

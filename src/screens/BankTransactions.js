@@ -556,7 +556,7 @@ const BankTransactions = () => {
               )}
             </div>
           )}
-          {transactions?.length > 0 && (
+          {transactions?.length > 0 && !loading && (
             <Pagination
               currentPage={page}
               totalPages={String(total)}

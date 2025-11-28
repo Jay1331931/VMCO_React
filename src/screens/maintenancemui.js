@@ -724,7 +724,7 @@ function Maintenance() {
         )}
 
         {/* External Pagination component */}
-        {isV("maintenancePagination") && initialTickets.length > 0 && (
+        {isV("maintenancePagination") && !loading && initialTickets.length > 0 && (
           <Pagination
             currentPage={page}
             totalPages={String(totalPages)}

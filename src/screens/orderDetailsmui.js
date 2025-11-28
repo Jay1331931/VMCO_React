@@ -4581,6 +4581,24 @@ function OrderDetails() {
                       formMode === "edit" && (
                         <div className="order-details-field">
                           <label>{t("Warehouse")} *</label>
+                          {isMobile ? (
+<select
+                            name="warehouse"
+                            value={selectedWarehouse || ""}
+                            onChange={handleWarehouseChange}
+                            className="entity-dropdown"
+                            disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
+                            placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
+                            >
+                            {warehouseOptions.map(
+                              (warehouse, index) => (
+                                <option key={index} value={warehouse}>
+                                  {i18n.language === "en" ? warehouse?.warehouseNameEn : warehouse?.warehouseNameAr}
+                                </option>
+                              )
+                            )}
+                          </select>
+                          ):(
                           <SearchableDropdown
                             options={warehouseOptions}
                             value={selectedWarehouse || ""}
@@ -4589,6 +4607,7 @@ function OrderDetails() {
                             placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
                             className="entity-dropdown"
                           />
+                          )}
                           {warehousesLoading && <div className="loading-indicator">Loading...</div>}
                         </div>
                       )
