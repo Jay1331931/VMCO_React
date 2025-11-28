@@ -28,6 +28,7 @@ import BankTransactions from "./screens/BankTransactions";
 import Reports from "./screens/reports";
 import ApiLogsReport from "./screens/apiLogsReport";
 import AddBankTransaction from "./components/AddBankTransaction";
+import AddInvites from "./components/AddInvites";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OptionsPage from "./components/OptionsPage";
@@ -123,6 +124,7 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
+        <Route path="/invite/add" element={<AddInvites />} />
         <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
         <Route path="/bankTransactions/order/:amount/:orderId/:orderType" element={<AddBankTransaction />} />
         <Route path="/admin/upload" element={<BulkUploadBranchAndCustomer />} />

@@ -713,7 +713,7 @@ function Support() {
                         )}
                     </div>
                 )}
-                {isV("supportPagination") && initialTickets.length > 0 && (
+                {isV("supportPagination") && !loading && initialTickets.length > 0 && (
                     <Pagination
                         currentPage={page}
                         totalPages={String(totalPages)}

@@ -1,0 +1,61 @@
+.invite-form-container {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.invite-grid {
+  display: flex;
+  flex-direction: column;
+  /* flex-wrap: wrap; */
+  /* gap: 16px; */
+}
+
+.form-group {
+  flex: 1 1 calc(50% - 16px);
+  display: flex;
+  flex-direction: column;
+}
+
+.full-width {
+  flex: 1 1 100%;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.error {
+  color: red;
+  font-size: 0.8em;
+  margin-top: 4px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.submit-btn,
+.cancel-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+}
+
+.submit-btn {
+  background: #006d63;
+  color: white;
+}
+
+.cancel-btn {
+  background: #ccc;
+}

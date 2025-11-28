@@ -192,6 +192,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
         .message-icon {
           width: 35px;
           height: 24px;
+          color: #002b5c;
         }
         .badge {
           position: absolute;

@@ -264,7 +264,7 @@
   height: 30px;
 }
 .dropdown-options {
-  max-height: 250px;
+  max-height: 315px;
   overflow-y: auto;
 }
 .dropdown-option {
@@ -1207,6 +1207,19 @@ body::-webkit-scrollbar {
   align-self: center;
   margin: 0 0;
 }
+.branch-card-highlight {
+  background:  #fff9e6 !important;;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  width: calc(0.9 * var(--branches-list-width));
+  min-width: calc(0.8 * var(--branches-list-width));
+  align-self: center;
+  margin: 0 0;
+}
+.branch-card-highlight:hover {
+background-color: #fff4d1 !important;
+}
 .branch-summary {
   display: flex;
   justify-content: space-between;
@@ -1546,7 +1559,7 @@ td.file-display-cell {
   }
 
   .dropdown-search {
-    width: 270px !important;
+    width: 375px !important;
   }
 
   .dropdown-content.mobile {
@@ -1731,6 +1744,10 @@ td.file-display-cell {
     max-width: 100% !important;
   }
   .branch-card {
+    padding: 0.9rem;
+    margin: 5px;
+  }
+  .branch-card-highlight {
     padding: 0.9rem;
     margin: 5px;
   }

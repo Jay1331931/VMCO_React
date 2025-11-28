@@ -3094,7 +3094,7 @@ function Orders() {
           />
         )}
 
-        {isV("ordersPagination") && paginatedOrders.length > 0 && (
+        {isV("ordersPagination") && paginatedOrders.length > 0 && !loading && (
           <Pagination
             currentPage={page}
             totalPages={String(totalPages)}

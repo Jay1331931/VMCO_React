@@ -11,6 +11,7 @@ import Tabs from "../components/Tabs";
 import RbacManager from "../utilities/rbac";
 import getBusinessDetailsFormData from "./customerDetailsForms/customerBusinessDetails";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Swal from "sweetalert2";
@@ -38,6 +39,7 @@ import Constants from "../constants";
 import CustomerCard from "../components/CustomerCard";
 import InviteCard from "../components/InviteCard";
 import { faHeartPulse } from "@fortawesome/free-solid-svg-icons";
+import AddInvites from "../components/AddInvites";
 const getStatusClass = (status) => {
   switch (status?.toLowerCase()) {
     case "approved":
@@ -52,7 +54,9 @@ const getStatusClass = (status) => {
 function Customers() {
   const { t, i18n } = useTranslation();
   const gridApiRef = useGridApiRef();
-  const [activeTab, setActiveTab] = useState("customers");
+  const location = useLocation();
+  const defaultTab = location.state?.activeTab || "customers";
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [filteredApprovals, setFilteredApprovals] = useState([]);
   const [customerContacts, setCustomerContacts] = useState({});
@@ -299,6 +303,9 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
       comments: "",
     });
     setInviteErrors({});
+    if (isMobile) {
+      navigate('/customers');
+    }
   };
 
   const handleInvite = () => {
@@ -306,7 +313,15 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
       ...prev,
       source: "salesexecutive",
     }));
-    setIsInviteModalOpen(true);
+    if(isMobile) {
+      navigate('/invite/add')
+      // <AddInvites
+      //   handleInviteSubmit={handleInviteSubmit}
+      //   clearInviteFields={clearInviteFields}
+      // />
+    } else {
+      setIsInviteModalOpen(true);
+    }  
   };
 
   const validateInviteData = (data) => {
@@ -2645,7 +2660,7 @@ const handleColumnResize = (params) => {
         </div>
         {renderContent()}
 
-        {isInviteModalOpen && (
+        {isInviteModalOpen && !isMobile && (
           <dialog className="invite-dialog" open>
             <h2>{t("Invite")}</h2>
 
@@ -2878,7 +2893,7 @@ const handleColumnResize = (params) => {
         (activeTab === "invites" && paginatedInvites.length > 0) ||
         (activeTab === "customers" &&
           isApprovalMode &&
-          paginatedApprovals.length > 0)) && (
+          paginatedApprovals.length > 0)) && !loading && (
           <Pagination
             currentPage={page}
             totalPages={Math.ceil(total / pageSize)}

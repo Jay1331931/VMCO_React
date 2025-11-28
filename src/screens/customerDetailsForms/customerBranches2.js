@@ -464,7 +464,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   // ?.slice(startIndex, endIndex);
   const isExpanded = (branchId) => expandedRows.includes(branchId);
   const getStatusClass = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "approved":
         return "status-approved";
       case "pending":
@@ -1709,8 +1709,14 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         )}
           {!showAllDetails && (
             <div className="branches-list">
-              {currentItems.map((branch) => (
-                <div key={branch.id} className="branch-card">
+              {currentItems.map((branch, index) => (
+                <div key={branch.id} className={ 
+                mode === "edit" &&
+                index === 0 &&
+                String(branch?.id) ===
+                  String(customer?.completeWorkflowData?.workflowData?.id)
+                  ? "branch-card-highlight"
+                  : "branch-card"}>
                   <div
                     // className="branch-summary"
                     style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}
@@ -1775,6 +1781,10 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             </div>
              */}
               <div className="branch-form-sections">
+                {isApprovalMode &&
+                            customerFormMode === "custDetailsAdd" && (
+                              <span style={{display: 'flex', justifyContent: 'center', fontWeight: 'bold'}}>{t("Branch is currently under approval")}</span>
+                            )}
                 <BranchDetailsForm
                   branchId={selectedBranch.id}
                   branch={selectedBranch}
