@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '../i18n';
 import { faLanguage } from '@fortawesome/free-solid-svg-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
+import Footer from '../components/Footer';
 
 
 
@@ -29,7 +30,7 @@ function LoginScreen() {
     document.body.dir = newLang === 'ar' ? 'rtl' : 'ltr';
   };
   return (
-    <div>
+  <div className="page-container">
       <div className={`app ${isRTL ? 'rtl' : ''}`}>
         <header className="header">
           <div className="sidebar-header">
@@ -48,8 +49,32 @@ function LoginScreen() {
       </div>
 
 
-      <Login title={title} userType={userType} />
+  <div className="content-wrap">
 
+
+      <Login title={title} userType={userType} />
+      </div>
+ <Footer/>
+
+
+ <style>
+  {`html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.page-container {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-wrap {
+  flex: 1;
+}
+`}
+ </style>
     </div>
   );
 }

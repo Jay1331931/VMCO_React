@@ -47,6 +47,8 @@ import PaymentLines from "./components/PaymentLines";
 import ApplePayComponent from "./screens/ApplePayComponent";
 import ApplePayment from "./components/ApplePayment";
 import ApplePaymentReact from "./components/ApplePaymentReact";
+import PrivacyPolicy from "./screens/PrivacyPolicy";
+import ContactUs from "./screens/ContactUs";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("")
@@ -87,7 +89,9 @@ function App() {
       <Routes>
         {/* <Route path="/" element={<LoginScreen />} /> */}
         <Route path="/" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
+        <Route path ="privacy-policy" element={<PrivacyPolicy/>}/>
 
+              <Route path ="contact-us" element={<ContactUs/>}/>
         {/* <Route path="/orders" element={<ProtectedRoute page="orders"><Orders /></ProtectedRoute>} /> */}
         <Route path="/orders" element={<ProtectedRoute page="orders"><OrdersMui /></ProtectedRoute>} />
         {/* <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/> */}
