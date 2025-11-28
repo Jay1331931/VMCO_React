@@ -128,7 +128,11 @@ function Catalog() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
+useEffect(() => {
+  if (products.length > 0 && !isLoading && !isLoadingMore && isPageLoading) {
+    setIsPageLoading(false);
+  }
+}, [products, isLoading, isLoadingMore, isPageLoading])
   // FIXED: Update refs when values change
   useEffect(() => {
     activeCategoryRef.current = activeCategory;
@@ -1449,8 +1453,18 @@ function Catalog() {
     }
   }, [categoryFilter]);
 
+
+
   return (
     <Sidebar title={t("Catalog")}>
+      {isPageLoading ? 
+      (
+          <div className="loading-container">
+                <LoadingSpinner size="medium" />
+              </div>    
+      )
+      :
+      (
       <div
         className={`catalog-wrapper${isRTL ? " rtl" : ""}`}
         style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
@@ -1665,7 +1679,7 @@ function Catalog() {
           />
         )}
       </div>
-
+      )}
       {/* {isMobile && isV("selectBranch") && (
           <div className="catalog-header">
             <div className="location-selector">
