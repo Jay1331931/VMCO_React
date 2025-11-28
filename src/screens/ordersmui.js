@@ -1467,7 +1467,7 @@ function Orders() {
             params?.row?.status?.toLowerCase() !== "rejected" &&
             params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
             params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+            (params?.row?.paymentStatus?.toLowerCase() !== "paid" ||  params?.row?.paymentStatus?.toLowerCase() !== "under review")&&
             ((params?.row?.entity.toLowerCase() ===
               Constants.ENTITY.VMCO.toLowerCase() &&
               params?.row?.status?.toLowerCase() === "approved") ||

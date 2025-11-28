@@ -1730,6 +1730,11 @@ body.catalog-page #root {
   align-items: center;
   color: var(--logo-red);
 }
+.status-reassign {
+  background-color: var(--bg-transparent);
+  align-items: center;
+  color: var(--logo-cyan);
+}
 .status-paid {
   background-color: var(--bg-transparent);
   color: var(--logo-light-green);
@@ -2089,12 +2094,35 @@ body.catalog-page #root {
   background: #5e5e5e;
   color: #fff;
 }
-
+.support-action-btn.cancel {
+  background: var(--bg-white);
+  color: var(--deep-green);
+}
+.support-action-btn.cancel:disabled {
+  background: #5e5e5e;
+  color: #fff;
+}
+.support-action-btn.close {
+  background: var(--logo-deep-green);
+  color: var(--bg-white);
+}
+.support-action-btn.close:disabled {
+  background: #5e5e5e;
+  color: #fff;
+}
 .support-action-btn.reject {
-  background: var(--logo-orange);
+  background: var(--logo-red);
   color: #fff;
 }
 .support-action-btn.reject:disabled {
+  background: #5e5e5e;
+  color: #fff;
+}
+.support-action-btn.reassign {
+background: var(--logo-cyan);
+  color: #fff;
+}
+.support-action-btn.reassign:disabled {
   background: #5e5e5e;
   color: #fff;
 }

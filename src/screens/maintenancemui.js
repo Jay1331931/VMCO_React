@@ -30,6 +30,8 @@ const getStatusClass = (status) => {
       return "status-approved";
     case "rejected":
       return "status-rejected";
+    case "reassign":
+      return "status-reassign";
     case "in progress":
     default:
       return "status-pending";
@@ -333,9 +335,8 @@ function Maintenance() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `maintenance-tickets-${
-        new Date().toISOString().split("T")[0]
-      }.xlsx`;
+      a.download = `maintenance-tickets-${new Date().toISOString().split("T")[0]
+        }.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -454,9 +455,9 @@ function Maintenance() {
   // Pagination calculation - same as Orders and Support pages
   const totalPages =
     Number.isFinite(total) &&
-    Number.isFinite(pageSize) &&
-    total > 0 &&
-    pageSize > 0
+      Number.isFinite(pageSize) &&
+      total > 0 &&
+      pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -605,12 +606,12 @@ function Maintenance() {
                 <MaintenanceCard
                   tickets={initialTickets}
                   setSelectedRow={handleShowAllDetailsClick}
-                  // handleViewDetails={(ticket) =>
-                  //   navigate("/maintenanceDetails", { state: { ticket, mode: "edit" } })
-                  // }
-                  // handleAdd={() =>
-                  //   navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } })
-                  // }
+                // handleViewDetails={(ticket) =>
+                //   navigate("/maintenanceDetails", { state: { ticket, mode: "edit" } })
+                // }
+                // handleAdd={() =>
+                //   navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } })
+                // }
                 />
               </>
             )}
@@ -660,7 +661,7 @@ function Maintenance() {
                     searchPlaceholder: "Search maintenance tickets...",
                     showColumnVisibility: true,
                     showFilters: true,
-                    showExport: user.userType === "employee" ? true : false,
+                    showExport: user?.userType === "employee" ? true : false,
                     handleExportClick: handleExportToExcel,
                     exportLoading: exportLoading,
                     showUpload: false,
@@ -688,34 +689,34 @@ function Maintenance() {
                   },
                   ...(isArabic
                     ? {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        },
-                      }
+                      direction: "rtl",
+                      "& .MuiDataGrid-cell": {
+                        textAlign: "right !important",
+                      },
+                      "& .MuiDataGrid-columnHeader": {
+                        textAlign: "right !important",
+                      },
+                      "& .MuiDataGrid-columnHeaderTitle": {
+                        textAlign: "right !important",
+                      },
+                      "& .MuiDataGrid-cellContent": {
+                        textAlign: "right !important",
+                      },
+                    }
                     : {
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "left",
-                        },
-                      }),
+                      "& .MuiDataGrid-cell": {
+                        textAlign: "left",
+                      },
+                      "& .MuiDataGrid-columnHeader": {
+                        textAlign: "left",
+                      },
+                      "& .MuiDataGrid-columnHeaderTitle": {
+                        textAlign: "left",
+                      },
+                      "& .MuiDataGrid-cellContent": {
+                        textAlign: "left",
+                      },
+                    }),
                 }}
               />
             )}

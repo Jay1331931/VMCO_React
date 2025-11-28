@@ -47,6 +47,12 @@
   box-sizing: border-box;
 }
 
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+  border-color: #888;
+  outline: none;
+}
 
 .full-width {
   grid-column: 1 / -1;

@@ -138,6 +138,31 @@ setIsUploading(true)
     setIsUploading(false)
   };
 
+  useEffect(() => {
+    const fetchCurrentDate = async () => {
+      try {
+        const response = await api.get(`/get-current-date`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const parts = response.data.date.split("/");
+        const formattedDate = `${parts[2]}-${parts[0].padStart(2, "0")}-${parts[1].padStart(2, "0")}`; // YYYY-MM-DD
+        setFormData((prev) => ({
+          ...prev,
+          transactionDate: prev.transactionDate || formattedDate,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch date from API", error);
+      }
+    };
+
+    fetchCurrentDate();
+  }, []);
+
   const handleSubmit = async () => {
     setisSubmitting(true);
     try {
@@ -851,6 +876,7 @@ setIsUploading(true)
               <textarea
                 id="description"
                 name="description"
+                className="description"
                 placeholder={t("Description")}
                 rows={3}
                 value={
@@ -969,7 +995,9 @@ setIsUploading(true)
           {`.full-width {
   width: 100%;
 }
-
+.description{
+  border: 1px solid #ccc;
+}
 .bank-doc-upload-wrapper {
   display: flex;
   align-items: center;
