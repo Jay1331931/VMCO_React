@@ -87,10 +87,10 @@ function MaintenanceDetails() {
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
-      const handleResize = () => setIsMobile(window.innerWidth < 768);
-      console.log("isMobile", isMobile);
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
   // Images state (allow dynamic add) - store both data URL and original filename
   const [images, setImages] = useState([]);
@@ -678,7 +678,6 @@ function MaintenanceDetails() {
 
   const handleApprovalDialogSubmit = async (commentText) => {
     setIsApprovalDialogOpen(false);
-
     if (!commentText?.trim()) {
       Swal.fire({
         icon: 'error',
@@ -687,56 +686,57 @@ function MaintenanceDetails() {
       });
       return;
     }
-    setClosing(true);
 
+    setClosing(true);
     const newComment = {
       date: formatDate(new Date(), 'DDMMYYYY HHmm'),
-      action: approvalAction === 'close' ? 'close' : 'reject',
+      action: approvalAction === 'close' ? 'close' : approvalAction === 'reject' ? 'reject' : 'reassign',
       userId: String(user.userId),
       message: commentText,
       userName: user.userName,
-      status: approvalAction === 'close' ? 'Ticket Closed' : 'Ticket Rejected',
+      status: approvalAction === 'close' ? 'Ticket Closed' :
+        approvalAction === 'reject' ? 'Ticket Rejected' : 'Request to Reassign'
     };
 
     try {
       const updatedComments = Array.isArray(ticket.comments)
-        ? [...ticket.comments, newComment] : [newComment];
-      const newStatus = approvalAction === 'close' ? 'Closed' : 'Rejected';
+        ? [...ticket.comments, newComment]
+        : [newComment];
+
+      const newStatus = approvalAction === 'close' ? 'Closed' : approvalAction === 'reject' ? 'Rejected' : 'Reassign';
+
       const apiUrl = `${API_BASE_URL}/maintenance/id/${ticket.id}`;
       const response = await fetch(apiUrl, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           status: newStatus,
-          isOpen: false,
+          isOpen: approvalAction === 'close' ? false : approvalAction === 'reject' ? false : true,
           comments: updatedComments,
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || 'Failed to update ticket status');
+        throw new Error(`errorText Failed to update ticket status`);
       }
 
-      setTicket(prev => ({
-        ...prev,
-        status: newStatus,
-        comments: updatedComments,
-      }));
-
+      setTicket(prev => ({ ...prev, status: newStatus, comments: updatedComments }));
       Swal.fire({
         icon: 'success',
         title: t('Success'),
-        text: approvalAction === 'close' ? t('Ticket closed successfully!') : t('Ticket rejected successfully!'),
+        text: approvalAction === 'close' ? t('Ticket closed successfully!') :
+          approvalAction === 'reject' ? t('Ticket rejected successfully!') :
+            t('Request sent successfully!'),
       });
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: t('Error'),
-        text: error.message || t('Failed to update ticket. Please try again.'),
+        text: `${error.message} ${t('Failed to update ticket. Please try again.')}`,
       });
     } finally {
       setClosing(false);
@@ -1086,6 +1086,13 @@ function MaintenanceDetails() {
     setDialogTitle('Reject ticket');
     setDialogSubTitle('Do you want to reject the ticket?');
     setApprovalAction('reject');
+    setIsApprovalDialogOpen(true);
+  };
+
+  const handleReassignTicket = () => {
+    setDialogTitle('Request to Reassign');
+    setDialogSubTitle('Add reason for reassignment.');
+    setApprovalAction('reassign');
     setIsApprovalDialogOpen(true);
   };
 
@@ -1580,47 +1587,36 @@ function MaintenanceDetails() {
             <div className="support-details-actions">
               {isEditing ? (
                 <>
-                  {isV('btnSave') && isE('btnSave') &&
-                    <button
-                      className="support-action-btn save"
-                      onClick={handleSave}
-                      disabled={saving || closing || isReadOnly}
-                    >
-                      {saving ? t("Saving...") : t("Save")}
-                    </button>
-                  }
-                  {/* {isV('btnCancel') && isE('btnCancel') &&
-                    <button
-                      className="support-action-btn cancel"
-                      onClick={handleCancel}
-                      disabled={isReadOnly || saving || closing}
-                    >
-                      {t("Cancel")}
-                    </button>
-                  } */}
-                  {isV('btnReject') && (
-                    <button
-                      className="support-action-btn reject"
-                      onClick={handleRejectTicket}
-                      disabled={saving || closing || isReadOnly}
-                    >
-                      Reject
-                    </button>
-                  )}
-                  {isV('btnClose') && isE('btnClose') &&
-                    <button
-                      className="support-action-btn close"
-                      onClick={() => { handleCloseTicket() }}
-                      disabled={closing || saving || isReadOnly}
-                    >
-                      {closing ? t('Closing...') : t('Close Ticket')}
-                    </button>
-                  }
+                  {isV('btnSave') &&
+                  <button className="support-action-btn save" onClick={handleSave} disabled={saving || closing || isReadOnly}>
+                    {saving ? t('Saving...') : t('Save')}
+                  </button>}
+
+                  {isV('btnCancel') &&
+                  <button className="support-action-btn cancel" onClick={handleCancel} disabled={isReadOnly || saving || closing}>
+                    {t('Cancel')}
+                  </button>}
+
+                  {isV('btnReject') &&
+                  <button className="support-action-btn reject" onClick={handleRejectTicket} disabled={saving || closing || isReadOnly}>
+                    {t('Reject')}
+                  </button>}
+
+                  {isV('btnClose') &&
+                  <button className="support-action-btn close" onClick={handleCloseTicket} disabled={closing || saving || isReadOnly}>
+                    {closing ? t('Closing...') : t('Close Ticket')}
+                  </button>}
+
+                  {isV('btnReassign') &&
+                  <button
+                    className="support-action-btn reassign"
+                    onClick={handleReassignTicket}
+                    disabled={closing || saving || isReadOnly}
+                  >
+                    {t('Request to Reassign')}
+                  </button>}
                 </>
-              ) : (
-                <>
-                </>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -1691,7 +1687,7 @@ function MaintenanceDetails() {
         onSubmit={handleApprovalDialogSubmit}
         title={dialogTitle}
         subTitle={dialogSubTitle}
-        placeholder={approvalAction === 'close' ? 'Enter closing comment' : 'Enter rejection reason'}
+        placeholder={approvalAction === 'close' ? 'Enter closing comment' : approvalAction === 'reject' ? 'Enter rejection reason' : 'Enter reacon for re-assignment'}
       />
       {showGetProducts && (
         <GetProducts

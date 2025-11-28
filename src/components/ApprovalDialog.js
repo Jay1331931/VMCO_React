@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-import '../styles/approvaldialog.css'; 
+import '../styles/approvaldialog.css';
 import Swal from 'sweetalert2';
 
-const ApprovalDialog = ({ 
-  isOpen, 
-  onClose, 
-  action, 
-  onSubmit, 
+const ApprovalDialog = ({
+  isOpen,
+  onClose,
+  action,
+  onSubmit,
   customerName,
   title,
   subtitle,
@@ -62,7 +62,7 @@ const ApprovalDialog = ({
               ? t(subtitle)
               : t(subtitle)}
           </p>
-          
+
           <textarea
             className="approval-comment-textarea"
             value={comment}
@@ -73,8 +73,8 @@ const ApprovalDialog = ({
         </div>
 
         <div className="approval-dialog-footer">
-          <button 
-            className="cancel-button" 
+          <button
+            className="cancel-button"
             onClick={onClose}
             disabled={isSubmitting}
           >
@@ -83,9 +83,13 @@ const ApprovalDialog = ({
           <button
             className={`action-button ${action}`}
             onClick={handleSubmit}
-            disabled={isSubmitting || (action === 'reject' && !comment.trim()) || (action === 'close' && !comment.trim())}
+            disabled={isSubmitting || (action === 'reject' && !comment.trim()) || (action === 'close' && !comment.trim()) || (action === 'reassign' && !comment.trim())}
           >
-            {isSubmitting ? t('Processing...') : action === 'approve' ? t('Approve') : action === 'reject' ? t('Reject') : action === 'close' ? t('Close') : ''}
+            {isSubmitting ? t('Processing...') :
+              action === 'approve' ? t('Approve') :
+                action === 'reject' ? t('Reject') :
+                  action === 'close' ? t('Close') :
+                    action === 'reassign' ? t('Request to Reassign') : ''}
           </button>
         </div>
       </div>
