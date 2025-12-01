@@ -1289,7 +1289,7 @@ function MaintenanceDetails() {
                   type="text"
                   placeholder="Select a machine"
                   readOnly={!allowManualMachineInput}
-                  value={selectedMachine}
+                  value={ticket.machine ? ticket.machine : selectedMachine}
                   onClick={handleMachineInputClick}
                   onChange={allowManualMachineInput ? (e) => setManualMachineName(e.target.value) : undefined}
                   style={{ cursor: allowManualMachineInput ? 'text' : 'pointer' }}
