@@ -28,6 +28,7 @@ import BankTransactions from "./screens/BankTransactions";
 import Reports from "./screens/reports";
 import ApiLogsReport from "./screens/apiLogsReport";
 import AddBankTransaction from "./components/AddBankTransaction";
+import AddInvites from "./components/AddInvites";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OptionsPage from "./components/OptionsPage";
@@ -47,6 +48,8 @@ import PaymentLines from "./components/PaymentLines";
 import ApplePayComponent from "./screens/ApplePayComponent";
 import ApplePayment from "./components/ApplePayment";
 import ApplePaymentReact from "./components/ApplePaymentReact";
+import PrivacyPolicy from "./screens/PrivacyPolicy";
+import ContactUs from "./screens/ContactUs";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("")
@@ -87,7 +90,9 @@ function App() {
       <Routes>
         {/* <Route path="/" element={<LoginScreen />} /> */}
         <Route path="/" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
+        <Route path ="privacy-policy" element={<PrivacyPolicy/>}/>
 
+              <Route path ="contact-us" element={<ContactUs/>}/>
         {/* <Route path="/orders" element={<ProtectedRoute page="orders"><Orders /></ProtectedRoute>} /> */}
         <Route path="/orders" element={<ProtectedRoute page="orders"><OrdersMui /></ProtectedRoute>} />
         {/* <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/> */}
@@ -123,6 +128,7 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
+        <Route path="/invite/add" element={<AddInvites />} />
         <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
         <Route path="/bankTransactions/order/:amount/:orderId/:orderType" element={<AddBankTransaction />} />
         <Route path="/admin/upload" element={<BulkUploadBranchAndCustomer />} />

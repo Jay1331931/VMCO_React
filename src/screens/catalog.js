@@ -82,6 +82,7 @@ function Catalog() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
 
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -127,7 +128,11 @@ function Catalog() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
+useEffect(() => {
+  if (products.length > 0 && !isLoading && !isLoadingMore && isPageLoading) {
+    setIsPageLoading(false);
+  }
+}, [products, isLoading, isLoadingMore, isPageLoading])
   // FIXED: Update refs when values change
   useEffect(() => {
     activeCategoryRef.current = activeCategory;
@@ -1448,15 +1453,25 @@ function Catalog() {
     }
   }, [categoryFilter]);
 
+
+
   return (
     <Sidebar title={t("Catalog")}>
+      {isPageLoading ? 
+      (
+          <div className="loading-container">
+                <LoadingSpinner size="medium" />
+              </div>    
+      )
+      :
+      (
       <div
         className={`catalog-wrapper${isRTL ? " rtl" : ""}`}
         style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
         dir={dir}
       >
         {/* Fixed Header Container */}
-        <div className="catalog-fixed-header">
+        {activeCategory && (<div className="catalog-fixed-header">
           {/* Location Selector and Cart Button */}
           {isV("selectBranch") && (
             <div className="catalog-header">
@@ -1475,7 +1490,7 @@ function Catalog() {
                   placeholder={t("Select Branch")}
                   disabled={isLoading || branches.length === 0}
                 />
-                {isLoading && branches.length === 0 && (
+                {isLoading && !isMobile && branches.length === 0 && (
                   <div className="dropdown-loading">
                     <LoadingSpinner size="small" />
                   </div>
@@ -1519,6 +1534,7 @@ function Catalog() {
                 tabs={filteredCategoryTabs}
                 activeTab={activeCategory}
                 onTabChange={(newCategory) => {
+                  setIsLoading(false)
                   console.log("🔄 Tab changing from", activeCategory, "to", newCategory);
                   setActiveCategory(newCategory);
                   setSearchQuery("");
@@ -1585,7 +1601,7 @@ function Catalog() {
               />
             </div>
           </div>
-        </div>
+        </div>)}
 
         {/* Scrollable Products Container */}
         <div className="catalog-scrollable-content">
@@ -1604,7 +1620,7 @@ function Catalog() {
                   isAdding={isAdding}
                 />
               ))
-              : !isLoading && (
+              : !isLoading && !isLoadingMore && !hasMore && (
                 <div className="no-products-message">
                   {searchQuery ? (
                     <p>
@@ -1663,7 +1679,7 @@ function Catalog() {
           />
         )}
       </div>
-
+      )}
       {/* {isMobile && isV("selectBranch") && (
           <div className="catalog-header">
             <div className="location-selector">

@@ -274,165 +274,7 @@ const TapCardPayment = () => {
   };
 
   return (
-    // <div
-    //   style={{
-    //     padding: "35px 28px",
-    //     maxWidth: "500px",
-    //     margin: "60px auto",
-    //     backgroundColor: "#ffffff",
-    //     borderRadius: "16px",
-    //     boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-    //     fontFamily: "'Inter', sans-serif",
-    //   }}
-    // >
-    //   <h2 style={{ textAlign: "center", color: "#0b4c45", fontWeight: 700 }}>
-    //     {t("Secure Payment")}
-    //   </h2>
-    //   <p style={{ textAlign: "center", fontSize: "18px", marginBottom: "25px" }}>
-    //     {t("Amount to Pay")}:{" "}
-    //     <strong style={{ color: "#0b4c45" }}>{amountDecoded} SAR</strong>
-    //   </p>
 
-    //   {/* Saved Cards */}
-    //   {!initialized && sdkLoaded && (
-    //     <div
-    //       style={{
-    //         background: "#fafafa",
-    //         border: "1px solid #e5e7eb",
-    //         borderRadius: "12px",
-    //         padding: "20px",
-    //         marginBottom: "25px",
-    //       }}
-    //     >
-    //       {CardDetails?.length > 0 && !selectedCardId ? (
-    //         <>
-    //           <h4 style={{ marginBottom: "15px", color: "#333" }}>
-    //             {t("Select a saved card")}
-    //           </h4>
-    //           <div
-    //             style={{
-    //               maxHeight: "180px",
-    //               overflowY: "auto",
-    //               marginBottom: "20px",
-    //             }}
-    //           >
-    //             {CardDetails.map((card) => (
-    //               <label
-    //                 key={card.id}
-    //                 style={{
-    //                   display: "block",
-    //                   padding: "14px",
-    //                   borderRadius: "10px",
-    //                   border:
-    //                     selectedCardId === card.id
-    //                       ? "2px solid #0b4c45"
-    //                       : "1px solid #ddd",
-    //                   marginBottom: "10px",
-    //                   backgroundColor:
-    //                     selectedCardId === card.id ? "#e7f8f6" : "#fff",
-    //                   cursor: "pointer",
-    //                   transition: "0.2s",
-    //                 }}
-    //               >
-    //                 <input
-    //                   type="radio"
-    //                   name="selectedCard"
-    //                   value={card.id}
-    //                   checked={selectedCardId === card.id}
-    //                   onChange={() => handleCardSelection(card.id)}
-    //                   style={{ marginRight: "10px" }}
-    //                 />
-    //                 💳 <strong>{card.brand}</strong> •••• {card.last_four} —{" "}
-    //                 {card.name} ({card.exp_month}/{card.exp_year})
-    //               </label>
-    //             ))}
-    //           </div>
-    //           <button
-    //             onClick={() => {
-    //               setisCardselected(false);
-    //               setCardDetails(null);
-    //               initializeTapCard();
-    //             }}
-    //             style={{
-    //               backgroundColor: "#0b4c45",
-    //               color: "#fff",
-    //               padding: "12px 24px",
-    //               border: "none",
-    //               borderRadius: "8px",
-    //               fontWeight: "600",
-    //               cursor: "pointer",
-    //               width: "100%",
-    //             }}
-    //           >
-    //             + {t("Add New Card")}
-    //           </button>
-    //         </>
-    //       ) : (
-    //         <div style={{ textAlign: "center", color: "#666" }}>
-    //           {t("Preparing your payment form...")}
-    //         </div>
-    //       )}
-    //     </div>
-    //   )}
-
-    //   {/* Card SDK container */}
-    //   <div
-    //     id="card-sdk-container"
-    //     style={{
-    //       marginBottom: "25px",
-    //       border: "1px solid #e0e0e0",
-    //       borderRadius: "10px",
-    //       padding: "20px",
-    //       backgroundColor: "#fafafa",
-    //       display: initialized && !paymentProcessing ? "block" : "none",
-    //     }}
-    //   />
-
-    //   {/* Payment progress */}
-    //   {paymentProcessing && (
-    //     <div
-    //       style={{
-    //         border: "1px solid #eee",
-    //         borderRadius: "10px",
-    //         backgroundColor: "#f5f5f5",
-    //         textAlign: "center",
-    //         padding: "20px",
-    //         color: "#6c757d",
-    //         marginBottom: "20px",
-    //       }}
-    //     >
-    //       {t("Processing your payment...")}
-    //     </div>
-    //   )}
-
-    //   {/* Pay Button */}
-    //   {isPayButtonValid && (
-    //     <button
-    //       onClick={createToken}
-    //       disabled={isProcessing || !initialized}
-    //       style={{
-    //         backgroundColor: isProcessing ? "#94a3b8" : "#0b4c45",
-    //         color: "#fff",
-    //         border: "none",
-    //         padding: "14px 28px",
-    //         borderRadius: "10px",
-    //         fontSize: "16px",
-    //         fontWeight: "600",
-    //         cursor: isProcessing ? "not-allowed" : "pointer",
-    //         width: "100%",
-    //         transition: "0.3s ease",
-    //       }}
-    //     >
-    //       {isProcessing ? t("Processing...") : t("Confirm Payment")}
-    //     </button>
-    //   )}
-
-    //   {!sdkLoaded && (
-    //     <p style={{ textAlign: "center", color: "#999", marginTop: "20px" }}>
-    //       {t("Loading payment gateway...")}
-    //     </p>
-    //   )}
-    // </div>
         <Sidebar title={t("Tap Payment")}>
     <Box
       sx={{
@@ -440,7 +282,6 @@ const TapCardPayment = () => {
         justifyContent: "center",
         alignItems: "flex-start",
         minHeight: "90vh",
-        // bgcolor: "#f7f9fb",
         py: 5,
         px: 2,
       }}
@@ -455,30 +296,11 @@ const TapCardPayment = () => {
           "&:hover": { boxShadow: 10 },
         }}
       >
-        {/* Header */}
-        {/* <CardHeader
-          title={
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              gap={1}
-            >
-              <Payment color="primary" />
-              <Typography variant="h5" fontWeight={700}>
-                {t("Secure Card Payment")}
-              </Typography>
-            </Box>
-          }
-          subheader={t("Please don't refresh the page.")}
-          sx={{ textAlign: "center", pb: 0 }}
-        />
-        <Divider sx={{ my: 2 }} /> */}
+       
 
         <CardContent>
-          {/* Amount */}
           <Grid container spacing={4} justifyContent={'center'} >
-            {/* Payment Info */}
+          
           
             <Grid item xs={12} md={6}>
                 <Typography variant="h6" fontWeight={600}>
@@ -601,26 +423,12 @@ const TapCardPayment = () => {
               {/* Processing State */}
               {paymentProcessing && (
                 <Box
-                  // sx={{
-                  //   border: "1px solid #eee",
-                  //   borderRadius: 3,
-                  //   backgroundColor: "#f5f5f5",
-                  //   textAlign: "center",
-                  //   py: 3,
-                  //   mb: 3,
-                  //   color: "#6c757d",
-                  // }}
+                 
                   sx={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    // p: 2,
                     borderRadius: 2,
-                    // backgroundColor: "#f5f5f5",
-
-                    // border: "1px solid #eee",
-
-                    // mb: 1.5,
                     cursor: "pointer",
                     transition: "0.2s",
                     "&:hover": { backgroundColor: "#f9f9f9" },
