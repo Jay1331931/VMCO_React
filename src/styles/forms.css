@@ -248,7 +248,7 @@
   border: 1px solid #ccc;
   border-top: none;
   border-radius: 0 0 4px 4px;
-  max-height: 300px;
+  /* max-height: 300px; */
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 10;
@@ -2279,5 +2279,11 @@ td.file-display-cell {
   .download-icon-button svg {
     width: 14px;
     height: 14px;
+  }
+}
+@media( max-width:500px){
+  .dropdown-content{
+    max-width: 300px;
+
   }
 }

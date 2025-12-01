@@ -31,6 +31,7 @@ const TapCardPayment = () => {
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [isCardselected, setisCardselected] = useState(false);
   const [isPayButtonValid, setisPayButtonValid] = useState(false);
+    const [showCardForm, setShowCardForm] = useState(true);
   const { token } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -207,6 +208,8 @@ const TapCardPayment = () => {
   };
 
   const createChargeRequest = async (tokenDATA) => {
+    setShowCardForm(false)
+    setPaymentProcessing(true)
     try {
       const payload = {
         salesOrderId: orderIdDecoded,
@@ -233,7 +236,7 @@ const TapCardPayment = () => {
           text: errorMessage || "Something went wrong during payment.",
           confirmButtonColor: "#0b4c45",
         });
-
+ setShowCardForm(true)
         return;
       }
       if (data?.data?.transaction?.url) {
@@ -263,13 +266,16 @@ const TapCardPayment = () => {
           text: errorMessage || "Something went wrong during payment.",
           confirmButtonColor: "#0b4c45",
         });
-
+  setShowCardForm(true)
         return;
       }
       console.error("Failed to create charge request", error);
     } finally {
-      setIsProcessing(false);
-      setPaymentProcessing(false);
+     setTimeout(() => {
+  setIsProcessing(false);
+  setPaymentProcessing(false);
+}, 100);
+         
     }
   };
 
@@ -400,7 +406,19 @@ const TapCardPayment = () => {
                       </button>
                     </>
                   ) : (
-                    <Typography textAlign="center" color="text.secondary">
+                    <Typography textAlign="center" color="text.secondary"  sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      // background: "#fafafa",
+                      // border: "1px solid #e0e0e0",
+                      // borderRadius: 3,
+                      p: 4,
+                      mb: 4,
+                      // minHeight: "200px",
+                    }}>
+                      <CircularProgress size={40} sx={{ mb: 2, color: "#0b4c45" }} />
                       {t("Preparing your payment form...")}
                     </Typography>
                   )}
@@ -416,32 +434,35 @@ const TapCardPayment = () => {
                   borderRadius: "10px",
                   padding: "20px 8px",
                   backgroundColor: "#fafafa",
-                  display: initialized && !paymentProcessing ? "block" : "none",
+                  display: (initialized && !paymentProcessing && showCardForm) ? "block" : "none",
                 }}
               />
 
               {/* Processing State */}
-              {paymentProcessing && (
-                <Box
-                 
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 2,
-                    cursor: "pointer",
-                    transition: "0.2s",
-                    "&:hover": { backgroundColor: "#f9f9f9" },
-                    background: "#fafafa",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 3,
-                    p: 3,
-                    mb: 4,
-                  }}
-                >
-                  {t("Processing your payment...")}
-                </Box>
-              )}
+               {(paymentProcessing || !showCardForm) && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "#fafafa",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 3,
+                      p: 4,
+                      mb: 4,
+                      minHeight: "200px",
+                    }}
+                  >
+                    <CircularProgress size={40} sx={{ mb: 2, color: "#0b4c45" }} />
+                    <Typography variant="h6" color="text.primary">
+                      {t("Processing your payment...")}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {t("Please wait while we process your payment")}
+                    </Typography>
+                  </Box>
+                )}
 
               {/* Pay Button */}
               {isPayButtonValid && (
@@ -467,6 +488,7 @@ const TapCardPayment = () => {
 
               {!sdkLoaded && (
                 <Typography textAlign="center" color="text.secondary" mt={2}>
+                  <CircularProgress size={40} sx={{ mb: 2, color: "#0b4c45" }} />
                   {t("Loading payment gateway...")}
                 </Typography>
               )}
