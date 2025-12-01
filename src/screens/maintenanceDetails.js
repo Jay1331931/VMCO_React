@@ -283,74 +283,32 @@ function MaintenanceDetails() {
     }
   };
 
-  // Utility: fetch regions from Constants.MAINTENANCE_REGIONAL_CITY
-  const fetchRegionalCities = async () => {
-    // Get MAINTENANCE_REGIONAL_CITY from Constants.js and map as array of objects { c: cityName }
-    const cities = Object.values(Constants.MAINTENANCE_REGIONAL_CITY);
-    return cities.map(city => ({ c: city.toLowerCase() }));
-  };
+  const calculateMaintenanceCharges = async (city, warrantyEndDate) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/calculate/maintenance-charges?city=${city}&warrantyEndDate=${warrantyEndDate || ''}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        }
+      });
 
-  // Utility: get city of selected branch (from branches array)
-  const getSelectedBranchCity = () => {
-    const branch = branches.find(b => b.id === ticket.branchId);
-    // Try both city and cityName fields, fallback to empty string
-    return branch ? (branch.city || branch.cityName || '').toLowerCase() : '';
-  };
+      if (!response.ok) throw new Error(`Error ${response.status}`);
 
-  // Logic to calculate maintenance charges
-  const calculateMaintenanceCharges = async () => {
-    if (formMode !== 'add') {
-      console.log('[Charges] Not in add mode, skipping calculation');
-      return; // Only in add mode
+      const result = await response.json();
+
+      if (result.status === 'Ok' && result.data?.success) {
+        setTicket(prev => ({
+          ...prev,
+          maintenanceCharges: result.data.maintenanceCharge.toFixed(2)
+        }));
+      } else {
+        setTicket(prev => ({ ...prev, maintenanceCharges: null }));
+      }
+    } catch (error) {
+      console.error('Error calculating maintenance charges:', error);
+      setTicket(prev => ({ ...prev, maintenanceCharges: null }));
     }
-    if (!ticket.warrantyEndDate) {
-      console.log('[Charges] Missing warrantyEndDate, skipping calculation');
-      return;
-    }
-    if (!ticket.branchId || branches.length === 0) {
-      console.log('[Charges] Missing branchId or branches not loaded, skipping calculation');
-      return;
-    }
-
-    // Use current date for comparison in add mode
-    const currentDate = new Date();
-    const currentDateFormatted = formatDate(currentDate.toISOString(), "DD/MM/YYYY");
-
-    // Convert warranty end date to DD/MM/YYYY format for comparison
-    const warrantyDateFormatted = formatDate(ticket.warrantyEndDate, "DD/MM/YYYY");
-
-    // Parse dates for comparison (DD/MM/YYYY format)
-    const warrantyDateParts = warrantyDateFormatted.split('/');
-    const currentDateParts = currentDateFormatted.split('/');
-
-    const warrantyDate = new Date(warrantyDateParts[2], warrantyDateParts[1] - 1, warrantyDateParts[0]);
-    const todayDate = new Date(currentDateParts[2], currentDateParts[1] - 1, currentDateParts[0]);
-
-    console.log('[Charges] warrantyEndDate (DD/MM/YYYY):', warrantyDateFormatted, 'currentDate (DD/MM/YYYY):', currentDateFormatted);
-    console.log('[Charges] warrantyDate >= currentDate?', warrantyDate >= todayDate);
-
-    const cities = await fetchRegionalCities();
-    console.log('[Charges] Cities from constants:', cities);
-
-    const branchCity = getSelectedBranchCity();
-    console.log('[Charges] Branch city:', branchCity);
-
-    const cityMatchesRegionalCity = cities.map(obj => obj.c).includes(branchCity);
-    console.log('[Charges] City matches regional city?', cityMatchesRegionalCity);
-
-    let charges = 0;
-    if (warrantyDate >= todayDate) {
-      // Warranty is still valid (not expired)
-      charges = cityMatchesRegionalCity ? 0.00 : 200.00;
-      console.log('[Charges] Warranty valid, charges:', charges);
-    } else {
-      // Warranty has expired
-      charges = cityMatchesRegionalCity ? 200.00 : 300.00;
-      console.log('[Charges] Warranty expired, charges:', charges);
-    }
-
-    setTicket(prev => ({ ...prev, maintenanceCharges: charges.toFixed(2) }));
-    console.log('[Charges] Final maintenanceCharges set:', charges.toFixed(2));
   };
 
   // All hooks must be before any early return!
@@ -375,17 +333,8 @@ function MaintenanceDetails() {
       if (formMode === 'edit') {
         loadExistingFiles();
       }
-      // Calculate maintenance charges if in add mode and all required fields are present
-      if (
-        formMode === 'add' &&
-        ticket.warrantyEndDate &&
-        ticket.branchId &&
-        branches.length > 0
-      ) {
-        calculateMaintenanceCharges();
-      }
     }
-  }, [user, formMode, ticket.warrantyEndDate, ticket.branchId, branches]);
+  }, [user, formMode, branches]);
 
   useEffect(() => {
     const fetchIssueTypeOptions = async () => {
@@ -416,21 +365,13 @@ function MaintenanceDetails() {
         } else {
           throw new Error('Unexpected response format for issue type options');
         }
-        // Calculate maintenance charges if in add mode and all required fields are present
-        if (
-          formMode === 'add' &&
-          ticket.warrantyEndDate &&
-          ticket.branchId &&
-          branches.length > 0
-        ) {
-          calculateMaintenanceCharges();
-        }
+
       } catch (err) {
         console.error('Error fetching issue type options:', err);
       }
     };
     fetchIssueTypeOptions();
-  }, [API_BASE_URL, formMode, ticket.warrantyEndDate, ticket.branchId, branches, currentLanguage, t]);
+  }, [API_BASE_URL, formMode, branches, currentLanguage, t]);
 
   // Add a separate useEffect to trigger calculation when warranty end date changes
   useEffect(() => {
@@ -444,7 +385,6 @@ function MaintenanceDetails() {
     }
   }, [ticket.warrantyEndDate]);
 
-  // Add helper functions to get customer and branch regions
   const getCustomerRegion = async (customerId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
@@ -479,9 +419,7 @@ function MaintenanceDetails() {
     navigate("/login");
     return null;
   }
-  //For fetching the user again after browser refresh - End
 
-  //Rbac and other access based on user object to follow below like this
   const companyNameToShow =
     currentLanguage === "en"
       ? ticket.companyNameEn || (user?.customerCompanyNameEn || "")
@@ -498,7 +436,6 @@ function MaintenanceDetails() {
 
   console.log("~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n", user);
 
-  // Place columns definition here, after isV/currentLanguage are defined
   const columns = [
     { key: "requestId", header: "Request #", include: isV('requestIdCol') },
     { key: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", header: "Customer", include: isV('customerCol') },
@@ -510,7 +447,6 @@ function MaintenanceDetails() {
     { key: "status", header: "Status", include: isV('statusCol') },
   ];
 
-  // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
     if (branches.length > 0) return; // Don't fetch if we already have branches
 
@@ -554,7 +490,6 @@ function MaintenanceDetails() {
     }
   };
 
-  // Fetch employees from backend (fetch all, set names as options for dropdown)
   const fetchEmployees = async () => {
     setLoadingEmployees(true);
     try {
@@ -580,11 +515,6 @@ function MaintenanceDetails() {
     } finally {
       setLoadingEmployees(false);
     }
-  };
-
-  // Toggle edit mode
-  const toggleEditMode = () => {
-    setIsEditing(!isEditing);
   };
 
   const handleCancel = async () => {
@@ -675,7 +605,6 @@ function MaintenanceDetails() {
     }
   };
 
-
   const handleApprovalDialogSubmit = async (commentText) => {
     setIsApprovalDialogOpen(false);
     if (!commentText?.trim()) {
@@ -743,12 +672,10 @@ function MaintenanceDetails() {
     }
   };
 
-  // Open GetProducts popup on machine input click
   const handleMachineInputClick = () => {
     setShowGetProducts(true);
   };
 
-  // Handle selected product(s) from GetProducts popup
   const handleSelectProduct = (products) => {
     if (products.length === 0) return;
     const selected = products[0];
@@ -769,12 +696,10 @@ function MaintenanceDetails() {
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  // Open file dialog for videos
   const openVideoDialog = () => {
     if (videoInputRef.current) videoInputRef.current.click();
   };
 
-  // Handle customer selection
   const handleSelectCustomer = (customer) => {
     setTicket(prev => ({
       ...prev,
@@ -793,7 +718,6 @@ function MaintenanceDetails() {
     }
   };
 
-  // Handle branch selection
   const handleSelectBranch = (branch) => {
     setTicket(prev => ({
       ...prev,
@@ -805,7 +729,6 @@ function MaintenanceDetails() {
     setShowBranchPopup(false);
   };
 
-  // Fetch branches for a specific customer
   const fetchBranchesForCustomer = async (customerId) => {
     if (!customerId) {
       console.log("No customer ID provided for fetching branches");
@@ -838,8 +761,6 @@ function MaintenanceDetails() {
     }
   };
 
-  // Track saving state
-
   const formatDateInput = (dateStr, returnType = 'date') => {
     if (!dateStr) return "";
 
@@ -870,10 +791,6 @@ function MaintenanceDetails() {
     return isoBase;
   };
 
-
-
-
-  // Handle save
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true); // Start saving process
@@ -912,21 +829,10 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-    // if (!ticket.urgencyLevel) {
-    //   Swal.fire({
-    //     title: t("Validation Error"),
-    //     text: t("Please select an urgency level"),
-    //     icon: "warning",
-    //     confirmButtonText: t("OK"),
-    //     confirmButtonColor: "#3085d6"
-    //   });
-    //   setSaving(false); // End saving if validation fails
-    //   return;
-    // }
-    if (!ticket.machineSerialNumber?.trim()) {
+    if (!ticket.maintenanceCharges) {
       Swal.fire({
         title: t("Validation Error"),
-        text: t("Please enter a machine serial number"),
+        text: t("Please enter a machine serial number to get maintenance Charges"),
         icon: "warning",
         confirmButtonText: t("OK"),
         confirmButtonColor: "#3085d6"
@@ -934,17 +840,6 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-    // if (!ticket.warrantyEndDate) {
-    //   Swal.fire({
-    //     title: t("Validation Error"),
-    //     text: t("Please enter a machine serial number and get the Warranty End Date"),
-    //     icon: "warning",
-    //     confirmButtonText: t("OK"),
-    //     confirmButtonColor: "#3085d6"
-    //   });
-    //   setSaving(false); // End saving if validation fails
-    //   return;
-    // }
     if (!selectedMachine || selectedMachine.trim() === '') {
       Swal.fire({
         title: t("Validation Error"),
@@ -1074,7 +969,6 @@ function MaintenanceDetails() {
     }
   };
 
-  // Handle close ticket
   const handleCloseTicket = () => {
     setDialogTitle('Close ticket');
     setDialogSubTitle('Add closing comment.');
@@ -1096,7 +990,6 @@ function MaintenanceDetails() {
     setIsApprovalDialogOpen(true);
   };
 
-  // Add comment to ticket.comments in correct format and save to backend immediately
   const handleAddComment = async (commentText, newCommentObj) => {
     if (!commentText || !user || isReadOnly) return;
 
@@ -1174,12 +1067,29 @@ function MaintenanceDetails() {
 
 
   const handleSerialNumberChange = async (SNo) => {
+    const serialValue = SNo ?? (SNo?.trim() || "000000");
+    setTicket(prev => ({
+      ...prev,
+      machineSerialNumber: serialValue,
+    }));
 
-    // setTicket((prev) => ({ ...prev, machineSerialNumber: SNo }));
-    // Clear any existing timeout
+    if (!ticket.branchId || branches.length === 0) {
+      console.log("No branch selected");
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select a branch"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      return;
+    }
 
-
-    // Set new timeout
+    const selectedBranch = branches.find(b => b.id === ticket.branchId);
+    if (!selectedBranch?.city) {
+      console.warn('Branch city not found');
+      return;
+    }
 
     try {
       const { data } = await axios.get(
@@ -1207,10 +1117,13 @@ function MaintenanceDetails() {
           confirmButtonColor: "#3085d6"
         });
       }
-
     } catch (error) {
       console.error("Error handling serial number change:", error);
     }
+    const city = selectedBranch.city.toLowerCase();
+    const warrantyEndDate = ticket.warrantyEndDate || null;
+
+    await calculateMaintenanceCharges(city, warrantyEndDate);
 
   };
 
@@ -1376,7 +1289,7 @@ function MaintenanceDetails() {
                   type="text"
                   placeholder="Select a machine"
                   readOnly={!allowManualMachineInput}
-                  value={selectedMachine}
+                  value={ticket.machine ? ticket.machine : selectedMachine}
                   onClick={handleMachineInputClick}
                   onChange={allowManualMachineInput ? (e) => setManualMachineName(e.target.value) : undefined}
                   style={{ cursor: allowManualMachineInput ? 'text' : 'pointer' }}
@@ -1399,21 +1312,25 @@ function MaintenanceDetails() {
               <div className='maintenance-details-field'>
                 <label>{t("Machine Serial Number")} *</label>
                 <input
-                  id='machineSerialNumber'
-                  name='machineSerialNumber'
-                  // onChange={handleSerialNumberChange}
-                  onChange={(e) => setTicket((prev) => ({ ...prev, machineSerialNumber: e.target.value }))}
-                  value={ticket.machineSerialNumber || ""}
-                  disabled={!isE("machineSerialNumber") || isReadOnly}
+                  id="machineSerialNumber"
+                  name="machineSerialNumber"
+                  value={ticket.machineSerialNumber || ''}
+                  onChange={(e) => {
+                    setTicket({ ...ticket, "machineSerialNumber": e.target.value })
+                  }}
+                  disabled={!isE('machineSerialNumber') || isReadOnly}
                 />
                 {!ticket?.warrantyEndDate && formMode === "add" && (
                   <button
                     type="button"
                     className="machine-button"
-                    disabled={!ticket.machineSerialNumber}
-                    onClick={() => handleSerialNumberChange(ticket.machineSerialNumber)}
+                    //disabled={!ticket.machineSerialNumber}
+                    onClick={() => {
+                      const serialNumber = ticket.machineSerialNumber?.trim() || "000000";
+                      handleSerialNumberChange(serialNumber);
+                    }}
                   >
-                    {t("Get Warranty End Date")}
+                    {t("Get Warranty End Date and Maintenance Charges")}
                   </button>
                 )}
               </div>
@@ -1588,33 +1505,33 @@ function MaintenanceDetails() {
               {isEditing ? (
                 <>
                   {isV('btnSave') &&
-                  <button className="support-action-btn save" onClick={handleSave} disabled={saving || closing || isReadOnly}>
-                    {saving ? t('Saving...') : t('Save')}
-                  </button>}
+                    <button className="support-action-btn save" onClick={handleSave} disabled={saving || closing || isReadOnly}>
+                      {saving ? t('Saving...') : t('Save')}
+                    </button>}
 
                   {isV('btnCancel') &&
-                  <button className="support-action-btn cancel" onClick={handleCancel} disabled={isReadOnly || saving || closing}>
-                    {t('Cancel')}
-                  </button>}
+                    <button className="support-action-btn cancel" onClick={handleCancel} disabled={isReadOnly || saving || closing}>
+                      {t('Cancel')}
+                    </button>}
 
                   {isV('btnReject') &&
-                  <button className="support-action-btn reject" onClick={handleRejectTicket} disabled={saving || closing || isReadOnly}>
-                    {t('Reject')}
-                  </button>}
+                    <button className="support-action-btn reject" onClick={handleRejectTicket} disabled={saving || closing || isReadOnly}>
+                      {t('Reject')}
+                    </button>}
 
                   {isV('btnClose') &&
-                  <button className="support-action-btn close" onClick={handleCloseTicket} disabled={closing || saving || isReadOnly}>
-                    {closing ? t('Closing...') : t('Close Ticket')}
-                  </button>}
+                    <button className="support-action-btn close" onClick={handleCloseTicket} disabled={closing || saving || isReadOnly}>
+                      {closing ? t('Closing...') : t('Close Ticket')}
+                    </button>}
 
                   {isV('btnReassign') &&
-                  <button
-                    className="support-action-btn reassign"
-                    onClick={handleReassignTicket}
-                    disabled={closing || saving || isReadOnly}
-                  >
-                    {t('Request to Reassign')}
-                  </button>}
+                    <button
+                      className="support-action-btn reassign"
+                      onClick={handleReassignTicket}
+                      disabled={closing || saving || isReadOnly}
+                    >
+                      {t('Request to Reassign')}
+                    </button>}
                 </>
               ) : null}
             </div>
@@ -1705,98 +1622,98 @@ function MaintenanceDetails() {
       <style>
         {
           `
-           .maintenance-details-images,
-.maintenance-details-videos {
-  flex: 1;
-  max-width: 48%;
-}
-.image-popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  animation: fadeIn 0.2s ease-in-out;
-}
+          .maintenance-details-images,
+          .maintenance-details-videos {
+            flex: 1;
+            max-width: 48%;
+          }
+          .image-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.2s ease-in-out;
+          }
 
-.image-popup-content {
-  position: relative;
-  max-width: 50%;
-  
-  background: #fff;
-  padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  animation: scaleIn 0.25s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+          .image-popup-content {
+            position: relative;
+            max-width: 50%;
+            
+            background: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            animation: scaleIn 0.25s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
 
-.image-popup-content img {
-  width: 100%;
-  max-width: 400px;
-  max-height: 400px;
-  height: auto;
-  border-radius: 8px;
-  object-fit: contain;
-}
+          .image-popup-content img {
+            width: 100%;
+            max-width: 400px;
+            max-height: 400px;
+            height: auto;
+            border-radius: 8px;
+            object-fit: contain;
+          }
 
-.image-popup-close {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: red;
-  color: white;
-  border: none;
-  font-size: 20px;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  transition: background 0.2s;
-}
+          .image-popup-close {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: red;
+            color: white;
+            border: none;
+            font-size: 20px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            transition: background 0.2s;
+          }
 
-.image-popup-close:hover {
-  background: #c00;
-}
+          .image-popup-close:hover {
+            background: #c00;
+          }
 
-.upload-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #f8f9fa;
-  border: 2px dashed #ccc;
-  text-align: center;
-  cursor: default;
-}
+          .upload-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            text-align: center;
+            cursor: default;
+          }
 
-.upload-loading .loading-spinner-outer {
-  background: transparent;
-  margin-bottom: 0;
-  
-}
-.machine-button {
-  padding: 8px 14px;
-  margin-top: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  background-color: #2563eb; /* blue */
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
-}
+          .upload-loading .loading-spinner-outer {
+            background: transparent;
+            margin-bottom: 0;
+            
+          }
+          .machine-button {
+            padding: 8px 14px;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            background-color: #2563eb; /* blue */
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+          }
 
-}`
+          }`
         }
       </style>
     </Sidebar>
