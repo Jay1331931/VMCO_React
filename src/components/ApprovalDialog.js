@@ -88,7 +88,7 @@ const ApprovalDialog = ({
             {isSubmitting ? t('Processing...') :
               action === 'approve' ? t('Approve') :
                 action === 'reject' ? t('Reject') :
-                  action === 'close' ? t('Close') :
+                  action === 'close' ? t('Close Ticket') :
                     action === 'reassign' ? t('Request to Reassign') : ''}
           </button>
         </div>

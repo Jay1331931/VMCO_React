@@ -1072,8 +1072,17 @@ body.catalog-page #root {
   font-size: 0.8rem !important;
 }
 .catalog-fixed-header {
+  position: sticky;
   padding: 20px 0px 10px 0px;
-  border-bottom: none !important;
+  border-bottom: 1px solid gray !important;
+  transition: top 0.35s ease-in-out;
+  border-radius: 10px;
+}
+.catalog-fixed-header.hide {
+  top: -120px; /* height + some extra, adjust as needed */
+}
+.catalog-fixed-header.show {
+  top: 60px;
 }
   .page-header {
     flex-direction: column;
@@ -2099,6 +2108,14 @@ body.catalog-page #root {
   color: var(--deep-green);
 }
 .support-action-btn.cancel:disabled {
+  background: #5e5e5e;
+  color: #fff;
+}
+.support-action-btn.AddSpareParts {
+  background: var(--logo-orange);
+  color: #fff;
+}
+.support-action-btn.AddSpareParts:disabled {
   background: #5e5e5e;
   color: #fff;
 }

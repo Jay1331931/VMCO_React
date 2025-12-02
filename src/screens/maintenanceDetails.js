@@ -17,6 +17,7 @@ import axios from "axios";
 import Constants from "../constants";
 import ApprovalDialog from "../components/ApprovalDialog";
 import GetProducts from '../components/GetProducts';
+import GetSpareParts from '../components/GetSpareParts';
 
 function MaintenanceDetails() {
   const defaultTicket = {
@@ -108,6 +109,8 @@ function MaintenanceDetails() {
   const [dialogSubTitle, setDialogSubTitle] = useState('');
   const [approvalAction, setApprovalAction] = useState(null);
   const [showGetProducts, setShowGetProducts] = useState(false);
+  const [showSparePartsPopup, setShowSparePartsPopup] = useState(false);
+  const [selectedSpareParts, setSelectedSpareParts] = useState([]);
   const [selectedMachine, setSelectedMachine] = useState('');
   const [manualMachineName, setManualMachineName] = useState('');
   const [allowManualMachineInput, setAllowManualMachineInput] = useState(false);
@@ -311,44 +314,17 @@ function MaintenanceDetails() {
     }
   };
 
-  // All hooks must be before any early return!
-  useEffect(() => {
-    if (user) {
-      fetchEmployees();
-      // Only fetch branches if we have a customer ID
-      const customerIdToUse = user?.userType === 'customer' ? user.customerId : (ticket.customerId || user.customerId);
-      if (customerIdToUse) {
-        fetchBranches();
-      }
-      // Set customer ID for customer users if not already set
-      if (user.userType === 'customer' && !ticket.customerId) {
-        setTicket(prev => ({
-          ...prev,
-          customerId: user.customerId,
-          companyNameEn: user.customerCompanyNameEn,
-          companyNameAr: user.customerCompanyNameLc
-        }));
-      }
-      // Load existing files if in edit mode
-      if (formMode === 'edit') {
-        loadExistingFiles();
-      }
-    }
-  }, [user, formMode, branches]);
-
   useEffect(() => {
     const fetchIssueTypeOptions = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "maintenanceIssueType"}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
-
         });
         if (!response.ok) throw new Error('Failed to fetch issue type options');
         const result = await response.json();
         if (result.status === 'Ok' && result.data) {
           const options = result.data;
-          // Extract issue type values from the response data and make them language-aware
           const issueTypeValues = options.map(item => ({
             value: item.value,
             displayText: currentLanguage === "ar" ? item.valueLc : item.value
@@ -356,7 +332,6 @@ function MaintenanceDetails() {
           setIssueTypeOptions(issueTypeValues);
         } else if (result.data && Array.isArray(result.data)) {
           const options = result.data;
-          // Handle the actual response structure and make them language-aware
           const issueTypeValues = options.map(item => ({
             value: item.value,
             displayText: currentLanguage === "ar" ? item.valueLc : item.value
@@ -365,25 +340,84 @@ function MaintenanceDetails() {
         } else {
           throw new Error('Unexpected response format for issue type options');
         }
-
       } catch (err) {
         console.error('Error fetching issue type options:', err);
       }
     };
-    fetchIssueTypeOptions();
-  }, [API_BASE_URL, formMode, branches, currentLanguage, t]);
 
-  // Add a separate useEffect to trigger calculation when warranty end date changes
-  useEffect(() => {
-    if (
-      formMode === 'add' &&
-      ticket.warrantyEndDate &&
-      ticket.branchId &&
-      branches.length > 0
-    ) {
-      calculateMaintenanceCharges();
+    const calculateChargesIfNeeded = () => {
+      if (
+        formMode === 'add' &&
+        ticket.warrantyEndDate &&
+        ticket.branchId &&
+        branches.length > 0
+      ) {
+        calculateMaintenanceCharges();
+      }
+    };
+
+    const parseSparePartsIfNeeded = () => {
+      if (ticket.spareParts) {
+        try {
+          let sparePartsArray = [];
+          if (typeof ticket.spareParts === "string") {
+            sparePartsArray = JSON.parse(ticket.spareParts);
+          } else if (Array.isArray(ticket.spareParts)) {
+            sparePartsArray = ticket.spareParts;
+          }
+          const mappedSpareParts = sparePartsArray.map(({ itemId, nameEn, nameAr, description }) => ({
+            itemId,
+            nameEn,
+            nameAr,
+            description,
+          }));
+          setSelectedSpareParts(mappedSpareParts);
+        } catch (error) {
+          console.error("Error parsing spareParts JSON", error);
+          setSelectedSpareParts([]);
+        }
+      }
+    };
+
+    if (user) {
+      fetchEmployees();
+      const customerIdToUse = user?.userType === 'customer' ? user.customerId : (ticket.customerId || user.customerId);
+      if (customerIdToUse) {
+        fetchBranches();
+      }
+      if (user.userType === 'customer' && !ticket.customerId) {
+        setTicket(prev => ({
+          ...prev,
+          customerId: user.customerId,
+          companyNameEn: user.customerCompanyNameEn,
+          companyNameAr: user.customerCompanyNameLc
+        }));
+      }
+      if (formMode === 'edit') {
+        loadExistingFiles();
+      }
     }
-  }, [ticket.warrantyEndDate]);
+
+    fetchIssueTypeOptions();
+    calculateChargesIfNeeded();
+    parseSparePartsIfNeeded();
+
+    if (ticket.machine) {
+      setSelectedMachine(ticket.machine);
+    }
+
+  }, [
+    user,
+    formMode,
+    branches,
+    ticket.warrantyEndDate,
+    ticket.branchId,
+    ticket.spareParts,
+    ticket.customerId,
+    ticket.machine,
+    currentLanguage,
+    t
+  ]);
 
   const getCustomerRegion = async (customerId) => {
     try {
@@ -409,7 +443,6 @@ function MaintenanceDetails() {
     return branch ? (branch.city || branch.cityName || "") : '';
   };
 
-  // Early returns must come after all hooks
   if (loading) {
     return <div>{t("msgLoadingUserInfo")}</div>; // Or your loading component
   }
@@ -613,18 +646,19 @@ function MaintenanceDetails() {
         title: t('Error'),
         text: t('Please add a comment.'),
       });
-      return;
+      return setClosing(true);
     }
 
-    setClosing(true);
     const newComment = {
       date: formatDate(new Date(), 'DDMMYYYY HHmm'),
-      action: approvalAction === 'close' ? 'close' : approvalAction === 'reject' ? 'reject' : 'reassign',
+      action: approvalAction,
+      close: approvalAction === 'close',
+      reject: approvalAction === 'reject',
+      reassign: approvalAction === 'reassign',
       userId: String(user.userId),
       message: commentText,
       userName: user.userName,
-      status: approvalAction === 'close' ? 'Ticket Closed' :
-        approvalAction === 'reject' ? 'Ticket Rejected' : 'Request to Reassign'
+      status: approvalAction === 'close' ? 'Closed' : approvalAction === 'reject' ? 'Rejected' : 'Reassign',
     };
 
     try {
@@ -634,38 +668,56 @@ function MaintenanceDetails() {
 
       const newStatus = approvalAction === 'close' ? 'Closed' : approvalAction === 'reject' ? 'Rejected' : 'Reassign';
 
+      const ticketUpdatePayload = {
+        status: newStatus,
+        isOpen: approvalAction === 'close' || approvalAction === 'reject' ? false : true,
+        comments: updatedComments,
+        spareParts: JSON.stringify(selectedSpareParts.map(({ itemId, nameEn, nameAr, description }) => ({
+          itemId,
+          nameEn,
+          nameAr,
+          description,
+        }))),
+      };
+
       const apiUrl = `${API_BASE_URL}/maintenance/id/${ticket.id}`;
       const response = await fetch(apiUrl, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          status: newStatus,
-          isOpen: approvalAction === 'close' ? false : approvalAction === 'reject' ? false : true,
-          comments: updatedComments,
-        }),
+        body: JSON.stringify(ticketUpdatePayload),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`errorText Failed to update ticket status`);
+        throw new Error(errorText);
       }
+      const responseResult = await response.json();
 
-      setTicket(prev => ({ ...prev, status: newStatus, comments: updatedComments }));
+      setTicket(prev => ({
+        ...prev,
+        status: newStatus,
+        comments: updatedComments,
+      }));
+
       Swal.fire({
         icon: 'success',
         title: t('Success'),
-        text: approvalAction === 'close' ? t('Ticket closed successfully!') :
-          approvalAction === 'reject' ? t('Ticket rejected successfully!') :
-            t('Request sent successfully!'),
+        text:
+          approvalAction === 'close'
+            ? t('Ticket closed successfully!')
+            : approvalAction === 'reject'
+              ? t('Ticket rejected successfully!')
+              : t('Request sent successfully!'),
       });
     } catch (error) {
+      console.error('Failed to update ticket:', error);
       Swal.fire({
         icon: 'error',
         title: t('Error'),
-        text: `${error.message} ${t('Failed to update ticket. Please try again.')}`,
+        text: t('Failed to update ticket. Please try again.'),
       });
     } finally {
       setClosing(false);
@@ -840,7 +892,7 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-    if (!selectedMachine || selectedMachine.trim() === '') {
+    if (!ticket.machine && !selectedMachine) {
       Swal.fire({
         title: t("Validation Error"),
         text: t("Please select a machine"),
@@ -851,7 +903,7 @@ function MaintenanceDetails() {
       setSaving(false);
       return;
     }
-    if (selectedMachine === "Others" && (!manualMachineName || manualMachineName.trim() === '')) {
+    if (selectedMachine.toLowerCase() === "others" && (!manualMachineName || manualMachineName.trim() === '')) {
       Swal.fire({
         title: t("Validation Error"),
         text: t("Please select a machine"),
@@ -970,24 +1022,38 @@ function MaintenanceDetails() {
   };
 
   const handleCloseTicket = () => {
-    setDialogTitle('Close ticket');
-    setDialogSubTitle('Add closing comment.');
-    setApprovalAction('close');
+    setDialogTitle(t('Close ticket'));
+    setDialogSubTitle(t('Add closing comment.'));
+    setApprovalAction(t('close'));
     setIsApprovalDialogOpen(true);
   };
 
   const handleRejectTicket = () => {
-    setDialogTitle('Reject ticket');
-    setDialogSubTitle('Do you want to reject the ticket?');
-    setApprovalAction('reject');
+    setDialogTitle(t('Reject ticket'));
+    setDialogSubTitle(t('Do you want to reject the ticket?'));
+    setApprovalAction(t('reject'));
     setIsApprovalDialogOpen(true);
   };
 
   const handleReassignTicket = () => {
-    setDialogTitle('Request to Reassign');
-    setDialogSubTitle('Add reason for reassignment.');
-    setApprovalAction('reassign');
+    setDialogTitle(t('Request to Reassign'));
+    setDialogSubTitle(t('Add reason for reassignment.'));
+    setApprovalAction(t('reassign'));
     setIsApprovalDialogOpen(true);
+  };
+
+  const handleSelectSpareparts = (newSpareparts) => {
+    setSelectedSpareParts((prevSelected) => {
+      const existingIds = new Set(prevSelected.map((sp) => sp.itemId));
+      const uniqueNewParts = newSpareparts.filter(sp => !existingIds.has(sp.itemId));
+      return [...prevSelected, ...uniqueNewParts];
+    });
+  };
+
+  const handleRemoveSparepart = (itemIdToRemove) => {
+    setSelectedSpareParts((prevSelected) =>
+      prevSelected.filter((sp) => sp.itemId !== itemIdToRemove)
+    );
   };
 
   const handleAddComment = async (commentText, newCommentObj) => {
@@ -1064,8 +1130,6 @@ function MaintenanceDetails() {
     }
   };
 
-
-
   const handleSerialNumberChange = async (SNo) => {
     const serialValue = SNo ?? (SNo?.trim() || "000000");
     setTicket(prev => ({
@@ -1111,7 +1175,7 @@ function MaintenanceDetails() {
       } else {
         Swal.fire({
           title: t("Error"),
-          text: data?.message || t("Please enter erpSerialNo Correct"),
+          text: t(data?.message) || t("Please enter erpSerialNo Correct"),
           icon: "warning",
           confirmButtonText: t("OK"),
           confirmButtonColor: "#3085d6"
@@ -1255,39 +1319,13 @@ function MaintenanceDetails() {
                 </select>
               </div>
             )}
-            {/* {isV('issueName') && (
-              <div className='maintenance-details-field'>
-                <label>{t("Issue Name")} *</label>
-                <input id='issueName' name='issueName' onChange={handleInputChange} value={ticket.issueName || ""} disabled={!isE("issueName") || isReadOnly} />
-              </div>
-            )}
-            {isV('urgencyLevel') && (
-              <div className='maintenance-details-field'>
-                <label>{t("Urgency Level")} *</label>
-                <select
-                  id='urgencyLevel'
-                  name='urgencyLevel'
-                  value={ticket.urgencyLevel || ""}
-                  onChange={handleInputChange}
-                  disabled={!isE("urgencyLevel") || isReadOnly}
-                  style={{
-                    color: ticket.urgencyLevel ? 'inherit' : '#999',
-                  }}
-                >
-                  <option value="" style={{ color: '#999' }}>{t("Select Urgency Level")}</option>
-                  <option value="Low" style={{ color: 'inherit' }}>{t("Low")}</option>
-                  <option value="Medium" style={{ color: 'inherit' }}>{t("Medium")}</option>
-                  <option value="High" style={{ color: 'inherit' }}>{t("High")}</option>
-                </select>
-              </div>
-            )} */}
             {isV('machine') && (
               <div className='maintenance-details-field'>
                 <label>{t("Machine")} *</label>
                 <input
                   id="machineInput"
                   type="text"
-                  placeholder="Select a machine"
+                  placeholder={t("Select a machine")}
                   readOnly={!allowManualMachineInput}
                   value={ticket.machine ? ticket.machine : selectedMachine}
                   onClick={handleMachineInputClick}
@@ -1330,7 +1368,7 @@ function MaintenanceDetails() {
                       handleSerialNumberChange(serialNumber);
                     }}
                   >
-                    {t("Get Warranty End Date and Maintenance Charges")}
+                    {t("Get Maintenance Charges")}
                   </button>
                 )}
               </div>
@@ -1453,7 +1491,82 @@ function MaintenanceDetails() {
               )}
             </div>
           )}
-
+          {selectedSpareParts && selectedSpareParts.length > 0 && (
+            <div style={{ marginTop: "16px" }}>
+              <h4 style={{ marginBottom: "8px" }}>
+                {t("Spare Parts")}
+              </h4>
+              <table
+                style={{
+                  width: "48%",
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                  border: "1px solid #ddd",
+                  borderRadius: "6px",
+                  backgroundColor: "#fff",
+                  boxShadow: "inset 0 1px 3px rgb(0 0 0 / 0.1)",
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        borderBottom: "1px solid #ddd",
+                        padding: "8px 12px",
+                        textAlign: currentLanguage === "ar" ? "right" : "left",
+                        backgroundColor: "#f9f9f9",
+                        borderTopLeftRadius: "6px",
+                      }}
+                    >
+                      {t("Item ID")}
+                    </th>
+                    <th
+                      style={{
+                        borderBottom: "1px solid #ddd",
+                        padding: "8px 12px",
+                        textAlign: currentLanguage === "ar" ? "right" : "left",
+                        backgroundColor: "#f9f9f9",
+                        borderTopRightRadius: "6px",
+                      }}
+                    >
+                      {t("Item Name")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedSpareParts.map(({ itemId, nameEn, nameAr }) => (
+                    <tr key={itemId} style={{ borderBottom: "1px solid #ddd" }}>
+                      <td style={{ padding: "8px 12px" }}>{itemId}</td>
+                      <td style={{ padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>
+                          {currentLanguage === "ar" ? nameAr || nameEn : nameEn}
+                        </span>
+                        {ticket.status.toLowerCase() !=="closed" &&
+                          <button
+                          onClick={() => handleRemoveSparepart(itemId)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "#c00",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            fontSize: "1.4rem",
+                            lineHeight: "1",
+                            padding: 0,
+                          }}
+                          aria-label="Remove spare part"
+                          title="Remove"
+                          disabled={saving || closing || isReadOnly}
+                        >
+                          ×
+                        </button>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           {isV('feedback') && ticket.status?.toLowerCase() === 'closed' && (
             <div className='maintenance-details-field maintenance-details-textarea'>
               <label>{t("Customer Feedback")}</label>
@@ -1478,7 +1591,7 @@ function MaintenanceDetails() {
         <div className='support-status '>
           {isV('ticketStatus') && (
             <div className='support-status'>
-              <span>{t("Ticket Status:")}</span>
+              <span>{t("Ticket Status")}:</span>
               <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
             </div>
           )}
@@ -1486,7 +1599,7 @@ function MaintenanceDetails() {
         <div className='support-details-container-right'>
           {isV('assignedTo') && (
             <div className="support-assign">
-              <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
+              <span>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
               <SearchableDropdown
                 id="assignedTeamMember"
                 name="assignedTeamMember"
@@ -1504,6 +1617,17 @@ function MaintenanceDetails() {
             <div className="support-details-actions">
               {isEditing ? (
                 <>
+                  {isV('btnAddSpareParts') &&
+                    user.userType.toLowerCase() === "employee" &&
+                    ticket.status.toLowerCase() === "in progress" && (
+                      <button
+                        className="support-action-btn AddSpareParts"
+                        onClick={() => setShowSparePartsPopup(true)}
+                        disabled={saving || closing || isReadOnly}
+                      >
+                        {t('Add Spare Parts')}
+                      </button>
+                    )}
                   {isV('btnSave') &&
                     <button className="support-action-btn save" onClick={handleSave} disabled={saving || closing || isReadOnly}>
                       {saving ? t('Saving...') : t('Save')}
@@ -1514,7 +1638,7 @@ function MaintenanceDetails() {
                       {t('Cancel')}
                     </button>}
 
-                  {isV('btnReject') &&
+                  {isV('btnReject') && formMode === 'edit' &&
                     <button className="support-action-btn reject" onClick={handleRejectTicket} disabled={saving || closing || isReadOnly}>
                       {t('Reject')}
                     </button>}
@@ -1604,7 +1728,7 @@ function MaintenanceDetails() {
         onSubmit={handleApprovalDialogSubmit}
         title={dialogTitle}
         subTitle={dialogSubTitle}
-        placeholder={approvalAction === 'close' ? 'Enter closing comment' : approvalAction === 'reject' ? 'Enter rejection reason' : 'Enter reacon for re-assignment'}
+        placeholder={approvalAction === 'close' ? t('Enter closing comment') : approvalAction === 'reject' ? t('Enter rejection reason') : t('Enter reacon for re-assignment')}
       />
       {showGetProducts && (
         <GetProducts
@@ -1617,6 +1741,15 @@ function MaintenanceDetails() {
           entity={Constants.ENTITY.VMCO}
           category={Constants.CATEGORY.VMCO_MACHINES}
           machineMode={true}
+        />
+      )}
+      {showSparePartsPopup && (
+        <GetSpareParts
+          open={showSparePartsPopup}
+          onClose={() => setShowSparePartsPopup(false)}
+          onSelectSpareparts={handleSelectSpareparts}
+          API_BASE_URL={API_BASE_URL}
+          token={token}
         />
       )}
       <style>

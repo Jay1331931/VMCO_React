@@ -447,7 +447,7 @@
     "Verified": "تم التحقق",
     "New Ticket": "تذكرة جديدة",
     "New Request": "طلب جديد",
-    "Ticket Status": ": حالة التذكرة:",
+    "Ticket Status": "حالة التذكرة",
     "Assigned T": ": تم التعيين إلى:",
     "Select Department": "اختر القسم",
     "Auto-calculated": "محسوب تلقائيًا",
@@ -873,7 +873,34 @@
  "to learn more about the way we use your information.":"لتعلم المزيد عن الطريقة التي نستخدم بها معلوماتك.",
 "for any support.":"لأي دعم.",
 "Privacy Policy":"سياسة الخصوصية",
-"WhatsApp":"واتساب"
+"WhatsApp":"واتساب",
+"Request ID": "معرف الطلب",
+"Assigned Sales Executive": "مدير المبيعات المعين",
+"Get Maintenance Charges": "احصل على رسوم الصيانة",
+"Select a machine":"اختر آلة",
+"erpcustId not found": "لم يتم العثور على",
+"Reject ticket": "رفض التذكرة",
+"Close ticket": "إغلاق التذكرة",
+"Enter rejection reason": "أدخل سبب الرفض",
+"Enter closing comment": "أدخل التعليق الختامي",
+"Enter reacon for re-assignment": "أدخل سبب إعادة التعيين",
+"Ticket rejected successfully": "تم رفض التذكرة بنجاح",
+"Request#": "طلب#",
+"Request to Reassign": "طلب إعادة التعيين",
+"Add reason for reassignment.":"أضف سببًا لإعادة التعيين.",
+"Assigned to": "تم التعيين إلى",
+"Select Employee": "حدد الموظف",
+"Ticket updated successfully!" : "تم تحديث تذكرة الموظف بنجاح!",
+"Ticket closed successfully!":"تم إغلاق التذكرة بنجاح",
+"Add Spare Parts": "إضافة قطع الغيار,",
+"Select Spare Parts": "حدد قطع الغيار",
+"Search spare parts...": "البحث عن قطع الغيار...",
+"Spare Parts": "قطع غيار",
+"Item ID": "معرف العنصر",
+"Item Name": "اسم العنصر",
+"Close Ticket": "إغلاق التذكرة"
+
+
 
 
 }

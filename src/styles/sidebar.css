@@ -519,3 +519,46 @@
   margin-left: 20px;
   margin-right: auto; /* Adjust for RTL (Arabic) */
 }
+.mobile-bottom-menu {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid gray;
+  border-radius: 10px;
+  z-index: 2000;
+  transition: transform 0.35s ease-in-out;
+}
+
+.mobile-bottom-menu.show {
+  transform: translateY(0%);
+}
+
+.mobile-bottom-menu.hide {
+  transform: translateY(100%); /* slide down off screen */
+}
+
+.mobile-bottom-menu .bottom-menu-item {
+  flex: 1;
+  text-align: center;
+  color: #bfc6d4;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-bottom-menu .bottom-menu-item.active {
+  color: #00205b;
+}
+
+.mobile-bottom-menu .bottom-menu-item svg {
+  font-size: 15px;
+  margin-bottom: 2px;
+}
