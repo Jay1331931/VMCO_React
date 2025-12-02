@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "../styles/sidebar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../i18n";
@@ -13,6 +13,7 @@ import {
   faBars,
   faHouse,
   faBookOpen,
+  faBoxOpen,
   faShoppingCart,
   faUsers,
   faCodeBranch,
@@ -30,7 +31,7 @@ import {
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-import { isMobile } from "../utilities/isMobile";
+// import { isMobile } from "../utilities/isMobile";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function Sidebar({ children, title }) {
@@ -39,13 +40,13 @@ function Sidebar({ children, title }) {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
-  // const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  //  useEffect(() => {
-  //     const handleResize = () => setIsMobile(window.innerWidth < 768);
-  //     console.log("isMobile", isMobile);
-  //     window.addEventListener("resize", handleResize);
-  //     return () => window.removeEventListener("resize", handleResize);
-  //   }, []);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+   useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
@@ -71,7 +72,53 @@ function Sidebar({ children, title }) {
   const [formData, setFormData] = useState();
   const [approvedCustomer, setApprovedCustomer] = useState();
   const [showPopup, setShowPopup] = useState(false);
+// const [showMenu, setShowMenu] = useState(true);
+// const lastScroll = useRef(0);  // 👈 persists without re-render
+// useEffect(() => {
+//   const handleScroll = () => {
+//     const current = window.scrollY;
 
+//     if (current > lastScroll.current) {
+//       setShowMenu(false); // scrolling down → hide
+//     } else {
+//       setShowMenu(true); // scrolling up → show
+//     }
+
+//     lastScroll.current = current;
+//   };
+
+//   window.addEventListener("scroll", handleScroll);
+//   return () => window.removeEventListener("scroll", handleScroll);
+// }, []);
+const [showMenu, setShowMenu] = useState(true);
+const dragStartY = useRef(0);
+
+useEffect(() => {
+  const handleTouchStart = (e) => {
+    dragStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e) => {
+    const currentY = e.touches[0].clientY;
+
+    if (currentY < dragStartY.current - 10) {
+      // user dragged up
+      setShowMenu(false);
+    } 
+    else if (currentY > dragStartY.current + 10) {
+      // user dragged down
+      setShowMenu(true);
+    }
+  };
+
+  window.addEventListener("touchstart", handleTouchStart);
+  window.addEventListener("touchmove", handleTouchMove);
+
+  return () => {
+    window.removeEventListener("touchstart", handleTouchStart);
+    window.removeEventListener("touchmove", handleTouchMove);
+  };
+}, []);
   const handlePopupToggle = () => {
     setShowPopup(!showPopup);
   };
@@ -437,18 +484,19 @@ function Sidebar({ children, title }) {
 
   const menuItems = [
     { icon: faHouse, label: "Dashboard", default: true ,isVisible:true},
-    { icon: faBookOpen, label: "Catalog" ,isVisible:true},
-    { icon: faShoppingCart, label: "Orders" ,isVisible:true},
-    { icon: faCodeBranch, label: "Branches" ,isVisible:true},
+    { icon: isMobile ? faHouse : faBookOpen, label: "Catalog" ,isVisible:true},
+    { icon: isMobile ? faBoxOpen : faShoppingCart, label: "Orders" ,isVisible:true},
+    { icon: faCodeBranch, label: "Branches" ,isVisible:isMobile ? false :true},
     { icon: faUsers, label: "Customers" ,isVisible:true},
-    { icon: faHeadset, label: "Support" ,isVisible:true},
-    { icon: faTools, label: "Maintenance" ,isVisible:true},
+    { icon: faHeadset, label: "Support" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transfer") ? true: false :true},
+    { icon: faTools, label: "Maintenance" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transfer") ? true: false :true},
     { icon: faFile, label: "Reports" ,isVisible:isMobile ? false :true},
-    { icon: faBank, label: "Bank Transfer", permission: "BankTransfer" ,isVisible:true},
-    { icon: faBuilding, label: "Company" ,isVisible:true},
+    { icon: faBank, label: "Bank Transfer", permission: "BankTransfer" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transfer") ? true: false :true},
+    { icon: isMobile ? faUser : faBuilding, label: "Company" ,isVisible:isMobile ? activeMenu === t("Catalog") || activeMenu === t("Company") ? true: false :true},
     { icon: faCog, label: "Settings" ,isVisible:true},
     { icon: faUpload, label: isMobile ? "" : "General", permission: isMobile ? false : "General" ,isVisible:isMobile ? false :true},
-      { icon: faHistory, label: "Approval History" , permission: "approvalHistory",isVisible:isMobile ? false :true},
+    { icon: faHistory, label: "Approval History" , permission: "approvalHistory",isVisible:isMobile ? false :true},
+    { icon: faShoppingCart, label: "Cart", permission: "Cart", isVisible: isMobile ? true : false}
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
@@ -682,13 +730,19 @@ function Sidebar({ children, title }) {
           }
         >
           <header className="header">
-            <button
+            {/* {!isMobile && (<button
               className="mobile-menu-btn"
               id="mobileMenuBtn"
               onClick={handleMobileToggle}
             >
               <FontAwesomeIcon icon={faBars} />
-            </button>
+            </button>)} */}
+            {isMobile && (<img
+              src="/logos/talab_point_logo.png"
+              alt="Talab Point Logo"
+              className="logo-collapsed"
+              style={{ maxWidth: "100%", maxHeight: "100%" }}
+            />)}
             <div className="header-title">{t(activeMenu)}</div>
             {/* Saudi time next to language switch */}
             <div className="user-text-header">
@@ -781,6 +835,24 @@ function Sidebar({ children, title }) {
             
           </header>
           <div className="content">{children}</div>
+          {isMobile && (
+  <div className={`mobile-bottom-menu ${showMenu ? "show" : "hide"}`}>
+    {menuItems
+      // .filter(({ label }) => label.toLowerCase() !== "company")
+      .map(({ icon, label, permission, isVisible }) => (
+        isV(permission || label) && isVisible && (
+          <div
+            key={label}
+            className={`bottom-menu-item ${activeMenu === t(label) ? "active" : ""}`}
+            onClick={() => handleMenuClick(label)}
+          >
+            <FontAwesomeIcon icon={icon} />
+            <span style={{fontSize: "10px"}}>{t(label)}</span>
+          </div>
+        )
+      ))}
+  </div>
+)}
         </div>
       </CustomerProvider>
     </div>
