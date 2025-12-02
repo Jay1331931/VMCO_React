@@ -2111,6 +2111,14 @@ body.catalog-page #root {
   background: #5e5e5e;
   color: #fff;
 }
+.support-action-btn.AddSpareParts {
+  background: var(--logo-orange);
+  color: #fff;
+}
+.support-action-btn.AddSpareParts:disabled {
+  background: #5e5e5e;
+  color: #fff;
+}
 .support-action-btn.close {
   background: var(--logo-deep-green);
   color: var(--bg-white);
