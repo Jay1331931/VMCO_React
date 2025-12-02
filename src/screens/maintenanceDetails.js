@@ -1022,23 +1022,23 @@ function MaintenanceDetails() {
   };
 
   const handleCloseTicket = () => {
-    setDialogTitle('Close ticket');
-    setDialogSubTitle('Add closing comment.');
-    setApprovalAction('close');
+    setDialogTitle(t('Close ticket'));
+    setDialogSubTitle(t('Add closing comment.'));
+    setApprovalAction(t('close'));
     setIsApprovalDialogOpen(true);
   };
 
   const handleRejectTicket = () => {
-    setDialogTitle('Reject ticket');
-    setDialogSubTitle('Do you want to reject the ticket?');
-    setApprovalAction('reject');
+    setDialogTitle(t('Reject ticket'));
+    setDialogSubTitle(t('Do you want to reject the ticket?'));
+    setApprovalAction(t('reject'));
     setIsApprovalDialogOpen(true);
   };
 
   const handleReassignTicket = () => {
-    setDialogTitle('Request to Reassign');
-    setDialogSubTitle('Add reason for reassignment.');
-    setApprovalAction('reassign');
+    setDialogTitle(t('Request to Reassign'));
+    setDialogSubTitle(t('Add reason for reassignment.'));
+    setApprovalAction(t('reassign'));
     setIsApprovalDialogOpen(true);
   };
 
@@ -1175,7 +1175,7 @@ function MaintenanceDetails() {
       } else {
         Swal.fire({
           title: t("Error"),
-          text: data?.message || t("Please enter erpSerialNo Correct"),
+          text: t(data?.message) || t("Please enter erpSerialNo Correct"),
           icon: "warning",
           confirmButtonText: t("OK"),
           confirmButtonColor: "#3085d6"
@@ -1325,7 +1325,7 @@ function MaintenanceDetails() {
                 <input
                   id="machineInput"
                   type="text"
-                  placeholder="Select a machine"
+                  placeholder={t("Select a machine")}
                   readOnly={!allowManualMachineInput}
                   value={ticket.machine ? ticket.machine : selectedMachine}
                   onClick={handleMachineInputClick}
@@ -1368,7 +1368,7 @@ function MaintenanceDetails() {
                       handleSerialNumberChange(serialNumber);
                     }}
                   >
-                    {t("Get Warranty End Date and Maintenance Charges")}
+                    {t("Get Maintenance Charges")}
                   </button>
                 )}
               </div>
@@ -1494,7 +1494,7 @@ function MaintenanceDetails() {
           {selectedSpareParts && selectedSpareParts.length > 0 && (
             <div style={{ marginTop: "16px" }}>
               <h4 style={{ marginBottom: "8px" }}>
-                {t("Selected Spare Parts")}
+                {t("Spare Parts")}
               </h4>
               <table
                 style={{
@@ -1591,7 +1591,7 @@ function MaintenanceDetails() {
         <div className='support-status '>
           {isV('ticketStatus') && (
             <div className='support-status'>
-              <span>{t("Ticket Status:")}</span>
+              <span>{t("Ticket Status")}:</span>
               <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
             </div>
           )}
@@ -1599,7 +1599,7 @@ function MaintenanceDetails() {
         <div className='support-details-container-right'>
           {isV('assignedTo') && (
             <div className="support-assign">
-              <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
+              <span>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
               <SearchableDropdown
                 id="assignedTeamMember"
                 name="assignedTeamMember"
@@ -1638,7 +1638,7 @@ function MaintenanceDetails() {
                       {t('Cancel')}
                     </button>}
 
-                  {isV('btnReject') &&
+                  {isV('btnReject') && formMode === 'edit' &&
                     <button className="support-action-btn reject" onClick={handleRejectTicket} disabled={saving || closing || isReadOnly}>
                       {t('Reject')}
                     </button>}
@@ -1728,7 +1728,7 @@ function MaintenanceDetails() {
         onSubmit={handleApprovalDialogSubmit}
         title={dialogTitle}
         subTitle={dialogSubTitle}
-        placeholder={approvalAction === 'close' ? 'Enter closing comment' : approvalAction === 'reject' ? 'Enter rejection reason' : 'Enter reacon for re-assignment'}
+        placeholder={approvalAction === 'close' ? t('Enter closing comment') : approvalAction === 'reject' ? t('Enter rejection reason') : t('Enter reacon for re-assignment')}
       />
       {showGetProducts && (
         <GetProducts

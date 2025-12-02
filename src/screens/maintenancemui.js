@@ -350,23 +350,15 @@ function Maintenance() {
   };
 
   const maintenanceColumns = [
-    { field: "requestId", headerName: "Request ID", width: 100 ,  searchable: true,},
-    { field: "erpCustomerId", headerName: "Customer ID", width: 120 ,  searchable: true,},
-    { field: "companyNameEn", headerName: "Customer", width: 150 ,  searchable: false,},
-    { field: "brandNameEn", headerName: "Brand Name", width: 140,  searchable: false, },
-    { field: "branchNameEn", headerName: "Branch Name", width: 140 ,  searchable: false,},
-    { field: "branchCity", headerName: "Branch City", width: 120 ,  searchable: true},
-    {
-      field: "assignedSalesExecutive",
-      headerName: "Assigned Sales Executive",
-      width: 160,
-    },
-    { field: "issueType", headerName: "Issue Type", width: 120 ,searchable:true},
-    {
-      field: "createdAt",
-      headerName: "Created Date",
-      width: 120,
-
+    { field: "requestId", headerName: t("Request ID"), width: 100 ,  searchable: true,},
+    { field: "erpCustomerId", headerName: t("Customer ID"), width: 120 ,  searchable: true,},
+    { field: "companyNameEn", headerName: t("Customer"), width: 150 ,  searchable: false,},
+    { field: "brandNameEn", headerName: t("Brand Name"), width: 140,  searchable: false, },
+    { field: "branchNameEn", headerName: t("Branch Name"), width: 140 ,  searchable: false,},
+    { field: "branchCity", headerName: t("Branch City"), width: 120 ,  searchable: true},
+    { field: "assignedSalesExecutive", headerName: t("Assigned Sales Executive"), width: 160, searchable: false,},
+    { field: "issueType", headerName: t("Issue Type"), width: 120 ,searchable:true},
+    { field: "createdAt", headerName: t("Created Date"), width: 120, 
       renderCell: (params) => (
         <span>
           {params.row?.createdAt
@@ -375,12 +367,9 @@ function Maintenance() {
         </span>
       ),
     },
-    { field: "createdByUsername", headerName: "Created By", width: 120 },
-    { field: "assignedTo", headerName: "Assigned To", width: 120 },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 110,
+    { field: "createdByUsername", headerName: t("Created By"), width: 120 },
+    { field: "assignedTo", headerName: t("Assigned To"), width: 120 },
+    { field: "status", headerName: t("Status"), width: 110,
       cellClassName: (params) => getStatusClass(params.value),
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{params.value}</label>

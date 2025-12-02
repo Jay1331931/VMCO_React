@@ -5,13 +5,12 @@ import { useTranslation } from "react-i18next";
 function GetSpareparts({
   open,
   onClose,
-  onSelectSpareparts, // similar to onSelectProduct
+  onSelectSpareparts, 
   API_BASE_URL,
-  token,
-  t = (x) => x, // fallback translation
+  token
 }) {
-  const { i18n } = useTranslation();
-  const isRTL = i18n.language === "ar";
+  const { t } = useTranslation();
+  const isRTL = t.language === "ar";
 
   const [backendSpareparts, setBackendSpareparts] = useState([]);
   const [sparepartsLoading, setSparepartsLoading] = useState(false);
