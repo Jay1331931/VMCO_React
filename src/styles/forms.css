@@ -256,7 +256,7 @@
   width: 250px;
 }
 .dropdown-search {
-  width: 250px;
+  /* width: 250px; */
   padding: 8px 12px;
   border: none;
   border-bottom: 1px solid #eee;
@@ -266,7 +266,7 @@
 .dropdown-options {
   max-height: 315px;
   overflow-y: auto;
-  width: 250px;
+  /* width: 250px; */
 }
 .dropdown-option {
   padding: 8px 12px;
@@ -1560,7 +1560,7 @@ td.file-display-cell {
   }
 
   .dropdown-search {
-    width: 375px !important;
+    /* width: 375px !important; */
   }
 
   .dropdown-content.mobile {
@@ -2284,7 +2284,7 @@ td.file-display-cell {
 }
 @media( max-width:500px){
   .dropdown-content{
-    max-width: 300px;
+    /* max-width: 300px; */
 
   }
 }

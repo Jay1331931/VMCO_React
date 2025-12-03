@@ -1025,6 +1025,7 @@ body.catalog-page #root {
   flex: 1 1 calc(80% - 20px); 
   max-width: calc(80% - 20px);
   box-sizing: border-box;
+  gap: 10px !important;
 }
 }
 @media (min-width: 760px) and (max-width: 900px) {
@@ -1072,8 +1073,18 @@ body.catalog-page #root {
   font-size: 0.8rem !important;
 }
 .catalog-fixed-header {
-  padding: 20px 0px 10px 0px;
-  border-bottom: none !important;
+  position: sticky;
+  padding: 20px 10px 10px 10px;
+  /* border-bottom: 1px solid gray !important; */
+  transition: top 0.35s ease-in-out;
+  /* border-radius: 10px; */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.catalog-fixed-header.hide {
+  top: -120px; /* height + some extra, adjust as needed */
+}
+.catalog-fixed-header.show {
+  top: 60px;
 }
   .page-header {
     flex-direction: column;
@@ -2944,7 +2955,7 @@ display: flex;
 /* Mobile responsive */
 @media (max-width: 768px) {
   .catalog-scrollable-content {
-    padding: 0px;
+    padding: 0px 10px;
   }
   .branch-form-popup {
     max-width: 95%;

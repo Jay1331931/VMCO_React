@@ -1,0 +1,7 @@
+{
+  "name": "Talabpoint",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}

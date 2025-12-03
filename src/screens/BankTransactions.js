@@ -83,6 +83,36 @@ const BankTransactions = () => {
       setColumnVisibilityModel(JSON.parse(savedModel));
     }
   }, [storageKey]);
+  const [showHeader, setShowHeader] = useState(true);
+  const dragStartY = useRef(0);
+  
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      dragStartY.current = e.touches[0].clientY;
+    };
+  
+    const handleTouchMove = (e) => {
+      const currentY = e.touches[0].clientY;
+  
+      // Drag up → hide header
+      if (currentY < dragStartY.current - 15) {
+        setShowHeader(false);
+      }
+  
+      // Drag down → show header
+      if (currentY > dragStartY.current + 15) {
+        setShowHeader(true);
+      }
+    };
+  
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchmove", handleTouchMove);
+  
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
 
   // Fetch API
   const fetchTransactions = useCallback(
@@ -337,14 +367,14 @@ const BankTransactions = () => {
               ) : (
                 <>
                   <div
-                    className="catalog-fixed-header"
-                    style={{
-                      top: isAtTop ? "60px" : "0px",
-                      position: "sticky",
-                      zIndex: 20,
-                      transition: "top 0.3s ease",
-                      background: "#fff",
-                    }}
+                    className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
+                    // style={{
+                    //   top: isAtTop ? "60px" : "0px",
+                    //   position: "sticky",
+                    //   zIndex: 20,
+                    //   transition: "top 0.3s ease",
+                    //   background: "#fff",
+                    // }}
                   >
                     <TableMobile
                       columns={visibleColumns}

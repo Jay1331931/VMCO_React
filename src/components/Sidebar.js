@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "../styles/sidebar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../i18n";
@@ -7,12 +7,15 @@ import { useNavigate, useLocation } from "react-router-dom"; // Add useLocation
 import { useAuth } from "../context/AuthContext";
 import SaudiTime from "../components/Time";
 import RbacManager from "../utilities/rbac";
+import { Capacitor } from "@capacitor/core";
+// import {isMobile as isMobileDevice} from "../utilities/isMobile";
 import {
   faChevronLeft,
   faChevronRight,
   faBars,
   faHouse,
   faBookOpen,
+  faBoxOpen,
   faShoppingCart,
   faUsers,
   faCodeBranch,
@@ -25,27 +28,28 @@ import {
   faLanguage,
   faBank,
   faFile,
-  faUpload,faHistory
+  faUpload,
+  faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
-import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-import { isMobile } from "../utilities/isMobile";
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
+// import { isMobile } from "../utilities/isMobile";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const isMobileDevice = Capacitor.isNativePlatform();
 function Sidebar({ children, title }) {
   const navigate = useNavigate();
   const location = useLocation(); // Add this to track current route
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
-  // const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  //  useEffect(() => {
-  //     const handleResize = () => setIsMobile(window.innerWidth < 768);
-  //     console.log("isMobile", isMobile);
-  //     window.addEventListener("resize", handleResize);
-  //     return () => window.removeEventListener("resize", handleResize);
-  //   }, []);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
@@ -71,7 +75,52 @@ function Sidebar({ children, title }) {
   const [formData, setFormData] = useState();
   const [approvedCustomer, setApprovedCustomer] = useState();
   const [showPopup, setShowPopup] = useState(false);
+  // const [showMenu, setShowMenu] = useState(true);
+  // const lastScroll = useRef(0);  // 👈 persists without re-render
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     const current = window.scrollY;
 
+  //     if (current > lastScroll.current) {
+  //       setShowMenu(false); // scrolling down → hide
+  //     } else {
+  //       setShowMenu(true); // scrolling up → show
+  //     }
+
+  //     lastScroll.current = current;
+  //   };
+
+  //   window.addEventListener("scroll", handleScroll);
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, []);
+  const [showMenu, setShowMenu] = useState(true);
+  const dragStartY = useRef(0);
+
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      dragStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e) => {
+      const currentY = e.touches[0].clientY;
+
+      if (currentY < dragStartY.current - 10) {
+        // user dragged up
+        setShowMenu(false);
+      } else if (currentY > dragStartY.current + 10) {
+        // user dragged down
+        setShowMenu(true);
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchmove", handleTouchMove);
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
   const handlePopupToggle = () => {
     setShowPopup(!showPopup);
   };
@@ -340,6 +389,7 @@ function Sidebar({ children, title }) {
 
   const handleMenuClick = async (label) => {
     setActiveMenu(label);
+    console.log("$$$$activemenu", activeMenu);
     if (window.innerWidth <= 768) setSidebarExpanded(false);
 
     // Navigate to the corresponding page
@@ -351,6 +401,7 @@ function Sidebar({ children, title }) {
         navigate("/customers");
         break;
       case "Catalog":
+      case "Home":
         navigate("/catalog");
         break;
       case "Support":
@@ -360,6 +411,7 @@ function Sidebar({ children, title }) {
         navigate("/maintenance");
         break;
       case "Bank Transfer":
+      case "Bank":
         navigate("/bankTransactions");
         break;
       case "General":
@@ -426,7 +478,7 @@ function Sidebar({ children, title }) {
     const userLoggedOut = user;
 
     logout(true); // Pass true to indicate button was clicked
-    
+
     // Logout successful, redirect to login page
     if (userLoggedOut?.userType === "employee") {
       navigate("/login/employee");
@@ -436,19 +488,100 @@ function Sidebar({ children, title }) {
   };
 
   const menuItems = [
-    { icon: faHouse, label: "Dashboard", default: true ,isVisible:true},
-    { icon: faBookOpen, label: "Catalog" ,isVisible:true},
-    { icon: faShoppingCart, label: "Orders" ,isVisible:true},
-    { icon: faCodeBranch, label: "Branches" ,isVisible:true},
-    { icon: faUsers, label: "Customers" ,isVisible:true},
-    { icon: faHeadset, label: "Support" ,isVisible:true},
-    { icon: faTools, label: "Maintenance" ,isVisible:true},
-    { icon: faFile, label: "Reports" ,isVisible:isMobile ? false :true},
-    { icon: faBank, label: "Bank Transfer", permission: "BankTransfer" ,isVisible:true},
-    { icon: faBuilding, label: "Company" ,isVisible:true},
-    { icon: faCog, label: "Settings" ,isVisible:true},
-    { icon: faUpload, label: isMobile ? "" : "General", permission: isMobile ? false : "General" ,isVisible:isMobile ? false :true},
-      { icon: faHistory, label: "Approval History" , permission: "approvalHistory",isVisible:isMobile ? false :true},
+    { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
+    {
+      icon: isMobileDevice ? faHouse : faBookOpen,
+      label: "Catalog",
+      isVisible: true,
+    },
+    {
+      icon: isMobileDevice ? faBoxOpen : faShoppingCart,
+      label: "Orders",
+      isVisible: true,
+    },
+    {
+      icon: faCodeBranch,
+      label: "Branches",
+      isVisible: isMobileDevice ? false : true,
+    },
+    { icon: faUsers, label: "Customers", isVisible: true },
+    {
+      icon: faHeadset,
+      label: "Support",
+      isVisible: isMobileDevice
+        ? activeMenu === t("Orders") ||
+          activeMenu === t("Support") ||
+          activeMenu === t("Maintenance") ||
+          activeMenu === t("Bank Transactions") ||
+          activeMenu === t("Bank")
+          ? true
+          : false
+        : true,
+    },
+    {
+      icon: faTools,
+      label: "Maintenance",
+      isVisible: isMobileDevice
+        ? activeMenu === t("Orders") ||
+          activeMenu === t("Support") ||
+          activeMenu === t("Maintenance") ||
+          activeMenu === t("Bank Transactions") ||
+          activeMenu === t("Bank")
+          ? true
+          : false
+        : true,
+    },
+    { icon: faFile, label: "Reports", isVisible: isMobileDevice ? false : true },
+    {
+      icon: faBank,
+      label: isMobileDevice ? "Bank" : "Bank Transfer",
+      permission: "BankTransfer",
+      isVisible: isMobileDevice
+        ? activeMenu === t("Orders") ||
+          activeMenu === t("Support") ||
+          activeMenu === t("Maintenance") ||
+          activeMenu === t("Bank Transactions") ||
+          activeMenu === t("Bank")
+          ? true
+          : false
+        : true,
+    },
+    {
+      icon: faShoppingCart,
+      label: "Cart",
+      permission: "Cart",
+      isVisible: isMobileDevice
+        ? activeMenu === t("Catalog") ||
+          activeMenu === t("Company") ||
+          activeMenu === t("Cart")
+          ? true
+          : false
+        : false,
+    },
+    {
+      icon: isMobileDevice ? faUser : faBuilding,
+      label: "Company",
+      isVisible: isMobileDevice
+        ? activeMenu === t("Catalog") ||
+          activeMenu === t("Company") ||
+          activeMenu === t("Cart")
+          ? true
+          : false
+        : true,
+    },
+    { icon: faCog, label: "Settings", isVisible: true },
+    {
+      icon: faUpload,
+      label: isMobile ? "" : "General",
+      permission: isMobile ? false : "General",
+      isVisible: isMobile ? false : true,
+    },
+    {
+      icon: faHistory,
+      label: "Approval History",
+      permission: "approvalHistory",
+      isVisible: isMobile ? false : true,
+    },
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
@@ -530,21 +663,26 @@ function Sidebar({ children, title }) {
           <div className="main-menu-items">
             {menuItems
               .filter(({ label }) => label.toLowerCase() !== "company")
-              .map(({ icon, label, permission,isVisible }) => (
-                isV(permission || label) && label &&isVisible &&<div
-                  key={label}
-                  className={`menu-item ${
-                    activeMenu === label ? "active" : ""
-                  }`}
-                  onClick={() => handleMenuClick(label)}
-                  style={{
-                    display: isV(permission || label) ? "flex" : "none",
-                  }}
-                >
-                  <FontAwesomeIcon icon={icon} />
-                  <span>{t(label)}</span>
-                </div>
-              ))}
+              .map(
+                ({ icon, label, permission, isVisible }) =>
+                  isV(permission || label) &&
+                  label &&
+                  isVisible && (
+                    <div
+                      key={label}
+                      className={`menu-item ${
+                        activeMenu === label ? "active" : ""
+                      }`}
+                      onClick={() => handleMenuClick(label)}
+                      style={{
+                        display: isV(permission || label) ? "flex" : "none",
+                      }}
+                    >
+                      <FontAwesomeIcon icon={icon} />
+                      <span>{t(label)}</span>
+                    </div>
+                  )
+              )}
           </div>
 
           <div className="bottom-menu-section">
@@ -601,7 +739,7 @@ function Sidebar({ children, title }) {
                 <div className="user-avatar">
                   <FontAwesomeIcon icon={faUser} />
                 </div>
-                <div className="user-text" style={{marginLeft: "5px"}}>
+                <div className="user-text" style={{ marginLeft: "5px" }}>
                   <div className="user-name">{user?.userName}</div>
                   <div className="user-email">{user?.email}</div>
                 </div>
@@ -682,105 +820,154 @@ function Sidebar({ children, title }) {
           }
         >
           <header className="header">
-            <button
+            {!isMobileDevice && (<button
               className="mobile-menu-btn"
               id="mobileMenuBtn"
               onClick={handleMobileToggle}
             >
               <FontAwesomeIcon icon={faBars} />
-            </button>
+            </button>)}
+            {isMobileDevice && (
+              <img
+                src="/logos/talab_point_logo.png"
+                alt="Talab Point Logo"
+                className="logo-collapsed"
+                style={{ maxWidth: "100%", maxHeight: "100%" }}
+              />
+            )}
             <div className="header-title">{t(activeMenu)}</div>
             {/* Saudi time next to language switch */}
             <div className="user-text-header">
-              {!isMobile && (<div className="text">
-            {user?.userType?.toLowerCase() === "employee" && (
-              // <div className="user-text-header">
-              <div className="text">
-                <div className="user-details-footer" title={user?.employeeId}>
-                  {t("Employee ID")}: {user?.employeeId}
-                </div>
-                <div className="user-details-footer" title={user?.designation}>
-                  {t("Designation")}: {user?.designation}
-                </div>
-                {/* <div className="user-details-footer">{user?.designation}</div> */}
-                <div className="user-details-footer" title={user?.roles}>
-                  {t("Role")}: {user?.roles}
-                </div>
-              {/* </div> */}
-              </div>
-            )}
-            {user?.userType?.toLowerCase() === "customer" &&
-              user?.roles[0] === "customer_primary" && (
-                // <div className="user-text-header">
+              {!isMobile && (
                 <div className="text">
-                <div
-                    className="user-details-footer"
-                    title={user?.erpCustomerId}
-                  >
-                    {t("Customer ID")}: {user?.erpCustomerId}
-                  </div>
-                  <div
-                    className="user-details-footer"
-                    title={
-                      i18n.language === "en"
-                        ? user?.companyNameEn
-                        : user?.companyNameAr
-                    }
-                  >
-                    {t("Company")}:{" "}
-                    {i18n.language === "en"
-                      ? user?.companyNameEn
-                      : user?.companyNameAr}
-                  </div>
-                  {/* <EllipsisToolTip content={i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}>
+                  {user?.userType?.toLowerCase() === "employee" && (
+                    // <div className="user-text-header">
+                    <div className="text">
+                      <div
+                        className="user-details-footer"
+                        title={user?.employeeId}
+                      >
+                        {t("Employee ID")}: {user?.employeeId}
+                      </div>
+                      <div
+                        className="user-details-footer"
+                        title={user?.designation}
+                      >
+                        {t("Designation")}: {user?.designation}
+                      </div>
+                      {/* <div className="user-details-footer">{user?.designation}</div> */}
+                      <div className="user-details-footer" title={user?.roles}>
+                        {t("Role")}: {user?.roles}
+                      </div>
+                      {/* </div> */}
+                    </div>
+                  )}
+                  {user?.userType?.toLowerCase() === "customer" &&
+                    user?.roles[0] === "customer_primary" && (
+                      // <div className="user-text-header">
+                      <div className="text">
+                        <div
+                          className="user-details-footer"
+                          title={user?.erpCustomerId}
+                        >
+                          {t("Customer ID")}: {user?.erpCustomerId}
+                        </div>
+                        <div
+                          className="user-details-footer"
+                          title={
+                            i18n.language === "en"
+                              ? user?.companyNameEn
+                              : user?.companyNameAr
+                          }
+                        >
+                          {t("Company")}:{" "}
+                          {i18n.language === "en"
+                            ? user?.companyNameEn
+                            : user?.companyNameAr}
+                        </div>
+                        {/* <EllipsisToolTip content={i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}>
       {t("Company")}: {i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}
     </EllipsisToolTip> */}
-                  {/* <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div> */}
-                  <div
-                    className="user-details-footer"
-                    title={user?.branchNumber}
-                  >
-                    {t("Branches")}: {user?.branchNumber}
-                  </div>
-                {/* </div> */}
+                        {/* <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div> */}
+                        <div
+                          className="user-details-footer"
+                          title={user?.branchNumber}
+                        >
+                          {t("Branches")}: {user?.branchNumber}
+                        </div>
+                        {/* </div> */}
+                      </div>
+                    )}
+                  {user?.userType?.toLowerCase() === "customer" &&
+                    user?.roles[0] === "branch_primary" && (
+                      // <div className="user-text-header">
+                      <div className="text">
+                        <div
+                          className="user-details-footer"
+                          title={user?.erpCustomerId}
+                        >
+                          {t("Customer ID")}: {user?.erpCustomerId}
+                        </div>
+                        {/* <div className="user-details-footer">{t("Company")}:</div> */}
+                        {/* <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div> */}
+                        <div
+                          className="user-details-footer"
+                          title={user?.branchNumberPrimary}
+                        >
+                          {Number(user?.branchNumberPrimary)
+                            ? t("Branch")
+                            : t("Branch ID")}
+                          : {user?.branchNumberPrimary}
+                        </div>
+                        {/* </div> */}
+                      </div>
+                    )}
                 </div>
-                  
               )}
-            {user?.userType?.toLowerCase() === "customer" &&
-              user?.roles[0] === "branch_primary" && (
-                // <div className="user-text-header">
-               <div className="text">
-                <div
-                    className="user-details-footer"
-                    title={user?.erpCustomerId}
-                  >
-                    {t("Customer ID")}: {user?.erpCustomerId}
-                  </div>
-                  {/* <div className="user-details-footer">{t("Company")}:</div> */}
-                  {/* <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div> */}
-                  <div
-                    className="user-details-footer"
-                    title={user?.branchNumberPrimary}
-                  >
-                    {Number(user?.branchNumberPrimary)
-                      ? t("Branch")
-                      : t("Branch ID")}
-                    : {user?.branchNumberPrimary}
-                  </div>
-                {/* </div> */}
-                </div>
-                  
-              )}
-              </div>)}
-            
+
               <button className="lang-switch-btn" onClick={toggleLanguage}>
-              <FontAwesomeIcon icon={faLanguage} />
-              <span>{isRTL ? "EN" : "عربى"}</span>
-            </button>
+                <FontAwesomeIcon icon={faLanguage} />
+                <span>{isRTL ? "EN" : "عربى"}</span>
+              </button>
+              {isMobileDevice && (
+                <>
+                  {console.log("%%%%ismobiledevice", isMobileDevice)}
+                  <div className="logout-icon" onClick={handleLogout}>
+                    <FontAwesomeIcon icon={faSignOutAlt} />
+                  </div>
+                </>
+              )}
             </div>
-            
           </header>
           <div className="content">{children}</div>
+          {isMobileDevice && (
+            <div className={`mobile-bottom-menu ${showMenu ? "show" : "hide"}`}>
+              {menuItems
+                // .filter(({ label }) => label.toLowerCase() !== "company")
+                .map(
+                  ({ icon, label, permission, isVisible }) =>
+                    isV(permission || label) &&
+                    isVisible && (
+                      <div
+                        key={label}
+                        className={`bottom-menu-item ${
+                          activeMenu === t(label) ||
+                          (activeMenu === t("Bank Transactions") &&
+                            label === "Bank")
+                            ? "active"
+                            : ""
+                        }`}
+                        onClick={() => handleMenuClick(label)}
+                      >
+                        <FontAwesomeIcon icon={icon} />
+                        <span style={{ fontSize: "11px" }}>
+                          {label === t("Catalog") ? t("Home") : t(label)}
+                        </span>
+                      </div>
+                    )
+                )}
+            </div>
+          )}
         </div>
       </CustomerProvider>
     </div>

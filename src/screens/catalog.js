@@ -121,7 +121,36 @@ function Catalog() {
       document.body.classList.remove('catalog-page');
     };
   }, []);
+const [showHeader, setShowHeader] = useState(true);
+const dragStartY = useRef(0);
 
+useEffect(() => {
+  const handleTouchStart = (e) => {
+    dragStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e) => {
+    const currentY = e.touches[0].clientY;
+
+    // Drag up → hide header
+    if (currentY < dragStartY.current - 15) {
+      setShowHeader(false);
+    }
+
+    // Drag down → show header
+    if (currentY > dragStartY.current + 15) {
+      setShowHeader(true);
+    }
+  };
+
+  window.addEventListener("touchstart", handleTouchStart);
+  window.addEventListener("touchmove", handleTouchMove);
+
+  return () => {
+    window.removeEventListener("touchstart", handleTouchStart);
+    window.removeEventListener("touchmove", handleTouchMove);
+  };
+}, []);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -1471,7 +1500,7 @@ useEffect(() => {
         dir={dir}
       >
         {/* Fixed Header Container */}
-        {activeCategory && (<div className="catalog-fixed-header">
+        {activeCategory && (<div className={isMobile ? `catalog-fixed-header ${showHeader ? "show" : "hide"}` : "catalog-fixed-header"}>
           {/* Location Selector and Cart Button */}
           {isV("selectBranch") && (
             <div className="catalog-header">
@@ -1803,6 +1832,19 @@ useEffect(() => {
             .products-grid > * {
             max-width: none !important;
       }
+            .catalog-fixed-header.show {
+              top: 0px
+            }
+              .catalog-fixed-header.hide {
+              top: -180px;
+              height: 0px;
+              }
+              .catalog-fixed-header {
+  position: relative;
+  padding: 0px 10px 5px 10px;
+  border-bottom: none !important;
+  transition: top 0.35s ease-in-out, height 0.35s ease-in-out;
+}
         }
       `}</style>
     </Sidebar>
