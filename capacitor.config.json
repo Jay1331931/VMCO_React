@@ -1,0 +1,8 @@
+{
+  "appId": "com.vmco.android.talabpoint",
+  "appName": "Talabpoint",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "build",
+  "cordova": {}
+}

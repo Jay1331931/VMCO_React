@@ -490,25 +490,25 @@ function Sidebar({ children, title }) {
   const menuItems = [
     { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
     {
-      icon: isMobile ? faHouse : faBookOpen,
+      icon: isMobileDevice ? faHouse : faBookOpen,
       label: "Catalog",
       isVisible: true,
     },
     {
-      icon: isMobile ? faBoxOpen : faShoppingCart,
+      icon: isMobileDevice ? faBoxOpen : faShoppingCart,
       label: "Orders",
       isVisible: true,
     },
     {
       icon: faCodeBranch,
       label: "Branches",
-      isVisible: isMobile ? false : true,
+      isVisible: isMobileDevice ? false : true,
     },
     { icon: faUsers, label: "Customers", isVisible: true },
     {
       icon: faHeadset,
       label: "Support",
-      isVisible: isMobile
+      isVisible: isMobileDevice
         ? activeMenu === t("Orders") ||
           activeMenu === t("Support") ||
           activeMenu === t("Maintenance") ||
@@ -521,7 +521,7 @@ function Sidebar({ children, title }) {
     {
       icon: faTools,
       label: "Maintenance",
-      isVisible: isMobile
+      isVisible: isMobileDevice
         ? activeMenu === t("Orders") ||
           activeMenu === t("Support") ||
           activeMenu === t("Maintenance") ||
@@ -531,12 +531,12 @@ function Sidebar({ children, title }) {
           : false
         : true,
     },
-    { icon: faFile, label: "Reports", isVisible: isMobile ? false : true },
+    { icon: faFile, label: "Reports", isVisible: isMobileDevice ? false : true },
     {
       icon: faBank,
-      label: isMobile ? "Bank" : "Bank Transfer",
+      label: isMobileDevice ? "Bank" : "Bank Transfer",
       permission: "BankTransfer",
-      isVisible: isMobile
+      isVisible: isMobileDevice
         ? activeMenu === t("Orders") ||
           activeMenu === t("Support") ||
           activeMenu === t("Maintenance") ||
@@ -550,12 +550,18 @@ function Sidebar({ children, title }) {
       icon: faShoppingCart,
       label: "Cart",
       permission: "Cart",
-      isVisible: isMobile ? true : false,
+      isVisible: isMobileDevice
+        ? activeMenu === t("Catalog") ||
+          activeMenu === t("Company") ||
+          activeMenu === t("Cart")
+          ? true
+          : false
+        : false,
     },
     {
-      icon: isMobile ? faUser : faBuilding,
+      icon: isMobileDevice ? faUser : faBuilding,
       label: "Company",
-      isVisible: isMobile
+      isVisible: isMobileDevice
         ? activeMenu === t("Catalog") ||
           activeMenu === t("Company") ||
           activeMenu === t("Cart")
@@ -814,14 +820,14 @@ function Sidebar({ children, title }) {
           }
         >
           <header className="header">
-            {/* {!isMobile && (<button
+            {!isMobileDevice && (<button
               className="mobile-menu-btn"
               id="mobileMenuBtn"
               onClick={handleMobileToggle}
             >
               <FontAwesomeIcon icon={faBars} />
-            </button>)} */}
-            {isMobile && (
+            </button>)}
+            {isMobileDevice && (
               <img
                 src="/logos/talab_point_logo.png"
                 alt="Talab Point Logo"
@@ -934,7 +940,7 @@ function Sidebar({ children, title }) {
             </div>
           </header>
           <div className="content">{children}</div>
-          {isMobile && (
+          {isMobileDevice && (
             <div className={`mobile-bottom-menu ${showMenu ? "show" : "hide"}`}>
               {menuItems
                 // .filter(({ label }) => label.toLowerCase() !== "company")

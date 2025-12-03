@@ -383,6 +383,7 @@
   }
   [dir="rtl"] .lang-switch-btn {
     margin-left: 10px !important;
+    margin-right: auto !important;
   }
 }
 .header {
@@ -429,6 +430,9 @@
     padding: 0px !important;
     font-size: 1.2rem !important;
     font-weight: 600;
+  }
+  .logout-icon {
+    font-size: 1.2rem;
   }
 }
 .header-title {
