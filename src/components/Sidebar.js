@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom"; // Add useLocation
 import { useAuth } from "../context/AuthContext";
 import SaudiTime from "../components/Time";
 import RbacManager from "../utilities/rbac";
+import {isMobile as isMobileDevice} from "../utilities/isMobile";
 import {
   faChevronLeft,
   faChevronRight,
@@ -387,6 +388,7 @@ useEffect(() => {
 
   const handleMenuClick = async (label) => {
     setActiveMenu(label);
+    console.log("$$$$activemenu", activeMenu)
     if (window.innerWidth <= 768) setSidebarExpanded(false);
 
     // Navigate to the corresponding page
@@ -398,6 +400,7 @@ useEffect(() => {
         navigate("/customers");
         break;
       case "Catalog":
+      case "Home":
         navigate("/catalog");
         break;
       case "Support":
@@ -407,6 +410,7 @@ useEffect(() => {
         navigate("/maintenance");
         break;
       case "Bank Transfer":
+      case "Bank":
         navigate("/bankTransactions");
         break;
       case "General":
@@ -484,19 +488,19 @@ useEffect(() => {
 
   const menuItems = [
     { icon: faHouse, label: "Dashboard", default: true ,isVisible:true},
-    { icon: isMobile ? faHouse : faBookOpen, label: "Catalog" ,isVisible:true},
+    { icon: isMobile ? faHouse : faBookOpen, label:"Catalog" ,isVisible:true},
     { icon: isMobile ? faBoxOpen : faShoppingCart, label: "Orders" ,isVisible:true},
     { icon: faCodeBranch, label: "Branches" ,isVisible:isMobile ? false :true},
     { icon: faUsers, label: "Customers" ,isVisible:true},
-    { icon: faHeadset, label: "Support" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transfer") ? true: false :true},
-    { icon: faTools, label: "Maintenance" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transfer") ? true: false :true},
+    { icon: faHeadset, label: "Support" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transactions") || activeMenu === t("Bank") ? true: false :true},
+    { icon: faTools, label: "Maintenance" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transactions") || activeMenu === t("Bank") ? true: false :true},
     { icon: faFile, label: "Reports" ,isVisible:isMobile ? false :true},
-    { icon: faBank, label: "Bank Transfer", permission: "BankTransfer" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transfer") ? true: false :true},
-    { icon: isMobile ? faUser : faBuilding, label: "Company" ,isVisible:isMobile ? activeMenu === t("Catalog") || activeMenu === t("Company") ? true: false :true},
+    { icon: faBank, label: isMobile ? "Bank" : "Bank Transfer", permission: "BankTransfer" ,isVisible: isMobile ? activeMenu === t("Orders") || activeMenu === t("Support") || activeMenu === t("Maintenance") || activeMenu === t("Bank Transactions") || activeMenu === t("Bank") ? true: false :true},
+    { icon: faShoppingCart, label: "Cart", permission: "Cart", isVisible: isMobile ? true : false},
+    { icon: isMobile ? faUser : faBuilding, label: "Company" ,isVisible:isMobile ? activeMenu === t("Catalog") || activeMenu === t("Company") || activeMenu === t("Cart") ? true: false :true},
     { icon: faCog, label: "Settings" ,isVisible:true},
     { icon: faUpload, label: isMobile ? "" : "General", permission: isMobile ? false : "General" ,isVisible:isMobile ? false :true},
     { icon: faHistory, label: "Approval History" , permission: "approvalHistory",isVisible:isMobile ? false :true},
-    { icon: faShoppingCart, label: "Cart", permission: "Cart", isVisible: isMobile ? true : false}
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
@@ -831,8 +835,15 @@ useEffect(() => {
               <FontAwesomeIcon icon={faLanguage} />
               <span>{isRTL ? "EN" : "عربى"}</span>
             </button>
+            {isMobileDevice && (
+              <>
+              {console.log("%%%%ismobiledevice", isMobileDevice)}
+              <div className="logout-icon" onClick={handleLogout}>
+                <FontAwesomeIcon icon={faSignOutAlt} />
+              </div>
+              </>
+            )}
             </div>
-            
           </header>
           <div className="content">{children}</div>
           {isMobile && (
@@ -843,11 +854,11 @@ useEffect(() => {
         isV(permission || label) && isVisible && (
           <div
             key={label}
-            className={`bottom-menu-item ${activeMenu === t(label) ? "active" : ""}`}
+            className={`bottom-menu-item ${activeMenu === t(label) || activeMenu === t("Bank Transactions") && label === "Bank" ? "active" : ""}`}
             onClick={() => handleMenuClick(label)}
           >
             <FontAwesomeIcon icon={icon} />
-            <span style={{fontSize: "10px"}}>{t(label)}</span>
+            <span style={{fontSize: "11px"}}>{label === t("Catalog")  ? t("Home") : t(label)}</span>
           </div>
         )
       ))}
