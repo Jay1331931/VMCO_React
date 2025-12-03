@@ -3,6 +3,7 @@
   "homepage": ".",
   "private": true,
   "dependencies": {
+    "@capacitor/android": "7.4.4",
     "@capacitor/core": "^7.4.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -61,5 +62,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.4"
   }
 }
