@@ -3,6 +3,7 @@
   "homepage": "https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
   "private": true,
   "dependencies": {
+    "@capacitor/core": "^7.4.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
