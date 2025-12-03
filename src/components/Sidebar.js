@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom"; // Add useLocation
 import { useAuth } from "../context/AuthContext";
 import SaudiTime from "../components/Time";
 import RbacManager from "../utilities/rbac";
-import {isMobile as isMobileDevice} from "../utilities/isMobile";
+// import {isMobile as isMobileDevice} from "../utilities/isMobile";
 import {
   faChevronLeft,
   faChevronRight,
@@ -34,7 +34,7 @@ import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 // import { isMobile } from "../utilities/isMobile";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const isMobileDevice = process.env.REACT_APP_IS_MOBILE;
 function Sidebar({ children, title }) {
   const navigate = useNavigate();
   const location = useLocation(); // Add this to track current route

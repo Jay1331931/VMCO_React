@@ -1841,7 +1841,7 @@ useEffect(() => {
               }
               .catalog-fixed-header {
   position: relative;
-  padding: 0px 0px 0px 0px;
+  padding: 0px 10px 5px 10px;
   border-bottom: none !important;
   transition: top 0.35s ease-in-out, height 0.35s ease-in-out;
 }
