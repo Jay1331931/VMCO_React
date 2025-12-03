@@ -490,12 +490,12 @@ function Sidebar({ children, title }) {
   const menuItems = [
     { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
     {
-      icon: isMobile ? faHouse : faBookOpen,
+      icon: isMobileDevice ? faHouse : faBookOpen,
       label: "Catalog",
       isVisible: true,
     },
     {
-      icon: isMobile ? faBoxOpen : faShoppingCart,
+      icon: isMobileDevice ? faBoxOpen : faShoppingCart,
       label: "Orders",
       isVisible: true,
     },
