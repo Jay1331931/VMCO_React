@@ -430,6 +430,9 @@
     font-size: 1.2rem !important;
     font-weight: 600;
   }
+  .logout-icon {
+    font-size: 1.2rem;
+  }
 }
 .header-title {
   padding: 35px;

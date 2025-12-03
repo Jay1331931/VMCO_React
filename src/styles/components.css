@@ -1025,6 +1025,7 @@ body.catalog-page #root {
   flex: 1 1 calc(80% - 20px); 
   max-width: calc(80% - 20px);
   box-sizing: border-box;
+  gap: 10px !important;
 }
 }
 @media (min-width: 760px) and (max-width: 900px) {
@@ -2954,7 +2955,7 @@ display: flex;
 /* Mobile responsive */
 @media (max-width: 768px) {
   .catalog-scrollable-content {
-    padding: 0px;
+    padding: 0px 10px;
   }
   .branch-form-popup {
     max-width: 95%;
