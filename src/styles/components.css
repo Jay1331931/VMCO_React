@@ -1073,10 +1073,11 @@ body.catalog-page #root {
 }
 .catalog-fixed-header {
   position: sticky;
-  padding: 20px 0px 10px 0px;
-  border-bottom: 1px solid gray !important;
+  padding: 20px 10px 10px 10px;
+  /* border-bottom: 1px solid gray !important; */
   transition: top 0.35s ease-in-out;
-  border-radius: 10px;
+  /* border-radius: 10px; */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 .catalog-fixed-header.hide {
   top: -120px; /* height + some extra, adjust as needed */
