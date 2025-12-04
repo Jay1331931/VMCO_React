@@ -3609,7 +3609,7 @@ function OrderDetails() {
   //discount approval code block end -----------------------------------------------------------------------------------------------------
 
   const handleApprovalSubmit = (action) => {
-    if (fromApproval && !formData.erpWarehouseId) {
+    if (fromApproval && action === "approve" && !formData.erpWarehouseId) {
       Swal.fire({
         icon: 'warning',
         title: t('Warehouse Required'),

@@ -237,7 +237,6 @@ useEffect(() => {
                     description: isArabic && product.descriptionLc ? product.descriptionLc : product.description,
                     price: product.unitPrice,
                     quantity: product.quantityOrdered,
-                    delivery: product.estimatedDelivery || product.delivery || '15 Apr 2025',
                     imageUrl: imageUrls[0], // <-- Use first image URL
                     productCode: product.erpProdId || product.product_id || product.code,
                     // Include all original properties
