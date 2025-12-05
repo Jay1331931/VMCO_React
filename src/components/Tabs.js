@@ -20,8 +20,7 @@ const Tabs = ({
                             ${activeTab === tab.value ? 'active' : ''}
                             ${tab.disabled ? 'disabled' : ''}
                         `}
-                        onClick={() => !tab.disabled && onTabChange(tab.value)}
-                        disabled={tab.disabled}
+                        onClick={() => onTabChange(tab.value)}
                         title={tab.disabled ? 'This tab is currently disabled' : ''}
                     >
                         {t(tab.label)}
@@ -95,7 +94,6 @@ const Tabs = ({
                         justify-content: center;
                         display: flex;
                         gap: 10px;
-                        // border-bottom: 2px solid #D9D9D6;
                     }
                     .tab-button {
                         width: 100%;
@@ -113,14 +111,14 @@ const Tabs = ({
                         border: 1px solid black;
                         border-radius: 10px;
                     }
-                        .category-tab.active {
+                    .category-tab.active {
                         color: white;
                         background: #0b4c45;
                         border: 1px solid #0b4c45;
-                        }
-                        .category-tabs {
-                            border-bottom: none;
-                        }
+                    }
+                    .category-tabs {
+                        border-bottom: none;
+                    }
                 }
             `}</style>
         </div>
