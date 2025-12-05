@@ -1156,7 +1156,7 @@ useEffect(() => {
                 const vatAmount = (baseAmount * vatPercentage) / 100;
                 totalAmount += baseAmount + vatAmount;
                 if (totalAmount <= 150) {
-                    totalAmount = totalAmount + 20.00;
+                    totalAmount = totalAmount + 23.00;
                 }
             });
 
@@ -1229,7 +1229,7 @@ useEffect(() => {
                 customerRegion: customerData?.data?.region,
                 vmcoCustomerRegion: customerData?.data?.branch,
                 paidAmount: "0.00",
-                deliveryCharges: totalAmount <= 150.00 ? "20.00" : "0.00",
+                deliveryCharges: totalAmount <= 150.00 ? "23.00" : "0.00",
                 paymentStatus: "Pending",
                 status: "Open",
                 productCategory: categoryName,
@@ -1768,8 +1768,8 @@ useEffect(() => {
 
             if (isDeliveryChargesApplicable === true) {
                 if (!isVmcoMachine && initialTotalAmount < 150) {
-                    initialDeliveryCharges = 20.00;
-                    console.log('Delivery charges applied: 20.00 (not VMCO machine and total < 150)');
+                    initialDeliveryCharges = 23.00;
+                    console.log('Delivery charges applied: 23.00 (not VMCO machine and total < 150)');
                 } else {
                     console.log('No delivery charges:', isVmcoMachine ? 'VMCO machine' : `total amount ${initialTotalAmount} >= 150`);
                 }
