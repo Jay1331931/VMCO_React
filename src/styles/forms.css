@@ -267,6 +267,7 @@
 .dropdown-options {
   max-height: 315px;
   overflow-y: auto;
+  scrollbar-width: none;
   /* width: 250px; */
 }
 .dropdown-option {
