@@ -177,36 +177,36 @@ function Orders() {
     }
   }, [storageKey]);
   const [isAtTop, setIsAtTop] = useState(true);
-const [showHeader, setShowHeader] = useState(true);
-const dragStartY = useRef(0);
+  const [showHeader, setShowHeader] = useState(true);
+  const dragStartY = useRef(0);
 
-useEffect(() => {
-  const handleTouchStart = (e) => {
-    dragStartY.current = e.touches[0].clientY;
-  };
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      dragStartY.current = e.touches[0].clientY;
+    };
 
-  const handleTouchMove = (e) => {
-    const currentY = e.touches[0].clientY;
+    const handleTouchMove = (e) => {
+      const currentY = e.touches[0].clientY;
 
-    // Drag up → hide header
-    if (currentY < dragStartY.current - 15) {
-      setShowHeader(false);
-    }
+      // Drag up → hide header
+      if (currentY < dragStartY.current - 15) {
+        setShowHeader(false);
+      }
 
-    // Drag down → show header
-    if (currentY > dragStartY.current + 15) {
-      setShowHeader(true);
-    }
-  };
+      // Drag down → show header
+      if (currentY > dragStartY.current + 15) {
+        setShowHeader(true);
+      }
+    };
 
-  window.addEventListener("touchstart", handleTouchStart);
-  window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchmove", handleTouchMove);
 
-  return () => {
-    window.removeEventListener("touchstart", handleTouchStart);
-    window.removeEventListener("touchmove", handleTouchMove);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -503,15 +503,15 @@ useEffect(() => {
       // Transform payment method filters
       if (filtersCopy.paymentMethod) {
         const paymentMethodLower = filtersCopy.paymentMethod.toLowerCase();
+        const normalized = paymentMethodLower.replace(/\s+/g, ""); // remove spaces etc.
+        const cardRegex = /card/; // case-insensitive not needed if already lower
 
         // If user searches for FOC, send sampleOrder=true filter
         if (["f", "fo", "foc"].includes(paymentMethodLower)) {
           delete filtersCopy.paymentMethod;
           filtersCopy.sampleOrder = true;
-        }
-        // Transform Card Payment to Pre Payment
-        else if (paymentMethodLower === "card payment" || paymentMethodLower === "cardpayment") {
-          filtersCopy.paymentMethod = "Pre payment";
+        } else if (cardRegex.test(normalized)) {
+          filtersCopy.paymentMethod = "Pre Payment";
         }
       }
       if (user?.userType === "employee") {
@@ -1074,7 +1074,7 @@ useEffect(() => {
         paymentStatus: "Paid",
         status: "approved",
       },
-       {
+      {
         paymentMethod: "Pre Payment",
         paymentStatus: "Under Review",
         status: "approved",
@@ -1497,7 +1497,7 @@ useEffect(() => {
             params?.row?.status?.toLowerCase() !== "rejected" &&
             params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
             params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
-            (params?.row?.paymentStatus?.toLowerCase() !== "paid" ||  params?.row?.paymentStatus?.toLowerCase() !== "under review")&&
+            (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "under review") &&
             ((params?.row?.entity.toLowerCase() ===
               Constants.ENTITY.VMCO.toLowerCase() &&
               params?.row?.status?.toLowerCase() === "approved") ||
@@ -1560,7 +1560,7 @@ useEffect(() => {
                   paymentStatus: "Pending",
                   status: "approved",
                 },
-                
+
               ]
               : [
                 {
@@ -2632,13 +2632,13 @@ useEffect(() => {
             <>
               <div
                 className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
-                // style={{
-                //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
-                //   position: "sticky",
-                //   zIndex: 20,
-                //   transition: "top 0.3s ease",
-                //   background: "#fff",
-                // }}
+              // style={{
+              //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+              //   position: "sticky",
+              //   zIndex: 20,
+              //   transition: "top 0.3s ease",
+              //   background: "#fff",
+              // }}
               >
                 <TableMobile
                   columns={visibleColumns}
@@ -2759,7 +2759,7 @@ useEffect(() => {
                           width: "100% !important",
                           minWidth: "230px !important",
                         },
-                        
+
                       }}
                     // }}
                     />

@@ -97,17 +97,17 @@ function GetPaymentMethods({
       </td>
     </tr>
   ) : (
-    methods.map((method, idx) => {
+    methods.map((method, idx, arr) => {
       console.log("method",method)
       const displayName =
         method?.toLowerCase() === 'pre payment' ? 'Card Payment' : method;
 
       return (
         <tr key={idx}>
-          <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+          <td style={{ padding: '10px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid #ddd'  }}>
             {displayName}
           </td>
-          <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+          <td style={{ padding: '10px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid #ddd'  }}>
             <button
               className="gp-product-btn"
               onClick={() => onSelectPaymentMethod(method)} // sends actual backend value

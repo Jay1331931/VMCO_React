@@ -565,7 +565,7 @@ function OrderDetails() {
   const handleSave = async (action, selectedMethod) => {
     const itemsWithInvalidMOQ = [];
     const updatedProducts = [...formData.products];
-
+    // TODO: To check if this is required................................................
     for (let i = 0; i < formData.products.length; i++) {
       const product = formData.products[i];
       const currentQuantity = Number(product.quantity) || 0;
@@ -619,7 +619,9 @@ function OrderDetails() {
       return;
     }
     setSaving(true);
+    //.....................................................................................
     // Basic validations first
+    //TODO: Swal fire the alert
     if (!formData.customerId) {
       alert(t("Please select a customer"));
       setSaving(false);
@@ -839,7 +841,7 @@ function OrderDetails() {
       setSaving(false);
       return;
     }
-
+    //TODO: Remove repeated codes..........................(Add a seperate function to vaidate basic things)
     if (!formData.customerId) {
       alert(t("Please select a customer"));
       setSaving(false);
@@ -2197,7 +2199,8 @@ function OrderDetails() {
       return;
     }
     setFormData((prev) => ({
-        ...prev,category:""}))
+      ...prev, category: ""
+    }))
 
     // Customer is selected, proceed with normal input handling
     handleInputChange(e);
@@ -3609,7 +3612,7 @@ function OrderDetails() {
   //discount approval code block end -----------------------------------------------------------------------------------------------------
 
   const handleApprovalSubmit = (action) => {
-    if (fromApproval && !formData.erpWarehouseId) {
+    if (fromApproval && action === "approve" && !formData.erpWarehouseId) {
       Swal.fire({
         icon: 'warning',
         title: t('Warehouse Required'),
@@ -4463,7 +4466,7 @@ function OrderDetails() {
                     )}
                     {isV("deliveryCharges") && (
                       <div className="order-details-field">
-                        <label>{t("Delivery Charges")}</label>
+                        <label>{t("Delivery Charge with VAT")}</label>
                         {formMode === "add" ? (
                           <input
                             type="text"
@@ -4582,31 +4585,31 @@ function OrderDetails() {
                         <div className="order-details-field">
                           <label>{t("Warehouse")} *</label>
                           {isMobile ? (
-<select
-                            name="warehouse"
-                            value={selectedWarehouse || ""}
-                            onChange={handleWarehouseChange}
-                            className="entity-dropdown"
-                            disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
-                            placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
+                            <select
+                              name="warehouse"
+                              value={selectedWarehouse || ""}
+                              onChange={handleWarehouseChange}
+                              className="entity-dropdown"
+                              disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
+                              placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
                             >
-                            {warehouseOptions.map(
-                              (warehouse, index) => (
-                                <option key={index} value={warehouse}>
-                                  {i18n.language === "en" ? warehouse?.warehouseNameEn : warehouse?.warehouseNameAr}
-                                </option>
-                              )
-                            )}
-                          </select>
-                          ):(
-                          <SearchableDropdown
-                            options={warehouseOptions}
-                            value={selectedWarehouse || ""}
-                            onChange={handleWarehouseChange}
-                            disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
-                            placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
-                            className="entity-dropdown"
-                          />
+                              {warehouseOptions.map(
+                                (warehouse, index) => (
+                                  <option key={index} value={warehouse}>
+                                    {i18n.language === "en" ? warehouse?.warehouseNameEn : warehouse?.warehouseNameAr}
+                                  </option>
+                                )
+                              )}
+                            </select>
+                          ) : (
+                            <SearchableDropdown
+                              options={warehouseOptions}
+                              value={selectedWarehouse || ""}
+                              onChange={handleWarehouseChange}
+                              disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
+                              placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
+                              className="entity-dropdown"
+                            />
                           )}
                           {warehousesLoading && <div className="loading-indicator">Loading...</div>}
                         </div>
@@ -4843,7 +4846,7 @@ function OrderDetails() {
                                       confirmButtonText: t("OK"),
                                     });
                                     return;
-                                  } else if (['vmco','shc'].includes(formData?.entity?.toLowerCase()) && !formData?.category){
+                                  } else if (['vmco', 'shc'].includes(formData?.entity?.toLowerCase()) && !formData?.category) {
                                     Swal.fire({
                                       title: t("VMCO / SHC Category"),
                                       text: t("Please select an Category first"),
@@ -5502,7 +5505,7 @@ function OrderDetails() {
                   </span>
                 </div>
               )}
-              <div className="" style={{ display: "flex", gap: "10px",    alignItems: 'center', 'justifySelf': 'start', width: isMobile ? '100%' : 'auto' }}>
+              <div className="" style={{ display: "flex", gap: "10px", alignItems: 'center', 'justifySelf': 'start', width: isMobile ? '100%' : 'auto' }}>
                 {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && formData?.paymentMethod?.toLowerCase() == "pre payment" && formData?.sample_order !== true && (
                   <button
                     className="order-action-btn"
@@ -5528,8 +5531,8 @@ function OrderDetails() {
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder("cancel order")}
-                    disabled={cancelling || 
-                      (formData.status && !["open"].includes(formData.status.toLowerCase())) || 
+                    disabled={cancelling ||
+                      (formData.status && !["open"].includes(formData.status.toLowerCase())) ||
                       (formData.paymentStatus && ["paid", "under review"].includes(formData.paymentStatus.toLowerCase()))
                     }
                   >
@@ -5570,7 +5573,7 @@ function OrderDetails() {
                   formData?.status?.toLowerCase() !== "cancelled" && formData?.status?.toLowerCase() !== "rejected" &&
                   formData?.paymentMethod?.toLowerCase() != "cash on delivery" &&
                   formData?.paymentMethod?.toLowerCase() !== "credit" &&
-                  (formData?.paymentStatus?.toLowerCase() !== "paid" ||  formData?.paymentStatus?.toLowerCase() !== "under review") &&
+                  (formData?.paymentStatus?.toLowerCase() !== "paid" || formData?.paymentStatus?.toLowerCase() !== "under review") &&
                   (
                     (formData?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
                       formData?.status?.toLowerCase() === "approved") ||
