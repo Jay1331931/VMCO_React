@@ -123,7 +123,24 @@ useEffect(() => {
     <div className={`searchable-dropdown `} ref={dropdownRef}>
       <div
         className={`dropdown-header ${className || ""}`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        // onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={() => {
+  if (disabled) return;
+
+  if (!isOpen && dropdownRef.current) {
+    const rect = dropdownRef.current.getBoundingClientRect();
+    setDropdownPosition({
+      position: "absolute",
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  }
+
+  setIsOpen(!isOpen);
+}}
+
         tabIndex={disabled ? -1 : 0}
         style={{
           ...(disabled

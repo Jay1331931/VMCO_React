@@ -428,7 +428,7 @@
   }
   .header-title {
     padding: 0px !important;
-    font-size: 1.2rem !important;
+    font-size: 14px !important;
     font-weight: 600;
   }
   .logout-icon {
@@ -440,9 +440,9 @@
   font-size: 1.5rem;
   font-weight: 600;
 }
-.content {
+/* .content { */
   /* padding: 20px; */
-}
+/* } */
 .page-title {
   font-size: 1.5rem;
   font-weight: 600;
