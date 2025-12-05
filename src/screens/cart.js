@@ -2846,7 +2846,7 @@ function Cart() {
         return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
     };
     return (
-        <Sidebar title={t('Your Cart')} dir={t('direction')}>
+        <Sidebar title={t('Your Cart')} dir={t('direction')} handleGoToCart={() => {}}>
             <div className="cart-header">
                 <div className="delivery-info">
                     <span className="delivery-link">

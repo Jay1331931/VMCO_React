@@ -1131,52 +1131,68 @@ function Catalog() {
   }, [categoryFilter]);
 
   return (
-    <Sidebar title={t("Catalog")}>
-      {isPageLoading ? (
-        <div className="loading-container">
-          <LoadingSpinner size="medium" />
-        </div>
-      ) : (
-        <div
-          className={`catalog-wrapper${isRTL ? " rtl" : ""}`}
-          style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
-          dir={dir}
-        >
-          {activeCategory && (
-            <div className={isMobile ? `catalog-fixed-header ${showHeader ? "show" : "hide"}` : "catalog-fixed-header"}>
-              {isV("selectBranch") && (
-                <div className="catalog-header">
-                  <div className="location-selector">
-                    <SearchableDropdown
-                      id={`location-select-${catalogId}`}
-                      name="locationSelect"
-                      value={selectedLocation}
-                      onChange={handleBranchSelect}
-                      options={branches.map((b) => ({ ...b, name: b.label || b.name || b.value, disabled: b.disabled }))}
-                      className={isMobile ? "mobile-select-branch location-select" : "location-select"}
-                      placeholder={t("Select Branch")}
-                      disabled={isLoading || branches.length === 0}
-                    />
-                    {isLoading && !isMobile && branches.length === 0 && (
-                      <div className="dropdown-loading"><LoadingSpinner size="small" /></div>
-                    )}
-                    {!isLoading && branches.length === 0 && (
-                      <div className="no-branches-message">{t("No branches available")}</div>
-                    )}
+    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart}>
+      {isPageLoading ? 
+      (
+          <div className="loading-container">
+                <LoadingSpinner size="medium" />
+              </div>    
+      )
+      :
+      (
+      <div
+        className={`catalog-wrapper${isRTL ? " rtl" : ""}`}
+        style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
+        dir={dir}
+      >
+        {/* Fixed Header Container */}
+        {activeCategory && (<div className={isMobile ? `catalog-fixed-header ${showHeader ? "show" : "hide"}` : "catalog-fixed-header"}>
+        {/* {activeCategory && (<div className={isMobile ? `catalog-fixed-header show` : "catalog-fixed-header"}> */}
+          {/* Location Selector and Cart Button */}
+          {isV("selectBranch") && (
+            <div className="catalog-header">
+              <div className="location-selector">
+                <SearchableDropdown
+                  id={`location-select-${catalogId}`}
+                  name="locationSelect"
+                  value={selectedLocation}
+                  onChange={handleBranchSelect}
+                  options={branches.map((b) => ({
+                    ...b,
+                    name: b.label || b.name || b.value,
+                    disabled: b.disabled,
+                  }))}
+                  className={isMobile ? "mobile-select-branch location-select" : "location-select"}
+                  placeholder={t("Select Branch")}
+                  disabled={isLoading || branches.length === 0}
+                />
+                {isLoading && !isMobile && branches.length === 0 && (
+                  <div className="dropdown-loading">
+                    <LoadingSpinner size="small" />
                   </div>
-                  {isV("goToCart") && (
-                    <button
-                      className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
-                      style={{ opacity: !selectedLocation ? 0.6 : 1, cursor: !selectedLocation ? "not-allowed" : "pointer" }}
-                      onClick={handleGoToCart}
-                      disabled={!selectedLocation}
-                    >
-                      <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
-                      {!isMobile && <span>{t("Go to Cart")}</span>}
-                    </button>
-                  )}
-                </div>
+                )}
+                {!isLoading && branches.length === 0 && (
+                  <div className="no-branches-message">
+                    {t("No branches available")}
+                  </div>
+                )}
+              </div>
+              {isV("goToCart") && (
+                <button
+                  className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
+                  style={{
+                    opacity: !selectedLocation ? 0.6 : 1,
+                    cursor: !selectedLocation ? "not-allowed" : "pointer",
+                  }}
+                  onClick={handleGoToCart}
+                  disabled={!selectedLocation}
+                >
+                  <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+                  {!isMobile && <span>{t("Go to Cart")}</span>}
+                </button>
               )}
+            </div>
+          )}
 
               <div className="filter-section">
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none" }}>
@@ -1250,23 +1266,24 @@ function Catalog() {
             </div>
           )}
 
-          <div className="catalog-scrollable-content">
-            <div className="products-grid">
-              {displayedProducts.length > 0 ? (
-                displayedProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={mapProductToCardProps(product)}
-                    quantities={quantities}
-                    onQuantityChange={handleQuantityChange}
-                    onAddToCart={() => handleAddToCart(product.id)}
-                    onProductClick={() => handleProductClick(product)}
-                    setQuantities={setQuantities}
-                    onToggleFavorite={handleToggleFavorite}
-                    isAdding={isAdding}
-                  />
-                ))
-              ) : !isLoading && !isLoadingMore && !hasMore && (
+        {/* Scrollable Products Container */}
+        <div className="catalog-scrollable-content" style={{paddingTop: isMobile ? isV("goToCart") ? showHeader ? "160px": "10px" : showHeader ? "110px" : "10px" : "0px"}}>
+          <div className="products-grid">
+            {displayedProducts.length > 0
+              ? displayedProducts?.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={mapProductToCardProps(product)}
+                  quantities={quantities}
+                  onQuantityChange={handleQuantityChange}
+                  onAddToCart={() => handleAddToCart(product.id)}
+                  onProductClick={() => handleProductClick(product)}
+                  setQuantities={setQuantities}
+                  onToggleFavorite={handleToggleFavorite}
+                  isAdding={isAdding}
+                />
+              ))
+              : !isLoading && !isLoadingMore && !hasMore && (
                 <div className="no-products-message">
                   {searchQuery ? (
                     <p>{t('No products found matching your search term "{{searchTerm}}".', { searchTerm: searchQuery })}</p>
@@ -1384,20 +1401,36 @@ function Catalog() {
           }
           .products-grid > * {
             max-width: none !important;
-          }
-          .catalog-fixed-header.show {
-            top: 0px
-          }
-          .catalog-fixed-header.hide {
-            top: -180px;
-            height: 0px;
-          }
-          .catalog-fixed-header {
-            position: relative;
-            padding: 0px 10px 5px 10px;
-            border-bottom: none !important;
-            transition: top 0.35s ease-in-out, height 0.35s ease-in-out;
-          }
+      }
+//             .catalog-fixed-header.show {
+//               top: 0px
+//             }
+//               .catalog-fixed-header.hide {
+//               top: -180px;
+//               height: 0px;
+//               }
+//               .catalog-fixed-header {
+//   position: relative;
+//   padding: 0px 10px 5px 10px;
+//   border-bottom: none !important;
+//   transition: top 0.35s ease-in-out, height 0.35s ease-in-out;
+// }
+.catalog-fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 0px 10px 5px 10px;
+  background: white; /* important */
+  z-index: 9;
+  transition: transform 0.7s ease-in-out;
+}
+.catalog-fixed-header.show {
+  transform: translateY(0);
+}
+.catalog-fixed-header.hide {
+  transform: translateY(-100%);
+}
         }
       `}</style>
     </Sidebar>

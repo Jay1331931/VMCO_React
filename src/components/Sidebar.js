@@ -37,7 +37,7 @@ import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 // import { isMobile } from "../utilities/isMobile";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isMobileDevice = Capacitor.isNativePlatform();
-function Sidebar({ children, title }) {
+function Sidebar({ children, title, handleGoToCart }) {
   const navigate = useNavigate();
   const location = useLocation(); // Add this to track current route
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -371,6 +371,9 @@ function Sidebar({ children, title }) {
       case "/admin/upload":
         setActiveMenu("General");
         break;
+      case "/cart":
+        setActiveMenu("Your Cart");
+        break;
       default:
         setActiveMenu("Dashboard");
     }
@@ -399,6 +402,9 @@ function Sidebar({ children, title }) {
         break;
       case "Customers":
         navigate("/customers");
+        break;
+      case "Your Cart":
+        handleGoToCart();
         break;
       case "Catalog":
       case "Home":
@@ -504,7 +510,11 @@ function Sidebar({ children, title }) {
       label: "Branches",
       isVisible: isMobileDevice ? false : true,
     },
-    { icon: faUsers, label: "Customers", isVisible: true },
+    { icon: faUsers, label: "Customers", isVisible: isMobileDevice
+        ? activeMenu === t("Catalog") || activeMenu === t("Customers")
+          ? true
+          : false
+        : true },
     {
       icon: faHeadset,
       label: "Support",
@@ -531,7 +541,11 @@ function Sidebar({ children, title }) {
           : false
         : true,
     },
-    { icon: faFile, label: "Reports", isVisible: isMobileDevice ? false : true },
+    {
+      icon: faFile,
+      label: "Reports",
+      isVisible: isMobileDevice ? false : true,
+    },
     {
       icon: faBank,
       label: isMobileDevice ? "Bank" : "Bank Transfer",
@@ -548,13 +562,12 @@ function Sidebar({ children, title }) {
     },
     {
       icon: faShoppingCart,
-      label: "Cart",
+      label: "Your Cart",
       permission: "Cart",
       isVisible: isMobileDevice
         ? activeMenu === t("Catalog") ||
-          activeMenu === t("Company") ||
-          activeMenu === t("Cart")
-          ? true
+          activeMenu === t("Your Cart")
+          ? isV("goToCart")
           : false
         : false,
     },
@@ -562,9 +575,7 @@ function Sidebar({ children, title }) {
       icon: isMobileDevice ? faUser : faBuilding,
       label: "Company",
       isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") ||
-          activeMenu === t("Company") ||
-          activeMenu === t("Cart")
+        ? activeMenu === t("Catalog") || activeMenu === t("Company")
           ? true
           : false
         : true,
@@ -820,13 +831,15 @@ function Sidebar({ children, title }) {
           }
         >
           <header className="header">
-            {!isMobileDevice && (<button
-              className="mobile-menu-btn"
-              id="mobileMenuBtn"
-              onClick={handleMobileToggle}
-            >
-              <FontAwesomeIcon icon={faBars} />
-            </button>)}
+            {!isMobileDevice && (
+              <button
+                className="mobile-menu-btn"
+                id="mobileMenuBtn"
+                onClick={handleMobileToggle}
+              >
+                <FontAwesomeIcon icon={faBars} />
+              </button>
+            )}
             {isMobileDevice && (
               <img
                 src="/logos/talab_point_logo.png"
@@ -939,7 +952,18 @@ function Sidebar({ children, title }) {
               )}
             </div>
           </header>
-          <div className="content">{children}</div>
+          <div
+            className="content"
+            style={{
+              padding: isMobileDevice
+                ? activeMenu
+                  ? "0 0px 0px"
+                  : "20px"
+                : "20px",
+            }}
+          >
+            {children}
+          </div>
           {isMobileDevice && (
             <div className={`mobile-bottom-menu ${showMenu ? "show" : "hide"}`}>
               {menuItems
@@ -961,7 +985,11 @@ function Sidebar({ children, title }) {
                       >
                         <FontAwesomeIcon icon={icon} />
                         <span style={{ fontSize: "11px" }}>
-                          {label === t("Catalog") ? t("Home") : t(label)}
+                          {label === t("Catalog")
+                            ? t("Home")
+                            : label === t("Your Cart")
+                            ? t("Cart")
+                            : t(label)}
                         </span>
                       </div>
                     )

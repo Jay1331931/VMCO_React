@@ -404,9 +404,9 @@ function FinancialInformation({
     );
   };
   const ORDERED_KEYS = ["VMCO", "SHC", "GMTC", "NAQI", "DAR"];
-const getDisplayName = (key) => {
+  const getDisplayName = (key) => {
     return Constants.TAB_NAMES[key?.toUpperCase()] || key?.toUpperCase();
-};
+  };
   const formatDate = (d) => dayjs(d).format("DD-MM-YYYY");
   const handleSubmit = async () => {
     setIsSubmited(true);
@@ -467,7 +467,7 @@ const getDisplayName = (key) => {
         user?.userType?.toLowerCase() == "employee"
           ? user.email
           : originalCustomerContactsData?.primaryContactEmail || "",
-      cc: ccEmail.replace(",",";"),
+      cc: ccEmail.replace(",", ";"),
       erpCustomerId: customerData?.erpCustId,
       assignedTo: customerData?.assignedTo,
     };
@@ -578,6 +578,11 @@ const getDisplayName = (key) => {
           </a>
         </div>
       )} */}
+      {user?.userType.toLowerCase() === "employee" && (
+        <div className="form-main-header">
+          {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
+          </div>
+      )}
       {/* Bank Details Header */}
       <h3 className="form-header full-width">{t("Bank Details")}</h3>
       {/* <div className="form-group">
@@ -1243,7 +1248,7 @@ const getDisplayName = (key) => {
                   customerData?.customerStatus?.toLowerCase() === "pending"
                 }
               />
-              {`\t ${t("Pre-Payment")}`}
+              {`\t ${t("Card Payment")}`}
               {paymentMethods?.prePayment?.isAllowed !==
                 originalCustomerPaymentMethodsData?.methodDetails?.prePayment
                   ?.isAllowed &&
@@ -2741,32 +2746,31 @@ const getDisplayName = (key) => {
                 </FormLabel>
 
                 <Grid container spacing={1} sx={{ mt: 1 }}>
-                  
-                 {ORDERED_KEYS?.map(key => (
-    <Grid item xs={12} sm={6} md={4} key={key}>
-      <FormControlLabel
-     sx={{
-    "& .MuiFormControlLabel-label": {
-      fontSize: "15px",}}}
-        control={
-          <Checkbox
-            checked={selectedEntities.includes(key)}
-            onChange={() => handleEntityChange(key)}
-          />
-        }
-        label={getDisplayName(key)}
-      />
-    </Grid>
-  ))
-}
-
+                  {ORDERED_KEYS?.map((key) => (
+                    <Grid item xs={12} sm={6} md={4} key={key}>
+                      <FormControlLabel
+                        sx={{
+                          "& .MuiFormControlLabel-label": {
+                            fontSize: "15px",
+                          },
+                        }}
+                        control={
+                          <Checkbox
+                            checked={selectedEntities.includes(key)}
+                            onChange={() => handleEntityChange(key)}
+                          />
+                        }
+                        label={getDisplayName(key)}
+                      />
+                    </Grid>
+                  ))}
                 </Grid>
               </FormControl>
             </Grid>
             <Grid container spacing={2}>
               {/* FROM DATE */}
               <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl width={'200px'}>
+                <FormControl width={"200px"}>
                   <FormLabel>{t("From Date")}</FormLabel>
                   <TextField
                     type="date"
@@ -2792,7 +2796,7 @@ const getDisplayName = (key) => {
 
               {/* TO DATE */}
               <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl width={'200px'}>
+                <FormControl width={"200px"}>
                   <FormLabel>{t("To Date")}</FormLabel>
                   <TextField
                     type="date"
@@ -2816,7 +2820,7 @@ const getDisplayName = (key) => {
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl width={'200px'}>
+                <FormControl width={"200px"}>
                   <FormLabel>{t("Email")}</FormLabel>
                   <TextField
                     value={
@@ -2839,11 +2843,10 @@ const getDisplayName = (key) => {
               </Grid>
 
               <Grid item xs={12} sm={6} md={6} lg={5} xl={6}>
-                <FormControl width={'200px'}>
+                <FormControl width={"200px"}>
                   <FormLabel>{t("CC")}</FormLabel>
 
                   <TextField
-                    
                     placeholder={t("comma separated emails.")}
                     value={ccEmail}
                     onChange={(e) => {
@@ -2891,7 +2894,7 @@ const getDisplayName = (key) => {
                 <Typography
                   variant="body2"
                   sx={{
-                    width:"200px",
+                    width: "200px",
                     wordWrap: "break-word",
                     overflowWrap: "break-word",
                     whiteSpace: "normal",

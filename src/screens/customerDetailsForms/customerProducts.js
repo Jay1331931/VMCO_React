@@ -20,7 +20,7 @@ import { debounce, set } from "lodash";
 import Constants from "../../constants";
 import { getOptionsFromBasicsMaster } from "../../utilities/commonServices";
 import SearchableDropdown from "../../components/SearchableDropdown"; // Add this import
-
+import LoadingSpinner from "../../components/LoadingSpinner";
 // --- Entities (Tabs) like catalog.js ---
 const initialEntities = [
   {
@@ -615,8 +615,13 @@ function Products({ customerId, customer, setTabsHeight }) {
           />
       </div>
 
+{loading && (
+              <div style={{ padding: 24 }}>
+                <LoadingSpinner />
+              </div>
+        )}
       
-      <div className="products-table-container">
+      {!loading && (<div className="products-table-container">
         <table className="products-data-table">
           <thead>
             <tr>
@@ -709,7 +714,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             }}
           />
         )}
-      </div>
+      </div>)}
       <style jsx="true">{`
         .product-search-input {
           padding: 10px 15px;

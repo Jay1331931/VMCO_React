@@ -333,6 +333,11 @@ const checkDisabledStatus = (fieldPath) => {
           </a>
         </div>
       )} */}
+      {user?.userType.toLowerCase() === "employee" && (
+        <div className="form-main-header">
+          {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
+          </div>
+      )}
 {/* Customer ERP ID */}
       <div className="form-group">
   <label htmlFor="erpCustId">

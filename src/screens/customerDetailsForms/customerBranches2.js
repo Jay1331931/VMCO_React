@@ -1423,6 +1423,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           </a>
         </div>
       )} */}
+      {user?.userType.toLowerCase() === "employee" && (
+        <div className="form-main-header" style={{marginTop: isMobile ? "20px" : "0px"}}>
+          {t("ERP ID")}: {customer?.erpCustId ?? "-"}
+          </div>
+      )}
       <div className="branches-page-header">
         <div className="branches-header-controls">
           {/* <input
@@ -1707,7 +1712,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                 <LoadingSpinner />
               </div>
         )}
-          {!showAllDetails && (
+          {!showAllDetails && !loading && (
             <div className="branches-list">
               {currentItems.map((branch, index) => (
                 <div key={branch.id} className={ 
