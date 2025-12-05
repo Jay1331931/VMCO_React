@@ -77,7 +77,8 @@ function Cart() {
     const [processingCategories, setProcessingCategories] = useState(new Set());
     const { token, user, logout, loading } = useAuth();
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-    // Use location.state to initialize userId, customerId, branchId if present
+    const [coolingPeriodData, setCoolingPeriodData] = useState([]);
+    const [disabledEntities, setDisabledEntities] = useState([]);
     useEffect(() => {
         if (location.state) {
             if (location.state.selectedUserId) setSelectedUserId(location.state.selectedUserId);
@@ -99,12 +100,12 @@ function Cart() {
             if (user?.customerId) setSelectedCustomerId(user.customerId);
         }
     }, [location.state, user]);
-useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        console.log("isMobile", isMobile);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
     // Use the selectedUserId, selectedCustomerId, selectedBranchId for fetching cart items
     const userId = selectedUserId || user?.userId;
     const customerId = selectedCustomerId || user?.customerId;
@@ -330,6 +331,35 @@ useEffect(() => {
         }
     }, [user, loading, logout, navigate, fetchCartItems, userId, customerId, selectedBranchId]);
 
+    useEffect(() => {
+        const fetchCoolingPeriod = async () => {
+            if (!token) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/cooling-period/now`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${token}`
+                    },
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.status === "Ok" && Array.isArray(result.data)) {
+                        // Store full data for time access
+                        setCoolingPeriodData(result.data);
+                        // Extract entities that are in cooling period
+                        const entities = [...new Set(result.data.map(item => item.entity))];
+                        setDisabledEntities(entities);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching cooling period:", error);
+            }
+        };
+
+        fetchCoolingPeriod();
+    }, [token]);
 
     //Rbac and other access based on user object to follow below lik this
     const rbacMgr = new RbacManager(user?.userType === 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'cart');
@@ -2839,243 +2869,79 @@ useEffect(() => {
                     <div className="error-message">{error}</div>
                 ) : (
                     <div className="cart-items-panel">
-                        {filteredCartItems.map((category) => (
-                            <div key={category.category} className="category-section">
-                                <div
-                                    className="category-header"
-                                    onClick={() => toggleCategory(category.category)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    {isMobile ? 
-                                    (
-                                        <div className="" style={{ display: 'flex', width: '100%', marginBottom: '10px', alignItems: 'center'}}>
-<div className="category-title">
-                                        <FontAwesomeIcon
-                                            icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
-                                        />
-                                        <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
-                                    </div>
-                                    <span className="category-count">{category.items.length} {t("Items")}</span>
-                                        
-                                        </div>
-                                    )
-                                    :
-                                    (<>
-                                    <div className="category-title">
-                                        <FontAwesomeIcon
-                                            icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
-                                        />
-                                        <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
-                                    </div>
-                                    <span className="category-count">{category.items.length} {t("Items")}</span>
-                                    </>)}
-                                    
-                                    {/* Only show Place Order button when category is collapsed */}
-                                    {collapsedCategories.has(category.category) && (
-                                        <button
-                                            className="checkout-btn"
-                                            onClick={async (event) => {
-                                                event.stopPropagation(); // Prevent event bubbling that causes category expansion
+                        {filteredCartItems.map((category) => {
+                            // 1. Determine if this category section is disabled
+                            const categoryEntity = getEntityFromCategory(category.category);
+                            const isEntityDisabled = categoryEntity && disabledEntities.includes(categoryEntity);
 
-                                                // Set category-specific loading state
-                                                setProcessingCategories(prev => new Set([...prev, category.category]));
+                            // 2. Find specific cooling info for the alert message
+                            const coolingInfo = isEntityDisabled ? coolingPeriodData.find(cp => cp.entity === categoryEntity) : null;
 
-                                                try {
-                                                    setPendingOrderCategory(category.category);
-                                                    setPendingOrderItems(category.items);
-
-                                                    const entity = getEntityFromCategory(category.category);
-                                                    if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
-                                                        entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
-                                                        // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
-                                                        await handlePlaceOrder(category.items, category.category, null);
-                                                    } else {
-                                                        let categoryTotal = 0;
-                                                        category.items.forEach(item => {
-                                                            const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
-                                                            const vatPercentage = Number(item.vatPercentage) || 0;
-                                                            const vatAmount = (baseAmount * vatPercentage) / 100;
-                                                            const totalAmount = baseAmount + vatAmount;
-                                                            categoryTotal += totalAmount;
-                                                        });
-
-                                                        const isCreditAllowed = await isCreditPaymentAllowed(selectedCustomerId, entity);
-                                                        if (isCreditAllowed) {
-                                                            const isBalanceValid = await validateCreditBalance(selectedCustomerId, categoryTotal, entity);
-                                                            if (isBalanceValid) {
-                                                                await handlePlaceOrder(category.items, category.category, 'Credit');
-                                                            }
-                                                        } else {
-                                                            // COD limit logic for non-credit entities
-                                                            const codLimit = await getCODLimit(selectedCustomerId);
-                                                            if (categoryTotal >= codLimit) {
-                                                                // Place order directly with Pre Payment
-                                                                await handlePlaceOrder(category.items, category.category, 'Pre Payment');
-                                                            } else {
-                                                                // Show payment method popup (COD/Pre Payment)
-                                                                setShowPaymentPopup(true);
-                                                            }
-                                                        }
-                                                    }
-                                                } finally {
-                                                    // Remove category-specific loading state
-                                                    setProcessingCategories(prev => {
-                                                        const newSet = new Set(prev);
-                                                        newSet.delete(category.category);
-                                                        return newSet;
-                                                    });
-                                                }
-                                            }}
-                                            disabled={processingCategories.has(category.category)}
-                                        >
-                                            {processingCategories.has(category.category) ? t('Processing...') : t('Place Order')}
-                                        </button>
-                                    )}
-                                </div>
-
-                                {!collapsedCategories.has(category.category) && (
-                                    <div className= "category-items">
-                                        {category.items.length === 0 ? (
-                                            <div className="empty-category">{t('No items in this category')}</div>
-                                        ) : !isMobile ? (
-                                            category.items.map((item, idx) => (
-                                                <div key={item.id + '-' + idx} className="cart-item">
-                                                    <div className="item-image">
-                                                        <img
-                                                            src={item.imageUrl || '/placeholder-image.png'}
-                                                            alt={item.name}
-                                                            onError={(e) => {
-                                                                e.target.onerror = null;
-                                                                e.target.src = '/placeholder-image.png';
-                                                            }}
-                                                            style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }}
+                            return (
+                                <div key={category.category} className={`category-section ${isEntityDisabled ? 'disabled-section' : ''}`}>
+                                    <div
+                                        className="category-header"
+                                        onClick={() => {
+                                            if (isEntityDisabled) {
+                                                // 3. Show alert if disabled
+                                                const timeDisplay = coolingInfo ? coolingInfo.toTime : "later";
+                                                Swal.fire({
+                                                    icon: 'warning',
+                                                    title: t('Ordering Window Closed'),
+                                                    text: `${t('Ordering window is closed.')} ${t('You may place an order after')} ${timeDisplay}`,
+                                                    confirmButtonText: t('OK')
+                                                });
+                                            } else {
+                                                // 4. Normal toggle behavior
+                                                toggleCategory(category.category);
+                                            }
+                                        }}
+                                        style={isEntityDisabled ?
+                                            { cursor: 'not-allowed', opacity: 0.6, backgroundColor: '#f5f5f5' } :
+                                            { cursor: 'pointer' }
+                                        }
+                                    >
+                                        {isMobile ?
+                                            (
+                                                <div className="" style={{ display: 'flex', width: '100%', marginBottom: '10px', alignItems: 'center' }}>
+                                                    <div className="category-title">
+                                                        {/* Use Lock icon or muted chevron for disabled state */}
+                                                        <FontAwesomeIcon
+                                                            icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
+                                                            style={isEntityDisabled ? { opacity: 0.5 } : {}}
                                                         />
+                                                        <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
                                                     </div>
-                                                    <div className="item-details">
-                                                        <h4 className="item-name">{item.name}</h4>
-                                                        <p className="item-code">{item.productCode}</p>
-                                                        {item.description && <p className="item-description">{item.description}</p>}
-                                                        <QuantityController
-                                                            itemId={item.id}
-                                                            quantity={quantities[item.id] !== undefined ? quantities[item.id] : 0}
-                                                            onQuantityChange={handleQuantityChange}
-                                                            onInputChange={handleQuantityInputChange}  // Add this new handler
-                                                            stopPropagation={true}
-                                                            minQuantity={Number(item.moq) || 0}
-                                                            moq={Number(item.moq) || 0}
-                                                        />
-                                                    </div>
-                                                    <div className="item-price-panel">                                                        <span className="item-price">
-                                                        {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1)).toFixed(2)}
-                                                        <span className="sar-label"> {t("SAR")}</span>
-                                                    </span>
-
-                                                        <span className="tax-row">{t("VAT: ")}{Number(item.vatPercentage)}%</span>
-                                                        <span className="item-total-price">
-                                                            {t("Net Amount:")} {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1) +
-                                                                (((Number(item.price) * Number(quantities[item.id] || item.quantity || 1)) / 100) * Number(item.vatPercentage))).toFixed(2)} {t("SAR")}
-                                                        </span>
-                                                        <button
-                                                            className="remove-btn"
-                                                            onClick={() => handleRemoveItem(item)}
-                                                            disabled={processingCategories.has(category.category)}
-                                                        >
-                                                            {processingCategories.has(category.category) ? t('Processing...') : t('Remove item')}
-                                                        </button>
-                                                    </div>
+                                                    <span className="category-count">{category.items.length} {t("Items")}</span>
                                                 </div>
-                                            ))
-                                        ) : (
-                                            category.items.map((item, idx) => (
-                                                <>
-                                                <div key={item.id + '-' + idx} className="cart-item">
-                                                    
-                                                    <div className="item-details">
-                                                        <h4 className="item-name">{item.name}</h4>
-                                                        <p className="item-code">{item.productCode}</p>
-                                                        {item.description && <p className="item-description">{item.description}</p>}
-                                                        
-                                                    </div>
-                                                    <div className="item-image">
-                                                        <img
-                                                            src={item.imageUrl || '/placeholder-image.png'}
-                                                            alt={item.name}
-                                                            onError={(e) => {
-                                                                e.target.onerror = null;
-                                                                e.target.src = '/placeholder-image.png';
-                                                            }}
-                                                            style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }}
-                                                        />
-                                                        <QuantityController
-                                                            itemId={item.id}
-                                                            quantity={quantities[item.id] !== undefined ? quantities[item.id] : 0}
-                                                            onQuantityChange={handleQuantityChange}
-                                                            onInputChange={handleQuantityInputChange}  // Add this new handler
-                                                            stopPropagation={true}
-                                                            minQuantity={Number(item.moq) || 0}
-                                                            moq={Number(item.moq) || 0}
-                                                        />
-                                                    </div>
+                                            )
+                                            :
+                                            (<>
+                                                <div className="category-title">
+                                                    <FontAwesomeIcon
+                                                        icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
+                                                        style={isEntityDisabled ? { opacity: 0.5 } : {}}
+                                                    />
+                                                    <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
                                                 </div>
-                                                <div className="item-price-panel">
-                                                                                                            <span className="item-price">
-                                                        {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1)).toFixed(2)}
-                                                        <span className="sar-label"> {t("SAR")}</span>
-                                                    </span>
+                                                <span className="category-count">{category.items.length} {t("Items")}</span>
+                                            </>)
+                                        }
 
-                                                        <span className="tax-row">{t("VAT: ")}{Number(item.vatPercentage)}%</span>
-                                                        <span className="item-total-price">
-                                                            {t("Net Amount:")} {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1) +
-                                                                (((Number(item.price) * Number(quantities[item.id] || item.quantity || 1)) / 100) * Number(item.vatPercentage))).toFixed(2)} {t("SAR")}
-                                                        </span>
-                                                        <button
-                                                            className="remove-btn"
-                                                            onClick={() => handleRemoveItem(item)}
-                                                            disabled={processingCategories.has(category.category)}
-                                                        >
-                                                            {processingCategories.has(category.category) ? t('Processing...') : t('Delete')}
-                                                        </button>
-                                                    </div>
-                                                    <hr style={{marginTop: "10px",
-    height: "1px",
-    backgroundColor: "#f0f0f0",
-    border: "none",}}></hr>
-                                                    </>
-                                            ))
-                                        )}
-                                        {/* Show partial payment for VMCO Machines */}
+                                        {/* Only show Place Order button when category is collapsed AND NOT disabled */}
+                                        {collapsedCategories.has(category.category) && !isEntityDisabled && (
+                                            <button
+                                                className="checkout-btn"
+                                                onClick={async (event) => {
+                                                    event.stopPropagation(); // Prevent event bubbling
 
-                                        {(category.category.toLowerCase() === t(Constants.CATEGORY.VMCO_MACHINES).toLowerCase() || category.category === "آلات VMCO") && category.items.length > 0 && (
-                                            <div className="partial-payment-row">
-                                                <span className="partial-payment-warning">{t("Min. 30% Partial Payment required")}</span>
-                                            </div>
-                                        )}
-                                        {category.items.length > 0 && (
-                                            <div className="checkout-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <span className="checkout-info" style={{ margin: '10px', fontWeight: 'bold' }}>
-                                                    {t('Total for this category')}:
-                                                    {(() => {
-                                                        // Calculate total for category including VAT and sugar tax
-                                                        let categoryTotal = 0; category.items.forEach(item => {
-                                                            const quantity = Number(quantities[item.id] || item.quantity || 1);
-                                                            const unitPrice = parseFloat(item.price) || 0;
-                                                            const vatPercentage = parseFloat(item.vatPercentage) || 0;
-                                                            //const sugarTaxPrice = parseFloat(item.sugarTaxPrice) || 0;
+                                                    // Double check in case button is somehow clickable
+                                                    if (isEntityDisabled) return;
 
-                                                            const baseAmount = unitPrice * quantity;
-                                                            const vatAmount = (baseAmount * vatPercentage) / 100;
-                                                            //const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100 : 0;
+                                                    // Set category-specific loading state
+                                                    setProcessingCategories(prev => new Set([...prev, category.category]));
 
-                                                            const totalAmount = baseAmount + vatAmount; // + sugarTaxAmount
-                                                            categoryTotal += totalAmount;
-                                                        });
-                                                        return (
-                                                            <strong> {categoryTotal.toFixed(2)} <span className="sar-label" style={{ margin: '5px' }}>{t("SAR")}</span></strong>
-                                                        );
-                                                    })()}
-                                                </span>
-                                                <button
-                                                    className="checkout-btn" onClick={async () => {
+                                                    try {
                                                         setPendingOrderCategory(category.category);
                                                         setPendingOrderItems(category.items);
 
@@ -3083,7 +2949,7 @@ useEffect(() => {
                                                         if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
                                                             entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
                                                             // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
-                                                            handlePlaceOrder(category.items, category.category, null);
+                                                            await handlePlaceOrder(category.items, category.category, null);
                                                         } else {
                                                             let categoryTotal = 0;
                                                             category.items.forEach(item => {
@@ -3098,31 +2964,228 @@ useEffect(() => {
                                                             if (isCreditAllowed) {
                                                                 const isBalanceValid = await validateCreditBalance(selectedCustomerId, categoryTotal, entity);
                                                                 if (isBalanceValid) {
-                                                                    handlePlaceOrder(category.items, category.category, 'Credit');
+                                                                    await handlePlaceOrder(category.items, category.category, 'Credit');
                                                                 }
                                                             } else {
                                                                 // COD limit logic for non-credit entities
                                                                 const codLimit = await getCODLimit(selectedCustomerId);
                                                                 if (categoryTotal >= codLimit) {
                                                                     // Place order directly with Pre Payment
-                                                                    handlePlaceOrder(category.items, category.category, 'Pre Payment');
+                                                                    await handlePlaceOrder(category.items, category.category, 'Pre Payment');
                                                                 } else {
                                                                     // Show payment method popup (COD/Pre Payment)
                                                                     setShowPaymentPopup(true);
                                                                 }
                                                             }
                                                         }
-                                                    }}
-                                                    disabled={isPlacingOrder}
-                                                >
-                                                    {isPlacingOrder ? t('Processing...') : t('Place Order')}
-                                                </button>
-                                            </div>
+                                                    } finally {
+                                                        // Remove category-specific loading state
+                                                        setProcessingCategories(prev => {
+                                                            const newSet = new Set(prev);
+                                                            newSet.delete(category.category);
+                                                            return newSet;
+                                                        });
+                                                    }
+                                                }}
+                                                disabled={processingCategories.has(category.category)}
+                                            >
+                                                {processingCategories.has(category.category) ? t('Processing...') : t('Place Order')}
+                                            </button>
                                         )}
                                     </div>
-                                )}
-                            </div>
-                        ))}
+
+                                    {/* Only render content if NOT collapsed AND NOT disabled (Safety Check) */}
+                                    {!collapsedCategories.has(category.category) && !isEntityDisabled && (
+                                        <div className="category-items">
+                                            {category.items.length === 0 ? (
+                                                <div className="empty-category">{t('No items in this category')}</div>
+                                            ) : !isMobile ? (
+                                                category.items.map((item, idx) => (
+                                                    <div key={item.id + '-' + idx} className="cart-item">
+                                                        <div className="item-image">
+                                                            <img
+                                                                src={item.imageUrl || '/placeholder-image.png'}
+                                                                alt={item.name}
+                                                                onError={(e) => {
+                                                                    e.target.onerror = null;
+                                                                    e.target.src = '/placeholder-image.png';
+                                                                }}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }}
+                                                            />
+                                                        </div>
+                                                        <div className="item-details">
+                                                            <h4 className="item-name">{item.name}</h4>
+                                                            <p className="item-code">{item.productCode}</p>
+                                                            {item.description && <p className="item-description">{item.description}</p>}
+                                                            <QuantityController
+                                                                itemId={item.id}
+                                                                quantity={quantities[item.id] !== undefined ? quantities[item.id] : 0}
+                                                                onQuantityChange={handleQuantityChange}
+                                                                onInputChange={handleQuantityInputChange}
+                                                                stopPropagation={true}
+                                                                minQuantity={Number(item.moq) || 0}
+                                                                moq={Number(item.moq) || 0}
+                                                            />
+                                                        </div>
+                                                        <div className="item-price-panel">
+                                                            <span className="item-price">
+                                                                {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1)).toFixed(2)}
+                                                                <span className="sar-label"> {t("SAR")}</span>
+                                                            </span>
+
+                                                            <span className="tax-row">{t("VAT: ")}{Number(item.vatPercentage)}%</span>
+                                                            <span className="item-total-price">
+                                                                {t("Net Amount:")} {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1) +
+                                                                    (((Number(item.price) * Number(quantities[item.id] || item.quantity || 1)) / 100) * Number(item.vatPercentage))).toFixed(2)} {t("SAR")}
+                                                            </span>
+                                                            <button
+                                                                className="remove-btn"
+                                                                onClick={() => handleRemoveItem(item)}
+                                                                disabled={processingCategories.has(category.category)}
+                                                            >
+                                                                {processingCategories.has(category.category) ? t('Processing...') : t('Remove item')}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                category.items.map((item, idx) => (
+                                                    <React.Fragment key={item.id + '-' + idx}>
+                                                        <div className="cart-item">
+                                                            <div className="item-details">
+                                                                <h4 className="item-name">{item.name}</h4>
+                                                                <p className="item-code">{item.productCode}</p>
+                                                                {item.description && <p className="item-description">{item.description}</p>}
+                                                            </div>
+                                                            <div className="item-image">
+                                                                <img
+                                                                    src={item.imageUrl || '/placeholder-image.png'}
+                                                                    alt={item.name}
+                                                                    onError={(e) => {
+                                                                        e.target.onerror = null;
+                                                                        e.target.src = '/placeholder-image.png';
+                                                                    }}
+                                                                    style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }}
+                                                                />
+                                                                <QuantityController
+                                                                    itemId={item.id}
+                                                                    quantity={quantities[item.id] !== undefined ? quantities[item.id] : 0}
+                                                                    onQuantityChange={handleQuantityChange}
+                                                                    onInputChange={handleQuantityInputChange}
+                                                                    stopPropagation={true}
+                                                                    minQuantity={Number(item.moq) || 0}
+                                                                    moq={Number(item.moq) || 0}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="item-price-panel">
+                                                            <span className="item-price">
+                                                                {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1)).toFixed(2)}
+                                                                <span className="sar-label"> {t("SAR")}</span>
+                                                            </span>
+
+                                                            <span className="tax-row">{t("VAT: ")}{Number(item.vatPercentage)}%</span>
+                                                            <span className="item-total-price">
+                                                                {t("Net Amount:")} {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1) +
+                                                                    (((Number(item.price) * Number(quantities[item.id] || item.quantity || 1)) / 100) * Number(item.vatPercentage))).toFixed(2)} {t("SAR")}
+                                                            </span>
+                                                            <button
+                                                                className="remove-btn"
+                                                                onClick={() => handleRemoveItem(item)}
+                                                                disabled={processingCategories.has(category.category)}
+                                                            >
+                                                                {processingCategories.has(category.category) ? t('Processing...') : t('Delete')}
+                                                            </button>
+                                                        </div>
+                                                        <hr style={{
+                                                            marginTop: "10px",
+                                                            height: "1px",
+                                                            backgroundColor: "#f0f0f0",
+                                                            border: "none",
+                                                        }}></hr>
+                                                    </React.Fragment>
+                                                ))
+                                            )}
+                                            {/* Show partial payment for VMCO Machines */}
+                                            {(category.category.toLowerCase() === t(Constants.CATEGORY.VMCO_MACHINES).toLowerCase() || category.category === "آلات VMCO") && category.items.length > 0 && (
+                                                <div className="partial-payment-row">
+                                                    <span className="partial-payment-warning">{t("Min. 30% Partial Payment required")}</span>
+                                                </div>
+                                            )}
+                                            {category.items.length > 0 && (
+                                                <div className="checkout-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span className="checkout-info" style={{ margin: '10px', fontWeight: 'bold' }}>
+                                                        {t('Total for this category')}:
+                                                        {(() => {
+                                                            // Calculate total for category including VAT
+                                                            let categoryTotal = 0;
+                                                            category.items.forEach(item => {
+                                                                const quantity = Number(quantities[item.id] || item.quantity || 1);
+                                                                const unitPrice = parseFloat(item.price) || 0;
+                                                                const vatPercentage = parseFloat(item.vatPercentage) || 0;
+                                                                const baseAmount = unitPrice * quantity;
+                                                                const vatAmount = (baseAmount * vatPercentage) / 100;
+                                                                const totalAmount = baseAmount + vatAmount;
+                                                                categoryTotal += totalAmount;
+                                                            });
+                                                            return (
+                                                                <strong> {categoryTotal.toFixed(2)} <span className="sar-label" style={{ margin: '5px' }}>{t("SAR")}</span></strong>
+                                                            );
+                                                        })()}
+                                                    </span>
+                                                    <button
+                                                        className="checkout-btn" onClick={async () => {
+                                                            // Final safety check
+                                                            if (isEntityDisabled) return;
+
+                                                            setPendingOrderCategory(category.category);
+                                                            setPendingOrderItems(category.items);
+
+                                                            const entity = getEntityFromCategory(category.category);
+                                                            if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
+                                                                entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
+                                                                // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
+                                                                handlePlaceOrder(category.items, category.category, null);
+                                                            } else {
+                                                                let categoryTotal = 0;
+                                                                category.items.forEach(item => {
+                                                                    const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                                                                    const vatPercentage = Number(item.vatPercentage) || 0;
+                                                                    const vatAmount = (baseAmount * vatPercentage) / 100;
+                                                                    const totalAmount = baseAmount + vatAmount;
+                                                                    categoryTotal += totalAmount;
+                                                                });
+
+                                                                const isCreditAllowed = await isCreditPaymentAllowed(selectedCustomerId, entity);
+                                                                if (isCreditAllowed) {
+                                                                    const isBalanceValid = await validateCreditBalance(selectedCustomerId, categoryTotal, entity);
+                                                                    if (isBalanceValid) {
+                                                                        handlePlaceOrder(category.items, category.category, 'Credit');
+                                                                    }
+                                                                } else {
+                                                                    // COD limit logic for non-credit entities
+                                                                    const codLimit = await getCODLimit(selectedCustomerId);
+                                                                    if (categoryTotal >= codLimit) {
+                                                                        // Place order directly with Pre Payment
+                                                                        handlePlaceOrder(category.items, category.category, 'Pre Payment');
+                                                                    } else {
+                                                                        // Show payment method popup (COD/Pre Payment)
+                                                                        setShowPaymentPopup(true);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }}
+                                                        disabled={isPlacingOrder || processingCategories.has(category.category)}
+                                                    >
+                                                        {isPlacingOrder || processingCategories.has(category.category) ? t('Processing...') : t('Place Order')}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -3167,35 +3230,39 @@ useEffect(() => {
                 })()}
             />
 
-
             <style jsx="true">{`
-                .loading-indicator, .error-message, .empty-category {
-                    padding: 20px;
-                    text-align: center;
-                    width: 100%;
-                }
+            .loading-indicator, .error-message, .empty-category {
+                padding: 20px;
+                text-align: center;
+                width: 100%;
+            }
+            
+            .loading-indicator {
+                color: #666;
+            }
+            
+            .error-message {
+                color: #d32f2f;
+            }
+            
+            .empty-category {
+                color: #888;
+                font-style: italic;
+                padding: 10px;
+            }
+            
+            /* Styling for disabled buttons */
+            button:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+            /* Additional style for disabled sections */
+            .disabled-section {
+                opacity: 0.8;
+            }
                 
-                .loading-indicator {
-                    color: #666;
-                }
-                
-                .error-message {
-                    color: #d32f2f;
-                }
-                
-                .empty-category {
-                    color: #888;
-                    font-style: italic;
-                    padding: 10px;
-                }
-                
-                /* Styling for disabled buttons */
-                button:disabled {
-                    opacity: 0.6;
-                    cursor: not-allowed;
-                }
-                    
-            `}</style>
+        `}</style>
         </Sidebar>
     );
 }
