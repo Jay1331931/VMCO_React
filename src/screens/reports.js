@@ -26,6 +26,11 @@ function Reports() {
     navigate("/orderStagingTable");
   }
 
+  const handleCoolingPeriodClick = () => {
+    // Navigate to the Delivery Schedule page
+    navigate("/coolingPeriodEditor");
+  }
+
   return (
     <div>
       <Sidebar title={t("Reports")}>
@@ -46,6 +51,11 @@ function Reports() {
         <break />
         <div style={{ marginBottom: "40px" }}><h3> {t("Order Staging Table")}</h3>
         <a onClick={handleOrderStagingTableClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Order Staging Report")}</a>
+        </div>
+        <break />
+        <break />
+        <div style={{ marginBottom: "40px" }}><h3> {t("Cooling Period Table")}</h3>
+        <a onClick={handleCoolingPeriodClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Order Staging Report")}</a>
         </div>
         <break />
       </Sidebar>
