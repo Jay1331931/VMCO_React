@@ -50,6 +50,7 @@ import ApplePayment from "./components/ApplePayment";
 import ApplePaymentReact from "./components/ApplePaymentReact";
 import PrivacyPolicy from "./screens/PrivacyPolicy";
 import ContactUs from "./screens/ContactUs";
+import CoolingPeriodEditor from "./screens/coolingPeriodEditor";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("")
@@ -121,6 +122,7 @@ function App() {
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
         <Route path="/rbacEditor" element={<ProtectedRoute page="rbacEditor"><RbacEditor /></ProtectedRoute>} />
         <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page="deliveryScheduleEditor"><DeliveryScheduleEditor /></ProtectedRoute>} />
+        <Route path="/coolingPeriodEditor" element={<ProtectedRoute page="coolingPeriodEditor"><CoolingPeriodEditor/></ProtectedRoute>} />
         <Route path="/priceListEditor" element={<ProtectedRoute page="priceListEditor"><PriceListEditor /></ProtectedRoute>} />
         <Route path="/approvalHistory" element={<ProtectedRoute page="approvalHistory"><ApprovalHistory /></ProtectedRoute>} />
         <Route path="/orderStagingTable" element={<ProtectedRoute page="orderStagingTable"><OrderStagingTable /></ProtectedRoute>} />
