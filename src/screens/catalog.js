@@ -1485,7 +1485,7 @@ useEffect(() => {
 
 
   return (
-    <Sidebar title={t("Catalog")}>
+    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart}>
       {isPageLoading ? 
       (
           <div className="loading-container">
@@ -1501,6 +1501,7 @@ useEffect(() => {
       >
         {/* Fixed Header Container */}
         {activeCategory && (<div className={isMobile ? `catalog-fixed-header ${showHeader ? "show" : "hide"}` : "catalog-fixed-header"}>
+        {/* {activeCategory && (<div className={isMobile ? `catalog-fixed-header show` : "catalog-fixed-header"}> */}
           {/* Location Selector and Cart Button */}
           {isV("selectBranch") && (
             <div className="catalog-header">
@@ -1633,7 +1634,7 @@ useEffect(() => {
         </div>)}
 
         {/* Scrollable Products Container */}
-        <div className="catalog-scrollable-content">
+        <div className="catalog-scrollable-content" style={{paddingTop: isMobile ? isV("goToCart") ? showHeader ? "160px": "10px" : showHeader ? "110px" : "10px" : "0px"}}>
           <div className="products-grid">
             {displayedProducts.length > 0
               ? displayedProducts?.map((product) => (
@@ -1832,18 +1833,34 @@ useEffect(() => {
             .products-grid > * {
             max-width: none !important;
       }
-            .catalog-fixed-header.show {
-              top: 0px
-            }
-              .catalog-fixed-header.hide {
-              top: -180px;
-              height: 0px;
-              }
-              .catalog-fixed-header {
-  position: relative;
+//             .catalog-fixed-header.show {
+//               top: 0px
+//             }
+//               .catalog-fixed-header.hide {
+//               top: -180px;
+//               height: 0px;
+//               }
+//               .catalog-fixed-header {
+//   position: relative;
+//   padding: 0px 10px 5px 10px;
+//   border-bottom: none !important;
+//   transition: top 0.35s ease-in-out, height 0.35s ease-in-out;
+// }
+.catalog-fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
   padding: 0px 10px 5px 10px;
-  border-bottom: none !important;
-  transition: top 0.35s ease-in-out, height 0.35s ease-in-out;
+  background: white; /* important */
+  z-index: 9;
+  transition: transform 0.7s ease-in-out;
+}
+.catalog-fixed-header.show {
+  transform: translateY(0);
+}
+.catalog-fixed-header.hide {
+  transform: translateY(-100%);
 }
         }
       `}</style>

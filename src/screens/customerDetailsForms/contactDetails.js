@@ -823,6 +823,11 @@ const initializeMap = () => {
           </a>
         </div>
       )} */}
+      {user?.userType.toLowerCase() === "employee" && (
+        <div className="form-main-header">
+          {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
+          </div>
+      )}
       {/* Primary Contact Details Header */}
       <h3 className="form-header full-width">{t("Primary Contact Details")}</h3>
       <div className="form-group">
