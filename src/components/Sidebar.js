@@ -887,25 +887,33 @@ function Sidebar({ children, title, handleGoToCart }) {
                 )}
             </div>
           )}
-          {isMobileDevice && activeMenu === t("Orders") && (
+       {isMobileDevice && activeMenu === t("Orders") && (
   <div className={`orders-bottom-bar ${showMenu ? "show" : "hide"}`}>
 
-    <div className="orders-icon" onClick={() => handleMenuClick("Bank")}>
-      <FontAwesomeIcon icon={faBank} />
-      <span>{t("Bank")}</span>
-    </div>
+    <button
+      className="orders-btn"
+      onClick={() => handleMenuClick("Bank")}
+    >
+      {t("Bank")}
+    </button>
 
-    <div className="orders-icon" onClick={() => handleMenuClick("Support")}>
-      <FontAwesomeIcon icon={faHeadset} />
-      <span>{t("Support")}</span>
-    </div>
+    <button
+      className="orders-btn"
+      onClick={() => handleMenuClick("Support")}
+    >
+      {t("Support")}
+    </button>
 
-    <div className="orders-icon" onClick={() => handleMenuClick("Maintenance")}>
-      <FontAwesomeIcon icon={faTools} />
-      <span>{t("Maintenance")}</span>
-    </div>
+    <button
+      className="orders-btn"
+      onClick={() => handleMenuClick("Maintenance")}
+    >
+      {t("Maintenance")}
+    </button>
+
   </div>
 )}
+
 
         </div>
       </CustomerProvider>
