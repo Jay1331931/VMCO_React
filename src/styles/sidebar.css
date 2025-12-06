@@ -577,3 +577,50 @@
   font-size: 20px;
   margin-bottom: 2px;
 }
+.orders-bottom-bar {
+  position: fixed;
+  bottom: 71px;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 2000;
+  transition: transform 0.4s ease-in-out;
+  transform: translateY(130%); 
+  pointer-events: none;
+}
+
+.orders-bottom-bar.show {
+  transform: translateY(0);
+  pointer-events: auto;
+    bottom: 71px;    
+}
+
+.orders-bottom-bar.hide {
+  transform: translateY(130%); 
+  pointer-events: none;
+    bottom: 0px;    
+}
+
+.orders-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  color: #444;
+}
+
+.orders-icon svg {
+  font-size: 20px;
+  margin-bottom: 3px;
+}
+
+.orders-icon.active {
+  color: #007bff;
+}
+
+
