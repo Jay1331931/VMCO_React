@@ -1262,6 +1262,7 @@ let branchdata;
         branch={branchContacts}
         originalBranchContacts={originalBranchContacts}
         branchDetails={branchDetails || branch}
+        setBranchContacts={setBranchContacts}
         customer={customer}
         branchChanges={branchChanges}
         handleBranchFieldChange={handleBranchContactsDataChange}

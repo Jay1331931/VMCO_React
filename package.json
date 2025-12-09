@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@capacitor/android": "7.4.4",
-    "@capacitor/app": "^7.1.0",
+    "@capacitor/app": "^7.1.1",
     "@capacitor/browser": "^7.0.3",
     "@capacitor/core": "^7.4.4",
     "@emotion/react": "^11.14.0",
