@@ -325,71 +325,62 @@ function OrderStagingTable() {
 
     // Export functionality
     const handleExportData = async () => {
-        try {
-            const params = new URLSearchParams({
-                page: page - 1,
-                pageSize: pageSize,
-                search: searchQuery,
-                download: "true",
-            });
+  try {
+    const params = new URLSearchParams({
+      page: page - 1,
+      pageSize,
+      search: searchQuery,
+      download: "true",
+    });
 
-            // Add filters to export
-            Object.entries(filters).forEach(([key, value]) => {
-                if (value) {
-                    params.append(key, value);
-                }
-            });
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.append(key, value);
+    });
 
-            const apiUrl = `${API_BASE_URL}/temp-sales-order/all?${params.toString()}`;
+    const url = `${API_BASE_URL}/temp-sales-order/export?${params}`;
 
-            const response = await fetch(apiUrl, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    logout();
-                    navigate(user?.userType === "customer" ? "/login" : "/login-employee");
-                    return;
-                }
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
-            }
+    if (!response.ok) {
+      if (response.status === 401) {
+        logout();
+        navigate(user?.userType === "customer" ? "/login" : "/login-employee");
+        return;
+      }
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
 
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
+    const blob = await response.blob();
+    const fileURL = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = fileURL;
 
-            const contentDisposition = response.headers.get("Content-Disposition");
-            let filename = "temp_sales_orders.csv";
-            if (contentDisposition) {
-                const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                if (filenameMatch && filenameMatch[1]) {
-                    filename = filenameMatch[1].replace(/['"]/g, "");
-                }
-            }
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = "temp_sales_orders.xlsx";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (match && match[1]) filename = match[1].replace(/['"]/g, "");
+    }
 
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(fileURL);
 
-            console.log("CSV file downloaded successfully");
-        } catch (error) {
-            console.error("Error downloading order staging data:", error);
-            Swal.fire({
-                title: "Error",
-                text: "Failed to download data",
-                icon: "error",
-                confirmButtonText: "OK",
-            });
-        }
-    };
+  } catch (err) {
+    console.error("Export error:", err);
+    Swal.fire({
+      title: "Error",
+      text: "Failed to export data",
+      icon: "error",
+    });
+  }
+};
 
     // Define columns for the DataGrid
     const orderColumns = [
@@ -528,7 +519,7 @@ function OrderStagingTable() {
     }
 
     return (
-        <Sidebar title={t("Order Staging Table")} isV={isV("orderStagingTableContent")}>
+        <Sidebar title={t("Card Transaction Temp ID")} isV={isV("orderStagingTableContent")}>
             <div className="order-staging-content">
                 {isMobile ? (
                     <div className="table-container">
@@ -585,7 +576,7 @@ function OrderStagingTable() {
                                                 columnVisibilityModel={columnVisibilityModel}
                                                 searchPlaceholder={t("Search orders...")}
                                                 showColumnVisibility={false}
-                                                showFilters={false}
+                                                showFilters={true}
                                                 showExport={true}
                                                 handleExportClick={handleExportData}
                                                 showUpload={false}

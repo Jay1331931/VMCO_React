@@ -2,10 +2,20 @@ import React from "react";
 import Sidebar from "../components/Sidebar";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import RbacManager from "../utilities/rbac";
 function Reports() {
   const { t } = useTranslation();
+  const { user, token, logout } = useAuth();
   const navigate = useNavigate();
-
+const rbacMgr = new RbacManager(
+    user?.userType === "employee" && user?.roles[0] !== "admin"
+      ? user?.designation
+      : user?.roles[0],
+    "Reports"
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
   const handleApiLogReportClick = () => {
     // Navigate to the API logs report page
     navigate("/apiLogsReport");
@@ -34,29 +44,29 @@ function Reports() {
   return (
     <div>
       <Sidebar title={t("Reports")}>
-        <div style={{ marginBottom: "40px" }}><h3>{t("API logs link")}</h3>
+        {isV("APILogsReport") && (<div style={{ marginBottom: "40px" }}><h3>{t("API logs link")}</h3>
         <a onClick={handleApiLogReportClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("API Logs Report")}</a>
-        </div>
+        </div>)}
         <break />
         <break />
-        <div style={{ marginBottom: "40px" }}><h3> {t("Delivery Schedule")}</h3>
+        {isV("DeliveryScheduleReport") && (<div style={{ marginBottom: "40px" }}><h3> {t("Delivery Schedule")}</h3>
         <a onClick={handleDeliveryScheduleClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Delivery Schedule")}</a>
-        </div>
+        </div>)}
         <break />
         <break />
-        <div style={{ marginBottom: "40px" }}><h3> {t("Price lists")}</h3>
+        {isV("PriceListsReport") && (<div style={{ marginBottom: "40px" }}><h3> {t("Price lists")}</h3>
         <a onClick={handlePriceListReportClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Price List Report")}</a>
-        </div>
+        </div>)}
         <break />
         <break />
-        <div style={{ marginBottom: "40px" }}><h3> {t("Order Staging Table")}</h3>
-        <a onClick={handleOrderStagingTableClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Order Staging Report")}</a>
-        </div>
+        {isV("CardTransactionTempIdReport") && (<div style={{ marginBottom: "40px" }}><h3> {t("Card Transaction Temp ID")}</h3>
+        <a onClick={handleOrderStagingTableClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Card Transaction Temp ID Report")}</a>
+        </div>)}
         <break />
         <break />
-        <div style={{ marginBottom: "40px" }}><h3> {t("Cooling Period Table")}</h3>
+        {isV("CoolingPeriodReport") && (<div style={{ marginBottom: "40px" }}><h3> {t("Cooling Period Table")}</h3>
         <a onClick={handleCoolingPeriodClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Order Staging Report")}</a>
-        </div>
+        </div>)}
         <break />
       </Sidebar>
     </div>
