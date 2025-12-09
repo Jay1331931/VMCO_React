@@ -12,7 +12,9 @@ import GetPaymentMethods from '../components/GetPaymentMethods';
 import Swal from 'sweetalert2';
 import Constants from '../constants';
 import axios from 'axios';
-
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from "@capacitor/core";
+const isMobileDevice =Capacitor.isNativePlatform();
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Simple helper function that doesn't depend on component state
@@ -1113,15 +1115,15 @@ function Cart() {
                         });
 
                         if (paymentLinkResponse?.data?.details?.url) {
-                            console.log('Payment link generated successfully, redirecting to:', paymentLinkResponse.data.details.url);
-                            const urlObj = new URL(paymentLinkResponse?.data?.details?.url);
-                            const cleanPath = urlObj.pathname + urlObj.search;
-
-                            console.log("Navigating to:", cleanPath);
-
-                            // Use React Router navigation
-                            navigate(cleanPath); 
-                            // window.location.replace(paymentLinkResponse?.data?.details?.url)
+                            if(isMobileDevice){
+                                await Browser.open({
+                                url: paymentLinkResponse?.data?.details?.url,
+                                // windowName: '_blank'
+                            });
+                            }else{
+  window.location.replace(paymentLinkResponse?.data?.details?.url)
+                            }
+                           
                         } else {
                             console.error('Payment URL not found in response:', paymentLinkResponse.data);
                         }

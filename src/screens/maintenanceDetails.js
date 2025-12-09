@@ -1589,7 +1589,7 @@ function MaintenanceDetails() {
 
         </div>
       </div>
-      <div className='support-details-footer'>
+      <div className='support-details-footer' style={{ alignItems: 'center' }}>
         <div className='support-status '>
           {isV('ticketStatus') && (
             <div className='support-status'>
