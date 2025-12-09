@@ -245,7 +245,10 @@ const OptionsPage = () => {
         return;
       }
 
-      window.location.replace(data.details.url);
+      // window.location.replace(data.details.url);
+      const extracted = data?.details?.url?.split('/bankTransactions')[1] 
+                navigate(`/bankTransactions${extracted}`)
+      // navigate(/)
       // window.close();
     } catch (error) {
       console.error("Error generating bank transaction link:", error);
@@ -312,13 +315,15 @@ const OptionsPage = () => {
 
       let URL;
       if (paymentType?.toLowerCase() == "cardpay") {
-        URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
+      
+        URL = `/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
       } else {
-        URL = `${window.location.protocol}//${window.location.host}/apple-pay/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
+        URL = `/apple-pay/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
       }
-      window.location.replace(URL);
+      // window.location.replace(URL);
       // window.close();
-      // navigate(URL)
+      navigate(URL)
+
     } catch (error) {
       console.error("Error generating payment link:", error);
       if (error.response && error.response.status === 401) {

@@ -1031,7 +1031,9 @@ function Orders() {
           },
         });
       } else if (!email && !copyUrl && data?.details?.url) {
-        window.location.replace(data.details.url);
+        // window.location.replace(data.details.url);
+          const extracted = data?.details?.url?.split('/payment-options')[1] 
+                navigate(`/payment-options${extracted}`)
       }
     } catch (error) {
       console.error("Error generating payment link:", error);

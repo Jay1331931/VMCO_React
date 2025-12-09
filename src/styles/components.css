@@ -782,6 +782,11 @@ body.catalog-page #root {
   border-radius: var(--border-radius);
   background: #fff;
 }
+@media (max-width: 500px) {
+  .cart-main-content ,.cart-header{
+   padding: 0 25px;
+  }}
+
 .category-header {
   display: flex;
   justify-content: stretch;
