@@ -51,9 +51,21 @@ import ApplePaymentReact from "./components/ApplePaymentReact";
 import PrivacyPolicy from "./screens/PrivacyPolicy";
 import ContactUs from "./screens/ContactUs";
 import CoolingPeriodEditor from "./screens/coolingPeriodEditor";
-function App() {
+import { App } from '@capacitor/app';
+function App1() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("")
+
+
+App.addListener('backButton', () => {
+  const canGoBack = window.history.length > 1;
+
+  if (canGoBack) {
+    window.history.back();
+  } else {
+    App.exitApp(); // exit only from root
+  }
+});
 
   useEffect(() => {
     if (user) {
@@ -149,4 +161,4 @@ function App() {
   );
 }
 
-export default App;
+export default App1;

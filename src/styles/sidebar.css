@@ -581,7 +581,7 @@
 }
 .orders-bottom-bar {
   position: fixed;
-  bottom: 71px;
+  bottom: 70px;
   left: 0;
   right: 0;
   height: 60px;
@@ -599,7 +599,7 @@
 .orders-bottom-bar.show {
   transform: translateY(0);
   pointer-events: auto;
-    bottom: 71px;    
+    bottom: 70px;    
 }
 
 .orders-bottom-bar.hide {
@@ -646,3 +646,4 @@
   color: #fff;
   border-color: #00205b;
 }
+

@@ -2489,8 +2489,8 @@ function Orders() {
 
   return (
     <Sidebar title={t("Orders")}>
-      <div
-        className="orders-content"
+      
+     <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin" ) ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
       >
         {user?.userType.toLowerCase() === "employee" && (

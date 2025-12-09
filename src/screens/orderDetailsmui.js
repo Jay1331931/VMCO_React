@@ -4117,7 +4117,7 @@ function OrderDetails() {
   }, [formMode, orderFromNav]);
 
   return (
-    <Sidebar>
+    <Sidebar title={t("Orders")} MenuName={t("Orders")}>
       {isV("orderDetails") && (
         <div>
           <div className="order-details-container">

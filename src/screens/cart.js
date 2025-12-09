@@ -1114,7 +1114,14 @@ function Cart() {
 
                         if (paymentLinkResponse?.data?.details?.url) {
                             console.log('Payment link generated successfully, redirecting to:', paymentLinkResponse.data.details.url);
-                            window.location.replace(paymentLinkResponse?.data?.details?.url)
+                            const urlObj = new URL(paymentLinkResponse?.data?.details?.url);
+                            const cleanPath = urlObj.pathname + urlObj.search;
+
+                            console.log("Navigating to:", cleanPath);
+
+                            // Use React Router navigation
+                            navigate(cleanPath); 
+                            // window.location.replace(paymentLinkResponse?.data?.details?.url)
                         } else {
                             console.error('Payment URL not found in response:', paymentLinkResponse.data);
                         }

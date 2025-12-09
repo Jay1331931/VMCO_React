@@ -11,6 +11,7 @@ import GetSalesOrder from "./GetSalesOrder";
 import formatDate from "../utilities/dateFormatter";
 import Swal from "sweetalert2";
 import "../styles/addBankTransaction.css";
+import "../styles/components.css"
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import api from "../utilities/api";
 import Constants from "../constants";
@@ -26,6 +27,20 @@ const getCookie = (name) => {
   //   }, {});
   // return cookies[name] || null;
   return localStorage.getItem(name);
+};
+const getStatusClass = (status) => {
+  switch (status?.toLowerCase()) {
+    case "approved":
+      return "status-approved";
+    case "open":
+      return "status-open";
+    case "rejected":
+      return "status-rejected";
+    case "cancelled":
+      return "status-cancelled";
+    default:
+      return "status-pending";
+  }
 };
 const AddBankTransaction = () => {
   const { t } = useTranslation();
@@ -945,9 +960,9 @@ setIsUploading(true)
         <>
           <div className="form-footer">
             {Object.keys(updateTransaction).length !== 0 ? (
-              <button className="status-btn" disabled>
-                {t("Status")}: {t(updateTransaction?.status)}
-              </button>
+              <p disabled>
+                {t("Status")}: <span className={`${getStatusClass(updateTransaction?.status)}`} >{t(updateTransaction?.status)}</span>
+              </p>
             ) : (
               <div></div>
             )}

@@ -30,20 +30,22 @@ import {
   faFile,
   faUpload,
   faHistory,
+  faList,
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 // import { isMobile } from "../utilities/isMobile";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isMobileDevice = Capacitor.isNativePlatform();
-function Sidebar({ children, title, handleGoToCart }) {
+const isMobileDevice =Capacitor.isNativePlatform();
+function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
   const navigate = useNavigate();
   const location = useLocation(); // Add this to track current route
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -54,6 +56,7 @@ function Sidebar({ children, title, handleGoToCart }) {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout } = useAuth();
+  const [showOrdersSubMenu, setShowOrdersSubMenu] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -75,7 +78,7 @@ function Sidebar({ children, title, handleGoToCart }) {
   const [formData, setFormData] = useState();
   const [approvedCustomer, setApprovedCustomer] = useState();
   const [showPopup, setShowPopup] = useState(false);
- 
+
   const [showMenu, setShowMenu] = useState(true);
   const dragStartY = useRef(0);
 
@@ -234,7 +237,7 @@ function Sidebar({ children, title, handleGoToCart }) {
         };
         // console.log('Customer Data with Payment Methods:', customerData);
       }
-      
+
       if (transformedCustomer.isApprovalMode) {
         if (transformedCustomer.workflowData?.updates) {
           // First, set all customer data while preserving current values
@@ -291,11 +294,14 @@ function Sidebar({ children, title, handleGoToCart }) {
   }, [isRTL]);
 
   useEffect(() => {
+
     const path = location.pathname;
-    switch (path) {
+    console.log("MenuName",MenuName)
+    switch (MenuName ||path  ) {
       case "/orders":
         setActiveMenu("Orders");
         break;
+
       case "/customers":
         setActiveMenu("Customers");
         break;
@@ -308,13 +314,18 @@ function Sidebar({ children, title, handleGoToCart }) {
       case "/cart":
         setActiveMenu("Your Cart");
         break;
+      case "Menu":
+ setActiveMenu("Menu");
+      case "Orders":
+        console.log("Orders")
+         setActiveMenu("Orders");
       default:
         setActiveMenu("Dashboard");
     }
-  }, [location.pathname]);
+  }, [location.pathname,MenuName]);
 
   useEffect(() => {
-    // Update the active menu based on the title prop
+  
     setActiveMenu(title);
   }, [title]);
 
@@ -325,8 +336,13 @@ function Sidebar({ children, title, handleGoToCart }) {
   };
 
   const handleMenuClick = async (label) => {
+    if (label === "Menu") {
+      setShowOrdersSubMenu(!showOrdersSubMenu);
+      return;
+    }
+    setShowOrdersSubMenu(false);
     setActiveMenu(label);
-    console.log("$$$$activemenu", activeMenu);
+ 
     if (window.innerWidth <= 768) setSidebarExpanded(false);
 
     // Navigate to the corresponding page
@@ -384,7 +400,7 @@ function Sidebar({ children, title, handleGoToCart }) {
       case "Branches":
         try {
           const customerData = await fetchApprovedCustomer(user);
-        
+
           navigate("/customerDetails", {
             state: {
               customerId: customerData?.id,
@@ -440,24 +456,25 @@ function Sidebar({ children, title, handleGoToCart }) {
       label: "Branches",
       isVisible: isMobileDevice ? false : true,
     },
-    { icon: faUsers, label: "Customers", isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") || activeMenu === t("Customers")
+    {
+      icon: faUsers,
+      label: "Customers",
+      isVisible: isMobileDevice
+        ? activeMenu === t("Catalog") || activeMenu === t("Customers") || activeMenu === t("Company")
           ? true
           : false
-        : true },
+        : true,
+    },
     {
       icon: faHeadset,
       label: "Support",
-      isVisible: isMobileDevice
-        
-           ?  true:false
+      isVisible:true
         ,
     },
     {
       icon: faTools,
       label: "Maintenance",
-      isVisible: isMobileDevice ?
-       true:false,
+      isVisible: true,
     },
     {
       icon: faFile,
@@ -468,8 +485,7 @@ function Sidebar({ children, title, handleGoToCart }) {
       icon: faBank,
       label: isMobileDevice ? "Bank" : "Bank Transfer",
       permission: "BankTransfer",
-      isVisible: isMobileDevice
-        ?  true:false
+      isVisible:          true
         
     },
     {
@@ -477,8 +493,7 @@ function Sidebar({ children, title, handleGoToCart }) {
       label: "Your Cart",
       permission: "Cart",
       isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") ||
-          activeMenu === t("Your Cart")
+        ? activeMenu === t("Catalog") || activeMenu === t("Your Cart")
           ? isV("goToCart")
           : false
         : false,
@@ -497,7 +512,7 @@ function Sidebar({ children, title, handleGoToCart }) {
       icon: faUpload,
       label: isMobile ? "" : "General",
       permission: isMobile ? false : "General",
-      isVisible: isMobile ? false : true,
+      isVisible: isMobileDevice ? false : true,
     },
     {
       icon: faHistory,
@@ -505,6 +520,16 @@ function Sidebar({ children, title, handleGoToCart }) {
       permission: "approvalHistory",
       isVisible: isMobile ? false : true,
     },
+   {
+  icon: faList,
+  label: "Menu",
+  isVisible: isMobileDevice && 
+    ["Support", "Bank", "Maintenance", "Orders","Bank Transactions"]
+      .map(t)
+      .includes(activeMenu),
+},
+,
+
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
@@ -552,6 +577,7 @@ function Sidebar({ children, title, handleGoToCart }) {
     else return true;
   };
 
+ 
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
@@ -630,7 +656,6 @@ function Sidebar({ children, title, handleGoToCart }) {
         </div>
 
         <div className="sidebar-footer">
-      
           <div className="user-card">
             <div className="user-info">
               <div
@@ -835,7 +860,6 @@ function Sidebar({ children, title, handleGoToCart }) {
               </button>
               {isMobileDevice && (
                 <>
-                  {console.log("%%%%ismobiledevice", isMobileDevice)}
                   <div className="logout-icon" onClick={handleLogout}>
                     <FontAwesomeIcon icon={faSignOutAlt} />
                   </div>
@@ -859,62 +883,73 @@ function Sidebar({ children, title, handleGoToCart }) {
             <div className={`mobile-bottom-menu ${showMenu ? "show" : "hide"}`}>
               {menuItems
                 .filter(({ label }) => !["support","maintenance","bank transfer","bank"].includes (label.toLowerCase())  )
-                .map(
-                  ({ icon, label, permission, isVisible }) =>
-                    isV(permission || label) &&
-                    isVisible && (
-                      <div
-                        key={label}
-                        className={`bottom-menu-item ${
-                          activeMenu === t(label) ||
-                          ((activeMenu === t("Bank Transactions") || activeMenu === t("Support")  || activeMenu === t("Maintenance")  )  &&
-                            label === "Orders")
-                            ? "active"
-                            : ""
-                        }`}
-                        onClick={() => handleMenuClick(label)}
-                      >
-                        <FontAwesomeIcon icon={icon} />
-                        <span style={{ fontSize: "11px" }}>
-                          {label === t("Catalog")
-                            ? t("Home")
-                            : label === t("Your Cart")
-                            ? t("Cart")
-                            : t(label)}
-                        </span>
-                      </div>
-                    )
-                )}
+                
+                .map(({ icon, label, permission, isVisible }) => {
+                  if (!isV(permission || label) || !isVisible) return null;
+                 const showMenuFor = ["Support", "Bank", "Maintenance", "Orders","Bank Transactions"].map(t);
+
+if (label === "Menu" && !showMenuFor.includes(activeMenu)) {
+  return null;
+}
+
+
+                  return (
+                    <div
+                      key={label}
+                      className={`bottom-menu-item ${
+                        activeMenu === t(label) ||
+                        ((activeMenu === t("Bank Transactions") ||activeMenu === t("Bank") ||
+                          activeMenu === t("Support") ||
+                          activeMenu === t("Maintenance") ||
+                          MenuName === "Menu") &&
+                          label === "Menu")
+                          ? "active"
+                          : ""
+                      }`}
+                      onClick={() => handleMenuClick(label)}
+                    >
+                      <FontAwesomeIcon icon={icon} />
+                      <span style={{ fontSize: "11px" }}>
+                        {label === t("Catalog")
+                          ? t("Home")
+                          : label === t("Your Cart")
+                          ? t("Cart")
+                          : t(label)}
+                      </span>
+                    </div>
+                  );
+                })}
             </div>
           )}
-       {isMobileDevice && activeMenu === t("Orders") && (
-  <div className={`orders-bottom-bar ${showMenu ? "show" : "hide"}`}>
+          {isMobileDevice &&
+            ( ["Support", "Bank", "Maintenance", "Orders","Menu","Bank Transactions"].map(t).includes(activeMenu)) &&
+            showOrdersSubMenu && (
+              <div
+                className={`orders-bottom-bar ${showMenu ? "show" : "hide"}`}
+              >
+                {  (isV("BankTransfer") || isV("Bank Transactions")) &&<button
+                  className="orders-btn"
+                  
+                  onClick={() => handleMenuClick("Bank")}
+                >
+                  {t("Bank")}
+                </button>}
 
-    <button
-      className="orders-btn"
-      onClick={() => handleMenuClick("Bank")}
-    >
-      {t("Bank")}
-    </button>
+                {(isV("Support"))&&<button
+                  className="orders-btn"
+                  onClick={() => handleMenuClick("Support")}
+                >
+                  {t("Support")}
+                </button>}
 
-    <button
-      className="orders-btn"
-      onClick={() => handleMenuClick("Support")}
-    >
-      {t("Support")}
-    </button>
-
-    <button
-      className="orders-btn"
-      onClick={() => handleMenuClick("Maintenance")}
-    >
-      {t("Maintenance")}
-    </button>
-
-  </div>
-)}
-
-
+                {isV("Maintenance")&&<button
+                  className="orders-btn"
+                  onClick={() => handleMenuClick("Maintenance")}
+                >
+                  {t("Maintenance")}
+                </button>}
+              </div>
+            )}
         </div>
       </CustomerProvider>
     </div>

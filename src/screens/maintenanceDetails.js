@@ -1260,7 +1260,9 @@ function MaintenanceDetails() {
 
 
   return (
-    <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
+    // <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
+     <Sidebar title={`Maintenance`}>
+     
       <div className='maintenance-details-container'>
         <h2 className='maintenance-details-title'>{formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}</h2>
         <div className='maintenance-details-section'>
