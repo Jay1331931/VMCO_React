@@ -4588,14 +4588,16 @@ function OrderDetails() {
                             <select
                               name="warehouse"
                               value={selectedWarehouse || ""}
-                              onChange={handleWarehouseChange}
+                              onChange={
+                                handleWarehouseChange
+                              }
                               className="entity-dropdown"
                               disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
                               placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
                             >
                               {warehouseOptions.map(
                                 (warehouse, index) => (
-                                  <option key={index} value={warehouse}>
+                                  <option key={index} value={warehouse?.name}>
                                     {i18n.language === "en" ? warehouse?.warehouseNameEn : warehouse?.warehouseNameAr}
                                   </option>
                                 )
