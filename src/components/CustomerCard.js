@@ -216,7 +216,7 @@ function CustomerCard({ customers, handleViewDetails, handleSync }) {
                       </Button> */}
                     </Tooltip>
                   ) : (
-                    <Tooltip title="Sync Customer to ERP" arrow>
+                    !customer?.erpCustId && customer?.customerStatus?.toLowerCase() === "approved" && (<Tooltip title="Sync Customer to ERP" arrow>
                       <Button
                         variant="contained"
                         size="small"
@@ -235,7 +235,7 @@ function CustomerCard({ customers, handleViewDetails, handleSync }) {
                         <SyncIcon fontSize="small" />
                         &nbsp; Sync
                       </Button>
-                    </Tooltip>
+                    </Tooltip>)
                   )}
                 </div>
               </Grid>

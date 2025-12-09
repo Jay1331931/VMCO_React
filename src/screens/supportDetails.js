@@ -1165,7 +1165,9 @@ function SupportDetails() {
   };
 
   return (
-    <Sidebar title={`${formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}`}>
+    // <Sidebar title={`${formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}`} >
+     
+      <Sidebar title={t("Support")} >
       <div className='support-details-container'>
         <h2 className='support-details-title'>{formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}</h2>
         <div className='support-details-section'>

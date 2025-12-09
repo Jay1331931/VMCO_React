@@ -226,6 +226,11 @@ const FinalSubmissionConfirmation = ({
   return (
     <>
       <div className="customer-onboarding-form-grid">
+        {user?.userType.toLowerCase() === "employee" && (
+        <div className="form-main-header">
+          {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
+          </div>
+      )}
         <h3>{t("Final Submission")}</h3>
         <div className="form-header full-width">
           {t(

@@ -50,9 +50,22 @@ import ApplePayment from "./components/ApplePayment";
 import ApplePaymentReact from "./components/ApplePaymentReact";
 import PrivacyPolicy from "./screens/PrivacyPolicy";
 import ContactUs from "./screens/ContactUs";
-function App() {
+import CoolingPeriodEditor from "./screens/coolingPeriodEditor";
+import { App } from '@capacitor/app';
+function App1() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("")
+
+
+App.addListener('backButton', () => {
+  const canGoBack = window.history.length > 1;
+
+  if (canGoBack) {
+    window.history.back();
+  } else {
+    App.exitApp(); // exit only from root
+  }
+});
 
   useEffect(() => {
     if (user) {
@@ -121,6 +134,7 @@ function App() {
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
         <Route path="/rbacEditor" element={<ProtectedRoute page="rbacEditor"><RbacEditor /></ProtectedRoute>} />
         <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page="deliveryScheduleEditor"><DeliveryScheduleEditor /></ProtectedRoute>} />
+        <Route path="/coolingPeriodEditor" element={<ProtectedRoute page="coolingPeriodEditor"><CoolingPeriodEditor/></ProtectedRoute>} />
         <Route path="/priceListEditor" element={<ProtectedRoute page="priceListEditor"><PriceListEditor /></ProtectedRoute>} />
         <Route path="/approvalHistory" element={<ProtectedRoute page="approvalHistory"><ApprovalHistory /></ProtectedRoute>} />
         <Route path="/orderStagingTable" element={<ProtectedRoute page="orderStagingTable"><OrderStagingTable /></ProtectedRoute>} />
@@ -147,4 +161,4 @@ function App() {
   );
 }
 
-export default App;
+export default App1;

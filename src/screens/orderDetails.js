@@ -2470,7 +2470,7 @@ const handleSelectProduct = (products) => {
       let deliveryCharges = '0.00';
       if (formData.entity && formData.entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase()) {
         if (netTotalForDelivery <= 150) {
-          deliveryCharges = '20.00';
+          deliveryCharges = '23.00';
         }
       }
 

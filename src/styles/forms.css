@@ -257,6 +257,7 @@
 }
 .dropdown-search {
   /* width: 250px; */
+  width: -webkit-fill-available;
   padding: 8px 12px;
   border: none;
   border-bottom: 1px solid #eee;
@@ -266,6 +267,7 @@
 .dropdown-options {
   max-height: 315px;
   overflow-y: auto;
+  scrollbar-width: none;
   /* width: 250px; */
 }
 .dropdown-option {
@@ -1345,17 +1347,18 @@ td.file-display-cell {
       2,
       1fr
     ); /* Single column on smaller screens */
-    margin-top: 25px; /* Add margin to the top */
+    margin-top: 32px; 
     gap: 20px;
     margin-bottom: 20px;
     border-left: none;
+    padding: 30px;
   }
   [dir="rtl"] .customers .customer-onboarding-form-grid {
     border-left: none;
     border-right: none;
   }
   .customers .customer-onboarding-tabs-vertical {
-    width: 85%; /* Full width on smaller screens */
+    width: 100%; /* Full width on smaller screens */
     border-right: none; /* Remove right border on smaller screens */
     z-index: 10;
     flex-direction: row;
@@ -1366,6 +1369,7 @@ td.file-display-cell {
     background: white;
     padding-right: 20px;
     top: 60px;
+    margin-top: 30px;
     display: -webkit-box;
     padding: 15px 10px 10px 10px;
     gap: 10px;
@@ -1406,7 +1410,8 @@ td.file-display-cell {
     margin-top: 10px;
     flex-direction: column;
     gap: 2px;
-    align-items: stretch;
+    align-items: center;
+    padding: 20px;
   }
   .customers .customer-onboarding-form-actions button {
     /* margin: 10px 0; Adjust margin for buttons on smaller screens */
@@ -1558,11 +1563,13 @@ td.file-display-cell {
     z-index: 0;
     width: 275px !important;
   }
-
-  .dropdown-search {
-    /* width: 375px !important; */
-  }
-
+/* .dropdown-content {
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  max-height: 250px;
+  overflow-y: auto;
+} */
   .dropdown-content.mobile {
     position: fixed !important;
     top: auto !important;
@@ -1664,7 +1671,11 @@ td.file-display-cell {
     border-left: none;
     width: 100%;
     min-height: 200px;
+    margin-top: 20px;
   }
+   .customers .branches-content  .form-main-header {
+    margin-bottom: 0px;
+   }
   [dir="rtl"] .branches-content {
     border-left: none;
     border-right: none;
@@ -1674,7 +1685,7 @@ td.file-display-cell {
     margin: 20px;
   }
   .css-d4ze00 {
-    width: 150px !important;
+    width: 250px !important;
   }
   .css-1ct4v4x {
     min-width: 150px !important;
@@ -1685,7 +1696,7 @@ td.file-display-cell {
     min-width: 70px !important;
   }
   .branches-page-header {
-    margin-top: 30px !important;
+    /* margin-top: 30px !important; */
     margin-bottom: 0px !important;
   }
   .branches-add-button {
@@ -2280,11 +2291,5 @@ td.file-display-cell {
   .download-icon-button svg {
     width: 14px;
     height: 14px;
-  }
-}
-@media( max-width:500px){
-  .dropdown-content{
-    /* max-width: 300px; */
-
   }
 }

@@ -22,6 +22,8 @@
     "Import": "استيراد",
     "My Approval": "موافقتي",
     "Order #": "رقم الطلب",
+    "Card Transaction Temp ID": "معرف مؤقت لمعاملة البطاقة",
+    "Card Transaction Temp ID Report": "تقرير معرف مؤقت لمعاملات البطاقة",
     "Order Number": "رقم الطلب",
     "Date": "التاريخ",
     "Email": "البريد الإلكتروني",
@@ -242,7 +244,7 @@
     "msgLoadingUserInfo": "جارٍ تحميل معلومات المستخدم...",
     "Stock": "المخزون",
     "Pricing Policy": "سياسة التسعير",
-    "Delivery Charges": "رسوم التوصيل",
+    "Delivery Charge with VAT":" رسوم التوصيل مع ضريبة القيمة المضافة",
     "Delivery images": "صور التوصيل",
     "Add Products": "إضافة منتجات",
     "Cancel Order": "إلغاء الطلب",
@@ -252,7 +254,7 @@
     "Select Pricing Policy": "اختر سياسة التسعير",
     "Your Cart": "سلتك",
     "Company Type": "نوع الشركة",
-    "ERP ID": "معرف ERP",
+    "ERP ID": "معرف",
     "Customer ERP ID": "معرف تخطيط موارد المؤسسات (ERP) للعميل",
     "Registration ID": "معرف التسجيل",
     "Workflow Name": "اسم سير العمل",
@@ -899,7 +901,9 @@
 "Spare Parts": "قطع غيار",
 "Item ID": "معرف العنصر",
 "Item Name": "اسم العنصر",
-"Close Ticket": "إغلاق التذكرة"
+"Close Ticket": "إغلاق التذكرة",
+"Menu":"قائمة طعام",
+"Bank":"بنك"
 
 
 
