@@ -464,7 +464,7 @@ function FinancialInformation({
       fromDate: formatDate(fromDate),
       toDate: formatDate(toDate),
       email:
-        user?.userType?.toLowerCase() == "employee"
+         user?.userType?.toLowerCase() == "employee" || user?.userType?.toLowerCase() == "admin"
           ? user.email
           : originalCustomerContactsData?.primaryContactEmail || "",
       cc: ccEmail.replace(",", ";"),
@@ -2824,7 +2824,9 @@ function FinancialInformation({
                   <FormLabel>{t("Email")}</FormLabel>
                   <TextField
                     value={
-                      originalCustomerContactsData?.primaryContactEmail || ""
+                        user?.userType?.toLowerCase() == "employee" || user?.userType?.toLowerCase() == "admin"
+          ? user.email
+          : originalCustomerContactsData?.primaryContactEmail || ""
                     }
                     InputProps={{ readOnly: true }}
                     disabled={true}
