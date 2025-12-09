@@ -1084,11 +1084,19 @@ body.catalog-page #root {
 }
 .catalog-fixed-header.hide {
   top: -120px;
+ 
   /* transform: translateY(-100%); */
+}
+
+.catalog-wrapper .catalog-fixed-header.show {
+  top: 90px;   
 }
 .catalog-fixed-header.show {
   top: 60px;
   /* transform: translateY(0);  */
+}
+.orders-content.has-filter .catalog-fixed-header.show {
+  top: 90px;   
 }
   .page-header {
     flex-direction: column;
@@ -1278,7 +1286,7 @@ body.catalog-page #root {
     padding: 12px 10px;
   }
   .category-items {
-    padding: 0 10px 10px 10px;
+    padding: 0 15px 15px 15px;
   }
   .cart-item {
     grid-template-columns: repeat(2, 1fr);
