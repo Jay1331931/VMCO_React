@@ -801,7 +801,8 @@ body::-webkit-scrollbar {
 .expanded-form-container {
   background: #f9f9f9;
   padding: 1rem;
-  width: 125%;
+  width: min-content;
+  min-width: 125%;
   /* border-top: 1px solid #ccc; */
 }
 .form-section {

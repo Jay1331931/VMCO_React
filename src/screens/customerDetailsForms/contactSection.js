@@ -8,6 +8,8 @@ import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import EditIcon from "@mui/icons-material/Edit";
+import { useAuth } from "../../context/AuthContext";
+import RbacManager from "../../utilities/rbac";
 import {  Dialog,
   DialogTitle,
   DialogContent,
@@ -86,6 +88,7 @@ const token = localStorage.getItem("token");
     const [newEmail, setNewEmail] = useState("");
     const [error, setError] = useState("");
 const [popup, setPopup] = useState(false);
+const { user, isAuthenticated, logout } = useAuth();
   let customerFormMode;
   if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
@@ -96,6 +99,14 @@ const [popup, setPopup] = useState(false);
   // const getFieldValue = (fieldName) => {
   //     return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
   // };
+  const rbacMgr = new RbacManager(
+      user?.userType == "employee" && user?.roles[0] !== "admin"
+        ? user?.designation
+        : user?.roles[0],
+      customerFormMode
+    );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
   const getFieldValue = (fieldName) => {
     if (branchChanges?.[branch.id]?.hasOwnProperty(fieldName)) {
       return branchChanges[branch.id][fieldName];
@@ -254,7 +265,8 @@ const validateEmail = (email) => {
           branchId: branchDetails?.id,
           oldEmail: currentEmail,
           email: newEmail,
-          customerId: branchDetails?.customerId
+          customerId: branchDetails?.customerId,
+          sequenceId: branchDetails?.sequenceId
         };
   
         const { data } = await axios.post(
@@ -456,8 +468,8 @@ const validateEmail = (email) => {
                       }
                     />
                     {field === "primaryContactEmail" && branchDetails?.branchStatus?.toLowerCase() === "approved" &&
-                                // isE("emailEdit") &&
-                                // isV("emailEdit") && 
+                                isE("branchEmailEdit") &&
+                                isV("branchEmailEdit") && 
                                 (
                                   <IconButton
                                     onClick={() => {
