@@ -5577,7 +5577,7 @@ function OrderDetails() {
                   formData?.status?.toLowerCase() !== "cancelled" && formData?.status?.toLowerCase() !== "rejected" &&
                   formData?.paymentMethod?.toLowerCase() != "cash on delivery" &&
                   formData?.paymentMethod?.toLowerCase() !== "credit" &&
-                  (formData?.paymentStatus?.toLowerCase() !== "paid" || formData?.paymentStatus?.toLowerCase() !== "under review") &&
+                  (!(formData?.paymentStatus?.toLowerCase() == "paid" || formData?.paymentStatus?.toLowerCase() == "under review")) &&
                   (
                     (formData?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
                       formData?.status?.toLowerCase() === "approved") ||
