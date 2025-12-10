@@ -7,7 +7,15 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-
+import EditIcon from "@mui/icons-material/Edit";
+import {  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  IconButton,
+} from "@mui/material";
 const ContactRow = ({ label, isRequired, onChange }) => {
   const { t } = useTranslation();
   return (
@@ -50,6 +58,7 @@ const ContactRow = ({ label, isRequired, onChange }) => {
 
 const ContactSection = ({
   branch,
+  setBranchContacts,
   originalBranchContacts,
   branchDetails,
   customer,
@@ -73,7 +82,10 @@ const token = localStorage.getItem("token");
 
   // Add state to track verified emails from database
   const [verifiedEmails, setVerifiedEmails] = useState(new Set());
-
+  const [currentEmail, setcurrentEmail] = useState("");
+    const [newEmail, setNewEmail] = useState("");
+    const [error, setError] = useState("");
+const [popup, setPopup] = useState(false);
   let customerFormMode;
   if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
@@ -222,6 +234,65 @@ const token = localStorage.getItem("token");
     }
     handleBranchFieldChange(e);
   };
+const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+  const handleNewEmailChange = (e) => {
+      const value = e.target.value;
+      setNewEmail(value);
+  
+      if (value && !validateEmail(value)) {
+        setError("Invalid email format");
+      } else {
+        setError("");
+      }
+    };
+    const handleSubmit = async () => {
+      try {
+        const payload = {
+          branchId: branchDetails?.id,
+          oldEmail: currentEmail,
+          email: newEmail,
+          customerId: branchDetails?.customerId
+        };
+  
+        const { data } = await axios.post(
+          `${API_BASE_URL}/branch-contact-primary-email-update`,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      //   console.log("data", data);
+  
+        if (data.success) {
+      //     navigate("/customers");
+          setPopup(false);
+      //     setSuccess(data.message);
+  
+          Swal.fire({
+            icon: "success",
+            title: t("Updated Email "),
+            text: t(data.message),
+            confirmButtonText: t("OK"),
+          });
+          setError("");
+          setBranchContacts({...branch, primaryContactEmail: newEmail})
+        } else {
+          setError(data.message);
+        }
+      } catch (error) {
+      //   console.error("Error updating email:", error?.response?.data?.message);
+      //   setError(
+      //     error?.response?.data?.message ||
+      //       "Something went wrong while updating email"
+      //   );
+      }
+    };
 
   // Contact types we want to display
   const contactTypes = [
@@ -358,7 +429,8 @@ const token = localStorage.getItem("token");
                     branchDetails?.branchStatus === "pending");
                 return (
                   <div className="form-group" key={field}>
-                    {!field.toLowerCase().includes("mobile") ? (<input
+                    {!field.toLowerCase().includes("mobile") ? 
+                    (<div className="input-with-verification"><input
                       type={field === "primaryContactEmail" ? "email" : "text"}
                       placeholder={t(name)}
                       name={field}
@@ -383,6 +455,21 @@ const token = localStorage.getItem("token");
                           field === "primaryContactEmail")
                       }
                     />
+                    {field === "primaryContactEmail" && branchDetails?.branchStatus?.toLowerCase() === "approved" &&
+                                // isE("emailEdit") &&
+                                // isV("emailEdit") && 
+                                (
+                                  <IconButton
+                                    onClick={() => {
+                                      setcurrentEmail(branch?.[field]);
+                                      setPopup(true);
+                                    }}
+                                    sx={{ padding: "5px" }}
+                                  >
+                                    <EditIcon />
+                                  </IconButton>
+                                )}
+                                </div>
                   ) : (
                       <PhoneInput
           international
@@ -570,6 +657,45 @@ const token = localStorage.getItem("token");
           </div>
         </div>
       ))}
+      <Dialog
+              open={popup}
+              onClose={() => setPopup(false)}
+              fullWidth
+              maxWidth="sm"
+            >
+              <DialogTitle>Edit Email</DialogTitle>
+              <DialogContent
+                sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+              >
+                {/* Current Email (disabled) */}
+                <TextField
+                  label="Current Email"
+                  value={currentEmail}
+                  disabled
+                  fullWidth
+                />
+      
+                <TextField
+                  label="New Email"
+                  value={newEmail}
+                  onChange={handleNewEmailChange}
+                  error={!!error}
+                  helperText={error}
+                  fullWidth
+                />
+              </DialogContent>
+      
+              <DialogActions>
+                <Button onClick={() => setPopup(false)}>Cancel</Button>
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  disabled={!newEmail}
+                >
+                  Submit
+                </Button>
+              </DialogActions>
+            </Dialog>
     </div>
   );
 };
