@@ -762,6 +762,7 @@ body::-webkit-scrollbar {
   justify-content: space-between;
   margin-bottom: 20px;
   gap: 20px;
+  width: 115%;
 }
 .branches-header-controls {
   display: flex;

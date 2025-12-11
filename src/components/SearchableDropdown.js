@@ -10,6 +10,7 @@ function SearchableDropdown({
   className,
   placeholder = "Value",
   style = {},
+  openUpwards = false,
 }) {
   // Add default 'All' option at the top
   const allOption = { name: "Select", value: null };
@@ -28,22 +29,73 @@ useEffect(() => {
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
-    useEffect(() => {
+//     useEffect(() => {
+//   if (isOpen && dropdownRef.current) {
+//     const rect = dropdownRef.current.getBoundingClientRect();
+
+//     setDropdownPosition({
+//       position: "absolute",
+//       top: rect.bottom + window.scrollY,  // just below header
+//       left: rect.left + window.scrollX,
+//       width: rect.width,                  // same width as header
+//       zIndex: 9999,
+//     });
+//   }
+// }, [isOpen]);
+
+useEffect(() => {
+  if (!isOpen) return;
+
+  const handleScroll = (e) => {
+    const dropdownEl = document.querySelector(".dropdown-content");
+
+    // If scroll happens inside dropdown, do NOT close it
+    if (dropdownEl && dropdownEl.contains(e.target)) return;
+
+    // Otherwise close the dropdown
+    setIsOpen(false);
+  };
+
+  // Use capture to detect scroll from all parents
+  window.addEventListener("scroll", handleScroll, true);
+
+  return () => {
+    window.removeEventListener("scroll", handleScroll, true);
+  };
+}, [isOpen]);
+
+useEffect(() => {
   if (isOpen && dropdownRef.current) {
     const rect = dropdownRef.current.getBoundingClientRect();
+    const dropdownHeight = 300; // estimate, or dynamic later
+
+    // space checks
+    const spaceAbove = rect.top;
+    const spaceBelow = window.innerHeight - rect.bottom;
+
+    let topPosition;
+
+      //  Auto decide based on available space
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight && openUpwards) {
+        topPosition = rect.top + window.scrollY - dropdownHeight; // open upwards
+      } else {
+        topPosition = rect.bottom + window.scrollY; // open downwards
+      }
+    
 
     setDropdownPosition({
       position: "absolute",
-      top: rect.bottom + window.scrollY,  // just below header
+      top: topPosition,
       left: rect.left + window.scrollX,
-      width: rect.width,                  // same width as header
+      // width: rect.width,
       zIndex: 9999,
     });
   }
-}, [isOpen]);
+}, [isOpen, openUpwards]);
+
 
   useEffect(() => {
-    // ✅ Only focus on desktop
+    //  Only focus on desktop
     if (!isMobile && inputRef.current) {
       inputRef.current.focus();
     }
