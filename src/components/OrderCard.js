@@ -40,6 +40,30 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
     }
   };
 
+  const getEntityBadge = (entity, order, t) => {
+  if (!entity) return null;
+
+  const value = entity.toLowerCase();
+
+  if (value === Constants.ENTITY.VMCO.toLowerCase()) {
+    return (
+      <span className="badge badge-blue" style={{width: "auto", backgroundColor: "#32a19f"}}>
+        {order?.isMachine ? t("Machines") : t("Consumables")}
+      </span>
+    );
+  }
+
+  if (value === Constants.ENTITY.SHC.toLowerCase()) {
+    return (
+      <span className="badge badge-blue" style={{width: "auto", backgroundColor: "#32a19f"}}>
+        {order?.isFresh ? t("Fresh") : t("Frozen")}
+      </span>
+    );
+  }
+
+  return null;
+};
+
   // 📅 Formatters
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -262,13 +286,12 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                     {`${t("Order #")}${order?.id}`}
                   </Typography>
 
-                  <Typography
-                    fontSize={12}
-                    color="textSecondary"
-                    sx={{ mt: 0.3 }}
-                  >
-                    {t(order?.entity?.toUpperCase())}
-                  </Typography>
+                  <Typography fontSize={12} color="textSecondary" sx={{ mt: 0.3, display: "flex", alignItems: "center", gap: 0.6 }}>
+  {t(order?.entity?.toUpperCase())}
+
+  {/* Badge here */}
+  {getEntityBadge(order?.entity, order, t)}
+</Typography>
 
                   <Typography
                     fontSize={12}
