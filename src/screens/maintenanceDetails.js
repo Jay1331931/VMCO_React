@@ -1612,6 +1612,7 @@ function MaintenanceDetails() {
                 placeholder={t('Select Employee')}
                 loading={loadingEmployees}
                 className={!isMobile ? "" : "mobile-select-branch location-select"}
+                openUpwards={true}
               />
             </div>
           )}

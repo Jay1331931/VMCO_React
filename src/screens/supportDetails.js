@@ -1412,6 +1412,7 @@ function SupportDetails() {
                     disabled={!isEditing || loadingDepartments || isReadOnly || !isE('assignedTo')}
                     placeholder={t('Select Department')}
                     className={!isMobile ? "" : "mobile-select-branch location-select"}
+                    openUpwards={true}
                   />
                 </div>
 
@@ -1426,6 +1427,7 @@ function SupportDetails() {
                     disabled={!isEditing || !selectedDepartment || isReadOnly || !isE('assignedTo')}
                     placeholder={!selectedDepartment ? t('Select department first') : t('Select Assignee')}
                     className={!isMobile ? "" : "mobile-select-branch location-select"}
+                    openUpwards={true}
                   />
                 </div>
               </div>

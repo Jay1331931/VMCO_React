@@ -103,6 +103,36 @@ function FinancialInformation({
   const [ccEmail, setCcEmail] = useState("");
   const [ccError, setCcError] = useState("");
   const [isSubmited, setIsSubmited] = useState(false);
+  const PAYMENT_GROUPS = {
+  PREPAY: ["prePayment?.isAllowed"],
+  COD: ["COD?.isAllowed", "COD?.limit"],
+  CREDIT_DAR: [
+    "credit?.DAR?.isAllowed",
+    "credit?.DAR?.limit",
+    "credit?.DAR?.period"
+  ],
+  CREDIT_VMCO: [
+    "credit?.VMCO?.isAllowed",
+    "credit?.VMCO?.limit",
+    "credit?.VMCO?.period"
+  ],
+  CREDIT_SHC: [
+    "credit?.SHC?.isAllowed",
+    "credit?.SHC?.limit",
+    "credit?.SHC?.period"
+  ],
+  CREDIT_NAQI: [
+    "credit?.NAQI?.isAllowed",
+    "credit?.NAQI?.limit",
+    "credit?.NAQI?.period"
+  ],
+  CREDIT_GMTC: [
+    "credit?.GMTC?.isAllowed",
+    "credit?.GMTC?.limit",
+    "credit?.GMTC?.period"
+  ]
+};
+
   useEffect(() => {
     setBankName(customerData?.bankName || "");
   }, [customerData?.bankName]);
@@ -308,6 +338,24 @@ function FinancialInformation({
       });
     }
   };
+const getChangedPaymentGroup = () => {
+  const original = originalCustomerPaymentMethodsData?.methodDetails || {};
+  const current = paymentMethods;
+
+  for (const [groupName, fields] of Object.entries(PAYMENT_GROUPS)) {
+    for (const field of fields) {
+      const parts = field.split("?.");
+      const originalValue = parts.reduce((o, k) => o?.[k], original);
+      const currentValue = parts.reduce((o, k) => o?.[k], current);
+
+      if (originalValue !== currentValue) {
+        return groupName; // the changed group
+      }
+    }
+  }
+
+  return null; // no changes yet
+};
 
   const checkDisabledStatus = (fieldPath) => {
     // Split the field path by dots to handle nested properties
@@ -378,25 +426,95 @@ function FinancialInformation({
       fieldParts
     );
     const currentValue = getNestedValue(paymentMethods, fieldParts);
+const hasChanges =
+  JSON.stringify(paymentMethods) !==
+  JSON.stringify(originalCustomerPaymentMethodsData?.methodDetails);
+  if (mode === "add" && hasChanges) {
+    const changedGroup = getChangedPaymentGroup();
 
+    if (!changedGroup) {
+      // Nothing changed yet → allow all
+      return false;
+    }
+
+    // Find group of THIS field
+    const currentFieldGroup = Object.entries(PAYMENT_GROUPS).find(([_, fields]) =>
+      fields.includes(fieldPath)
+    )?.[0];
+
+    // Disable if this field does NOT belong to the changed group
+    return currentFieldGroup !== changedGroup;
+  }
     const commonConditions =
-      originalCustomerPaymentMethodsData &&
+      (originalCustomerPaymentMethodsData &&
       paymentMethods &&
       originalValue === currentValue &&
-      mode === "edit";
+      mode === "edit") 
+      // || (mode === "add" && hasChanges && originalValue === currentValue);
 
-    if (
-      user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR ||
+    if (mode === "edit" && 
+      (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR ||
       user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
       user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE ||
       user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
-      user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+      user?.roles[0] === Constants.ROLES.SUPER_ADMIN)
     ) {
-      return commonConditions && !paymentFieldsForUpdate?.[fieldPath];
+      return commonConditions 
+      // && !paymentFieldsForUpdate?.[fieldPath];
     }
 
     return commonConditions;
   };
+
+
+// const checkDisabledStatusPayment = (fieldPath) => {
+//   const fieldParts = fieldPath?.split("?.");
+
+//   // In ADD MODE — disable unrelated payment fields
+//   if (mode === "add") {
+//     const changedGroup = getChangedPaymentGroup();
+
+//     if (!changedGroup) {
+//       // Nothing changed yet → allow all
+//       return false;
+//     }
+
+//     // Find group of THIS field
+//     const currentFieldGroup = Object.entries(PAYMENT_GROUPS).find(([_, fields]) =>
+//       fields.includes(fieldPath)
+//     )?.[0];
+
+//     // Disable if this field does NOT belong to the changed group
+//     return currentFieldGroup !== changedGroup;
+//   }
+
+//   // EDIT MODE logic remains unchanged
+//   const originalValue = fieldParts.reduce(
+//     (acc, key) => acc?.[key],
+//     originalCustomerPaymentMethodsData?.methodDetails
+//   );
+
+//   const currentValue = fieldParts.reduce(
+//     (acc, key) => acc?.[key],
+//     paymentMethods
+//   );
+
+//   const commonConditions =
+//     originalValue === currentValue &&
+//     mode === "edit";
+
+//   if (
+//     user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR ||
+//     user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+//     user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE ||
+//     user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+//     user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+//   ) {
+//     return commonConditions && !paymentFieldsForUpdate?.[fieldPath];
+//   }
+
+//   return commonConditions;
+// };
 
   const handleEntityChange = (key) => {
     setSelectedEntities((prev) =>
@@ -1304,7 +1422,7 @@ function FinancialInformation({
               <>
                 <label htmlFor="creditLimit">{t("COD Limit")}</label>
                 <input
-                  type="text"
+                  type="number"
                   id="CODLimit"
                   name="CODLimit"
                   className={`text-field small ${

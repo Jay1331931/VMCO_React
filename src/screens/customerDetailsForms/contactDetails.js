@@ -2886,6 +2886,7 @@ const initializeMap = () => {
                   : ""
               }
               placeholder={t("Enter zone")}
+              // openUpwards={true}
               required
             />
             {isV("zoneVerified") &&
