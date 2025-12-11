@@ -4595,8 +4595,11 @@ function OrderDetails() {
                               }
                               className="entity-dropdown"
                               disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
-                              placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
+                              // placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
                             >
+                              <option value="" disabled hidden>
+    {t("Select Warehouse")}
+  </option>
                               {warehouseOptions.map(
                                 (warehouse, index) => (
                                   <option key={index} value={warehouse?.name}>
