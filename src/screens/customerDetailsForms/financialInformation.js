@@ -459,7 +459,8 @@ const hasChanges =
       user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
       user?.roles[0] === Constants.ROLES.SUPER_ADMIN)
     ) {
-      return commonConditions && !paymentFieldsForUpdate?.[fieldPath];
+      return commonConditions 
+      // && !paymentFieldsForUpdate?.[fieldPath];
     }
 
     return commonConditions;
