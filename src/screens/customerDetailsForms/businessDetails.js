@@ -2010,6 +2010,7 @@ const checkDisabledStatus = (fieldPath) => {
                   : ""
               }
               placeholder={t("Select")}
+              openUpwards={true}
               required
             />
             {originalCustomerData &&
@@ -2074,6 +2075,7 @@ const checkDisabledStatus = (fieldPath) => {
                   : ""
               }
               placeholder={t("Select")}
+              openUpwards={true}
               required
             />
             {originalCustomerData &&
@@ -2138,6 +2140,7 @@ const checkDisabledStatus = (fieldPath) => {
                   : ""
               }
               placeholder={t("Select")}
+              openUpwards={true}
               required
             />
             {originalCustomerData &&
@@ -2203,6 +2206,7 @@ const checkDisabledStatus = (fieldPath) => {
                   : ""
               }
               placeholder={t("Select")}
+              openUpwards={true}
               required
             />
             {originalCustomerData &&
