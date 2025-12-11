@@ -501,6 +501,7 @@ function CustomerDetails() {
     originalCustomerPaymentMethodsData,
     setOriginalCustomerPaymentMethodsData,
   ] = useState(null); //WF
+  const originalFrozenRef = useRef(null);
   // var wfCustomerData = null; //WF
   const [wfCustomerData, setWfCustomerData] = useState(null); //
   const [completeWorkflowData, setCompleteWorkflowData] = useState({});
@@ -562,6 +563,19 @@ function CustomerDetails() {
 
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+  const deepFreeze = (obj) => {
+  Object.freeze(obj);
+  Object.getOwnPropertyNames(obj).forEach((prop) => {
+    if (
+      obj[prop] !== null &&
+      (typeof obj[prop] === "object" || typeof obj[prop] === "function") &&
+      !Object.isFrozen(obj[prop])
+    ) {
+      deepFreeze(obj[prop]);
+    }
+  });
+  return obj;
+};
   useEffect(() => {
     const fetchData = async () => {
       if (!customerId) {
@@ -636,7 +650,11 @@ function CustomerDetails() {
           ? { methodDetails: temp?.methodDetails }
           : paymentMethodsRes
       );
-      setOriginalCustomerPaymentMethodsData(paymentMethodsRes);
+      const deepCopy = structuredClone(paymentMethodsRes);
+    const frozenCopy = deepFreeze(deepCopy);
+
+    setOriginalCustomerPaymentMethodsData(frozenCopy);
+    originalFrozenRef.current = frozenCopy;
     };
     fetchData();
   }, [customerId]);
@@ -740,7 +758,7 @@ function CustomerDetails() {
     }
 
     if (name === "CODLimit") {
-      paymentMethods["COD"].limit = value;
+      paymentMethods["COD"].limit = Number(value);
     }
 
     setCustomerPaymentMethodsData((prev) => ({
@@ -767,11 +785,11 @@ function CustomerDetails() {
 
     if (name.includes("CreditLimit")) {
       const methodName = name.replace("CreditLimit", "");
-      paymentMethods[methodName].limit = value;
+      paymentMethods[methodName].limit = Number(value);
     }
     if (name.includes("CreditPeriod")) {
       const methodName = name.replace("CreditPeriod", "");
-      paymentMethods[methodName].period = value;
+      paymentMethods[methodName].period = Number(value);
     }
     setCustomerPaymentMethodsData((prev) => ({
       ...prev,
@@ -780,6 +798,7 @@ function CustomerDetails() {
         credit: paymentMethods,
       },
     }));
+    setOriginalCustomerPaymentMethodsData(structuredClone(originalFrozenRef.current));
     updatedCustomerPaymentMethodsData.current = {
       ...updatedCustomerPaymentMethodsData.current,
       methodDetails: {
