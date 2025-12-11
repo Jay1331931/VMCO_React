@@ -1213,7 +1213,7 @@ function OrderDetails() {
               quantity,
               netAmount,
               vatPercentage,
-              lineDiscount = 0
+              lineDiscount
             );
           }
         });
