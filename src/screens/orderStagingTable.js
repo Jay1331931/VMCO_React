@@ -102,18 +102,19 @@ function OrderStagingTable() {
                     search: searchTerm,
                     sortBy: sortedModel?.[0]?.field || "id",
                     sortOrder: sortedModel?.[0]?.sort || "asc",
+                    filters: JSON.stringify(customFilters),
                 });
 
                 // Add custom filters if any
-                if (Object.keys(customFilters).length > 0) {
-                    Object.entries(customFilters).forEach(([key, value]) => {
-                        if (value) {
-                            params.append(key, value);
-                        }
-                    });
-                }
+                // if (Object.keys(customFilters).length > 0) {
+                //     Object.entries(customFilters).forEach(([key, value]) => {
+                //         if (value) {
+                //             params.append(key, value);
+                //         }
+                //     });
+                // }
 
-                const response = await axios.get(`${apiUrl}?${params}`, {
+                const response = await axios.get(`${apiUrl}?${params.toString()}`, {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
@@ -428,7 +429,7 @@ function OrderStagingTable() {
             field: "companyName",
             headerName: t("Company Name"),
             include: isV("companyNameCol"),
-            searchable: true,
+            searchable: false,
             sortable: true,
             width: columnDimensions.companyName?.width || 250,
             align: isArabic ? "right" : "left",
@@ -463,7 +464,7 @@ function OrderStagingTable() {
             field: "totalAmount",
             headerName: t("Total Amount"),
             include: isV("totalAmountCol"),
-            searchable: true,
+            searchable: false,
             sortable: true,
             width: columnDimensions.totalAmount?.width || 130,
             align: "right",
