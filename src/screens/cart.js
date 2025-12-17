@@ -3700,12 +3700,23 @@ function Cart() {
                         const timeDisplay = coolingInfo
                           ? coolingInfo.toTime
                           : "later";
+                           const todayUTC = new Date().toISOString().split("T")[0];
+                        const utcDateTime = `${todayUTC}T${coolingInfo?.toTime}Z`;
+
+                        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+                        const localTime = new Date(utcDateTime).toLocaleTimeString("en-IN", {
+                          timeZone: timezone,
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        });
                         Swal.fire({
                           icon: "warning",
                           title: t("Ordering Window Closed"),
                           text: `${t("Ordering window is closed.")} ${t(
                             "You may place an order after"
-                          )} ${timeDisplay}`,
+                          )} ${localTime}`,
                           confirmButtonText: t("OK"),
                         });
                       } else {
