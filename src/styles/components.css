@@ -1017,8 +1017,9 @@ body.catalog-page #root {
     margin-left: 0;
   }
   .loading-container {
-    align-items: center;
-    justify-content: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
   }
   .logs-header {
     flex-direction: column;

@@ -85,29 +85,29 @@ const BankTransactions = () => {
   }, [storageKey]);
   const [showHeader, setShowHeader] = useState(true);
   const dragStartY = useRef(0);
-  
+
   useEffect(() => {
     const handleTouchStart = (e) => {
       dragStartY.current = e.touches[0].clientY;
     };
-  
+
     const handleTouchMove = (e) => {
       const currentY = e.touches[0].clientY;
-  
+
       // Drag up → hide header
       if (currentY < dragStartY.current - 15) {
         setShowHeader(false);
       }
-  
+
       // Drag down → show header
       if (currentY > dragStartY.current + 15) {
         setShowHeader(true);
       }
     };
-  
+
     window.addEventListener("touchstart", handleTouchStart);
     window.addEventListener("touchmove", handleTouchMove);
-  
+
     return () => {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
@@ -368,13 +368,13 @@ const BankTransactions = () => {
                 <>
                   <div
                     className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
-                    // style={{
-                    //   top: isAtTop ? "60px" : "0px",
-                    //   position: "sticky",
-                    //   zIndex: 20,
-                    //   transition: "top 0.3s ease",
-                    //   background: "#fff",
-                    // }}
+                  // style={{
+                  //   top: isAtTop ? "60px" : "0px",
+                  //   position: "sticky",
+                  //   zIndex: 20,
+                  //   transition: "top 0.3s ease",
+                  //   background: "#fff",
+                  // }}
                   >
                     <TableMobile
                       columns={visibleColumns}
@@ -473,7 +473,9 @@ const BankTransactions = () => {
           ) : (
             <div className="table-container">
               {loading ? (
-                <LoadingSpinner />
+                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                  <LoadingSpinner size="medium" />
+                </div>
               ) : error ? (
                 <div className="error-message">{error}</div>
               ) : (

@@ -528,7 +528,7 @@ function Products({ customerId, customer, setTabsHeight }) {
               setSubCategoryFilter("");
               setSearch("");
             }}
-            variant="category"
+            variant={isMobile ? 'mobile' : 'pc'}
           />
         </div>
       </div>

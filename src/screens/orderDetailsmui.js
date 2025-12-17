@@ -442,48 +442,90 @@ function OrderDetails() {
           "Failed to fetch credit eligibility:",
           creditRes.statusText
         );
-        return false;
+        return { allowed: false };
       }
       const creditResult = await creditRes.json();
       const isCreditUser =
         creditResult?.data?.methodDetails?.credit?.[entity]?.isAllowed;
+
       if (!isCreditUser) {
-        let codLimit = creditResult?.data?.methodDetails?.COD?.limit || 0;
-        if (totalAmount > codLimit) {
-          console.log(`Total amount exceeds COD limit.`);
-          return false;
-        } else {
-          console.log(
-            `Total amount is within COD limit. Showing payment popup.`
-          );
+        // User is not a credit user, check COD and Pre Payment options
+        const isCODAllowed = creditResult?.data?.methodDetails?.COD?.isAllowed;
+        const isPrePaymentAllowed = creditResult?.data?.methodDetails?.prePayment?.isAllowed;
+
+        console.log('Payment method checks:', {
+          isCODAllowed,
+          isPrePaymentAllowed
+        });
+
+        // Case 1: Only COD is allowed
+        if (isCODAllowed && !isPrePaymentAllowed) {
+          const codLimit = creditResult?.data?.methodDetails?.COD?.limit || 0;
+          if (totalAmount > codLimit) {
+            console.log(`Total amount exceeds COD limit.`);
+            Swal.fire({
+              icon: "warning",
+              title: t("COD Limit Exceeded"),
+              text: t(`The total amount exceeds the COD limit of ${codLimit}.`),
+            });
+            setSaving(false);
+            return { allowed: false };
+          } else {
+            console.log(`Total amount is within COD limit. Setting COD as payment method.`);
+            return { allowed: true, paymentMethod: 'Cash on Delivery' };
+          }
+        }
+
+        // Case 2: Only Pre Payment is allowed
+        else if (isPrePaymentAllowed && !isCODAllowed) {
+          console.log('Only Pre Payment allowed, setting payment method automatically');
+          return { allowed: true, paymentMethod: 'Pre Payment' };
+        }
+
+        // Case 3: Both COD and Pre Payment are allowed
+        else if (isCODAllowed && isPrePaymentAllowed) {
+          console.log('Both payment methods allowed, showing payment popup');
           setShowPaymentPopup(true);
           setPendingSaveAction(true);
-          return "Payment popup"; // Indicate that payment popup should be shown
+          return { allowed: 'Payment popup' };
+        }
+
+        // Case 4: Neither is allowed
+        else {
+          console.log('No payment methods allowed');
+          Swal.fire({
+            icon: "warning",
+            title: t("No Payment Methods Available"),
+            text: t("No valid payment methods are available for this customer."),
+          });
+          setSaving(false);
+          return { allowed: false };
         }
       } else {
+        // User is a credit user
         console.log(
           `Credit is allowed for customer. checking for current balance`
         );
         const currentCreditBalance =
           creditResult?.data?.currentBalance?.[entity] || 0;
-        const netAmountToatl = formData?.products?.reduce((total, item) => {
+        const netAmountTotal = formData?.products?.reduce((total, item) => {
           return total + parseFloat(item.netAmount);
         }, 0);
-        if (netAmountToatl > currentCreditBalance) {
+        if (netAmountTotal > currentCreditBalance) {
           Swal.fire({
             icon: "warning",
-            title: t("Insuffiecient Credit balance"),
+            title: t("Insufficient Credit balance"),
             text: t(`Your credit balance is ${currentCreditBalance}.`),
           });
-          setSaving(false)
-          return "Insufficient balance";
+          setSaving(false);
+          return { allowed: "Insufficient balance" };
         } else {
-          return true;
+          return { allowed: true, paymentMethod: 'Credit' };
         }
       }
     } catch (err) {
       console.error("Error in isCreditPaymentAllowed:", err);
-      return false;
+      return { allowed: false };
     }
   };
 
@@ -670,38 +712,39 @@ function OrderDetails() {
           finalPaymentMethod = "Pre Payment";
         } else {
           const totalAmount = parseFloat(formData.totalAmount);
-          const isCreditAllowed = await isCreditPaymentAllowed(
+          const creditCheck = await isCreditPaymentAllowed(
             formData.customerId,
             formData.entity,
             totalAmount,
             action
           );
 
-          if (isCreditAllowed === "Payment popup") {
+          if (creditCheck.allowed === "Payment popup") {
             setSaving(false);
             return;
-          } else if (isCreditAllowed === false) {
-            finalPaymentMethod = "Pre Payment";
-          } else {
-            finalPaymentMethod = "Credit";
+          } else if (creditCheck.allowed === false) {
+            setSaving(false);
+            return;
+          } else if (creditCheck.paymentMethod) {
+            finalPaymentMethod = creditCheck.paymentMethod;
           }
         }
       } else {
         const totalAmount = parseFloat(formData.totalAmount);
-        const isCreditAllowed = await isCreditPaymentAllowed(
+        const creditCheck = await isCreditPaymentAllowed(
           formData.customerId,
           formData.entity,
           totalAmount,
           action
         );
-
-        if (isCreditAllowed === "Payment popup") {
+        if (creditCheck.allowed === "Payment popup") {
           setSaving(false);
           return;
-        } else if (isCreditAllowed === false) {
-          finalPaymentMethod = "Pre Payment";
-        } else {
-          finalPaymentMethod = "Credit";
+        } else if (creditCheck.allowed === false) {
+          setSaving(false);
+          return;
+        } else if (creditCheck.paymentMethod) {
+          finalPaymentMethod = creditCheck.paymentMethod;
         }
       }
     }
@@ -882,46 +925,44 @@ function OrderDetails() {
             "VMCO entity with non-machine products - determining payment method"
           );
           const totalAmount = parseFloat(formData.totalAmount);
-          const isCreditAllowed = await isCreditPaymentAllowed(
+          const creditCheck = await isCreditPaymentAllowed(
             formData.customerId,
             formData.entity,
             totalAmount,
             action
           );
-          if (isCreditAllowed === "Payment popup") {
+
+          if (creditCheck.allowed === "Payment popup") {
             setSaving(false);
             return;
           }
-          if (isCreditAllowed === "Insufficient balance") {
+          if (creditCheck.allowed === "Insufficient balance") {
             console.log("Credit not allowed - insufficient balance");
             setSaving(false);
             return;
-          } else if (isCreditAllowed === false) {
-            selectedMethod = "Pre Payment";
-          } else {
-            selectedMethod = "Credit"; // Default to Credit if allowed
+          } else if (creditCheck.paymentMethod) {
+            selectedMethod = creditCheck.paymentMethod;
           }
         }
       } else {
         console.log("Other entity - determining payment method");
         const totalAmount = parseFloat(formData.totalAmount);
-        const isCreditAllowed = await isCreditPaymentAllowed(
+        const creditCheck = await isCreditPaymentAllowed(
           formData.customerId,
           formData.entity,
           totalAmount,
           action
         );
-        if (isCreditAllowed === "Payment popup") {
+
+        if (creditCheck.allowed === "Payment popup") {
           setSaving(false);
           return;
-        } else if (isCreditAllowed === "Insufficient balance") {
+        } else if (creditCheck.allowed === "Insufficient balance") {
           console.log("Credit not allowed - insufficient balance");
           setSaving(false);
           return;
-        } else if (!isCreditAllowed) {
-          selectedMethod = "Pre Payment";
-        } else {
-          selectedMethod = "Credit"; // Default to Credit if allowed
+        } else if (creditCheck.paymentMethod) {
+          selectedMethod = creditCheck.paymentMethod;
         }
       }
     }
@@ -2101,8 +2142,8 @@ function OrderDetails() {
         });
       } else if (!email && !copyUrl && data?.details?.url) {
         // window.open(data.details.url, "_blank");
-          const extracted = data?.details?.url?.split('/payment-options')[1] 
-                navigate(`/payment-options${extracted}`)
+        const extracted = data?.details?.url?.split('/payment-options')[1]
+        navigate(`/payment-options${extracted}`)
       }
     } catch (error) {
       console.error("Error generating payment link:", error);
@@ -4595,11 +4636,11 @@ function OrderDetails() {
                               }
                               className="entity-dropdown"
                               disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
-                              // placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
+                            // placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
                             >
                               <option value="" disabled hidden>
-    {t("Select Warehouse")}
-  </option>
+                                {t("Select Warehouse")}
+                              </option>
                               {warehouseOptions.map(
                                 (warehouse, index) => (
                                   <option key={index} value={warehouse?.name}>
@@ -5643,7 +5684,7 @@ function OrderDetails() {
                       className="order-action-btn"
                       onClick={() => handleCheckout(orderId, false, true)}
                       style={{
-                        width: "160px",
+                        //width: "160px",
                         backgroundColor: "#005932",
                         color: "white",
                       }}

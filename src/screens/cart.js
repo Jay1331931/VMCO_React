@@ -220,8 +220,8 @@ function Cart() {
       const cartProducts = Array.isArray(result.data.data)
         ? result.data.data
         : result.data && Array.isArray(result.data)
-        ? result.data
-        : [];
+          ? result.data
+          : [];
 
       console.log("Extracted cart products:", cartProducts.length, "items");
 
@@ -958,13 +958,10 @@ function Cart() {
           const existingIds = existingResults
             .map((r) => `#${r.existingOrderId}`)
             .join(" and ");
-          const messageText = `Open order${
-            existingResults.length > 1 ? "s" : ""
-          } ${existingIds} already exist${
-            existingResults.length > 1 ? "" : "s"
-          }. Please update the open order${
-            existingResults.length > 1 ? "s" : ""
-          } instead of creating a new one.`;
+          const messageText = `Open order${existingResults.length > 1 ? "s" : ""
+            } ${existingIds} already exist${existingResults.length > 1 ? "" : "s"
+            }. Please update the open order${existingResults.length > 1 ? "s" : ""
+            } instead of creating a new one.`;
 
           Swal.fire({
             icon: "warning",
@@ -1263,8 +1260,7 @@ function Cart() {
       const nonFreshProducts = categoryItems.filter((item) => {
         const isFresh = item.isFresh === true;
         console.log(
-          `Product ${item.name} (${
-            item.product_id
+          `Product ${item.name} (${item.product_id
           }): isFresh=${isFresh}, isNonFresh=${!isFresh}`
         );
         return !isFresh;
@@ -1425,13 +1421,13 @@ function Cart() {
         const orderText =
           orderIds.length === 1
             ? t(
-                `Your order has been placed successfully! Order #${orderIds[0]}`
-              )
+              `Your order has been placed successfully! Order #${orderIds[0]}`
+            )
             : t(
-                `Your orders have been placed successfully! Orders: ${orderIds
-                  .map((id) => `#${id}`)
-                  .join(" and ")}`
-              );
+              `Your orders have been placed successfully! Orders: ${orderIds
+                .map((id) => `#${id}`)
+                .join(" and ")}`
+            );
       }
     } catch (err) {
       console.error("Error in SHC order splitting:", err);
@@ -1814,29 +1810,24 @@ function Cart() {
           nonMachineProductIds: nonMachineProducts.map((p) => p.product_id),
         });
 
-        // For VMCO, handle consumables with credit check, then process both machines and consumables
+        // For VMCO, handle consumables with credit check
         if (nonMachineProducts.length > 0) {
           console.log("Checking if user is credit user for VMCO consumables");
 
-          // Check if credit payment is allowed for VMCO entity
-          const isCreditAllowed = await isCreditPaymentAllowed(
-            selectedCustomerId,
-            entity
-          );
+          // ✅ FIRST: Calculate total amount for consumables to validate balance
+          let consumablesTotalAmount = 0;
+          nonMachineProducts.forEach((item) => {
+            const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+            const vatPercentage = Number(item.vatPercentage) || 0;
+            const vatAmount = (baseAmount * vatPercentage) / 100;
+            const itemTotal = baseAmount + vatAmount;
+            consumablesTotalAmount += itemTotal;
+          });
 
-          if (isCreditAllowed) {
-            // Calculate total amount for consumables to validate balance
-            let consumablesTotalAmount = 0;
-            nonMachineProducts.forEach((item) => {
-              const baseAmount =
-                Number(item.price) *
-                Number(quantities[item.id] || item.quantity || 1);
-              const vatPercentage = Number(item.vatPercentage) || 0;
-              const vatAmount = (baseAmount * vatPercentage) / 100;
-              const itemTotal = baseAmount + vatAmount;
-              consumablesTotalAmount += itemTotal;
-            });
+          // ✅ THEN: Check if credit payment is allowed for VMCO entity with totalAmount
+          const creditCheck = await isCreditPaymentAllowed(selectedCustomerId, entity, consumablesTotalAmount);
 
+          if (creditCheck.allowed === true && creditCheck.paymentMethod === 'Credit') {
             // Validate credit balance
             const isBalanceValid = await validateCreditBalance(
               selectedCustomerId,
@@ -1845,30 +1836,31 @@ function Cart() {
             );
 
             if (isBalanceValid) {
-              await handleVMCOOrderProcessing(
-                categoryItems,
-                categoryName,
-                "Credit"
-              );
+              await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit");
             } else {
-              // Credit user but insufficient balance - show payment popup
-              console.log(
-                "VMCO user is credit user but has insufficient balance, showing payment popup"
-              );
+              // Insufficient balance - show payment popup
+              console.log("VMCO user is credit user but has insufficient balance, showing payment popup");
               setPendingOrderCategory(categoryName);
-              setPendingOrderItems(categoryItems); // Pass all items so we can separate later
+              setPendingOrderItems(categoryItems);
               setShowPaymentPopup(true);
-              return; // Exit function to wait for user payment method selection
+              return;
             }
-          } else {
-            // Non-credit user - show payment popup
-            console.log(
-              "VMCO user is non-credit user, showing payment method selection for consumables"
-            );
+          } else if (creditCheck.paymentMethod === 'Pre Payment') {
+            // Automatically use Pre Payment
+            console.log("VMCO: Pre Payment is the only option, proceeding directly");
+            await handleVMCOOrderProcessing(categoryItems, categoryName, "Pre Payment");
+          } else if (creditCheck.allowed === 'Payment popup') {
+            // Show payment popup
+            console.log("VMCO: Multiple payment options available, showing popup");
             setPendingOrderCategory(categoryName);
-            setPendingOrderItems(categoryItems); // Pass all items so we can separate later
+            setPendingOrderItems(categoryItems);
             setShowPaymentPopup(true);
-            return; // Exit function to wait for user payment method selection
+            return;
+          } else {
+            // Not allowed
+            console.log("VMCO: No payment methods available");
+            setIsPlacingOrder(false);
+            return;
           }
         } else if (machineProducts.length > 0) {
           // If only machines, proceed directly
@@ -2002,12 +1994,9 @@ function Cart() {
 
         // Inside handlePlaceOrder, for GMTC entity section:
         if (entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
-          const isCreditAllowed = await isCreditPaymentAllowed(
-            selectedCustomerId,
-            entity
-          );
-
-          if (isCreditAllowed) {
+          const creditCheck = await isCreditPaymentAllowed(selectedCustomerId, entity, totalAmount);
+          console.log("GMTC credit check result:", creditCheck);
+          if (creditCheck.allowed === true && creditCheck.paymentMethod === 'Credit') {
             const isBalanceValid = await validateCreditBalance(
               selectedCustomerId,
               totalAmount,
@@ -2015,85 +2004,85 @@ function Cart() {
             );
 
             if (isBalanceValid) {
-              // Credit user with sufficient balance - check for existing open orders
-              console.log(
-                "GMTC user is credit user with sufficient balance, checking for existing open orders"
-              );
-
-              // IMPORTANT: Set pendingOrderCategory to current categoryName before calling check
+              // Credit user with sufficient balance
+              console.log("GMTC user is credit user with sufficient balance, checking for existing open orders");
               setPendingOrderCategory(categoryName);
               setPendingOrderItems(categoryItems);
-
-              // Pass categoryName explicitly to ensure correct entity
-              await handleGMTCExistingOrdersCheck(
-                categoryItems,
-                "Credit",
-                categoryName
-              );
+              await handleGMTCExistingOrdersCheck(categoryItems, "Credit", categoryName);
               return;
             } else {
-              // Credit user but insufficient balance - show payment popup
-              console.log(
-                "GMTC user is credit user but has insufficient balance, showing payment popup"
-              );
+              // Insufficient balance - show warning
+              console.log("GMTC user is credit user but has insufficient balance");
               setPendingOrderCategory(categoryName);
               setPendingOrderItems(categoryItems);
-              setShowPaymentPopup(true);
-              return; // Exit function to wait for user payment method selection
+              Swal.fire({
+                icon: "warning",
+                title: t("Insufficient Credit Balance"),
+                text: t("Your credit balance is insufficient to place this order."),
+              });
+              return;
             }
+          } else if (creditCheck.paymentMethod === 'Pre Payment') {
+            // Automatically use Pre Payment
+            console.log("GMTC: Pre Payment is the only option");
+            await placeOrderForCategory(categoryItems, categoryName, "Pre Payment", true);
+            return;
+          } else if (creditCheck.allowed === 'Payment popup') {
+            // Show payment popup
+            console.log("GMTC: Multiple payment options, showing popup");
+            setPendingOrderCategory(categoryName);
+            setPendingOrderItems(categoryItems);
+            setShowPaymentPopup(true);
+            return;
           }
         }
 
         // For other entities (NAQI, DAR) or non-credit GMTC users
-        // Determine payment method for non-machine products
-        const paymentMethod = await determinePaymentMethodForNonMachines(
-          selectedCustomerId,
-          totalAmount,
-          entity
-        );
-
-        // If payment method determination returned null (insufficient balance), cancel the order
-        if (paymentMethod === null) {
-          console.log(
-            "Payment method determination cancelled due to insufficient balance"
-          );
-          return; // Exit the function early
-        }
-
-        // If a specific payment method was determined, use it directly
-        if (paymentMethod === "Pre Payment") {
-          // Directly place order with Pre Payment, do not show popup
-          console.log(
-            "Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for entity",
+        // Check credit status first
+        const creditCheck = await isCreditPaymentAllowed(selectedCustomerId, entity, totalAmount);
+        if (creditCheck.allowed === true && creditCheck.paymentMethod === 'Credit') {
+          // User is a credit user - validate balance
+          const isBalanceValid = await validateCreditBalance(
+            selectedCustomerId,
+            totalAmount,
             entity
           );
-          await placeOrderForCategory(
-            categoryItems,
-            categoryName,
-            "Pre Payment",
-            true
-          );
+
+          if (isBalanceValid) {
+            // Credit user with sufficient balance - place order directly
+            console.log(`${entity}: Credit user with sufficient balance, placing order directly`);
+            await placeOrderForCategory(categoryItems, categoryName, "Credit", true);
+            return;
+          } else {
+            // Insufficient balance - show payment popup
+            console.log(`${entity}: Credit user with insufficient balance, showing payment popup`);
+            setPendingOrderCategory(categoryName);
+            setPendingOrderItems(categoryItems);
+            setShowPaymentPopup(true);
+            return;
+          }
+        } else if (creditCheck.paymentMethod === 'Pre Payment') {
+          // Only Pre Payment is allowed
+          console.log(`${entity}: Pre Payment is the only option`);
+          await placeOrderForCategory(categoryItems, categoryName, "Pre Payment", true);
           return;
-        } else if (paymentMethod && paymentMethod !== "Cash on Delivery") {
-          console.log(
-            "Using determined payment method",
-            paymentMethod,
-            "for entity",
-            entity
-          );
-          await placeOrderForCategory(
-            categoryItems,
-            categoryName,
-            paymentMethod,
-            true
-          );
-        } else {
-          // For COD or when payment method needs user selection, show popup
-          console.log("Showing payment method selection for entity", entity);
+        } else if (creditCheck.paymentMethod === 'Cash on Delivery') {
+          // Only COD is allowed and within limit
+          console.log(`${entity}: COD is the only option`);
+          await placeOrderForCategory(categoryItems, categoryName, "Cash on Delivery", true);
+          return;
+        } else if (creditCheck.allowed === 'Payment popup') {
+          // Both payment methods available - show popup
+          console.log(`${entity}: Multiple payment options, showing popup`);
           setPendingOrderCategory(categoryName);
           setPendingOrderItems(categoryItems);
           setShowPaymentPopup(true);
-          return; // Exit function to wait for user selection
+          return;
+        } else {
+          // No payment methods allowed
+          console.log(`${entity}: No payment methods available`);
+          setIsPlacingOrder(false);
+          return;
         }
       } else {
         // For other entities - directly place order with selected payment method
@@ -2758,8 +2747,8 @@ function Cart() {
           const cartProducts = Array.isArray(cartCheckResult.data?.data)
             ? cartCheckResult.data.data
             : Array.isArray(cartCheckResult.data)
-            ? cartCheckResult.data
-            : [];
+              ? cartCheckResult.data
+              : [];
 
           // UPDATED: Skip deletion for SHC entity (already handled in handleSHCExistingOrdersCheck)
           if (
@@ -2852,7 +2841,7 @@ function Cart() {
           icon: "success",
           title:
             entity &&
-            entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+              entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
               ? t("Request Sent")
               : t("Order Placed"),
           text: `${orderStatusMessage} Order #${orderId}. Payment Method: ${selectedPaymentMethod}`,
@@ -2923,9 +2912,8 @@ function Cart() {
       Swal.fire({
         icon: "error",
         title: t("Order Processing Failed"),
-        text: `${t("Error")}: ${error.message}\n${
-          orderId ? `${t("Order")} ${orderId} ${t("has been cancelled.")}` : ""
-        }`,
+        text: `${t("Error")}: ${error.message}\n${orderId ? `${t("Order")} ${orderId} ${t("has been cancelled.")}` : ""
+          }`,
         confirmButtonText: t("OK"),
       });
 
@@ -2933,22 +2921,19 @@ function Cart() {
     }
   };
 
-  const isCreditPaymentAllowed = async (customerId, entity = null) => {
+  const isCreditPaymentAllowed = async (customerId, entity = null, totalAmount = 0) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/payment-method-balances/id/${customerId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         console.error("Failed to fetch payment method details");
-        return false;
+        return { allowed: false };
       }
 
       const result = await response.json();
@@ -2957,28 +2942,77 @@ function Cart() {
       if (result.status === "Ok" && result.data && result.data.methodDetails) {
         const methodDetails = result.data.methodDetails;
 
+        // Check if user is a credit user
+        let isCreditUser = false;
+        console.log("Checking credit user status for entity:", entity);
         if (entity && methodDetails.credit && methodDetails.credit[entity]) {
           const entityCreditDetails = methodDetails.credit[entity];
-          const isAllowed = entityCreditDetails.isAllowed === true;
-          console.log(
-            `Credit payment is ${
-              isAllowed ? "allowed" : "not allowed"
-            } for entity ${entity}`
-          );
-          return isAllowed;
+          isCreditUser = entityCreditDetails.isAllowed === true;
+          console.log(`Credit payment is ${isCreditUser ? 'allowed' : 'not allowed'} for entity ${entity}`);
+        } else if (methodDetails.credit && methodDetails.credit.isAllowed === true) {
+          isCreditUser = true;
+          console.log("Credit payment is allowed for customer (general)");
         }
 
-        if (methodDetails.credit && methodDetails.credit.isAllowed === true) {
-          console.log("Credit payment is allowed for customer (general)");
-          return true;
+        // If NOT a credit user, check COD and Pre Payment options
+        if (!isCreditUser) {
+          const isCODAllowed = methodDetails?.COD?.isAllowed;
+          const isPrePaymentAllowed = methodDetails?.prePayment?.isAllowed;
+
+          console.log('Payment method checks:', {
+            isCODAllowed,
+            isPrePaymentAllowed
+          });
+
+          // Case 1: Only COD is allowed
+          if (isCODAllowed && !isPrePaymentAllowed) {
+            const codLimit = methodDetails?.COD?.limit || 0;
+            const totalAmountToCheck = typeof totalAmount === 'number' ? totalAmount : parseFloat(totalAmount) || 0;
+
+            if (totalAmountToCheck > codLimit) {
+              console.log(`Total amount exceeds COD limit.`);
+              Swal.fire({
+                icon: "warning",
+                title: t("COD Limit Exceeded"),
+                text: t(`The total amount exceeds the COD limit of ${codLimit}.`),
+              });
+              return { allowed: false };
+            } else {
+              console.log(`Total amount is within COD limit. Using COD.`);
+              return { allowed: true, paymentMethod: 'Cash on Delivery' };
+            }
+          }
+          // Case 2: Only Pre Payment is allowed
+          else if (isPrePaymentAllowed && !isCODAllowed) {
+            console.log('Only Pre Payment allowed, setting payment method automatically');
+            return { allowed: true, paymentMethod: 'Pre Payment' };
+          }
+
+          // Case 3: Both COD and Pre Payment are allowed
+          else if (isCODAllowed && isPrePaymentAllowed) {
+            console.log('Both payment methods allowed, showing payment popup');
+            return { allowed: 'Payment popup' };
+          }
+
+          // Case 4: Neither is allowed
+          else {
+            console.log('No payment methods allowed');
+            Swal.fire({
+              icon: "warning",
+              title: t("No Payment Methods Available"),
+              text: t("No valid payment methods are available for this customer."),
+            });
+            return { allowed: false };
+          }
         }
+        return { allowed: true, paymentMethod: 'Credit' };
       }
 
       console.log("Credit payment is not allowed for customer");
-      return false;
+      return { allowed: false };
     } catch (error) {
       console.error("Error checking credit payment allowance:", error);
-      return false;
+      return { allowed: false };
     }
   };
 
@@ -3026,8 +3060,7 @@ function Cart() {
           const orderTotal = Number(totalAmount);
 
           console.log(
-            `Checking credit balance: ${creditBalance} vs order total: ${orderTotal} for entity: ${
-              entity || "general"
+            `Checking credit balance: ${creditBalance} vs order total: ${orderTotal} for entity: ${entity || "general"
             }`
           );
 
@@ -3055,7 +3088,9 @@ function Cart() {
       console.error("Error validating credit balance:", error);
       return false;
     }
-  }; // Initialize from navigation state if available
+  };
+
+  // Initialize from navigation state if available
   useEffect(() => {
     console.log("Location state useEffect triggered:", location.state);
     if (location.state) {
@@ -3263,22 +3298,15 @@ function Cart() {
   };
 
   // Helper function to determine payment method for non-machine products
-  const determinePaymentMethodForNonMachines = async (
-    customerId,
-    totalAmount,
-    entity
-  ) => {
+  const determinePaymentMethodForNonMachines = async (customerId, totalAmount, entity) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/payment-method-balances/id/${customerId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         console.error("Failed to fetch payment method details");
@@ -3290,59 +3318,78 @@ function Cart() {
 
       if (result.status === "Ok" && result.data && result.data.methodDetails) {
         const methodDetails = result.data.methodDetails;
-        const currentBalance = result.data.currentBalance || {};
+        const currentBalance = result.data.currentBalance;
         let creditAllowed = false;
         if (methodDetails.credit && methodDetails.credit[entity]) {
           const entityCreditDetails = methodDetails.credit[entity];
           creditAllowed = entityCreditDetails.isAllowed === true;
-          if (creditAllowed) {
-            // Check if current balance is sufficient
-            const entityBalance = currentBalance[entity] || 0;
-            if (totalAmount <= Math.abs(entityBalance)) {
-              console.log(
-                `Credit is allowed for entity ${entity} and balance ${entityBalance} is sufficient for amount ${totalAmount}, using Credit payment method`
-              );
-              return "Credit";
-            } else {
-              console.log(
-                `Credit is allowed for entity ${entity} but balance ${entityBalance} is insufficient for amount ${totalAmount}`
-              );
-              Swal.fire({
-                icon: "warning",
-                title: t("Insufficient Balance"),
-                text: t(
-                  `Insufficient Balance! Your current credit balance is: ${Math.abs(
-                    entityBalance
-                  ).toFixed(2)}`
-                ),
-                confirmButtonText: t("OK"),
-              });
-              return null;
-            }
+        }
+
+        if (creditAllowed) {
+          // Check if current balance is sufficient
+          const entityBalance = currentBalance[entity] || 0;
+          if (totalAmount <= Math.abs(entityBalance)) {
+            console.log(`Credit is allowed for entity ${entity} and balance ${entityBalance} is sufficient for amount ${totalAmount}, using Credit payment method`);
+            return "Credit";
+          } else {
+            console.log(`Credit is allowed for entity ${entity} but balance ${entityBalance} is insufficient for amount ${totalAmount}`);
+            Swal.fire({
+              icon: "warning",
+              title: t("Insufficient Balance"),
+              text: t(`Insufficient Balance! Your current credit balance is ${Math.abs(entityBalance).toFixed(2)}`),
+              confirmButtonText: t("OK"),
+            });
+            return null;
           }
         }
 
-        // If credit is not allowed, check COD limit logic
-        if (
-          !creditAllowed &&
-          methodDetails.COD &&
-          methodDetails.COD.isAllowed === true
-        ) {
-          const codLimit = methodDetails.COD.limit || 0;
-          if (totalAmount >= codLimit) {
-            // If totalAmount is greater than or equal to COD limit, force Pre Payment
-            console.log(
-              `Credit not allowed, COD allowed but totalAmount ${totalAmount} >= codLimit ${codLimit}, using Pre Payment`
-            );
+        // If credit is not allowed, check COD and Pre Payment
+        const isCODAllowed = methodDetails?.COD?.isAllowed;
+        const isPrePaymentAllowed = methodDetails?.prePayment?.isAllowed;
+
+        console.log('Non-credit user payment method checks:', {
+          isCODAllowed,
+          isPrePaymentAllowed
+        });
+
+        // Case 1: Only COD is allowed
+        if (isCODAllowed && !isPrePaymentAllowed) {
+          const codLimit = methodDetails?.COD?.limit || 0;
+          if (totalAmount > codLimit) {
+            console.log(`Total amount ${totalAmount} exceeds COD limit ${codLimit}, using Pre Payment`);
+            Swal.fire({
+              icon: "warning",
+              title: t("COD Limit Exceeded"),
+              text: t(`The total amount exceeds the COD limit of ${codLimit}.`),
+            });
             return "Pre Payment";
           } else {
-            setShowPaymentPopup(true);
-            return;
+            console.log(`Total amount is within COD limit, using COD`);
+            return "Cash on Delivery";
           }
+        }
+
+        // Case 2: Only Pre Payment is allowed
+        else if (isPrePaymentAllowed && !isCODAllowed) {
+          console.log('Only Pre Payment allowed');
+          return "Pre Payment";
+        }
+
+        // Case 3: Both are allowed - show popup
+        else if (isCODAllowed && isPrePaymentAllowed) {
+          console.log('Both payment methods allowed, need user selection');
+          return "Cash on Delivery"; // Or return special value to trigger popup
+        }
+
+        // Case 4: Neither is allowed
+        else {
+          console.log('No payment methods allowed, defaulting to Pre Payment');
+          return "Pre Payment";
         }
       }
 
-      return "Pre Payment"; // Default fallback
+      console.log("Defaulting to Pre Payment");
+      return "Pre Payment";
     } catch (error) {
       console.error("Error determining payment method:", error);
       return "Pre Payment"; // Default fallback
@@ -3350,26 +3397,19 @@ function Cart() {
   };
 
   // Helper function to determine payment method for SHC products (fresh and non-fresh)
-  const determinePaymentMethodForSHC = async (
-    customerId,
-    totalAmount,
-    entity
-  ) => {
+  const determinePaymentMethodForSHC = async (customerId, totalAmount, entity) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/payment-method-balances/id/${customerId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         console.error("Failed to fetch payment method details");
-        return "Pre Payment"; // Default fallback
+        return "Pre Payment";
       }
 
       const result = await response.json();
@@ -3377,56 +3417,69 @@ function Cart() {
 
       if (result.status === "Ok" && result.data && result.data.methodDetails) {
         const methodDetails = result.data.methodDetails;
-        const currentBalance = result.data.currentBalance || {};
+        const currentBalance = result.data.currentBalance;
 
         // Check if credit is allowed for SHC entity
-        if (
-          methodDetails.credit &&
-          methodDetails.credit.SHC &&
-          methodDetails.credit.SHC.isAllowed === true
-        ) {
+        if (methodDetails.credit && methodDetails.credit.SHC && methodDetails.credit.SHC.isAllowed === true) {
           // Check if current balance is sufficient
           const entityBalance = currentBalance.SHC || 0;
           if (totalAmount <= Math.abs(entityBalance)) {
-            console.log(
-              `Credit payment is allowed for SHC entity and balance ${entityBalance} is sufficient for amount ${totalAmount}`
-            );
+            console.log(`Credit payment is allowed for SHC entity and balance ${entityBalance} is sufficient for amount ${totalAmount}`);
             return "Credit";
           } else {
-            console.log(
-              `Credit is allowed for SHC but balance ${entityBalance} is insufficient for amount ${totalAmount}`
-            );
+            console.log(`Credit is allowed for SHC but balance ${entityBalance} is insufficient for amount ${totalAmount}`);
             // Show insufficient balance alert
             Swal.fire({
               icon: "warning",
               title: t("Insufficient Balance"),
-              text: t(
-                `Insufficient Balance! Your current credit balance is: ${Math.abs(
-                  entityBalance
-                ).toFixed(2)}`
-              ),
+              text: t(`Insufficient Balance! Your current credit balance is ${Math.abs(entityBalance).toFixed(2)}`),
               confirmButtonText: t("OK"),
             });
             return null; // Return null to indicate payment method selection should be cancelled
           }
         }
 
-        // Check Cash on Delivery limits if credit is not allowed or insufficient
-        if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
-          const codLimit = methodDetails.COD.limit || 0;
-          if (totalAmount <= codLimit) {
-            console.log(
-              `Cash on Delivery payment is allowed for amount ${totalAmount} (limit: ${codLimit})`
-            );
-            return "Cash on Delivery";
-          } else {
-            console.log(
-              `Total amount ${totalAmount} exceeds Cash on Delivery limit ${codLimit}, using Pre Payment`
-            );
+        // Not a credit user - check COD and Pre Payment
+        const isCODAllowed = methodDetails?.COD?.isAllowed;
+        const isPrePaymentAllowed = methodDetails?.prePayment?.isAllowed;
+
+        console.log('SHC non-credit user payment method checks:', {
+          isCODAllowed,
+          isPrePaymentAllowed
+        });
+
+        // Case 1: Only COD is allowed
+        if (isCODAllowed && !isPrePaymentAllowed) {
+          const codLimit = methodDetails?.COD?.limit || 0;
+          if (totalAmount > codLimit) {
+            console.log(`SHC: Total amount exceeds COD limit, using Pre Payment`);
+            Swal.fire({
+              icon: "warning",
+              title: t("COD Limit Exceeded"),
+              text: t(`The total amount exceeds the COD limit of ${codLimit}.`),
+            });
             return "Pre Payment";
+          } else {
+            console.log(`SHC: Total amount is within COD limit`);
+            return "Cash on Delivery";
           }
-        } else {
-          console.log("Cash on Delivery is not allowed, using Pre Payment");
+        }
+
+        // Case 2: Only Pre Payment is allowed
+        else if (isPrePaymentAllowed && !isCODAllowed) {
+          console.log('SHC: Only Pre Payment allowed');
+          return "Pre Payment";
+        }
+
+        // Case 3: Both are allowed
+        else if (isCODAllowed && isPrePaymentAllowed) {
+          console.log('SHC: Both payment methods allowed');
+          return "Cash on Delivery"; // Trigger popup in calling code
+        }
+
+        // Case 4: Neither is allowed
+        else {
+          console.log('SHC: No payment methods allowed');
           return "Pre Payment";
         }
       }
@@ -3435,7 +3488,7 @@ function Cart() {
       return "Pre Payment";
     } catch (error) {
       console.error("Error determining payment method for SHC:", error);
-      return "Pre Payment";
+      return "Pre Payment"; // Default fallback
     }
   };
 
@@ -3595,7 +3648,7 @@ function Cart() {
     <Sidebar
       title={t("Your Cart")}
       dir={t("direction")}
-      handleGoToCart={() => {}}
+      handleGoToCart={() => { }}
     >
       <div className="cart-header">
         <div className="delivery-info">
@@ -3636,9 +3689,8 @@ function Cart() {
               return (
                 <div
                   key={category.category}
-                  className={`category-section ${
-                    isEntityDisabled ? "disabled-section" : ""
-                  }`}
+                  className={`category-section ${isEntityDisabled ? "disabled-section" : ""
+                    }`}
                 >
                   <div
                     className="category-header"
@@ -3664,10 +3716,10 @@ function Cart() {
                     style={
                       isEntityDisabled
                         ? {
-                            cursor: "not-allowed",
-                            opacity: 0.6,
-                            backgroundColor: "#f5f5f5",
-                          }
+                          cursor: "not-allowed",
+                          opacity: 0.6,
+                          backgroundColor: "#f5f5f5",
+                        }
                         : { cursor: "pointer" }
                     }
                   >
@@ -3756,7 +3808,7 @@ function Cart() {
                                 (entity.toLowerCase() ===
                                   Constants.ENTITY.VMCO.toLowerCase() ||
                                   entity.toLowerCase() ===
-                                    Constants.ENTITY.SHC.toLowerCase())
+                                  Constants.ENTITY.SHC.toLowerCase())
                               ) {
                                 // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
                                 await handlePlaceOrder(
@@ -3765,57 +3817,7 @@ function Cart() {
                                   null
                                 );
                               } else {
-                                let categoryTotal = 0;
-                                category.items.forEach((item) => {
-                                  const baseAmount =
-                                    Number(item.price) *
-                                    Number(
-                                      quantities[item.id] || item.quantity || 1
-                                    );
-                                  const vatPercentage =
-                                    Number(item.vatPercentage) || 0;
-                                  const vatAmount =
-                                    (baseAmount * vatPercentage) / 100;
-                                  const totalAmount = baseAmount + vatAmount;
-                                  categoryTotal += totalAmount;
-                                });
-
-                                const isCreditAllowed =
-                                  await isCreditPaymentAllowed(
-                                    selectedCustomerId,
-                                    entity
-                                  );
-                                if (isCreditAllowed) {
-                                  const isBalanceValid =
-                                    await validateCreditBalance(
-                                      selectedCustomerId,
-                                      categoryTotal,
-                                      entity
-                                    );
-                                  if (isBalanceValid) {
-                                    await handlePlaceOrder(
-                                      category.items,
-                                      category.category,
-                                      "Credit"
-                                    );
-                                  }
-                                } else {
-                                  // COD limit logic for non-credit entities
-                                  const codLimit = await getCODLimit(
-                                    selectedCustomerId
-                                  );
-                                  if (categoryTotal >= codLimit) {
-                                    // Place order directly with Pre Payment
-                                    await handlePlaceOrder(
-                                      category.items,
-                                      category.category,
-                                      "Pre Payment"
-                                    );
-                                  } else {
-                                    // Show payment method popup (COD/Pre Payment)
-                                    setShowPaymentPopup(true);
-                                  }
-                                }
+                                await handlePlaceOrder(category.items, category.category, null);
                               }
                             } finally {
                               // Remove category-specific loading state
@@ -3908,19 +3910,19 @@ function Cart() {
                                   {t("Net Amount:")}{" "}
                                   {(
                                     Number(item.price) *
-                                      Number(
-                                        quantities[item.id] ||
-                                          item.quantity ||
-                                          1
-                                      ) +
+                                    Number(
+                                      quantities[item.id] ||
+                                      item.quantity ||
+                                      1
+                                    ) +
                                     ((Number(item.price) *
                                       Number(
                                         quantities[item.id] ||
-                                          item.quantity ||
-                                          1
+                                        item.quantity ||
+                                        1
                                       )) /
                                       100) *
-                                      Number(item.vatPercentage)
+                                    Number(item.vatPercentage)
                                   ).toFixed(2)}{" "}
                                   {t("SAR")}
                                 </span>
@@ -4004,19 +4006,19 @@ function Cart() {
                                   {t("Net Amount:")}{" "}
                                   {(
                                     Number(item.price) *
-                                      Number(
-                                        quantities[item.id] ||
-                                          item.quantity ||
-                                          1
-                                      ) +
+                                    Number(
+                                      quantities[item.id] ||
+                                      item.quantity ||
+                                      1
+                                    ) +
                                     ((Number(item.price) *
                                       Number(
                                         quantities[item.id] ||
-                                          item.quantity ||
-                                          1
+                                        item.quantity ||
+                                        1
                                       )) /
                                       100) *
-                                      Number(item.vatPercentage)
+                                    Number(item.vatPercentage)
                                   ).toFixed(2)}{" "}
                                   {t("SAR")}
                                 </span>
@@ -4116,7 +4118,7 @@ function Cart() {
                                   (entity.toLowerCase() ===
                                     Constants.ENTITY.VMCO.toLowerCase() ||
                                     entity.toLowerCase() ===
-                                      Constants.ENTITY.SHC.toLowerCase())
+                                    Constants.ENTITY.SHC.toLowerCase())
                                 ) {
                                   // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
                                   handlePlaceOrder(
@@ -4125,60 +4127,9 @@ function Cart() {
                                     null
                                   );
                                 } else {
-                                  let categoryTotal = 0;
-                                  category.items.forEach((item) => {
-                                    const baseAmount =
-                                      Number(item.price) *
-                                      Number(
-                                        quantities[item.id] ||
-                                          item.quantity ||
-                                          1
-                                      );
-                                    const vatPercentage =
-                                      Number(item.vatPercentage) || 0;
-                                    const vatAmount =
-                                      (baseAmount * vatPercentage) / 100;
-                                    const totalAmount = baseAmount + vatAmount;
-                                    categoryTotal += totalAmount;
-                                  });
-
-                                  const isCreditAllowed =
-                                    await isCreditPaymentAllowed(
-                                      selectedCustomerId,
-                                      entity
-                                    );
-                                  if (isCreditAllowed) {
-                                    const isBalanceValid =
-                                      await validateCreditBalance(
-                                        selectedCustomerId,
-                                        categoryTotal,
-                                        entity
-                                      );
-                                    if (isBalanceValid) {
-                                      handlePlaceOrder(
-                                        category.items,
-                                        category.category,
-                                        "Credit"
-                                      );
-                                    }
-                                  } else {
-                                    // COD limit logic for non-credit entities
-                                    const codLimit = await getCODLimit(
-                                      selectedCustomerId
-                                    );
-                                    if (categoryTotal >= codLimit) {
-                                      // Place order directly with Pre Payment
-                                      handlePlaceOrder(
-                                        category.items,
-                                        category.category,
-                                        "Pre Payment"
-                                      );
-                                    } else {
-                                      // Show payment method popup (COD/Pre Payment)
-                                      setShowPaymentPopup(true);
-                                    }
-                                  }
+                                  handlePlaceOrder(category.items, category.category, null);
                                 }
+
                               }}
                               disabled={
                                 isPlacingOrder ||
@@ -4186,7 +4137,7 @@ function Cart() {
                               }
                             >
                               {isPlacingOrder ||
-                              processingCategories.has(category.category)
+                                processingCategories.has(category.category)
                                 ? t("Processing...")
                                 : t("Place Order")}
                             </button>
