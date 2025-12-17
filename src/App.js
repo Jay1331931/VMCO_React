@@ -62,9 +62,10 @@ App.addListener('backButton', () => {
 
   if (canGoBack) {
     window.history.back();
-  } else {
-    App.exitApp(); // exit only from root
   }
+  //  else {
+  //   App.exitApp(); // exit only from root
+  // }
 });
 
   useEffect(() => {
@@ -101,6 +102,7 @@ App.addListener('backButton', () => {
   return (
     <Router>
       <Routes>
+       
         {/* <Route path="/" element={<LoginScreen />} /> */}
         <Route path="/" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
         <Route path ="privacy-policy" element={<PrivacyPolicy/>}/>
