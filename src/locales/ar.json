@@ -903,7 +903,8 @@
 "Item Name": "اسم العنصر",
 "Close Ticket": "إغلاق التذكرة",
 "Menu":"قائمة طعام",
-"Bank":"بنك"
+"Bank":"بنك",
+"Only one  entity credit details can be updated at a time":"لا يمكن تحديث بيانات ائتمان إلا لجهة واحدة في كل مرة"
 
 
 
