@@ -264,13 +264,13 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
             <div style="display:flex;align-items:center;">
               <input
                 id="invite-link"
-                class="swal2-input"
+                class=${isMobile ? "swal3-input" : "swal2-input"}
                 style="flex:1;margin:0 8px 0 0;"
                 type="text"
                 value="${result?.data}"
                 readonly
               />
-              <button id="copy-icon" style="padding: ${isMobile ? '5px' : '18px'} ; border-radius: 5px;">${isMobile ? '📋' : "Copy"}</button>
+              <button id="copy-icon" style="padding: ${isMobile ? '3px' : '18px'} ; border-radius: 5px;">${isMobile ? '📋' : "Copy"}</button>
 
             </div>
           `,
@@ -510,12 +510,12 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
             <p>${t("The invite has been sent successfully.")}</p>
             <div style="display:flex;align-items:center;">
               <input  id="invite-link"
-                      class="swal2-input"
+                      class=${isMobile ? "swal3-input" : "swal2-input"}
                       style="flex:1;margin:0 8px 0 0;"
                       type="text"
                       value="${res.data}"
                       readonly />
- <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+ <button id="copy-icon" style="padding: ${isMobile ? '3px' : '18px'} ; border-radius: 5px;">${isMobile ? '📋' : "Copy"}</button>
 
             </div>
           `,
