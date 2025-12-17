@@ -5052,16 +5052,13 @@ function OrderDetails() {
                                       <div className="product-meta">
                                         <p>
                                           {t("Unit Price: ")}
-                                          <strong>
+                                          <span style={{fontWeight:"460"}}>
                                             {Number(item.unitPrice || item.price || 0).toFixed(2)}{" "}
                                             {t("SAR")}
-                                          </strong>
+                                          </span>
                                         </p>
-                                        <p>
-                                          {t("Quantity")}: <strong>{item.quantity || 0}</strong>
-                                        </p>
-                                        <p>
-                                          {t("VAT: ")}<strong>{Number(item.vatPercentage)}%</strong>
+                                        <p style={{marginBottom:"12px"}}>
+                                          {t("Quantity")}: <span style={{fontWeight:"460"}}>{item.quantity || 0}</span>
                                         </p>
                                         <div
                                           className="quantity-controller"
@@ -5144,67 +5141,42 @@ function OrderDetails() {
                                           {InventoryLoading && loadingProductId === item.id && <LoadingSpinner />}
                                         </div>
                                       </div>
-
-                                      {/* Optional Quantity Controller (if interactive) */}
-                                      {/* {typeof handleQuantityChange === "function" && (
-                <QuantityController
-                  itemId={item.id}
-                  quantity={quantities[item.id] || item.quantity || 0}
-                  onQuantityChange={handleQuantityChange}
-                  onInputChange={handleQuantityInputChange}
-                  stopPropagation={true}
-                  minQuantity={Number(item.moq) || 0}
-                  moq={Number(item.moq) || 0}
-                />
-              )} */}
                                     </div>
-
                                   </div>
                                   <div style={{ marginBottom: 10 }}>
-                                    <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
+                                    <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
                                   </div>
                                   {/* Price Summary */}
-                                  <div className="item-price-panel">
-                                    <span className="item-price" style={{ fontSize: 13 }}>
-                                      {(Number(item.unitPrice || item.price || 0) *
-                                        Number(item.quantity || 1)
-                                      ).toFixed(2)}{" "}
-                                      <span className="sar-label">{t("SAR")}</span>
-                                    </span>
+                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px" }} >
+                                    <div className="item-price-panel" >
+                                      <span className="tax-row" style={{ fontSize: 13 }} >
+                                        {t("VAT: ")}
+                                        {Number(item.vatPercentage)}%
+                                      </span>
+                                      {formData.entity.toLocaleLowerCase()===Constants.ENTITY.VMCO.toLocaleLowerCase() &&
+                                      <span className="line-discount-row" style={{ fontSize: 13 }} >
+                                        {t("Discount: ")}
+                                        {Number(item.lineDiscount)}%
+                                      </span>}
 
-                                    <span className="tax-row" style={{ fontSize: 13 }} >
-                                      {t("VAT: ")}
-                                      {Number(item.vatPercentage)}%
-                                    </span>
-
-                                    <span className="item-total-price" style={{ fontSize: 13 }}>
-                                      {t("Net Amount:")}{" "}
-                                      {(
-                                        Number(item.unitPrice || item.price || 0) *
-                                        Number(item.quantity || 1) +
-                                        ((Number(item.unitPrice || item.price || 0) *
-                                          Number(item.quantity || 1) *
-                                          Number(item.vatPercentage)) /
-                                          100)
-                                      ).toFixed(2)}{" "}
-                                      {t("SAR")}
-                                    </span>
-
-                                    {/* Remove Button */}
-                                    {/* <button
-                className="remove-btn"
-                onClick={() => handleRemoveItem(item)}
-                disabled={processingCategories?.has?.(item.category)}
-              >
-                {processingCategories?.has?.(item.category)
-                  ? t("Processing...")
-                  : t("Remove item")}
-              </button> */}
+                                      <span className="item-total-price" style={{ fontSize: 13 }}>
+                                        {t("Net Amount:")}{" "}
+                                        {(
+                                          Number(item.unitPrice || item.price || 0) *
+                                          Number(item.quantity || 1) +
+                                          ((Number(item.unitPrice || item.price || 0) *
+                                            Number(item.quantity || 1) *
+                                            Number(item.vatPercentage)) /
+                                            100)
+                                        ).toFixed(2)}{" "}
+                                        {t("SAR")}
+                                      </span>
+                                    </div>
                                     {isV("deleteButton") &&
                                       isE("deleteCol") && (
                                         <button
                                           className="order-action-btn reject"
-                                          style={{ padding: "2px 2px", fontSize: 12, width: "90px" }}
+                                          style={{ marginTop: "20px", marginLeft: "40px", fontSize: 12, width: "90px", justifyContent: "flex-end" }}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleDeleteProductRow(idx);
@@ -5219,6 +5191,7 @@ function OrderDetails() {
                                           {t("Delete")}
                                         </button>)}
                                   </div>
+                                  <div style={{ borderBottom: "1.5px solid #ccc", marginBottom: 10 }}></div>
                                 </>
                               ))}
                             </div>
