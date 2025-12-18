@@ -94,36 +94,36 @@ function Maintenance() {
   }, []);
 
   const storageKey = `${pageName}_${role}_columns`;
-const [showHeader, setShowHeader] = useState(true);
-const dragStartY = useRef(0);
+  const [showHeader, setShowHeader] = useState(true);
+  const dragStartY = useRef(0);
 
-useEffect(() => {
-  const handleTouchStart = (e) => {
-    dragStartY.current = e.touches[0].clientY;
-  };
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      dragStartY.current = e.touches[0].clientY;
+    };
 
-  const handleTouchMove = (e) => {
-    const currentY = e.touches[0].clientY;
+    const handleTouchMove = (e) => {
+      const currentY = e.touches[0].clientY;
 
-    // Drag up → hide header
-    if (currentY < dragStartY.current - 15) {
-      setShowHeader(false);
-    }
+      // Drag up → hide header
+      if (currentY < dragStartY.current - 15) {
+        setShowHeader(false);
+      }
 
-    // Drag down → show header
-    if (currentY > dragStartY.current + 15) {
-      setShowHeader(true);
-    }
-  };
+      // Drag down → show header
+      if (currentY > dragStartY.current + 15) {
+        setShowHeader(true);
+      }
+    };
 
-  window.addEventListener("touchstart", handleTouchStart);
-  window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchmove", handleTouchMove);
 
-  return () => {
-    window.removeEventListener("touchstart", handleTouchStart);
-    window.removeEventListener("touchmove", handleTouchMove);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
   useEffect(() => {
     const savedModel = localStorage.getItem(storageKey);
     if (savedModel) {
@@ -379,15 +379,16 @@ useEffect(() => {
   };
 
   const maintenanceColumns = [
-    { field: "requestId", headerName: t("Request ID"), width: 100 ,  searchable: true,},
-    { field: "erpCustomerId", headerName: t("Customer ID"), width: 120 ,  searchable: true,},
-    { field: "companyNameEn", headerName: t("Customer"), width: 150 ,  searchable: false,},
-    { field: "brandNameEn", headerName: t("Brand Name"), width: 140,  searchable: false, },
-    { field: "branchNameEn", headerName: t("Branch Name"), width: 140 ,  searchable: false,},
-    { field: "branchCity", headerName: t("Branch City"), width: 120 ,  searchable: true},
-    { field: "assignedSalesExecutive", headerName: t("Assigned Sales Executive"), width: 160, searchable: false,},
-    { field: "issueType", headerName: t("Issue Type"), width: 120 ,searchable:true},
-    { field: "createdAt", headerName: t("Created Date"), width: 120, 
+    { field: "requestId", headerName: t("Request ID"), width: 100, searchable: true, },
+    { field: "erpCustomerId", headerName: t("Customer ID"), width: 120, searchable: true, },
+    { field: "companyNameEn", headerName: t("Customer"), width: 150, searchable: false, },
+    { field: "brandNameEn", headerName: t("Brand Name"), width: 140, searchable: false, },
+    { field: "branchNameEn", headerName: t("Branch Name"), width: 140, searchable: false, },
+    { field: "branchCity", headerName: t("Branch City"), width: 120, searchable: true },
+    { field: "assignedSalesExecutive", headerName: t("Assigned Sales Executive"), width: 160, searchable: false, },
+    { field: "issueType", headerName: t("Issue Type"), width: 120, searchable: true },
+    {
+      field: "createdAt", headerName: t("Created Date"), width: 120,
       renderCell: (params) => (
         <span>
           {params.row?.createdAt
@@ -398,7 +399,8 @@ useEffect(() => {
     },
     { field: "createdByUsername", headerName: t("Created By"), width: 120 },
     { field: "assignedTo", headerName: t("Assigned To"), width: 120 },
-    { field: "status", headerName: t("Status"), width: 110,
+    {
+      field: "status", headerName: t("Status"), width: 110,
       cellClassName: (params) => getStatusClass(params.value),
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{params.value}</label>
@@ -498,13 +500,13 @@ useEffect(() => {
               <>
                 <div
                   className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
-                  // style={{
-                  //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
-                  //   position: "sticky",
-                  //   zIndex: 20,
-                  //   transition: "top 0.3s ease",
-                  //   background: "#fff",
-                  // }}
+                // style={{
+                //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                //   position: "sticky",
+                //   zIndex: 20,
+                //   transition: "top 0.3s ease",
+                //   background: "#fff",
+                // }}
                 >
                   <TableMobile
                     columns={visibleColumns}
@@ -638,7 +640,9 @@ useEffect(() => {
         ) : (
           <div className="table-container">
             {loading ? (
-              <LoadingSpinner />
+              <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                <LoadingSpinner size="medium" />
+              </div>
             ) : error ? (
               <div className="error-message">{error}</div>
             ) : (
@@ -676,7 +680,7 @@ useEffect(() => {
                     onColumnVisibilityChange: setColumnVisibilityModel,
                     columns: filteredData,
                     filters: filters,
-                    
+
                     columnVisibilityModel: columnVisibilityModel,
                     searchPlaceholder: "Search maintenance tickets...",
                     showColumnVisibility: true,

@@ -762,62 +762,62 @@ function ApprovalHistory() {
     };
 
     const handleExportData = async () => {
-    try {
-        const params = new URLSearchParams({
-            page: page,
-            pageSize: pageSize,
-            search: searchQuery,
-            sortBy: sortModel[0]?.field || 'id',
-            sortOrder: sortModel[0]?.sort || 'asc',
-            filters: JSON.stringify(filters),
-            isdownload: 'true' 
-        });
+        try {
+            const params = new URLSearchParams({
+                page: page,
+                pageSize: pageSize,
+                search: searchQuery,
+                sortBy: sortModel[0]?.field || 'id',
+                sortOrder: sortModel[0]?.sort || 'asc',
+                filters: JSON.stringify(filters),
+                isdownload: 'true'
+            });
 
-        const apiUrl = `${API_BASE_URL}/workflow-instance/get-approval-history?${params.toString()}`;
-        
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-        });
+            const apiUrl = `${API_BASE_URL}/workflow-instance/get-approval-history?${params.toString()}`;
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                logout();
-                navigate(user?.userType === 'customer' ? '/login' : '/login-employee');
-                return;
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    logout();
+                    navigate(user?.userType === 'customer' ? '/login' : '/login-employee');
+                    return;
+                }
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
 
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = 'approval_history.xlsx';
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (filenameMatch && filenameMatch[1]) {
-                filename = filenameMatch[1].replace(/['"]/g, '');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = 'approval_history.xlsx';
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (filenameMatch && filenameMatch[1]) {
+                    filename = filenameMatch[1].replace(/['"]/g, '');
+                }
             }
+
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            console.log('Excel file downloaded successfully');
+
+        } catch (error) {
+            console.error('Error downloading approval history:', error);
         }
-        
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        console.log('Excel file downloaded successfully');
-
-    } catch (error) {
-        console.error('Error downloading approval history:', error);
-    }
-};
+    };
 
 
 
@@ -827,7 +827,9 @@ function ApprovalHistory() {
                 {isMobile ? (
                     <div className="table-container">
                         {loading ? (
-                            <LoadingSpinner />
+                            <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                                <LoadingSpinner size="medium" />
+                            </div>
                         ) : error ? (
                             <div className="error-message">{error}</div>
                         ) : (
@@ -842,7 +844,9 @@ function ApprovalHistory() {
                 ) : (
                     <div className="table-container">
                         {loading ? (
-                            <LoadingSpinner />
+                            <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                                <LoadingSpinner size="medium" />
+                            </div>
                         ) : error ? (
                             <div className="error-message">{error}</div>
                         ) : (

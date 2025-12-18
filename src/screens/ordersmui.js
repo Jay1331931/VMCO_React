@@ -1032,8 +1032,8 @@ function Orders() {
         });
       } else if (!email && !copyUrl && data?.details?.url) {
         // window.location.replace(data.details.url);
-          const extracted = data?.details?.url?.split('/payment-options')[1] 
-                navigate(`/payment-options${extracted}`)
+        const extracted = data?.details?.url?.split('/payment-options')[1]
+        navigate(`/payment-options${extracted}`)
       }
     } catch (error) {
       console.error("Error generating payment link:", error);
@@ -1499,7 +1499,7 @@ function Orders() {
             params?.row?.status?.toLowerCase() !== "rejected" &&
             params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
             params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
-            (!(params?.row?.paymentStatus?.toLowerCase() == "paid" ||  params?.row?.paymentStatus?.toLowerCase() == "under review")) &&
+            (!(params?.row?.paymentStatus?.toLowerCase() == "paid" || params?.row?.paymentStatus?.toLowerCase() == "under review")) &&
             ((params?.row?.entity.toLowerCase() ===
               Constants.ENTITY.VMCO.toLowerCase() &&
               params?.row?.status?.toLowerCase() === "approved") ||
@@ -2491,8 +2491,8 @@ function Orders() {
 
   return (
     <Sidebar title={t("Orders")}>
-      
-     <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin" ) ? "has-filter" : ""}`}
+
+      <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin") ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
       >
         {user?.userType.toLowerCase() === "employee" && (
@@ -2526,7 +2526,7 @@ function Orders() {
                   setSubCategoryFilter("");
                   setSubCategoryOptions([]);
                 }}
-                variant="category"
+                variant={isMobile ? 'mobile' : 'pc'}
               />
             </div>
           </div>
@@ -2797,7 +2797,9 @@ function Orders() {
         ) : (
           <div className="table-container">
             {loading ? (
-              <LoadingSpinner />
+              <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                <LoadingSpinner size="medium" />
+              </div>
             ) : error ? (
               <div className="error-message">{error}</div>
             ) : (

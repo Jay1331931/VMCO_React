@@ -2485,7 +2485,7 @@ function CustomerDetails() {
   return (
     <Sidebar title={t("Company")} MenuName={t("/customers")}>
       {isLoading && (
-        <div className="loading-container">
+        <div className="loading-container" style= {{position: "absolute", top: "50%", left: "50%"}}>
           <LoadingSpinner size="medium" />
         </div>
       )}

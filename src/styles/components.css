@@ -998,9 +998,6 @@ body.catalog-page #root {
   .item-image {
     margin-bottom: 8px;
   }
-  .item-price-panel {
-    align-items: flex-start;
-  }
   .checkout-btn {
     width: 100%;
     padding: 5px 18px;
@@ -1017,8 +1014,9 @@ body.catalog-page #root {
     margin-left: 0;
   }
   .loading-container {
-    align-items: center;
-    justify-content: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
   }
   .logs-header {
     flex-direction: column;
@@ -1306,8 +1304,9 @@ body.catalog-page #root {
     flex-direction: column;
   }
   .item-price-panel {
-    flex-direction: row;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     /* border-bottom: 1px solid #f0f0f0; */
   }
   .checkout-row {

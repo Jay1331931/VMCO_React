@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "../src/components/Sidebar";
-import Orders from "./screens/orders";
 import OrdersMui from "./screens/ordersmui";
-import Customers from "./screens/customers";
 import Catalog from "./screens/catalog";
-import Support from "./screens/support";
 import SupportMui from "./screens/supportmui";
-import Maintenance from "./screens/maintenance";
 import MaintenanceMui from "./screens/maintenancemui";
 import Cart from "./screens/cart";
 import CustomersDetails from "./screens/customersDetails";
@@ -16,7 +12,6 @@ import CustomersOnboarding from "./screens/customersOnboarding";
 import Checkout from "./screens/checkout";
 import ForgotPassword from "./components/ForgotPassword";
 import EmployeeLogin from "./screens/employeeLogin";
-import OrderDetails from "./screens/orderDetails";
 import OrderDetailsMui from "./screens/orderDetailsmui";
 import SupportDetails from "./screens/supportDetails";
 import MaintenanceDetails from "./screens/maintenanceDetails";
@@ -62,9 +57,10 @@ App.addListener('backButton', () => {
 
   if (canGoBack) {
     window.history.back();
-  } else {
-    App.exitApp(); // exit only from root
   }
+  //  else {
+  //   App.exitApp(); // exit only from root
+  // }
 });
 
   useEffect(() => {
@@ -101,6 +97,7 @@ App.addListener('backButton', () => {
   return (
     <Router>
       <Routes>
+       
         {/* <Route path="/" element={<LoginScreen />} /> */}
         <Route path="/" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
         <Route path ="privacy-policy" element={<PrivacyPolicy/>}/>
