@@ -374,7 +374,7 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
         navigate("/admin/upload");
         break;
       case "Dashboard":
-        navigate("/login");
+        navigate("/login",{replace:true});
         break;
       // case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: fetchApprovedCustomer(user)}}); break;
       case "Company":
@@ -433,9 +433,9 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
 
     // Logout successful, redirect to login page
     if (userLoggedOut?.userType === "employee") {
-      navigate("/login/employee");
+      navigate("/login/employee",{replace:true});
     } else {
-      navigate("/login");
+      navigate("/login",{replace:true});
     }
   };
 

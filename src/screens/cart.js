@@ -377,7 +377,7 @@ function Cart() {
     if (loading) return;
     if (!user) {
       logout();
-      navigate("/login");
+      navigate("/login",{replace:true});
       return;
     }
     // Only fetch cart items if we have user data and required IDs
@@ -800,7 +800,7 @@ function Cart() {
     Swal.fire({
       icon: icon,
       title: title,
-      text: `${messageText}. ${paymentText}`,
+      text: `${messageText}`,
       confirmButtonText: t("OK"),
     }).then(() => {
       if (shouldDeleteCart) {
@@ -1814,7 +1814,7 @@ function Cart() {
         if (nonMachineProducts.length > 0) {
           console.log("Checking if user is credit user for VMCO consumables");
 
-          // ✅ FIRST: Calculate total amount for consumables to validate balance
+          //  FIRST: Calculate total amount for consumables to validate balance
           let consumablesTotalAmount = 0;
           nonMachineProducts.forEach((item) => {
             const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
@@ -1825,42 +1825,41 @@ function Cart() {
           });
 
           // ✅ THEN: Check if credit payment is allowed for VMCO entity with totalAmount
-          const creditCheck = await isCreditPaymentAllowed(selectedCustomerId, entity, consumablesTotalAmount);
+          const creditCheck = await isCreditPaymentAllowed(selectedCustomerId, entity, consumablesTotalAmount)
 
-          if (creditCheck.allowed === true && creditCheck.paymentMethod === 'Credit') {
+          if (creditCheck.allowed === true && creditCheck.paymentMethod === "Credit") {
             // Validate credit balance
-            const isBalanceValid = await validateCreditBalance(
-              selectedCustomerId,
-              consumablesTotalAmount,
-              entity
-            );
-
+            const isBalanceValid = await validateCreditBalance(selectedCustomerId, consumablesTotalAmount, entity)
             if (isBalanceValid) {
-              await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit");
+              await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit")
             } else {
               // Insufficient balance - show payment popup
-              console.log("VMCO user is credit user but has insufficient balance, showing payment popup");
-              setPendingOrderCategory(categoryName);
-              setPendingOrderItems(categoryItems);
-              setShowPaymentPopup(true);
-              return;
+              console.log("VMCO user is credit user but has insufficient balance, showing payment popup")
+              setPendingOrderCategory(categoryName)
+              setPendingOrderItems(categoryItems)
+              setShowPaymentPopup(true)
+              return
             }
-          } else if (creditCheck.paymentMethod === 'Pre Payment') {
+          } else if (creditCheck.paymentMethod === "Pre Payment") {
             // Automatically use Pre Payment
-            console.log("VMCO: Pre Payment is the only option, proceeding directly");
-            await handleVMCOOrderProcessing(categoryItems, categoryName, "Pre Payment");
-          } else if (creditCheck.allowed === 'Payment popup') {
+            console.log("VMCO: Pre Payment is the only option, proceeding directly")
+            await handleVMCOOrderProcessing(categoryItems, categoryName, "Pre Payment")
+          } else if (creditCheck.paymentMethod === "Cash on Delivery") {  // ← ADD THIS
+            // Automatically use COD
+            console.log("VMCO: Cash on Delivery is the only option, proceeding directly")
+            await handleVMCOOrderProcessing(categoryItems, categoryName, "Cash on Delivery")
+          } else if (creditCheck.allowed === "Payment popup") {
             // Show payment popup
-            console.log("VMCO: Multiple payment options available, showing popup");
-            setPendingOrderCategory(categoryName);
-            setPendingOrderItems(categoryItems);
-            setShowPaymentPopup(true);
-            return;
+            console.log("VMCO: Multiple payment options available, showing popup")
+            setPendingOrderCategory(categoryName)
+            setPendingOrderItems(categoryItems)
+            setShowPaymentPopup(true)
+            return
           } else {
             // Not allowed
-            console.log("VMCO: No payment methods available");
-            setIsPlacingOrder(false);
-            return;
+            console.log("VMCO: No payment methods available")
+            setIsPlacingOrder(false)
+            return
           }
         } else if (machineProducts.length > 0) {
           // If only machines, proceed directly
@@ -2921,7 +2920,7 @@ function Cart() {
     }
   };
 
-  const isCreditPaymentAllowed = async (customerId, entity = null, totalAmount = 0) => {
+  const isCreditPaymentAllowed = async (customerId, entity, totalAmount) => {
     try {
       const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
         method: "GET",
@@ -3700,7 +3699,7 @@ function Cart() {
                         const timeDisplay = coolingInfo
                           ? coolingInfo.toTime
                           : "later";
-                           const todayUTC = new Date().toISOString().split("T")[0];
+                        const todayUTC = new Date().toISOString().split("T")[0];
                         const utcDateTime = `${todayUTC}T${coolingInfo?.toTime}Z`;
 
                         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;

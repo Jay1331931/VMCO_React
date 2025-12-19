@@ -151,7 +151,7 @@ function CustomersOnboarding() {
           console.log(response);
           console.log(result);
           if (result?.data?.registered) {
-            navigate("/login");
+            navigate("/login",{replace:true});
             return;
           }
           if (result.status === "Ok") {
@@ -392,7 +392,7 @@ function CustomersOnboarding() {
   };
 
   const handleLogin = () => {
-    navigate("/login");
+    navigate("/login",{replace:true});
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -606,7 +606,7 @@ function CustomersOnboarding() {
             if (result.status === "Ok") {
               setIsRegistered(true);
             }
-            navigate("/login");
+            navigate("/login",{replace:true});
           } catch (error) {
             console.error("Error during registration:", error);
           }
@@ -626,7 +626,7 @@ function CustomersOnboarding() {
             );
             const result = await response.json();
             console.log(result);
-            navigate("/login");
+            navigate("/login",{replace:true});
           } catch (error) {
             console.error("Error during registration:", error);
           }

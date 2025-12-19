@@ -89,7 +89,7 @@ if (!isLogin){
             data?.data?.roles[0].toLowerCase() ===
               Constants.ROLES.SUPER_ADMIN.toLowerCase())
         ) {
-          navigate("/customers");
+          navigate("/customers",{replace:true});
         } else if (
           data?.data?.userType?.toLowerCase() === "employee" &&
           (data?.data?.designation?.toLowerCase() ===
@@ -99,21 +99,21 @@ if (!isLogin){
             data?.data?.designation?.toLowerCase() ===
               Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())
         ) {
-          navigate("/maintenance");
+          navigate("/maintenance",{replace:true});
         } else if (
           data?.data?.userType?.toLowerCase() === "employee" &&
           data?.data?.designation?.toLowerCase() ===
             Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase()
         ) {
-          navigate("/bankTransactions");
+          navigate("/bankTransactions",{replace:true});
         }
         else if ( data?.data?.userType?.toLowerCase() === "employee" &&
           data?.data?.designation?.toLowerCase() ===
             Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
         ) {
-          navigate("/orders");
+          navigate("/orders",{replace:true});
         } else {
-          navigate("/catalog");
+          navigate("/catalog",{replace:true});
         }
 
         setMessage(data.message);
@@ -154,11 +154,11 @@ if (!isLogin){
   };
   const handleNavigation = (e) => {
     e.preventDefault();
-    navigate("/login/employee");
+    navigate("/login/employee",{replace:true});
   };
    const handleCustLogin = (e) => {
     e.preventDefault();
-    navigate("/login");
+    navigate("/login",{replace:true});
   };
   return (
     <div className="login-screen">
