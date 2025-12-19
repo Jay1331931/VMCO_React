@@ -34,6 +34,16 @@ const Constants = {
         DAR: 'DAR Company',
         VMCO:'Vending Machine Company'
     },
+    TAB_IMAGES: {
+       VMCO_MACHINES: "VmcoMachinesTabImage.jpg",
+        VMCO_CONSUMABLES: "VmcoConsumablesTabImage.jpg",
+        SHC: "ShcTabImage.webp",
+        GMTC: "GmtcTabImage.jpg",
+        NAQI: "NaqiTabImage.jpg",
+        DAR: "DarTabImage.jpeg",
+        SPECIAL_PRODUCTS:"SpecialproductsTabImage.webp",
+        FAVORITES: "FavoritesTabImage.jpg"
+    },
     FAVORITES: 'Favorites',
     CATEGORY:{
         VMCO_MACHINES: 'VMCO Machines',

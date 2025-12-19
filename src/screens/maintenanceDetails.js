@@ -449,7 +449,7 @@ function MaintenanceDetails() {
   if (!user) {
     console.log("$$$$$$$$$$$ logging out");
     logout();
-    navigate("/login");
+    navigate("/login",{replace:true});
     return null;
   }
 
@@ -1172,15 +1172,16 @@ function MaintenanceDetails() {
           ...prev,
           warrantyEndDate: formatDateInput(rawDate, "date") || "",
         }));
-      } else {
-        Swal.fire({
-          title: t("Error"),
-          text: t(data?.message) || t("Please enter erpSerialNo Correct"),
-          icon: "warning",
-          confirmButtonText: t("OK"),
-          confirmButtonColor: "#3085d6"
-        });
-      }
+      } 
+      // else {
+      //   Swal.fire({
+      //     title: t("Error"),
+      //     text: t(data?.message) || t("Please enter erpSerialNo Correct"),
+      //     icon: "warning",
+      //     confirmButtonText: t("OK"),
+      //     confirmButtonColor: "#3085d6"
+      //   });
+      // }
     } catch (error) {
       console.error("Error handling serial number change:", error);
     }
@@ -1391,7 +1392,7 @@ function MaintenanceDetails() {
             )}
             {isV('maintenanceCharges') && (
               <div className='maintenance-details-field'>
-                <label>{t("Maintenance Charges")}</label>
+                <label>{t("Maintenance Charges With VAT")}</label>
                 <input
                   id='maintenanceCharges'
                   name='maintenanceCharges'

@@ -442,48 +442,90 @@ function OrderDetails() {
           "Failed to fetch credit eligibility:",
           creditRes.statusText
         );
-        return false;
+        return { allowed: false };
       }
       const creditResult = await creditRes.json();
       const isCreditUser =
         creditResult?.data?.methodDetails?.credit?.[entity]?.isAllowed;
+
       if (!isCreditUser) {
-        let codLimit = creditResult?.data?.methodDetails?.COD?.limit || 0;
-        if (totalAmount > codLimit) {
-          console.log(`Total amount exceeds COD limit.`);
-          return false;
-        } else {
-          console.log(
-            `Total amount is within COD limit. Showing payment popup.`
-          );
+        // User is not a credit user, check COD and Pre Payment options
+        const isCODAllowed = creditResult?.data?.methodDetails?.COD?.isAllowed;
+        const isPrePaymentAllowed = creditResult?.data?.methodDetails?.prePayment?.isAllowed;
+
+        console.log('Payment method checks:', {
+          isCODAllowed,
+          isPrePaymentAllowed
+        });
+
+        // Case 1: Only COD is allowed
+        if (isCODAllowed && !isPrePaymentAllowed) {
+          const codLimit = creditResult?.data?.methodDetails?.COD?.limit || 0;
+          if (totalAmount > codLimit) {
+            console.log(`Total amount exceeds COD limit.`);
+            Swal.fire({
+              icon: "warning",
+              title: t("COD Limit Exceeded"),
+              text: t(`The total amount exceeds the COD limit of ${codLimit}.`),
+            });
+            setSaving(false);
+            return { allowed: false };
+          } else {
+            console.log(`Total amount is within COD limit. Setting COD as payment method.`);
+            return { allowed: true, paymentMethod: 'Cash on Delivery' };
+          }
+        }
+
+        // Case 2: Only Pre Payment is allowed
+        else if (isPrePaymentAllowed && !isCODAllowed) {
+          console.log('Only Pre Payment allowed, setting payment method automatically');
+          return { allowed: true, paymentMethod: 'Pre Payment' };
+        }
+
+        // Case 3: Both COD and Pre Payment are allowed
+        else if (isCODAllowed && isPrePaymentAllowed) {
+          console.log('Both payment methods allowed, showing payment popup');
           setShowPaymentPopup(true);
           setPendingSaveAction(true);
-          return "Payment popup"; // Indicate that payment popup should be shown
+          return { allowed: 'Payment popup' };
+        }
+
+        // Case 4: Neither is allowed
+        else {
+          console.log('No payment methods allowed');
+          Swal.fire({
+            icon: "warning",
+            title: t("No Payment Methods Available"),
+            text: t("No valid payment methods are available for this customer."),
+          });
+          setSaving(false);
+          return { allowed: false };
         }
       } else {
+        // User is a credit user
         console.log(
           `Credit is allowed for customer. checking for current balance`
         );
         const currentCreditBalance =
           creditResult?.data?.currentBalance?.[entity] || 0;
-        const netAmountToatl = formData?.products?.reduce((total, item) => {
+        const netAmountTotal = formData?.products?.reduce((total, item) => {
           return total + parseFloat(item.netAmount);
         }, 0);
-        if (netAmountToatl > currentCreditBalance) {
+        if (netAmountTotal > currentCreditBalance) {
           Swal.fire({
             icon: "warning",
-            title: t("Insuffiecient Credit balance"),
+            title: t("Insufficient Credit balance"),
             text: t(`Your credit balance is ${currentCreditBalance}.`),
           });
-          setSaving(false)
-          return "Insufficient balance";
+          setSaving(false);
+          return { allowed: "Insufficient balance" };
         } else {
-          return true;
+          return { allowed: true, paymentMethod: 'Credit' };
         }
       }
     } catch (err) {
       console.error("Error in isCreditPaymentAllowed:", err);
-      return false;
+      return { allowed: false };
     }
   };
 
@@ -670,38 +712,39 @@ function OrderDetails() {
           finalPaymentMethod = "Pre Payment";
         } else {
           const totalAmount = parseFloat(formData.totalAmount);
-          const isCreditAllowed = await isCreditPaymentAllowed(
+          const creditCheck = await isCreditPaymentAllowed(
             formData.customerId,
             formData.entity,
             totalAmount,
             action
           );
 
-          if (isCreditAllowed === "Payment popup") {
+          if (creditCheck.allowed === "Payment popup") {
             setSaving(false);
             return;
-          } else if (isCreditAllowed === false) {
-            finalPaymentMethod = "Pre Payment";
-          } else {
-            finalPaymentMethod = "Credit";
+          } else if (creditCheck.allowed === false) {
+            setSaving(false);
+            return;
+          } else if (creditCheck.paymentMethod) {
+            finalPaymentMethod = creditCheck.paymentMethod;
           }
         }
       } else {
         const totalAmount = parseFloat(formData.totalAmount);
-        const isCreditAllowed = await isCreditPaymentAllowed(
+        const creditCheck = await isCreditPaymentAllowed(
           formData.customerId,
           formData.entity,
           totalAmount,
           action
         );
-
-        if (isCreditAllowed === "Payment popup") {
+        if (creditCheck.allowed === "Payment popup") {
           setSaving(false);
           return;
-        } else if (isCreditAllowed === false) {
-          finalPaymentMethod = "Pre Payment";
-        } else {
-          finalPaymentMethod = "Credit";
+        } else if (creditCheck.allowed === false) {
+          setSaving(false);
+          return;
+        } else if (creditCheck.paymentMethod) {
+          finalPaymentMethod = creditCheck.paymentMethod;
         }
       }
     }
@@ -882,46 +925,44 @@ function OrderDetails() {
             "VMCO entity with non-machine products - determining payment method"
           );
           const totalAmount = parseFloat(formData.totalAmount);
-          const isCreditAllowed = await isCreditPaymentAllowed(
+          const creditCheck = await isCreditPaymentAllowed(
             formData.customerId,
             formData.entity,
             totalAmount,
             action
           );
-          if (isCreditAllowed === "Payment popup") {
+
+          if (creditCheck.allowed === "Payment popup") {
             setSaving(false);
             return;
           }
-          if (isCreditAllowed === "Insufficient balance") {
+          if (creditCheck.allowed === "Insufficient balance") {
             console.log("Credit not allowed - insufficient balance");
             setSaving(false);
             return;
-          } else if (isCreditAllowed === false) {
-            selectedMethod = "Pre Payment";
-          } else {
-            selectedMethod = "Credit"; // Default to Credit if allowed
+          } else if (creditCheck.paymentMethod) {
+            selectedMethod = creditCheck.paymentMethod;
           }
         }
       } else {
         console.log("Other entity - determining payment method");
         const totalAmount = parseFloat(formData.totalAmount);
-        const isCreditAllowed = await isCreditPaymentAllowed(
+        const creditCheck = await isCreditPaymentAllowed(
           formData.customerId,
           formData.entity,
           totalAmount,
           action
         );
-        if (isCreditAllowed === "Payment popup") {
+
+        if (creditCheck.allowed === "Payment popup") {
           setSaving(false);
           return;
-        } else if (isCreditAllowed === "Insufficient balance") {
+        } else if (creditCheck.allowed === "Insufficient balance") {
           console.log("Credit not allowed - insufficient balance");
           setSaving(false);
           return;
-        } else if (!isCreditAllowed) {
-          selectedMethod = "Pre Payment";
-        } else {
-          selectedMethod = "Credit"; // Default to Credit if allowed
+        } else if (creditCheck.paymentMethod) {
+          selectedMethod = creditCheck.paymentMethod;
         }
       }
     }
@@ -2045,64 +2086,123 @@ function OrderDetails() {
           confirmButtonText: t("OK"),
         });
       } else if (copyUrl) {
-        Swal.fire({
-          title: t(`Payment Link`),
-          html: `
-      <div style="display:flex;align-items:center;">
-        <input id="payment-link"
-               class="swal2-input"
-               style="flex:1;margin:0 8px 0 0;"
-               type="text"
-               value="${data.details.url}"
-               readonly />
-        <button id="copyBtn"
-                style="padding:10px 16px; border-radius:5px; background:#32a19f; color:#fff; border:none; cursor:pointer;">
-          Copy
-        </button>
-      </div>
-    `,
-          showConfirmButton: false,
-          showCancelButton: false, // we’ll add our own Close button in footer
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          footer: `
-      <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
-        <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style=" background:#009345">Send Link</button>
-        <button id="closeBtn" class="swal2-cancel swal2-styled">Close</button>
-      </div>
-    `,
-          didOpen: () => {
-            const input = document.getElementById("payment-link");
-            const copyBtn = document.getElementById("copyBtn");
-            const sendLinkBtn = document.getElementById("sendLinkBtn");
-            const closeBtn = document.getElementById("closeBtn");
+ Swal.fire({
+  title: t(`Payment Link`),
+  html: `
+    <div style="display:flex;align-items:center; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+      <input id="payment-link"
+             style="flex:1; border:none; padding:10px 12px; font-size:14px; outline:none;"
+             type="text"
+             value="${data.details.url}"
+             readonly />
+      <button id="copyBtn"
+              style="display:flex; align-items:center; gap:6px; padding:0 12px; height:44px; border:none; border-left:1px solid #ddd; background:#fff; cursor:pointer; transition:all 0.2s; white-space:nowrap;"
+              title="Copy to clipboard">
+        <i class="fas fa-copy" style="font-size:14px; color:#666;"></i>
+        <span id="copyText" style="font-size:14px; color:#666;">Copy</span>
+      </button>
+    </div>
+  `,
+  showConfirmButton: false,
+  showCancelButton: false,
+  allowOutsideClick: false,
+  allowEscapeKey: false,
+  footer: `
+    <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+      <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style="background:#009345; display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-paper-plane" style="font-size:14px;"></i>
+        <span>Send Link</span>
+      </button>
+      <button id="closeBtn" class="swal2-cancel swal2-styled" style="display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-times" style="font-size:14px;"></i>
+        <span>Close</span>
+      </button>
+    </div>
+  `,
+  didOpen: () => {
+    const input = document.getElementById("payment-link");
+    const copyBtn = document.getElementById("copyBtn");
+    const copyIcon = copyBtn.querySelector('i');
+    const copyText = document.getElementById("copyText");
+    const sendLinkBtn = document.getElementById("sendLinkBtn");
+    const closeBtn = document.getElementById("closeBtn");
 
-            // Copy button
-            copyBtn.addEventListener("click", async () => {
-              input.select();
-              input.setSelectionRange(0, 99999); // for mobile
-              await navigator.clipboard.writeText(input.value);
+    // Hover effect
+    copyBtn.addEventListener("mouseenter", () => {
+      copyBtn.style.background = "#f5f5f5";
+      copyIcon.style.color = "#333";
+      copyText.style.color = "#333";
+    });
+    
+    copyBtn.addEventListener("mouseleave", () => {
+      copyBtn.style.background = "#fff";
+      copyIcon.style.color = "#666";
+      copyText.style.color = "#666";
+    });
 
-              copyBtn.textContent = "Copied!";
-              copyBtn.style.background = "#0b4c45";
-            });
+    // Copy button
+    copyBtn.addEventListener("click", async () => {
+      input.select();
+      input.setSelectionRange(0, 99999);
+      
+      try {
+        await navigator.clipboard.writeText(input.value);
+        
+        // Success state
+        copyIcon.className = "fas fa-check";
+        copyIcon.style.color = "#28a745";
+        copyText.textContent = "Copied!";
+        copyText.style.color = "#28a745";
+        copyBtn.style.background = "#e8f5e9";
+        copyBtn.style.borderLeftColor = "#c3e6cb";
+        
+        // Revert after 2 seconds
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = "Copy";
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy: ", err);
+        
+        // Error state
+        copyIcon.className = "fas fa-times";
+        copyIcon.style.color = "#dc3545";
+        copyText.textContent = "Failed!";
+        copyText.style.color = "#dc3545";
+        copyBtn.style.background = "#f8d7da";
+        copyBtn.style.borderLeftColor = "#f5c6cb";
+        
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = "Copy";
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      }
+    });
 
-            // Send Link button
-            sendLinkBtn.addEventListener("click", () => {
-              handleCheckout(orderId, true, false);
-              Swal.close();
-            });
+    // Send Link button
+    sendLinkBtn.addEventListener("click", () => {
+      handleCheckout(orderId, true, false);
+      Swal.close();
+    });
 
-            // Close button
-            closeBtn.addEventListener("click", () => {
-              Swal.close();
-            });
-          },
-        });
+    // Close button
+    closeBtn.addEventListener("click", () => {
+      Swal.close();
+    });
+  },
+});
       } else if (!email && !copyUrl && data?.details?.url) {
         // window.open(data.details.url, "_blank");
-          const extracted = data?.details?.url?.split('/payment-options')[1] 
-                navigate(`/payment-options${extracted}`)
+        const extracted = data?.details?.url?.split('/payment-options')[1]
+        navigate(`/payment-options${extracted}`)
       }
     } catch (error) {
       console.error("Error generating payment link:", error);
@@ -4595,11 +4695,11 @@ function OrderDetails() {
                               }
                               className="entity-dropdown"
                               disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
-                              // placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
+                            // placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
                             >
                               <option value="" disabled hidden>
-    {t("Select Warehouse")}
-  </option>
+                                {t("Select Warehouse")}
+                              </option>
                               {warehouseOptions.map(
                                 (warehouse, index) => (
                                   <option key={index} value={warehouse?.name}>
@@ -5011,16 +5111,13 @@ function OrderDetails() {
                                       <div className="product-meta">
                                         <p>
                                           {t("Unit Price: ")}
-                                          <strong>
+                                          <span style={{fontWeight:"460"}}>
                                             {Number(item.unitPrice || item.price || 0).toFixed(2)}{" "}
                                             {t("SAR")}
-                                          </strong>
+                                          </span>
                                         </p>
-                                        <p>
-                                          {t("Quantity")}: <strong>{item.quantity || 0}</strong>
-                                        </p>
-                                        <p>
-                                          {t("VAT: ")}<strong>{Number(item.vatPercentage)}%</strong>
+                                        <p style={{marginBottom:"12px"}}>
+                                          {t("Quantity")}: <span style={{fontWeight:"460"}}>{item.quantity || 0}</span>
                                         </p>
                                         <div
                                           className="quantity-controller"
@@ -5103,67 +5200,42 @@ function OrderDetails() {
                                           {InventoryLoading && loadingProductId === item.id && <LoadingSpinner />}
                                         </div>
                                       </div>
-
-                                      {/* Optional Quantity Controller (if interactive) */}
-                                      {/* {typeof handleQuantityChange === "function" && (
-                <QuantityController
-                  itemId={item.id}
-                  quantity={quantities[item.id] || item.quantity || 0}
-                  onQuantityChange={handleQuantityChange}
-                  onInputChange={handleQuantityInputChange}
-                  stopPropagation={true}
-                  minQuantity={Number(item.moq) || 0}
-                  moq={Number(item.moq) || 0}
-                />
-              )} */}
                                     </div>
-
                                   </div>
                                   <div style={{ marginBottom: 10 }}>
-                                    <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
+                                    <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
                                   </div>
                                   {/* Price Summary */}
-                                  <div className="item-price-panel">
-                                    <span className="item-price" style={{ fontSize: 13 }}>
-                                      {(Number(item.unitPrice || item.price || 0) *
-                                        Number(item.quantity || 1)
-                                      ).toFixed(2)}{" "}
-                                      <span className="sar-label">{t("SAR")}</span>
-                                    </span>
+                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px" }} >
+                                    <div className="item-price-panel" >
+                                      <span className="tax-row" style={{ fontSize: 13 }} >
+                                        {t("VAT: ")}
+                                        {Number(item.vatPercentage)}%
+                                      </span>
+                                      {formData.entity.toLocaleLowerCase()===Constants.ENTITY.VMCO.toLocaleLowerCase() &&
+                                      <span className="line-discount-row" style={{ fontSize: 13 }} >
+                                        {t("Discount: ")}
+                                        {Number(item.lineDiscount)}%
+                                      </span>}
 
-                                    <span className="tax-row" style={{ fontSize: 13 }} >
-                                      {t("VAT: ")}
-                                      {Number(item.vatPercentage)}%
-                                    </span>
-
-                                    <span className="item-total-price" style={{ fontSize: 13 }}>
-                                      {t("Net Amount:")}{" "}
-                                      {(
-                                        Number(item.unitPrice || item.price || 0) *
-                                        Number(item.quantity || 1) +
-                                        ((Number(item.unitPrice || item.price || 0) *
-                                          Number(item.quantity || 1) *
-                                          Number(item.vatPercentage)) /
-                                          100)
-                                      ).toFixed(2)}{" "}
-                                      {t("SAR")}
-                                    </span>
-
-                                    {/* Remove Button */}
-                                    {/* <button
-                className="remove-btn"
-                onClick={() => handleRemoveItem(item)}
-                disabled={processingCategories?.has?.(item.category)}
-              >
-                {processingCategories?.has?.(item.category)
-                  ? t("Processing...")
-                  : t("Remove item")}
-              </button> */}
+                                      <span className="item-total-price" style={{ fontSize: 13 }}>
+                                        {t("Net Amount:")}{" "}
+                                        {(
+                                          Number(item.unitPrice || item.price || 0) *
+                                          Number(item.quantity || 1) +
+                                          ((Number(item.unitPrice || item.price || 0) *
+                                            Number(item.quantity || 1) *
+                                            Number(item.vatPercentage)) /
+                                            100)
+                                        ).toFixed(2)}{" "}
+                                        {t("SAR")}
+                                      </span>
+                                    </div>
                                     {isV("deleteButton") &&
                                       isE("deleteCol") && (
                                         <button
                                           className="order-action-btn reject"
-                                          style={{ padding: "2px 2px", fontSize: 12, width: "90px" }}
+                                          style={{ marginTop: "20px", marginLeft: "40px", fontSize: 12, width: "90px", justifyContent: "flex-end" }}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleDeleteProductRow(idx);
@@ -5178,6 +5250,7 @@ function OrderDetails() {
                                           {t("Delete")}
                                         </button>)}
                                   </div>
+                                  <div style={{ borderBottom: "1.5px solid #ccc", marginBottom: 10 }}></div>
                                 </>
                               ))}
                             </div>
@@ -5643,7 +5716,7 @@ function OrderDetails() {
                       className="order-action-btn"
                       onClick={() => handleCheckout(orderId, false, true)}
                       style={{
-                        width: "160px",
+                        //width: "160px",
                         backgroundColor: "#005932",
                         color: "white",
                       }}

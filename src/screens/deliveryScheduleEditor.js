@@ -617,7 +617,7 @@ function DeliveryScheduleEditor() {
                             tabs={categoryTabs}
                             activeTab={activeCategory}
                             onTabChange={handleTabChange}
-                            variant="category"
+                            variant='mobile'
                         />
                     </div>
                 </div>

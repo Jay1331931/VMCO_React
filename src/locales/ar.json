@@ -178,7 +178,7 @@
     "Unit Price: ": ": سعر الوحدة ",
     "VMCO Machines": "آلات VMCO",
     "VMCO Consumables": "VMCO مستهلكات",
-    "VMCO": "في إم سي أو",
+    "VMCO": "شركة الماكينة الالية",
     "Saudi Hospitality Company": "شركة الضيافة السعودية",
     "Green Mast Factory Ltd": "جرين ماست للتجارة",
     "Naqi Company": "شركة نقي",
@@ -239,7 +239,7 @@
     "Videos": "فيديوهات",
     "Status:": ": الحالة:",
     "Assign To:": ": تعيين إلى:",
-    "To": "ل",
+    "To": "الى",
     "From": "من",
     "msgLoadingUserInfo": "جارٍ تحميل معلومات المستخدم...",
     "Stock": "المخزون",
@@ -250,7 +250,7 @@
     "Cancel Order": "إلغاء الطلب",
     "Product ID": "معرف المنتج",
     "Delete": "حذف",
-    "vmco": "فيمكو",
+    "vmco": "شركة الماكينة الالية",
     "Select Pricing Policy": "اختر سياسة التسعير",
     "Your Cart": "سلتك",
     "Company Type": "نوع الشركة",
@@ -262,7 +262,7 @@
     "Customer Source": "مصدر العميل",
     "Green Mast": "جرين مارت",
     "Naqi": "نقي",
-    "DAR": "دار",
+    "DAR": "شركة دار المحدودة",
     "Inter-Company": "بين الشركات",
     "Active": "نشط",
     "Primary Contact Details": "تفاصيل جهة الاتصال الرئيسية",
@@ -315,8 +315,8 @@
     "Selected": "المحدد",
     "Apply All": "تطبيق الكل",
     "Diayafa": "الضيافة",
-    "SHC": "إس إتش سي",
-    "NAQI": "نقي",
+    "SHC": "شركة الضيافة السعودية",
+    "NAQI": "شركة نقي",
     "GMTC": "جي إم تي سي",
     "Credit Balance": "رصيد الائتمان",
     "Get Credit Balance": "الحصول على رصيد الائتمان",
@@ -903,7 +903,9 @@
 "Item Name": "اسم العنصر",
 "Close Ticket": "إغلاق التذكرة",
 "Menu":"قائمة طعام",
-"Bank":"بنك"
+"Bank":"بنك",
+"Only one  entity credit details can be updated at a time":"لا يمكن تحديث بيانات ائتمان إلا لجهة واحدة في كل مرة",
+"Maintenance Charges With VAT":"رسوم الصيانة شاملة ضريبة القيمة المضافة"
 
 
 

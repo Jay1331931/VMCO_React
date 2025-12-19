@@ -21,13 +21,6 @@ const QuantityController = ({
     const dir = i18n.dir();
     const isRTL = dir === 'rtl' || currentLanguage === 'ar' || i18n.language === 'ar';
 
-    console.log('QuantityController Debug:', {
-        currentLanguage,
-        dir,
-        isRTL,
-        language: i18n.language
-    });
-
     const showMOQWarning = () => {
         Swal.fire({
             title: t('Minimum Order Quantity'),

@@ -138,7 +138,7 @@ function ForgotPassword() {
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        navigate("/login");
+        navigate("/login",{replace:true});
       }, 2000);
     } catch (err) {
       console.error("Password reset error:", err);
@@ -426,7 +426,7 @@ function ForgotPassword() {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate("/login");
+                  navigate("/login",{replace:true});
                 }}
               >
                 {`\t ${t("Login")}`}

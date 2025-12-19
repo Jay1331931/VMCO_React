@@ -114,54 +114,54 @@ function Customers() {
   );
   const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
   const pageName = activeTab === "customers" ? (isApprovalMode ? "customersApproval" : "customers") : "invites";
-const columnWidthsKey = `${pageName}_${role}_columnWidths`;
+  const columnWidthsKey = `${pageName}_${role}_columnWidths`;
   const [columnDimensions, setColumnDimensions] = useState({});
 
   console.log("RBAC Manager:", rbacMgr);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
-    const contentRef = useRef(null);
+  const contentRef = useRef(null);
   const [isAtTop, setIsAtTop] = useState(true);
   const [showHeader, setShowHeader] = useState(true);
   const dragStartY = useRef(0);
-  
+
   useEffect(() => {
     const handleTouchStart = (e) => {
       dragStartY.current = e.touches[0].clientY;
     };
-  
+
     const handleTouchMove = (e) => {
       const currentY = e.touches[0].clientY;
-  
+
       // Drag up → hide header
       if (currentY < dragStartY.current - 15) {
         setShowHeader(false);
       }
-  
+
       // Drag down → show header
       if (currentY > dragStartY.current + 15) {
         setShowHeader(true);
       }
     };
-  
+
     window.addEventListener("touchstart", handleTouchStart);
     window.addEventListener("touchmove", handleTouchMove);
-  
+
     return () => {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
     };
   }, []);
-    useEffect(() => {
-      const handleScroll = () => {
-        const scrollTop = contentRef.current?.scrollTop || 0;
-        setIsAtTop(scrollTop < 20); // detect near top
-      };
-  
-      const container = contentRef.current;
-      container?.addEventListener("scroll", handleScroll);
-      return () => container?.removeEventListener("scroll", handleScroll);
-    }, []);
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = contentRef.current?.scrollTop || 0;
+      setIsAtTop(scrollTop < 20); // detect near top
+    };
+
+    const container = contentRef.current;
+    container?.addEventListener("scroll", handleScroll);
+    return () => container?.removeEventListener("scroll", handleScroll);
+  }, []);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -256,45 +256,96 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
               },
             }),
           });
-          Swal.fire({
-            title: "Invite Resent",
-            html: `
-            <p>${t("The invite has been resent successfully.")}</p>
+         Swal.fire({
+  title: t("Invite Resent"),
+  html: `
+    <p>${t("The invite has been resent successfully.")}</p>
 
-            <div style="display:flex;align-items:center;">
-              <input
-                id="invite-link"
-                class=${isMobile ? "swal3-input" : "swal2-input"}
-                style="flex:1;margin:0 8px 0 0;"
-                type="text"
-                value="${result?.data}"
-                readonly
-              />
-              <button id="copy-icon" style="padding: ${isMobile ? '3px' : '18px'} ; border-radius: 5px;">${isMobile ? '📋' : "Copy"}</button>
+    <div style="display:flex;align-items:center;border:1px solid #ddd;border-radius:4px;overflow:hidden;">
+      <input
+        id="invite-link"
+        type="text"
+        value="${result?.data}"
+        readonly
+        style="flex:1;border:none;padding:10px 12px;font-size:14px;outline:none;"
+      />
+      <button
+        id="copyInviteBtn"
+        style="display:flex;align-items:center;gap:6px;padding:0 12px;height:44px;border:none;border-left:1px solid #ddd;background:#fff;cursor:pointer;transition:all .2s;white-space:nowrap;"
+        title="Copy to clipboard"
+      >
+        <i class="fas fa-copy" style="font-size:14px;color:#666;"></i>
+        <span id="copyInviteText" style="font-size:14px;color:#666;">Copy</span>
+      </button>
+    </div>
+  `,
+  icon: "success",
+  showConfirmButton: true,
+  confirmButtonText: "OK",
 
-            </div>
-          `,
-            icon: "success",
-            showConfirmButton: true,
-            confirmButtonText: "OK",
+  didOpen: () => {
+    const input = document.getElementById("invite-link");
+    const copyBtn = document.getElementById("copyInviteBtn");
+    const copyIcon = copyBtn.querySelector("i");
+    const copyText = document.getElementById("copyInviteText");
 
-            didOpen: () => {
-              const input = document.getElementById("invite-link");
-              const icon = document.getElementById("copy-icon");
+    /* Hover effect */
+    copyBtn.addEventListener("mouseenter", () => {
+      copyBtn.style.background = "#f5f5f5";
+      copyIcon.style.color = "#333";
+      copyText.style.color = "#333";
+    });
 
-              icon.addEventListener("click", () => {
-                input.select();
-                input.setSelectionRange(0, 99999); // mobile-friendly
-                navigator.clipboard.writeText(input.value).then(() => {
-                  icon.classList.replace("fa-copy", "fa-check");
-                  setTimeout(
-                    () => icon.classList.replace("fa-check", "fa-copy"),
-                    2000
-                  );
-                });
-              });
-            },
-          });
+    copyBtn.addEventListener("mouseleave", () => {
+      copyBtn.style.background = "#fff";
+      copyIcon.style.color = "#666";
+      copyText.style.color = "#666";
+    });
+
+    /* Copy action */
+    copyBtn.addEventListener("click", async () => {
+      input.select();
+      input.setSelectionRange(0, 99999);
+
+      try {
+        await navigator.clipboard.writeText(input.value);
+
+        copyIcon.className = "fas fa-check";
+        copyIcon.style.color = "#28a745";
+        copyText.textContent = "Copied!";
+        copyText.style.color = "#28a745";
+        copyBtn.style.background = "#e8f5e9";
+        copyBtn.style.borderLeftColor = "#c3e6cb";
+
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = "Copy";
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      } catch (err) {
+        copyIcon.className = "fas fa-times";
+        copyIcon.style.color = "#dc3545";
+        copyText.textContent = "Failed!";
+        copyText.style.color = "#dc3545";
+        copyBtn.style.background = "#f8d7da";
+        copyBtn.style.borderLeftColor = "#f5c6cb";
+
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = "Copy";
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      }
+    });
+  },
+});
+
         } catch (err) {
           console.error("Error generating invite link:", err);
           // alert('Failed to generate invite link. Please try again later.');
@@ -342,7 +393,7 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
       ...prev,
       source: "salesexecutive",
     }));
-    if(isMobile) {
+    if (isMobile) {
       navigate('/invite/add')
       // <AddInvites
       //   handleInviteSubmit={handleInviteSubmit}
@@ -350,7 +401,7 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
       // />
     } else {
       setIsInviteModalOpen(true);
-    }  
+    }
   };
 
   const validateInviteData = (data) => {
@@ -504,42 +555,98 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
             });
             return;
           }
-          Swal.fire({
-            title: "Invite Link Sent",
-            html: `
-            <p>${t("The invite has been sent successfully.")}</p>
-            <div style="display:flex;align-items:center;">
-              <input  id="invite-link"
-                      class=${isMobile ? "swal3-input" : "swal2-input"}
-                      style="flex:1;margin:0 8px 0 0;"
-                      type="text"
-                      value="${res.data}"
-                      readonly />
- <button id="copy-icon" style="padding: ${isMobile ? '3px' : '18px'} ; border-radius: 5px;">${isMobile ? '📋' : "Copy"}</button>
+         Swal.fire({
+  title: t("Invite Link Sent1"),
+  html: `
+    <p>${t("The invite has been sent successfully.")}</p>
+ <div style="display:flex;align-items:center;border:1px solid #ddd;border-radius:4px;overflow:hidden;">
+      <input
+        id="invite-link"
+        type="text"
+        value="${result?.data}"
+        readonly
+        style="flex:1;border:none;padding:10px 12px;font-size:14px;outline:none;"
+      />
+      <button
+        id="copyInviteBtn"
+        style="display:flex;align-items:center;gap:6px;padding:0 12px;height:44px;border:none;border-left:1px solid #ddd;background:#fff;cursor:pointer;transition:all .2s;white-space:nowrap;"
+        title="Copy to clipboard"
+      >
+        <i class="fas fa-copy" style="font-size:14px;color:#666;"></i>
+        <span id="copyInviteText" style="font-size:14px;color:#666;">Copy</span>
+      </button>
+    </div>
+      
+  `,
+  icon: "success",
+  showConfirmButton: true,
+  confirmButtonText: t("OK"),
 
-            </div>
-          `,
-            icon: "success",
-            showConfirmButton: true,
-            confirmButtonText: "OK",
+  didOpen: () => {
+    const input = document.getElementById("invite-link");
+    const copyBtn = document.getElementById("copyInviteBtn");
+    const copyIcon = copyBtn.querySelector("i");
+    const copyText = document.getElementById("copyInviteText");
 
-            didOpen: () => {
-              const input = document.getElementById("invite-link");
-              const icon = document.getElementById("copy-icon");
+    /* Hover effect */
+    copyBtn.addEventListener("mouseenter", () => {
+      copyBtn.style.background = "#f5f5f5";
+      copyIcon.style.color = "#333";
+      copyText.style.color = "#333";
+    });
 
-              icon.addEventListener("click", () => {
-                input.select();
-                input.setSelectionRange(0, 99999);
-                navigator.clipboard.writeText(input.value).then(() => {
-                  icon.classList.replace("fa-copy", "fa-check");
-                  setTimeout(
-                    () => icon.classList.replace("fa-check", "fa-copy"),
-                    2000
-                  );
-                });
-              });
-            },
-          });
+    copyBtn.addEventListener("mouseleave", () => {
+      copyBtn.style.background = "#fff";
+      copyIcon.style.color = "#666";
+      copyText.style.color = "#666";
+    });
+
+    /* Copy action */
+    copyBtn.addEventListener("click", async () => {
+      input.select();
+      input.setSelectionRange(0, 99999);
+
+      try {
+        await navigator.clipboard.writeText(input.value);
+
+        // success state
+        copyIcon.className = "fas fa-check";
+        copyIcon.style.color = "#28a745";
+        copyText.textContent = t("Copied!");
+        copyText.style.color = "#28a745";
+        copyBtn.style.background = "#e8f5e9";
+        copyBtn.style.borderLeftColor = "#c3e6cb";
+
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = t("Copy");
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      } catch {
+        // error state
+        copyIcon.className = "fas fa-times";
+        copyIcon.style.color = "#dc3545";
+        copyText.textContent = t("Failed!");
+        copyText.style.color = "#dc3545";
+        copyBtn.style.background = "#f8d7da";
+        copyBtn.style.borderLeftColor = "#f5c6cb";
+
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = t("Copy");
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      }
+    });
+  },
+});
+
 
           // }
         } catch (err) {
@@ -671,15 +778,15 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
   ];
   const customerColumns = [
     {
-  field: "id",
-  headerName: isMobile ? t("ID") : t("Registration ID"),
-  include: isV("id"),
-  searchable: true,
-  width: isMobile ? 50 : (columnDimensions["id"]?.width || 100),
-  // flex: isMobile ? undefined : 1, // Remove flex when using fixed width on mobile
-  align: isArabic ? 'right' : 'left',
-  renderCell: (params) => <span>{params.value}</span>
-},
+      field: "id",
+      headerName: isMobile ? t("ID") : t("Registration ID"),
+      include: isV("id"),
+      searchable: true,
+      width: isMobile ? 50 : (columnDimensions["id"]?.width || 100),
+      // flex: isMobile ? undefined : 1, // Remove flex when using fixed width on mobile
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => <span>{params.value}</span>
+    },
     {
       field: "erpCustId",
       headerName: t("ERP ID"),
@@ -1817,707 +1924,711 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
       case t("customers"):
         const customerColumnsToUse = visibleColumns;
 
-        return isMobile ? 
-        (
-          <div className="orders-content">
-            {loading ? (
-              <LoadingSpinner />
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <>
-              <div
-                className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
-                // style={{
-                //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
-                //   position: "sticky",
-                //   zIndex: 20,
-                //   transition: "top 0.3s ease",
-                //   background: "#fff",
-                // }}
-              >
-                <TableMobile
-                columns={customerColumnsToUse}
-                allColumns={isApprovalMode ? approvalColumns : customerColumns}
-                data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-                showAllDetails={true}
-                handleAllDetailsClick={handleShowAllDetailsClick}
-                selectedRow={selectedRow}
-                setSelectedRow={setSelectedRow}
-                showRowPopup={showRowPopup}
-                setShowRowPopup={setShowRowPopup}
-                disableExtendRowFullWidth={true}
-                dataGridComponent={
-                  <DataGrid
-                    rows={[]}
-                    columns={[]}
-                    pageSize={pageSize}
-                    rowCount={total}
-                    getRowId={(row) => row?.workflowInstanceId || row?.id}
-                    onRowClick={handleRowClick}
-                    columnVisibilityModel={columnVisibilityModel}
-                    onColumnVisibilityModelChange={setColumnVisibilityModel}
-                    sortModel={sortModel}
-                    onSortModelChange={handleSortModelChange}
-                    disableSelectionOnClick
-                    disableColumnMenu
-                    hideFooter={true}
-                    hideFooterPagination={true}
-                    disableExtendRowFullWidth={true}
-                    pagination={false}
-                    autoHeight
-                    rowHeight={55}
-                    showToolbar
-                    slots={{
-                      toolbar: () => (
-                        <CustomToolbar
-                          searchQuery={searchQuery}
-                          filterAnchor={filterAnchor}
-                          onSearch={handleSearch}
-                          setSearchQuery={setSearchQuery}
-                          setFilterAnchor={setFilterAnchor}
-                          handleFilterChange={handleFilterChange}
-                          onColumnVisibilityChange={setColumnVisibilityModel}
-                          columns={filteredData}
-                          filters={filters}
+        return isMobile ?
+          (
+            <div className="orders-content">
+              {loading ? (
+                <LoadingSpinner />
+              ) : error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <>
+                  <div
+                    className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
+                  // style={{
+                  //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                  //   position: "sticky",
+                  //   zIndex: 20,
+                  //   transition: "top 0.3s ease",
+                  //   background: "#fff",
+                  // }}
+                  >
+                    <TableMobile
+                      columns={customerColumnsToUse}
+                      allColumns={isApprovalMode ? approvalColumns : customerColumns}
+                      data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                      showAllDetails={true}
+                      handleAllDetailsClick={handleShowAllDetailsClick}
+                      selectedRow={selectedRow}
+                      setSelectedRow={setSelectedRow}
+                      showRowPopup={showRowPopup}
+                      setShowRowPopup={setShowRowPopup}
+                      disableExtendRowFullWidth={true}
+                      dataGridComponent={
+                        <DataGrid
+                          rows={[]}
+                          columns={[]}
+                          pageSize={pageSize}
+                          rowCount={total}
+                          getRowId={(row) => row?.workflowInstanceId || row?.id}
+                          onRowClick={handleRowClick}
                           columnVisibilityModel={columnVisibilityModel}
-                          searchPlaceholder="Search customers..."
-                          showColumnVisibility={false}
-                          showFilters={false}
-                          showExport={false}
-                          showUpload={false}
-                          showApproval={true}
-                          columnsToDisplay={columnsToDisplay}
-                          handleApproval={handleApproval}
-                          isApprovalMode={isApprovalMode}
-                        />
-                      ),
-                    }}
-                    // sx={{
-                    //   "& .MuiDataGrid-row": {
-                    //     cursor: "pointer",
-                    //     "&:hover": {
-                    //       backgroundColor: "rgba(0, 0, 0, 0.04)",
-                    //     },
-                    //   },
-                    //   '.MuiDataGrid-cell': {
-                    //     textAlign: 'center',
-                    //     display: 'flex',
-                    //     alignItems: 'center',
-                    //     justifyContent: 'center',
-                    //   }
-                    // }}
-                    sx={{
-                      border: "none !important",
-                        "& .MuiDataGrid-overlay": {
-                          display: "none !important", // ✅ hides “No rows” message
-                        },
-                        "& .MuiDataGrid-row": {
-                          // cursor: "default",
-                          // "&:hover": {
-                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
-                          // },
-                          display: "none !important",
-                        },
-                        ".MuiDataGrid-cell": {
-                          display: "none !important",
-                        },
-                        "& .MuiDataGrid-main": {
-                          display: "none", // ✅ hides the main grid body
-                        },
-                        "& .MuiDataGrid-toolbar": {
-                          // position: "sticky",
-                          // top: 0,
-                          // zIndex: 10, // keeps it above rows
-                          // backgroundColor: "#fff", // ensures it doesn't become transparent
-                          // borderBottom: "1px solid #e0e0e0",
-                          padding: "0px",
-                          gap: "10px",
-                          border: "none",
-                        },
+                          onColumnVisibilityModelChange={setColumnVisibilityModel}
+                          sortModel={sortModel}
+                          onSortModelChange={handleSortModelChange}
+                          disableSelectionOnClick
+                          disableColumnMenu
+                          hideFooter={true}
+                          hideFooterPagination={true}
+                          disableExtendRowFullWidth={true}
+                          pagination={false}
+                          autoHeight
+                          rowHeight={55}
+                          showToolbar
+                          slots={{
+                            toolbar: () => (
+                              <CustomToolbar
+                                searchQuery={searchQuery}
+                                filterAnchor={filterAnchor}
+                                onSearch={handleSearch}
+                                setSearchQuery={setSearchQuery}
+                                setFilterAnchor={setFilterAnchor}
+                                handleFilterChange={handleFilterChange}
+                                onColumnVisibilityChange={setColumnVisibilityModel}
+                                columns={filteredData}
+                                filters={filters}
+                                columnVisibilityModel={columnVisibilityModel}
+                                searchPlaceholder="Search customers..."
+                                showColumnVisibility={false}
+                                showFilters={false}
+                                showExport={false}
+                                showUpload={false}
+                                showApproval={true}
+                                columnsToDisplay={columnsToDisplay}
+                                handleApproval={handleApproval}
+                                isApprovalMode={isApprovalMode}
+                              />
+                            ),
+                          }}
+                          // sx={{
+                          //   "& .MuiDataGrid-row": {
+                          //     cursor: "pointer",
+                          //     "&:hover": {
+                          //       backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          //     },
+                          //   },
+                          //   '.MuiDataGrid-cell': {
+                          //     textAlign: 'center',
+                          //     display: 'flex',
+                          //     alignItems: 'center',
+                          //     justifyContent: 'center',
+                          //   }
+                          // }}
+                          sx={{
+                            border: "none !important",
+                            "& .MuiDataGrid-overlay": {
+                              display: "none !important", // ✅ hides “No rows” message
+                            },
+                            "& .MuiDataGrid-row": {
+                              // cursor: "default",
+                              // "&:hover": {
+                              //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+                              // },
+                              display: "none !important",
+                            },
+                            ".MuiDataGrid-cell": {
+                              display: "none !important",
+                            },
+                            "& .MuiDataGrid-main": {
+                              display: "none", // ✅ hides the main grid body
+                            },
+                            "& .MuiDataGrid-toolbar": {
+                              // position: "sticky",
+                              // top: 0,
+                              // zIndex: 10, // keeps it above rows
+                              // backgroundColor: "#fff", // ensures it doesn't become transparent
+                              // borderBottom: "1px solid #e0e0e0",
+                              padding: "0px",
+                              gap: "10px",
+                              border: "none",
+                            },
 
-                        "&.catalog-datagrid": {
-                          border: "2px solid black",
-                          borderRadius: "8px",
-                          backgroundColor: "#f8f9fa",
-                        },
-                      }}
+                            "&.catalog-datagrid": {
+                              border: "2px solid black",
+                              borderRadius: "8px",
+                              backgroundColor: "#f8f9fa",
+                            },
+                          }}
+                        />
+                      }
+                    />
+                  </div>
+                  <CustomerCard
+                    customers={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                    handleViewDetails={handleShowAllDetailsClick}
+                    handleSync={HandleFandOFailCustomer}
                   />
-                }
-              />
-              </div>
-              <CustomerCard
-    customers={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-    handleViewDetails={handleShowAllDetailsClick}
-    handleSync={HandleFandOFailCustomer}
-  />
-              </>
-              // <TableMobile
-              //   columns={customerColumnsToUse}
-              //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
-              //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-              //   showAllDetails={true}
-              //   handleAllDetailsClick={handleShowAllDetailsClick}
-              //   selectedRow={selectedRow}
-              //   setSelectedRow={setSelectedRow}
-              //   showRowPopup={showRowPopup}
-              //   setShowRowPopup={setShowRowPopup}
-              //   dataGridComponent={
-              //     <DataGrid
-              //       rows={[]}
-              //       columns={[]}
-              //       pageSize={pageSize}
-              //       rowCount={total}
-              //       getRowId={(row) => row?.workflowInstanceId || row?.id}
-              //       onRowClick={handleRowClick}
-              //       columnVisibilityModel={columnVisibilityModel}
-              //       onColumnVisibilityModelChange={setColumnVisibilityModel}
-              //       sortModel={sortModel}
-              //       onSortModelChange={handleSortModelChange}
-              //       disableSelectionOnClick
-              //       disableColumnMenu
-              //       hideFooter={true}
-              //       hideFooterPagination={true}
-              //       disableExtendRowFullWidth={true}
-              //       pagination={false}
-              //       autoHeight
-              //       rowHeight={55}
-              //       showToolbar
-              //       slots={{
-              //         toolbar: () => (
-              //           <CustomToolbar
-              //             searchQuery={searchQuery}
-              //             filterAnchor={filterAnchor}
-              //             onSearch={handleSearch}
-              //             setSearchQuery={setSearchQuery}
-              //             setFilterAnchor={setFilterAnchor}
-              //             handleFilterChange={handleFilterChange}
-              //             onColumnVisibilityChange={setColumnVisibilityModel}
-              //             columns={filteredData}
-              //             filters={filters}
-              //             columnVisibilityModel={columnVisibilityModel}
-              //             searchPlaceholder="Search customers..."
-              //             showColumnVisibility={true}
-              //             showFilters={true}
-              //             showExport={false}
-              //             showUpload={false}
-              //             showApproval={true}
-              //             columnsToDisplay={columnsToDisplay}
-              //             handleApproval={handleApproval}
-              //             isApprovalMode={isApprovalMode}
-              //           />
-              //         ),
-              //       }}
-              //       sx={{
-              //         "& .MuiDataGrid-row": {
-              //           cursor: "pointer",
-              //           "&:hover": {
-              //             backgroundColor: "rgba(0, 0, 0, 0.04)",
-              //           },
-              //         },
-              //         '.MuiDataGrid-cell': {
-              //           textAlign: 'center',
-              //           display: 'flex',
-              //           alignItems: 'center',
-              //           justifyContent: 'center',
-              //         }
-              //       }}
-              //     />
-              //   }
-              // />
-            )}
-          </div>
-        ) 
-        : (
-          <div className="table-container">
-            {loading ? (
-              <LoadingSpinner />
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <>
-                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
-                <div style={{
-                  //height: '380px',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}>
-                  <DataGrid
-                    apiRef={gridApiRef}
-                    rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-                    columns={customerColumnsToUse}
-                    pageSize={pageSize}
-                    rowCount={total}
-                    getRowId={(row) => row?.workflowInstanceId || row?.id}
-                    onRowClick={handleRowClick}
-                    columnVisibilityModel={columnVisibilityModel}
-                    onColumnVisibilityModelChange={handleColumnVisibilityChange}
-                    columnDimensions={columnDimensions}
-                    onColumnResize={handleColumnResize}
-                    sortModel={sortModel}
-                    onSortModelChange={handleSortModelChange}
-                    disableSelectionOnClick
-                    disableColumnMenu
-                    hideFooter={true}
-                    hideFooterPagination={true}
-                    pagination={false}
-                    rowHeight={55}
-                    showToolbar
-                    slots={{
-                      toolbar: () => (
-                        <CustomToolbar
-                          searchQuery={searchQuery}
-                          filterAnchor={filterAnchor}
-                          onSearch={handleSearch}
-                          setSearchQuery={setSearchQuery}
-                          setFilterAnchor={setFilterAnchor}
-                          handleFilterChange={handleFilterChange}
-                          onColumnVisibilityChange={setColumnVisibilityModel}
-                          columns={filteredData}
-                          filters={filters}
-                          columnVisibilityModel={columnVisibilityModel}
-                          searchPlaceholder="Search customers..."
-                          showColumnVisibility={true}
-                          showFilters={true}
-                          showExport={isApprovalMode ? true : false}
-                          showUpload={false}
-                          showApproval={true}
-                          columnsToDisplay={columnsToDisplay}
-                          handleApproval={handleApproval}
-                          handleExportClick={handleExportData}
-                          isApprovalMode={isApprovalMode}
-                        />
-                      ),
-                    }}
-                    sx={{
-                      // Flex grow to fill available space
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-
-                      '& .MuiDataGrid-toolbar': {
-                        padding: '0px 8px  !important',
-                        minHeight: '56px !important',
-                        flexShrink: 0,
-                      },
-
-                      '& .MuiDataGrid-main': {
+                </>
+                // <TableMobile
+                //   columns={customerColumnsToUse}
+                //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
+                //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                //   showAllDetails={true}
+                //   handleAllDetailsClick={handleShowAllDetailsClick}
+                //   selectedRow={selectedRow}
+                //   setSelectedRow={setSelectedRow}
+                //   showRowPopup={showRowPopup}
+                //   setShowRowPopup={setShowRowPopup}
+                //   dataGridComponent={
+                //     <DataGrid
+                //       rows={[]}
+                //       columns={[]}
+                //       pageSize={pageSize}
+                //       rowCount={total}
+                //       getRowId={(row) => row?.workflowInstanceId || row?.id}
+                //       onRowClick={handleRowClick}
+                //       columnVisibilityModel={columnVisibilityModel}
+                //       onColumnVisibilityModelChange={setColumnVisibilityModel}
+                //       sortModel={sortModel}
+                //       onSortModelChange={handleSortModelChange}
+                //       disableSelectionOnClick
+                //       disableColumnMenu
+                //       hideFooter={true}
+                //       hideFooterPagination={true}
+                //       disableExtendRowFullWidth={true}
+                //       pagination={false}
+                //       autoHeight
+                //       rowHeight={55}
+                //       showToolbar
+                //       slots={{
+                //         toolbar: () => (
+                //           <CustomToolbar
+                //             searchQuery={searchQuery}
+                //             filterAnchor={filterAnchor}
+                //             onSearch={handleSearch}
+                //             setSearchQuery={setSearchQuery}
+                //             setFilterAnchor={setFilterAnchor}
+                //             handleFilterChange={handleFilterChange}
+                //             onColumnVisibilityChange={setColumnVisibilityModel}
+                //             columns={filteredData}
+                //             filters={filters}
+                //             columnVisibilityModel={columnVisibilityModel}
+                //             searchPlaceholder="Search customers..."
+                //             showColumnVisibility={true}
+                //             showFilters={true}
+                //             showExport={false}
+                //             showUpload={false}
+                //             showApproval={true}
+                //             columnsToDisplay={columnsToDisplay}
+                //             handleApproval={handleApproval}
+                //             isApprovalMode={isApprovalMode}
+                //           />
+                //         ),
+                //       }}
+                //       sx={{
+                //         "& .MuiDataGrid-row": {
+                //           cursor: "pointer",
+                //           "&:hover": {
+                //             backgroundColor: "rgba(0, 0, 0, 0.04)",
+                //           },
+                //         },
+                //         '.MuiDataGrid-cell': {
+                //           textAlign: 'center',
+                //           display: 'flex',
+                //           alignItems: 'center',
+                //           justifyContent: 'center',
+                //         }
+                //       }}
+                //     />
+                //   }
+                // />
+              )}
+            </div>
+          )
+          : (
+            <div className="table-container">
+              {loading ? (
+                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                  <LoadingSpinner size="medium" />
+                </div>
+              ) : error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <>
+                  {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                  <div style={{
+                    //height: '380px',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    <DataGrid
+                      apiRef={gridApiRef}
+                      rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                      columns={customerColumnsToUse}
+                      pageSize={pageSize}
+                      rowCount={total}
+                      getRowId={(row) => row?.workflowInstanceId || row?.id}
+                      onRowClick={handleRowClick}
+                      columnVisibilityModel={columnVisibilityModel}
+                      onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                      columnDimensions={columnDimensions}
+                      onColumnResize={handleColumnResize}
+                      sortModel={sortModel}
+                      onSortModelChange={handleSortModelChange}
+                      disableSelectionOnClick
+                      disableColumnMenu
+                      hideFooter={true}
+                      hideFooterPagination={true}
+                      pagination={false}
+                      rowHeight={55}
+                      showToolbar
+                      slots={{
+                        toolbar: () => (
+                          <CustomToolbar
+                            searchQuery={searchQuery}
+                            filterAnchor={filterAnchor}
+                            onSearch={handleSearch}
+                            setSearchQuery={setSearchQuery}
+                            setFilterAnchor={setFilterAnchor}
+                            handleFilterChange={handleFilterChange}
+                            onColumnVisibilityChange={setColumnVisibilityModel}
+                            columns={filteredData}
+                            filters={filters}
+                            columnVisibilityModel={columnVisibilityModel}
+                            searchPlaceholder="Search customers..."
+                            showColumnVisibility={true}
+                            showFilters={true}
+                            showExport={isApprovalMode ? true : false}
+                            showUpload={false}
+                            showApproval={true}
+                            columnsToDisplay={columnsToDisplay}
+                            handleApproval={handleApproval}
+                            handleExportClick={handleExportData}
+                            isApprovalMode={isApprovalMode}
+                          />
+                        ),
+                      }}
+                      sx={{
+                        // Flex grow to fill available space
                         flex: 1,
-                        overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
-                      },
 
-                      // Ensure only the virtual scroller (rows) is scrollable
-                      '& .MuiDataGrid-virtualScroller': {
-                        //overflow: 'auto !important',
-                        flex: 1,
-                      },
+                        '& .MuiDataGrid-toolbar': {
+                          padding: '0px 8px  !important',
+                          minHeight: '56px !important',
+                          flexShrink: 0,
+                        },
 
-                      // Keep headers sticky and non-scrollable
-                      '& .MuiDataGrid-columnHeaders': {
-                        //position: 'sticky',
-                        top: 0,
-                        zIndex: 1,
-                        backgroundColor: 'white',
-                        borderBottom: '1px solid #e0e0e0',
-                        flexShrink: 0, // Prevent header from shrinking
-                      },
+                        '& .MuiDataGrid-main': {
+                          flex: 1,
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column',
+                        },
 
-                      '& .MuiDataGrid-row': {
-                        cursor: "pointer",
-                        "&:hover": {
-                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        // Ensure only the virtual scroller (rows) is scrollable
+                        '& .MuiDataGrid-virtualScroller': {
+                          //overflow: 'auto !important',
+                          flex: 1,
                         },
-                      },
 
-                      // Arabic RTL styling
-                      ...(isArabic && {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
+                        // Keep headers sticky and non-scrollable
+                        '& .MuiDataGrid-columnHeaders': {
+                          //position: 'sticky',
+                          top: 0,
+                          zIndex: 1,
+                          backgroundColor: 'white',
+                          borderBottom: '1px solid #e0e0e0',
+                          flexShrink: 0, // Prevent header from shrinking
                         },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        }
-                      }),
 
-                      // Default LTR styling (left alignment)
-                      ...(!isArabic && {
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "left",
+                        '& .MuiDataGrid-row': {
+                          cursor: "pointer",
+                          "&:hover": {
+                            backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          },
                         },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "left",
-                        }
-                      })
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-        );
+
+                        // Arabic RTL styling
+                        ...(isArabic && {
+                          direction: "rtl",
+                          "& .MuiDataGrid-cell": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-columnHeader": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-columnHeaderTitle": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-cellContent": {
+                            textAlign: "right !important",
+                          }
+                        }),
+
+                        // Default LTR styling (left alignment)
+                        ...(!isArabic && {
+                          "& .MuiDataGrid-cell": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-columnHeader": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-columnHeaderTitle": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-cellContent": {
+                            textAlign: "left",
+                          }
+                        })
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          );
 
       case t("invites"):
-        return isMobile ? 
-        (
-          <div className="orders-content">
-            {loading ? (
-              <LoadingSpinner />
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <>
-              <div
-                className="catalog-fixed-header"
-                style={{
-                  top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
-                  position: "sticky",
-                  zIndex: 20,
-                  transition: "top 0.3s ease",
-                  background: "#fff",
-                }}
-              >
-                <TableMobile
-                columns={inviteColumns}
-                allColumns={inviteColumns}
-                data={paginatedInvites}
-                showAllDetails={true}
-                handleAllDetailsClick={handleShowAllDetailsClick}
-                selectedRow={selectedRow}
-                setSelectedRow={setSelectedRow}
-                showRowPopup={showRowPopup}
-                setShowRowPopup={setShowRowPopup}
-                disableExtendRowFullWidth={true}
-                dataGridComponent={
-                  <DataGrid
-                    apiRef={gridApiRef}
-                    rows={[]}
-                    columns={[]}
-                    pageSize={pageSize}
-                    rowCount={total}
-                    columnVisibilityModel={invitecolumnVisibilityModel}
-                    onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
-                    columnDimensions={columnDimensions}
-                    onColumnResize={handleColumnResize}
-                    sortModel={inviteSortModel}
-                    onSortModelChange={handleInviteSortModelChange}
-                    disableSelectionOnClick
-                    disableColumnMenu
-                    hideFooter={true}
-                    hideFooterPagination={true}
-                    disableExtendRowFullWidth={true}
-                    pagination={false}
-                    rowHeight={55}
-                    showToolbar
-                    slots={{
-                      toolbar: () => (
-                        <CustomToolbar
-                          searchQuery={searchQuery}
-                          filterAnchor={filterAnchor}
-                          onSearch={handleSearch}
-                          setSearchQuery={setSearchQuery}
-                          setFilterAnchor={setFilterAnchor}
-                          handleFilterChange={handleFilterChange}
-                          onColumnVisibilityChange={handleColumnVisibilityChange}
-                          columns={filertInvites}
-                          filters={filters}
-                          columnVisibilityModel={columnVisibilityModel}
-                          searchPlaceholder="Search invites..."
-                          showColumnVisibility={false}
-                          showFilters={false}
-                          showExport={false}
-                          showUpload={false}
-                          showApproval={false}
-                          showAdd={isV("btnAddInvite")}
-                          buttonName={t("invite")}
-                          handleAddClick={handleInvite}
-                          columnsToDisplay={columnsToDisplay}
-                          handleApproval={handleApproval}
-                          isApprovalMode={false}
-                        />
-                      ),
+        return isMobile ?
+          (
+            <div className="orders-content">
+              {loading ? (
+                <LoadingSpinner />
+              ) : error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <>
+                  <div
+                    className="catalog-fixed-header"
+                    style={{
+                      top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                      position: "sticky",
+                      zIndex: 20,
+                      transition: "top 0.3s ease",
+                      background: "#fff",
                     }}
-                    sx={{
-                      border: "none !important",
-                        "& .MuiDataGrid-overlay": {
-                          display: "none !important", // ✅ hides “No rows” message
-                        },
-                        "& .MuiDataGrid-row": {
-                          // cursor: "default",
-                          // "&:hover": {
-                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
-                          // },
-                          display: "none !important",
-                        },
-                        ".MuiDataGrid-cell": {
-                          display: "none !important",
-                        },
-                        "& .MuiDataGrid-main": {
-                          display: "none", // ✅ hides the main grid body
-                        },
-                        "& .MuiDataGrid-toolbar": {
-                          // position: "sticky",
-                          // top: 0,
-                          // zIndex: 10, // keeps it above rows
-                          // backgroundColor: "#fff", // ensures it doesn't become transparent
-                          // borderBottom: "1px solid #e0e0e0",
-                          padding: "0px",
-                          gap: "10px",
-                          border: "none",
-                        },
+                  >
+                    <TableMobile
+                      columns={inviteColumns}
+                      allColumns={inviteColumns}
+                      data={paginatedInvites}
+                      showAllDetails={true}
+                      handleAllDetailsClick={handleShowAllDetailsClick}
+                      selectedRow={selectedRow}
+                      setSelectedRow={setSelectedRow}
+                      showRowPopup={showRowPopup}
+                      setShowRowPopup={setShowRowPopup}
+                      disableExtendRowFullWidth={true}
+                      dataGridComponent={
+                        <DataGrid
+                          apiRef={gridApiRef}
+                          rows={[]}
+                          columns={[]}
+                          pageSize={pageSize}
+                          rowCount={total}
+                          columnVisibilityModel={invitecolumnVisibilityModel}
+                          onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
+                          columnDimensions={columnDimensions}
+                          onColumnResize={handleColumnResize}
+                          sortModel={inviteSortModel}
+                          onSortModelChange={handleInviteSortModelChange}
+                          disableSelectionOnClick
+                          disableColumnMenu
+                          hideFooter={true}
+                          hideFooterPagination={true}
+                          disableExtendRowFullWidth={true}
+                          pagination={false}
+                          rowHeight={55}
+                          showToolbar
+                          slots={{
+                            toolbar: () => (
+                              <CustomToolbar
+                                searchQuery={searchQuery}
+                                filterAnchor={filterAnchor}
+                                onSearch={handleSearch}
+                                setSearchQuery={setSearchQuery}
+                                setFilterAnchor={setFilterAnchor}
+                                handleFilterChange={handleFilterChange}
+                                onColumnVisibilityChange={handleColumnVisibilityChange}
+                                columns={filertInvites}
+                                filters={filters}
+                                columnVisibilityModel={columnVisibilityModel}
+                                searchPlaceholder="Search invites..."
+                                showColumnVisibility={false}
+                                showFilters={false}
+                                showExport={false}
+                                showUpload={false}
+                                showApproval={false}
+                                showAdd={isV("btnAddInvite")}
+                                buttonName={t("invite")}
+                                handleAddClick={handleInvite}
+                                columnsToDisplay={columnsToDisplay}
+                                handleApproval={handleApproval}
+                                isApprovalMode={false}
+                              />
+                            ),
+                          }}
+                          sx={{
+                            border: "none !important",
+                            "& .MuiDataGrid-overlay": {
+                              display: "none !important", // ✅ hides “No rows” message
+                            },
+                            "& .MuiDataGrid-row": {
+                              // cursor: "default",
+                              // "&:hover": {
+                              //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+                              // },
+                              display: "none !important",
+                            },
+                            ".MuiDataGrid-cell": {
+                              display: "none !important",
+                            },
+                            "& .MuiDataGrid-main": {
+                              display: "none", // ✅ hides the main grid body
+                            },
+                            "& .MuiDataGrid-toolbar": {
+                              // position: "sticky",
+                              // top: 0,
+                              // zIndex: 10, // keeps it above rows
+                              // backgroundColor: "#fff", // ensures it doesn't become transparent
+                              // borderBottom: "1px solid #e0e0e0",
+                              padding: "0px",
+                              gap: "10px",
+                              border: "none",
+                            },
 
-                        "&.catalog-datagrid": {
-                          border: "2px solid black",
-                          borderRadius: "8px",
-                          backgroundColor: "#f8f9fa",
-                        },
-                      }}
+                            "&.catalog-datagrid": {
+                              border: "2px solid black",
+                              borderRadius: "8px",
+                              backgroundColor: "#f8f9fa",
+                            },
+                          }}
+                        />
+                      }
+                    />
+                  </div>
+                  <InviteCard
+                    invites={paginatedInvites}
+                    handleResend={handleResend}
                   />
-                }
-              />
-              </div>
-              <InviteCard
-  invites={paginatedInvites}
-  handleResend={handleResend}
-/>
-              </>
-              // <TableMobile
-              //   columns={customerColumnsToUse}
-              //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
-              //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-              //   showAllDetails={true}
-              //   handleAllDetailsClick={handleShowAllDetailsClick}
-              //   selectedRow={selectedRow}
-              //   setSelectedRow={setSelectedRow}
-              //   showRowPopup={showRowPopup}
-              //   setShowRowPopup={setShowRowPopup}
-              //   dataGridComponent={
-              //     <DataGrid
-              //       rows={[]}
-              //       columns={[]}
-              //       pageSize={pageSize}
-              //       rowCount={total}
-              //       getRowId={(row) => row?.workflowInstanceId || row?.id}
-              //       onRowClick={handleRowClick}
-              //       columnVisibilityModel={columnVisibilityModel}
-              //       onColumnVisibilityModelChange={setColumnVisibilityModel}
-              //       sortModel={sortModel}
-              //       onSortModelChange={handleSortModelChange}
-              //       disableSelectionOnClick
-              //       disableColumnMenu
-              //       hideFooter={true}
-              //       hideFooterPagination={true}
-              //       disableExtendRowFullWidth={true}
-              //       pagination={false}
-              //       autoHeight
-              //       rowHeight={55}
-              //       showToolbar
-              //       slots={{
-              //         toolbar: () => (
-              //           <CustomToolbar
-              //             searchQuery={searchQuery}
-              //             filterAnchor={filterAnchor}
-              //             onSearch={handleSearch}
-              //             setSearchQuery={setSearchQuery}
-              //             setFilterAnchor={setFilterAnchor}
-              //             handleFilterChange={handleFilterChange}
-              //             onColumnVisibilityChange={setColumnVisibilityModel}
-              //             columns={filteredData}
-              //             filters={filters}
-              //             columnVisibilityModel={columnVisibilityModel}
-              //             searchPlaceholder="Search customers..."
-              //             showColumnVisibility={true}
-              //             showFilters={true}
-              //             showExport={false}
-              //             showUpload={false}
-              //             showApproval={true}
-              //             columnsToDisplay={columnsToDisplay}
-              //             handleApproval={handleApproval}
-              //             isApprovalMode={isApprovalMode}
-              //           />
-              //         ),
-              //       }}
-              //       sx={{
-              //         "& .MuiDataGrid-row": {
-              //           cursor: "pointer",
-              //           "&:hover": {
-              //             backgroundColor: "rgba(0, 0, 0, 0.04)",
-              //           },
-              //         },
-              //         '.MuiDataGrid-cell': {
-              //           textAlign: 'center',
-              //           display: 'flex',
-              //           alignItems: 'center',
-              //           justifyContent: 'center',
-              //         }
-              //       }}
-              //     />
-              //   }
-              // />
-            )}
-          </div>
-        )
-        :
-        (
-          <div className="table-container">
-            {loading ? (
-              <LoadingSpinner />
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <>
-                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
-                <div style={{
-                  //height: '400px',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}>
-                  <DataGrid
-                    apiRef={gridApiRef}
-                    rows={paginatedInvites}
-                    columns={inviteColumns}
-                    pageSize={pageSize}
-                    rowCount={total}
-                    columnVisibilityModel={invitecolumnVisibilityModel}
-                    onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
-                    columnDimensions={columnDimensions}
-                    onColumnResize={handleColumnResize}
-                    sortModel={inviteSortModel}
-                    onSortModelChange={handleInviteSortModelChange}
-                    disableSelectionOnClick
-                    disableColumnMenu
-                    hideFooter={true}
-                    hideFooterPagination={true}
-                    disableExtendRowFullWidth={true}
-                    pagination={false}
-                    rowHeight={55}
-                    showToolbar
-                    slots={{
-                      toolbar: () => (
-                        <CustomToolbar
-                          searchQuery={searchQuery}
-                          filterAnchor={filterAnchor}
-                          onSearch={handleSearch}
-                          setSearchQuery={setSearchQuery}
-                          setFilterAnchor={setFilterAnchor}
-                          handleFilterChange={handleFilterChange}
-                          onColumnVisibilityChange={handleColumnVisibilityChange}
-                          columns={filertInvites}
-                          filters={filters}
-                          columnVisibilityModel={columnVisibilityModel}
-                          searchPlaceholder="Search invites..."
-                          showColumnVisibility={true}
-                          showFilters={true}
-                          showExport={false}
-                          showUpload={false}
-                          showApproval={false}
-                          showAdd={isV("btnAddInvite")}
-                          buttonName={t("invite")}
-                          handleAddClick={handleInvite}
-                          columnsToDisplay={columnsToDisplay}
-                          handleApproval={handleApproval}
-                          isApprovalMode={false}
-                        />
-                      ),
-                    }}
-                    sx={{
-                      // Flex grow to fill available space
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-
-                      '& .MuiDataGrid-toolbar': {
-                        padding: '0px 8px  !important',
-                        minHeight: '56px !important',
-                        flexShrink: 0,
-                      },
-
-                      '& .MuiDataGrid-main': {
+                </>
+                // <TableMobile
+                //   columns={customerColumnsToUse}
+                //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
+                //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                //   showAllDetails={true}
+                //   handleAllDetailsClick={handleShowAllDetailsClick}
+                //   selectedRow={selectedRow}
+                //   setSelectedRow={setSelectedRow}
+                //   showRowPopup={showRowPopup}
+                //   setShowRowPopup={setShowRowPopup}
+                //   dataGridComponent={
+                //     <DataGrid
+                //       rows={[]}
+                //       columns={[]}
+                //       pageSize={pageSize}
+                //       rowCount={total}
+                //       getRowId={(row) => row?.workflowInstanceId || row?.id}
+                //       onRowClick={handleRowClick}
+                //       columnVisibilityModel={columnVisibilityModel}
+                //       onColumnVisibilityModelChange={setColumnVisibilityModel}
+                //       sortModel={sortModel}
+                //       onSortModelChange={handleSortModelChange}
+                //       disableSelectionOnClick
+                //       disableColumnMenu
+                //       hideFooter={true}
+                //       hideFooterPagination={true}
+                //       disableExtendRowFullWidth={true}
+                //       pagination={false}
+                //       autoHeight
+                //       rowHeight={55}
+                //       showToolbar
+                //       slots={{
+                //         toolbar: () => (
+                //           <CustomToolbar
+                //             searchQuery={searchQuery}
+                //             filterAnchor={filterAnchor}
+                //             onSearch={handleSearch}
+                //             setSearchQuery={setSearchQuery}
+                //             setFilterAnchor={setFilterAnchor}
+                //             handleFilterChange={handleFilterChange}
+                //             onColumnVisibilityChange={setColumnVisibilityModel}
+                //             columns={filteredData}
+                //             filters={filters}
+                //             columnVisibilityModel={columnVisibilityModel}
+                //             searchPlaceholder="Search customers..."
+                //             showColumnVisibility={true}
+                //             showFilters={true}
+                //             showExport={false}
+                //             showUpload={false}
+                //             showApproval={true}
+                //             columnsToDisplay={columnsToDisplay}
+                //             handleApproval={handleApproval}
+                //             isApprovalMode={isApprovalMode}
+                //           />
+                //         ),
+                //       }}
+                //       sx={{
+                //         "& .MuiDataGrid-row": {
+                //           cursor: "pointer",
+                //           "&:hover": {
+                //             backgroundColor: "rgba(0, 0, 0, 0.04)",
+                //           },
+                //         },
+                //         '.MuiDataGrid-cell': {
+                //           textAlign: 'center',
+                //           display: 'flex',
+                //           alignItems: 'center',
+                //           justifyContent: 'center',
+                //         }
+                //       }}
+                //     />
+                //   }
+                // />
+              )}
+            </div>
+          )
+          :
+          (
+            <div className="table-container">
+              {loading ? (
+                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                  <LoadingSpinner size="medium" />
+                </div>
+              ) : error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <>
+                  {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                  <div style={{
+                    //height: '400px',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    <DataGrid
+                      apiRef={gridApiRef}
+                      rows={paginatedInvites}
+                      columns={inviteColumns}
+                      pageSize={pageSize}
+                      rowCount={total}
+                      columnVisibilityModel={invitecolumnVisibilityModel}
+                      onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
+                      columnDimensions={columnDimensions}
+                      onColumnResize={handleColumnResize}
+                      sortModel={inviteSortModel}
+                      onSortModelChange={handleInviteSortModelChange}
+                      disableSelectionOnClick
+                      disableColumnMenu
+                      hideFooter={true}
+                      hideFooterPagination={true}
+                      disableExtendRowFullWidth={true}
+                      pagination={false}
+                      rowHeight={55}
+                      showToolbar
+                      slots={{
+                        toolbar: () => (
+                          <CustomToolbar
+                            searchQuery={searchQuery}
+                            filterAnchor={filterAnchor}
+                            onSearch={handleSearch}
+                            setSearchQuery={setSearchQuery}
+                            setFilterAnchor={setFilterAnchor}
+                            handleFilterChange={handleFilterChange}
+                            onColumnVisibilityChange={handleColumnVisibilityChange}
+                            columns={filertInvites}
+                            filters={filters}
+                            columnVisibilityModel={columnVisibilityModel}
+                            searchPlaceholder="Search invites..."
+                            showColumnVisibility={true}
+                            showFilters={true}
+                            showExport={false}
+                            showUpload={false}
+                            showApproval={false}
+                            showAdd={isV("btnAddInvite")}
+                            buttonName={t("invite")}
+                            handleAddClick={handleInvite}
+                            columnsToDisplay={columnsToDisplay}
+                            handleApproval={handleApproval}
+                            isApprovalMode={false}
+                          />
+                        ),
+                      }}
+                      sx={{
+                        // Flex grow to fill available space
                         flex: 1,
-                        overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
-                      },
 
-                      // Ensure only the virtual scroller (rows) is scrollable
-                      '& .MuiDataGrid-virtualScroller': {
-                        //overflow: 'auto !important',
-                        flex: 1,
-                      },
+                        '& .MuiDataGrid-toolbar': {
+                          padding: '0px 8px  !important',
+                          minHeight: '56px !important',
+                          flexShrink: 0,
+                        },
 
-                      // Keep headers sticky and non-scrollable
-                      '& .MuiDataGrid-columnHeaders': {
-                        //position: 'sticky',
-                        top: 0,
-                        zIndex: 1,
-                        backgroundColor: 'white',
-                        borderBottom: '1px solid #e0e0e0',
-                        flexShrink: 0, // Prevent header from shrinking
-                      },
+                        '& .MuiDataGrid-main': {
+                          flex: 1,
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column',
+                        },
 
-                      '& .MuiDataGrid-row': {
-                        cursor: "pointer",
-                        "&:hover": {
-                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        // Ensure only the virtual scroller (rows) is scrollable
+                        '& .MuiDataGrid-virtualScroller': {
+                          //overflow: 'auto !important',
+                          flex: 1,
                         },
-                      },
 
-                      // Arabic RTL styling
-                      ...(isArabic && {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
+                        // Keep headers sticky and non-scrollable
+                        '& .MuiDataGrid-columnHeaders': {
+                          //position: 'sticky',
+                          top: 0,
+                          zIndex: 1,
+                          backgroundColor: 'white',
+                          borderBottom: '1px solid #e0e0e0',
+                          flexShrink: 0, // Prevent header from shrinking
                         },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        }
-                      }),
 
-                      // Default LTR styling (left alignment)
-                      ...(!isArabic && {
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "left",
+                        '& .MuiDataGrid-row': {
+                          cursor: "pointer",
+                          "&:hover": {
+                            backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          },
                         },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "left",
-                        }
-                      })
-                    }}
-                  />
-                </div>
 
-              </>
-            )}
-          </div>
-        );
+                        // Arabic RTL styling
+                        ...(isArabic && {
+                          direction: "rtl",
+                          "& .MuiDataGrid-cell": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-columnHeader": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-columnHeaderTitle": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-cellContent": {
+                            textAlign: "right !important",
+                          }
+                        }),
+
+                        // Default LTR styling (left alignment)
+                        ...(!isArabic && {
+                          "& .MuiDataGrid-cell": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-columnHeader": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-columnHeaderTitle": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-cellContent": {
+                            textAlign: "left",
+                          }
+                        })
+                      }}
+                    />
+                  </div>
+
+                </>
+              )}
+            </div>
+          );
       default:
         return null;
     }
@@ -2588,61 +2699,61 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
 
   const handleExportData = async () => {
     try {
-        const params = new URLSearchParams({
-            page: page,
-            pageSize: pageSize,
-            search: searchQuery,
-            sortBy: sortModel[0]?.field || 'id',
-            sortOrder: sortModel[0]?.sort || 'asc',
-            filters: JSON.stringify(filters),
-            isdownload: 'true' 
-        });
+      const params = new URLSearchParams({
+        page: page,
+        pageSize: pageSize,
+        search: searchQuery,
+        sortBy: sortModel[0]?.field || 'id',
+        sortOrder: sortModel[0]?.sort || 'asc',
+        filters: JSON.stringify(filters),
+        isdownload: 'true'
+      });
 
-        const apiUrl = `${API_BASE_URL}/customers/get-approval-history?${params.toString()}`;
-        
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-        });
+      const apiUrl = `${API_BASE_URL}/customers/get-approval-history?${params.toString()}`;
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                logout();
-                navigate(user?.userType === 'customer' ? '/login' : '/login-employee');
-                return;
-            }
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          logout();
+          navigate(user?.userType === 'customer' ? '/login' : '/login-employee');
+          return;
         }
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = 'approval_history.xlsx';
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (filenameMatch && filenameMatch[1]) {
-                filename = filenameMatch[1].replace(/['"]/g, '');
-            }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'approval_history.xlsx';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
         }
-        
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      }
 
-        console.log('Excel file downloaded successfully');
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      console.log('Excel file downloaded successfully');
 
     } catch (error) {
-        console.error('Error downloading approval history:', error);
+      console.error('Error downloading approval history:', error);
     }
-};
+  };
   useEffect(() => {
     setFilters({});
   }, [activeTab]);
@@ -2657,24 +2768,24 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
-  
-useEffect(() => {
-  const savedDimensions = localStorage.getItem(columnWidthsKey);
-  if (savedDimensions) {
-    setColumnDimensions(JSON.parse(savedDimensions));
-  }
-}, [columnWidthsKey]);
-const handleColumnResize = (params) => {
-  const { colDef } = params;
-  setColumnDimensions(prev => {
-    const newDimensions = {
-      ...prev,
-      [colDef.field]: { width: colDef.width }
-    };
-    localStorage.setItem(columnWidthsKey, JSON.stringify(newDimensions));
-    return newDimensions;
-  });
-};
+
+  useEffect(() => {
+    const savedDimensions = localStorage.getItem(columnWidthsKey);
+    if (savedDimensions) {
+      setColumnDimensions(JSON.parse(savedDimensions));
+    }
+  }, [columnWidthsKey]);
+  const handleColumnResize = (params) => {
+    const { colDef } = params;
+    setColumnDimensions(prev => {
+      const newDimensions = {
+        ...prev,
+        [colDef.field]: { width: colDef.width }
+      };
+      localStorage.setItem(columnWidthsKey, JSON.stringify(newDimensions));
+      return newDimensions;
+    });
+  };
   return (
     <Sidebar title={t("Customers")}>
       <div className="customer-content">

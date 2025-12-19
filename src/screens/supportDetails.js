@@ -391,7 +391,7 @@ function SupportDetails() {
     console.log("$$$$$$$$$$$ logging out");
     // Logout instead of showing loading message
     logout();
-    navigate("/login");
+    navigate("/login",{replace:true});
     return null; // Return null while logout is processing
   }
   //For fetching the user again after browser refersh - End
