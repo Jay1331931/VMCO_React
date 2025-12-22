@@ -5616,7 +5616,7 @@ function OrderDetails() {
                       (formData.paymentStatus && ["paid", "under review"].includes(formData.paymentStatus.toLowerCase()))
                     }
                   >
-                    {cancelling ? t("Cancelling...") : t("Cancel")}
+                    {cancelling ? t("Cancelling...") : t("Cancel Order")}
                   </button>
                 )}
 
