@@ -1000,12 +1000,11 @@ body.catalog-page #root {
   cursor: pointer;
 }
 .filter-tabs {
-   display: flex;
-              flex-wrap: wrap;
-              align-items: center;
-              gap: 12;
-              overflow-x: auto;
-              scrollbar-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12;
+  scrollbar-width: none;
 }
 @media (max-width: 768px) {
   .cart-header {
