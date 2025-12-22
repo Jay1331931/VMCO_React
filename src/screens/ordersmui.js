@@ -2633,7 +2633,7 @@ function Orders() {
           ) : (
             <>
               <div
-                className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
+                className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}
               // style={{
               //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
               //   position: "sticky",

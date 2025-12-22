@@ -246,7 +246,16 @@ const TapCardPayment = () => {
         if (isMobile) {
           navigate("/catalog");
           // window.open(paymentUrl, "_blank", "noopener,noreferrer");
-          window.open(paymentUrl, "_system");
+          // window.open(paymentUrl, "_system");
+          const width = Math.min(500, window.screen.width - 40);
+  const height = Math.min(700, window.screen.height - 100);
+  const left = (window.screen.width - width) / 2;
+  const top = (window.screen.height - height) / 2;
+   window.open(
+    paymentUrl,
+    'TapPayment',
+    `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
+  );
         } else {
           window.location.replace(paymentUrl);
         }

@@ -256,45 +256,96 @@ function Customers() {
               },
             }),
           });
-          Swal.fire({
-            title: "Invite Resent",
-            html: `
-            <p>${t("The invite has been resent successfully.")}</p>
+         Swal.fire({
+  title: t("Invite Resent"),
+  html: `
+    <p>${t("The invite has been resent successfully.")}</p>
 
-            <div style="display:flex;align-items:center;">
-              <input
-                id="invite-link"
-                class=${isMobile ? "swal3-input" : "swal2-input"}
-                style="flex:1;margin:0 8px 0 0;"
-                type="text"
-                value="${result?.data}"
-                readonly
-              />
-              <button id="copy-icon" style="padding: ${isMobile ? '3px' : '18px'} ; border-radius: 5px;">${isMobile ? '📋' : "Copy"}</button>
+    <div style="display:flex;align-items:center;border:1px solid #ddd;border-radius:4px;overflow:hidden;">
+      <input
+        id="invite-link"
+        type="text"
+        value="${result?.data}"
+        readonly
+        style="flex:1;border:none;padding:10px 12px;font-size:14px;outline:none;"
+      />
+      <button
+        id="copyInviteBtn"
+        style="display:flex;align-items:center;gap:6px;padding:0 12px;height:44px;border:none;border-left:1px solid #ddd;background:#fff;cursor:pointer;transition:all .2s;white-space:nowrap;"
+        title="Copy to clipboard"
+      >
+        <i class="fas fa-copy" style="font-size:14px;color:#666;"></i>
+        <span id="copyInviteText" style="font-size:14px;color:#666;">Copy</span>
+      </button>
+    </div>
+  `,
+  icon: "success",
+  showConfirmButton: true,
+  confirmButtonText: "OK",
 
-            </div>
-          `,
-            icon: "success",
-            showConfirmButton: true,
-            confirmButtonText: "OK",
+  didOpen: () => {
+    const input = document.getElementById("invite-link");
+    const copyBtn = document.getElementById("copyInviteBtn");
+    const copyIcon = copyBtn.querySelector("i");
+    const copyText = document.getElementById("copyInviteText");
 
-            didOpen: () => {
-              const input = document.getElementById("invite-link");
-              const icon = document.getElementById("copy-icon");
+    /* Hover effect */
+    copyBtn.addEventListener("mouseenter", () => {
+      copyBtn.style.background = "#f5f5f5";
+      copyIcon.style.color = "#333";
+      copyText.style.color = "#333";
+    });
 
-              icon.addEventListener("click", () => {
-                input.select();
-                input.setSelectionRange(0, 99999); // mobile-friendly
-                navigator.clipboard.writeText(input.value).then(() => {
-                  icon.classList.replace("fa-copy", "fa-check");
-                  setTimeout(
-                    () => icon.classList.replace("fa-check", "fa-copy"),
-                    2000
-                  );
-                });
-              });
-            },
-          });
+    copyBtn.addEventListener("mouseleave", () => {
+      copyBtn.style.background = "#fff";
+      copyIcon.style.color = "#666";
+      copyText.style.color = "#666";
+    });
+
+    /* Copy action */
+    copyBtn.addEventListener("click", async () => {
+      input.select();
+      input.setSelectionRange(0, 99999);
+
+      try {
+        await navigator.clipboard.writeText(input.value);
+
+        copyIcon.className = "fas fa-check";
+        copyIcon.style.color = "#28a745";
+        copyText.textContent = "Copied!";
+        copyText.style.color = "#28a745";
+        copyBtn.style.background = "#e8f5e9";
+        copyBtn.style.borderLeftColor = "#c3e6cb";
+
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = "Copy";
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      } catch (err) {
+        copyIcon.className = "fas fa-times";
+        copyIcon.style.color = "#dc3545";
+        copyText.textContent = "Failed!";
+        copyText.style.color = "#dc3545";
+        copyBtn.style.background = "#f8d7da";
+        copyBtn.style.borderLeftColor = "#f5c6cb";
+
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = "Copy";
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      }
+    });
+  },
+});
+
         } catch (err) {
           console.error("Error generating invite link:", err);
           // alert('Failed to generate invite link. Please try again later.');
@@ -504,42 +555,98 @@ function Customers() {
             });
             return;
           }
-          Swal.fire({
-            title: "Invite Link Sent",
-            html: `
-            <p>${t("The invite has been sent successfully.")}</p>
-            <div style="display:flex;align-items:center;">
-              <input  id="invite-link"
-                      class=${isMobile ? "swal3-input" : "swal2-input"}
-                      style="flex:1;margin:0 8px 0 0;"
-                      type="text"
-                      value="${res.data}"
-                      readonly />
- <button id="copy-icon" style="padding: ${isMobile ? '3px' : '18px'} ; border-radius: 5px;">${isMobile ? '📋' : "Copy"}</button>
+         Swal.fire({
+  title: t("Invite Link Sent1"),
+  html: `
+    <p>${t("The invite has been sent successfully.")}</p>
+ <div style="display:flex;align-items:center;border:1px solid #ddd;border-radius:4px;overflow:hidden;">
+      <input
+        id="invite-link"
+        type="text"
+        value="${result?.data}"
+        readonly
+        style="flex:1;border:none;padding:10px 12px;font-size:14px;outline:none;"
+      />
+      <button
+        id="copyInviteBtn"
+        style="display:flex;align-items:center;gap:6px;padding:0 12px;height:44px;border:none;border-left:1px solid #ddd;background:#fff;cursor:pointer;transition:all .2s;white-space:nowrap;"
+        title="Copy to clipboard"
+      >
+        <i class="fas fa-copy" style="font-size:14px;color:#666;"></i>
+        <span id="copyInviteText" style="font-size:14px;color:#666;">Copy</span>
+      </button>
+    </div>
+      
+  `,
+  icon: "success",
+  showConfirmButton: true,
+  confirmButtonText: t("OK"),
 
-            </div>
-          `,
-            icon: "success",
-            showConfirmButton: true,
-            confirmButtonText: "OK",
+  didOpen: () => {
+    const input = document.getElementById("invite-link");
+    const copyBtn = document.getElementById("copyInviteBtn");
+    const copyIcon = copyBtn.querySelector("i");
+    const copyText = document.getElementById("copyInviteText");
 
-            didOpen: () => {
-              const input = document.getElementById("invite-link");
-              const icon = document.getElementById("copy-icon");
+    /* Hover effect */
+    copyBtn.addEventListener("mouseenter", () => {
+      copyBtn.style.background = "#f5f5f5";
+      copyIcon.style.color = "#333";
+      copyText.style.color = "#333";
+    });
 
-              icon.addEventListener("click", () => {
-                input.select();
-                input.setSelectionRange(0, 99999);
-                navigator.clipboard.writeText(input.value).then(() => {
-                  icon.classList.replace("fa-copy", "fa-check");
-                  setTimeout(
-                    () => icon.classList.replace("fa-check", "fa-copy"),
-                    2000
-                  );
-                });
-              });
-            },
-          });
+    copyBtn.addEventListener("mouseleave", () => {
+      copyBtn.style.background = "#fff";
+      copyIcon.style.color = "#666";
+      copyText.style.color = "#666";
+    });
+
+    /* Copy action */
+    copyBtn.addEventListener("click", async () => {
+      input.select();
+      input.setSelectionRange(0, 99999);
+
+      try {
+        await navigator.clipboard.writeText(input.value);
+
+        // success state
+        copyIcon.className = "fas fa-check";
+        copyIcon.style.color = "#28a745";
+        copyText.textContent = t("Copied!");
+        copyText.style.color = "#28a745";
+        copyBtn.style.background = "#e8f5e9";
+        copyBtn.style.borderLeftColor = "#c3e6cb";
+
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = t("Copy");
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      } catch {
+        // error state
+        copyIcon.className = "fas fa-times";
+        copyIcon.style.color = "#dc3545";
+        copyText.textContent = t("Failed!");
+        copyText.style.color = "#dc3545";
+        copyBtn.style.background = "#f8d7da";
+        copyBtn.style.borderLeftColor = "#f5c6cb";
+
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = t("Copy");
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      }
+    });
+  },
+});
+
 
           // }
         } catch (err) {

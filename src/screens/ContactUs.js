@@ -20,7 +20,7 @@ const ContactUs = () => {
     document.body.dir = newLang === "ar" ? "rtl" : "ltr";
   };
   const handleNavigate = () => {
-    navigate("/login");
+    navigate("/login",{replace:true});
   };
 
   return (

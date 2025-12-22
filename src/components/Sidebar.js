@@ -3,12 +3,11 @@ import "../styles/sidebar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../i18n";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useLocation } from "react-router-dom"; // Add useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SaudiTime from "../components/Time";
 import RbacManager from "../utilities/rbac";
 import { Capacitor } from "@capacitor/core";
-// import {isMobile as isMobileDevice} from "../utilities/isMobile";
 import {
   faChevronLeft,
   faChevronRight,
@@ -35,12 +34,13 @@ import {
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
-// import { isMobile } from "../utilities/isMobile";
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isMobileDevice =Capacitor.isNativePlatform();
-function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
+const isMobileDevice = true; //Capacitor.isNativePlatform();
+
+function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
   const navigate = useNavigate();
-  const location = useLocation(); // Add this to track current route
+  const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
@@ -52,6 +52,7 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
@@ -73,6 +74,7 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
     i18n.changeLanguage(newLang);
     document.body.dir = newLang === "ar" ? "rtl" : "ltr";
   };
+
   const [customer, setCustomer] = useState();
   let transformedCustomer;
   const [formData, setFormData] = useState();
@@ -91,10 +93,8 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       const currentY = e.touches[0].clientY;
 
       if (currentY < dragStartY.current - 10) {
-        // user dragged up
         setShowMenu(false);
       } else if (currentY > dragStartY.current + 10) {
-        // user dragged down
         setShowMenu(true);
       }
     };
@@ -107,17 +107,18 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       window.removeEventListener("touchmove", handleTouchMove);
     };
   }, []);
+
   const handlePopupToggle = () => {
     setShowPopup(!showPopup);
   };
+
   function transformCustomerData(customer, customerContacts) {
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts
-      ? [customerContacts]
-      : [];
+        ? [customerContacts]
+        : [];
 
-    // Create a map of contactType to contact data (note: using contactType instead of contact_type)
     const contactsMap = contacts.reduce((acc, contact) => {
       acc[contact.contactType] = contact;
       return acc;
@@ -169,12 +170,12 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       console.error("Error fetching customer contacts:", err);
     }
   };
+
   const fetchApprovedCustomer = async (transformedCustomer) => {
     console.log("Fetch Approved Customer Called");
     const customerId =
       transformedCustomer?.id || transformedCustomer?.customerId;
     try {
-      // Fetch basic customer data
       const response = await fetch(
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
@@ -194,7 +195,6 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       }
 
       let customerData = result.data;
-      // console.log('Initial Customer Data:', customerData);
 
       const [contactsResponse, paymentMethodsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
@@ -235,29 +235,23 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
             paymentMethods.find((m) => m?.methodName === "Credit")?.balance ||
             0,
         };
-        // console.log('Customer Data with Payment Methods:', customerData);
       }
 
       if (transformedCustomer.isApprovalMode) {
         if (transformedCustomer.workflowData?.updates) {
-          // First, set all customer data while preserving current values
           setFormData((prevFormData) => {
             const newFormData = { ...prevFormData, ...customerData };
 
-            // If 'current' doesn't exist, initialize it with the current values
             if (!newFormData.current) {
               newFormData.current = { ...prevFormData };
             }
 
-            // Apply updates while preserving current values
             Object.entries(transformedCustomer.workflowData.updates).forEach(
               ([key, value]) => {
                 if (newFormData[key] !== undefined) {
-                  // Store the current value if not already stored
                   if (!newFormData.current[key]) {
                     newFormData.current[key] = newFormData[key];
                   }
-                  // Apply the update
                   newFormData[key] = value;
                 }
               }
@@ -276,6 +270,7 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       throw err;
     }
   };
+
   useEffect(() => {
     document.body.dir = isRTL ? "rtl" : "ltr";
 
@@ -294,14 +289,12 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
   }, [isRTL]);
 
   useEffect(() => {
-
     const path = location.pathname;
-    console.log("MenuName",MenuName)
-    switch (MenuName ||path  ) {
+    console.log("MenuName", MenuName);
+    switch (MenuName || path) {
       case "/orders":
         setActiveMenu("Orders");
         break;
-
       case "/customers":
         setActiveMenu("Customers");
         break;
@@ -315,19 +308,38 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
         setActiveMenu("Your Cart");
         break;
       case "Menu":
- setActiveMenu("Menu");
+        setActiveMenu("Menu");
+        break;
       case "Orders":
-        console.log("Orders")
-         setActiveMenu("Orders");
+        console.log("Orders");
+        setActiveMenu("Orders");
+        break;
       default:
         setActiveMenu("Dashboard");
     }
-  }, [location.pathname,MenuName]);
+  }, [location.pathname, MenuName]);
 
   useEffect(() => {
-  
     setActiveMenu(title);
   }, [title]);
+
+  useEffect(() => {
+    const mainContent = document.querySelector(".main-content");
+    if (mainContent && isMobileDevice) {
+      if (showOrdersSubMenu) {
+        mainContent.classList.add("has-orders-submenu");
+      } else {
+        mainContent.classList.remove("has-orders-submenu");
+      }
+    }
+
+    return () => {
+      const mainContent = document.querySelector(".main-content");
+      if (mainContent) {
+        mainContent.classList.remove("has-orders-submenu");
+      }
+    };
+  }, [showOrdersSubMenu, isMobileDevice]);
 
   const toggleSidebar = () => setSidebarCollapsed(!isSidebarCollapsed);
   const handleMobileToggle = () => {
@@ -342,10 +354,9 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
     }
     setShowOrdersSubMenu(false);
     setActiveMenu(label);
- 
+
     if (window.innerWidth <= 768) setSidebarExpanded(false);
 
-    // Navigate to the corresponding page
     switch (label) {
       case "Orders":
         navigate("/orders");
@@ -374,23 +385,16 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
         navigate("/admin/upload");
         break;
       case "Dashboard":
-        navigate("/login");
+        navigate("/login",{replace:true});
         break;
-      // case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: fetchApprovedCustomer(user)}}); break;
       case "Company":
         try {
           const customerData = await fetchApprovedCustomer(user);
-          // navigate('/customersDetails', {
-          //   state: {
-          //     transformedCustomer: JSON.parse(JSON.stringify(customerData))
-          //   }
-          // });
           navigate("/customerDetails", {
             state: {
               customerId: customerData?.id,
               workflowId: customerData?.workflowInstanceId,
               mode: "add",
-              // activeTabRequired: "Branches",
             },
           });
         } catch (err) {
@@ -419,9 +423,7 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       case "Approval History":
         navigate("/approvalHistory");
         break;
-
       default:
-        // If no match is found, stay on current page
         break;
     }
   };
@@ -429,13 +431,12 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
   const handleLogout = async () => {
     const userLoggedOut = user;
 
-    logout(true); // Pass true to indicate button was clicked
+    logout(true);
 
-    // Logout successful, redirect to login page
     if (userLoggedOut?.userType === "employee") {
-      navigate("/login/employee");
+      navigate("/login/employee",{replace:true});
     } else {
-      navigate("/login");
+      navigate("/login",{replace:true});
     }
   };
 
@@ -460,7 +461,9 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       icon: faUsers,
       label: "Customers",
       isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") || activeMenu === t("Customers") || activeMenu === t("Company")
+        ? activeMenu === t("Catalog") ||
+          activeMenu === t("Customers") ||
+          activeMenu === t("Company")
           ? true
           : false
         : true,
@@ -468,8 +471,7 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
     {
       icon: faHeadset,
       label: "Support",
-      isVisible:true
-        ,
+      isVisible: true,
     },
     {
       icon: faTools,
@@ -485,8 +487,7 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       icon: faBank,
       label: isMobileDevice ? "Bank" : "Bank Transfer",
       permission: "BankTransfer",
-      isVisible:          true
-        
+      isVisible: true,
     },
     {
       icon: faShoppingCart,
@@ -520,21 +521,16 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       permission: "approvalHistory",
       isVisible: isMobile ? false : true,
     },
-   {
-  icon: faList,
-  label: "Menu",
-  isVisible: isMobileDevice && 
-    ["Support", "Bank", "Maintenance", "Orders","Bank Transactions"]
-      .map(t)
-      .includes(activeMenu),
-},
-,
-
+    {
+      icon: faList,
+      label: "Menu",
+      // UPDATED: Menu visible on all screens in mobile
+      isVisible: isMobileDevice,
+    },
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
 
-  // Add this function to refresh customer data
   const refreshCustomerData = async () => {
     try {
       const customerData = await fetchApprovedCustomer(user);
@@ -549,24 +545,23 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
   };
 
   const formatKey = (key) => {
-    // Add space before capital letters and capitalize the first letter
     return key
-      .replace(/([a-z])([A-Z])/g, "$1 $2") // insert space before capital letter
-      .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2") // handle consecutive caps like ERP
-      .replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
+      .replace(/^./, (str) => str.toUpperCase());
   };
+
   const formatValue = (value) => {
     if (Array.isArray(value)) {
-      // Handle array of objects with name property
       if (value?.length > 0 && typeof value[0] === "object" && value[0]?.name) {
         return value?.map((item) => item?.name).join(", ");
       }
-      // Handle array of strings or numbers
       return value?.join(", ");
     }
 
     return value;
   };
+
   const popupValidKey = (key) => {
     if (
       key.toLowerCase() === "test" ||
@@ -577,7 +572,6 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
     else return true;
   };
 
- 
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
@@ -587,7 +581,6 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
       >
         <div className="sidebar-header">
           {isSidebarCollapsed ? (
-            // Collapsed logo
             <img
               src="/logos/talab_point_logo.png"
               alt="Talab Point Logo"
@@ -595,7 +588,6 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
               style={{ maxWidth: "100%", maxHeight: "100%" }}
             />
           ) : (
-            // Expanded logo: show different image based on RTL
             <img
               src={
                 isRTL
@@ -701,7 +693,6 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
                     : null
                 )}
               </div>
-              {/* Add more fields as needed */}
               <div className="user-popup-footer">
                 <button onClick={handlePopupToggle} className="close-dialog">
                   Close
@@ -746,7 +737,7 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
               : { marginLeft: sidebarOffset, marginRight: 0 }
           }
         >
-          <header className="header">
+          <header className={`header ${showMenu ? "show" : "show"}`}>
             {!isMobileDevice && (
               <button
                 className="mobile-menu-btn"
@@ -765,12 +756,10 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
               />
             )}
             <div className="header-title">{t(activeMenu)}</div>
-            {/* Saudi time next to language switch */}
             <div className="user-text-header">
               {!isMobile && (
                 <div className="text">
                   {user?.userType?.toLowerCase() === "employee" && (
-                    // <div className="user-text-header">
                     <div className="text">
                       <div
                         className="user-details-footer"
@@ -784,16 +773,13 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
                       >
                         {t("Designation")}: {user?.designation}
                       </div>
-                      {/* <div className="user-details-footer">{user?.designation}</div> */}
                       <div className="user-details-footer" title={user?.roles}>
                         {t("Role")}: {user?.roles}
                       </div>
-                      {/* </div> */}
                     </div>
                   )}
                   {user?.userType?.toLowerCase() === "customer" &&
                     user?.roles[0] === "customer_primary" && (
-                      // <div className="user-text-header">
                       <div className="text">
                         <div
                           className="user-details-footer"
@@ -814,22 +800,16 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
                             ? user?.companyNameEn
                             : user?.companyNameAr}
                         </div>
-                        {/* <EllipsisToolTip content={i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}>
-      {t("Company")}: {i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}
-    </EllipsisToolTip> */}
-                        {/* <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div> */}
                         <div
                           className="user-details-footer"
                           title={user?.branchNumber}
                         >
                           {t("Branches")}: {user?.branchNumber}
                         </div>
-                        {/* </div> */}
                       </div>
                     )}
                   {user?.userType?.toLowerCase() === "customer" &&
                     user?.roles[0] === "branch_primary" && (
-                      // <div className="user-text-header">
                       <div className="text">
                         <div
                           className="user-details-footer"
@@ -837,8 +817,6 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
                         >
                           {t("Customer ID")}: {user?.erpCustomerId}
                         </div>
-                        {/* <div className="user-details-footer">{t("Company")}:</div> */}
-                        {/* <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div> */}
                         <div
                           className="user-details-footer"
                           title={user?.branchNumberPrimary}
@@ -848,7 +826,6 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
                             : t("Branch ID")}
                           : {user?.branchNumberPrimary}
                         </div>
-                        {/* </div> */}
                       </div>
                     )}
                 </div>
@@ -870,41 +847,40 @@ function Sidebar({ children, title, handleGoToCart,MenuName=null }) {
           <div
             className="content"
             style={{
-              padding: isMobileDevice
-                ? activeMenu
-                  ? "0 0px 0px"
-                  : "20px"
-                : "20px",
+              padding: isMobileDevice ? (activeMenu ? "0 0px 0px" : "20px") : "20px",
             }}
           >
             {children}
           </div>
-          {isMobileDevice && (
-            <div className={`mobile-bottom-menu ${showMenu ? "show" : "hide"}`}>
+          {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
+          {isMobile && isMobileDevice && (
+            <div className={`mobile-bottom-menu ${showMenu ? "show" : "show"}`}>
               {menuItems
-                .filter(({ label }) => !["support","maintenance","bank transfer","bank"].includes (label.toLowerCase())  )
-                
+                .filter(
+                  ({ label }) =>
+                    ![
+                      "support",
+                      "maintenance",
+                      "bank transfer",
+                      "bank",
+                    ].includes(label.toLowerCase())
+                )
                 .map(({ icon, label, permission, isVisible }) => {
                   if (!isV(permission || label) || !isVisible) return null;
-                 const showMenuFor = ["Support", "Bank", "Maintenance", "Orders","Bank Transactions"].map(t);
 
-if (label === "Menu" && !showMenuFor.includes(activeMenu)) {
-  return null;
-}
-
+                  // UPDATED: Menu item is active only when clicked
+                  const isMenuItemActive = () => {
+                    if (label === "Menu") {
+                      return showOrdersSubMenu;
+                    }
+                    return activeMenu === t(label);
+                  };
 
                   return (
                     <div
                       key={label}
                       className={`bottom-menu-item ${
-                        activeMenu === t(label) ||
-                        ((activeMenu === t("Bank Transactions") ||activeMenu === t("Bank") ||
-                          activeMenu === t("Support") ||
-                          activeMenu === t("Maintenance") ||
-                          MenuName === "Menu") &&
-                          label === "Menu")
-                          ? "active"
-                          : ""
+                        isMenuItemActive() ? "active" : ""
                       }`}
                       onClick={() => handleMenuClick(label)}
                     >
@@ -921,35 +897,37 @@ if (label === "Menu" && !showMenuFor.includes(activeMenu)) {
                 })}
             </div>
           )}
-          {isMobileDevice &&
-            ( ["Support", "Bank", "Maintenance", "Orders","Menu","Bank Transactions"].map(t).includes(activeMenu)) &&
-            showOrdersSubMenu && (
-              <div
-                className={`orders-bottom-bar ${showMenu ? "show" : "hide"}`}
-              >
-                {  (isV("BankTransfer") || isV("Bank Transactions")) &&<button
+          {/* UPDATED: Only show orders submenu on mobile */}
+          {isMobile && isMobileDevice && showOrdersSubMenu && (
+            <div className={`orders-bottom-bar ${showMenu ? "show" : "show"}`}>
+              {(isV("BankTransfer") || isV("Bank Transactions")) && (
+                <button
                   className="orders-btn"
-                  
                   onClick={() => handleMenuClick("Bank")}
                 >
                   {t("Bank")}
-                </button>}
+                </button>
+              )}
 
-                {(isV("Support"))&&<button
+              {isV("Support") && (
+                <button
                   className="orders-btn"
                   onClick={() => handleMenuClick("Support")}
                 >
                   {t("Support")}
-                </button>}
+                </button>
+              )}
 
-                {isV("Maintenance")&&<button
+              {isV("Maintenance") && (
+                <button
                   className="orders-btn"
                   onClick={() => handleMenuClick("Maintenance")}
                 >
                   {t("Maintenance")}
-                </button>}
-              </div>
-            )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </CustomerProvider>
     </div>
