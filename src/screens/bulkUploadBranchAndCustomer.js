@@ -7,14 +7,33 @@ import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import Constants from "../constants";
+import {
+  Select,
+  FormControl,
+  Button,
+  MenuItem,
+  InputLabel,
+} from "@mui/material";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const actionBtnStyle = {
+  px: 3,
+  py: 1.4,
+  fontSize: "15px",
+  fontWeight: 600,
+  borderRadius: "10px",
+  textTransform: "none",
+  boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
+};
+
 function BulkUploadBranchAndCustomer() {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadType, setUploadType] = useState(null); // "customer" | "branch"
   const [popup, setPopup] = useState(false);
   const { token, user, logout } = useAuth();
-    const [emailloading, setEmailLoading] = useState(false);
+  const [emailloading, setEmailLoading] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState("");
+    const [cutOffLoading, setcutOffLoading] = useState(false);
   const fileExcelInputRef = useRef();
   const { t } = useTranslation();
   const rbacMgr = new RbacManager(
@@ -187,152 +206,253 @@ function BulkUploadBranchAndCustomer() {
       fileExcelInputRef.current.value = "";
     }
   };
-const handleSend = async () => {
-  setEmailLoading(true)
-  try {
-    const { data } = await axios.get(`${API_BASE_URL}/auth/getallPrimaryCustomers`);
+  const handleSend = async () => {
+    setEmailLoading(true);
+    try {
+      const { data } = await axios.get(
+        `${API_BASE_URL}/auth/getallPrimaryCustomers`
+      );
 
-    if (data.success){
+      if (data.success) {
         Swal.fire({
           title: t("BulK Email Sent Successfully"),
-          text:
-            t(data.message) || t("email sent to Customer"),
+          text: t(data.message) || t("email sent to Customer"),
           icon: "success",
           confirmButtonText: t("OK"),
         });
-    }else{
-       Swal.fire({
-           title: "Failed to Send email",
-          text:
-            t(data.message) || "An error occurred while sending email.",
+      } else {
+        Swal.fire({
+          title: "Failed to Send email",
+          text: t(data.message) || "An error occurred while sending email.",
           icon: "error",
           confirmButtonText: t("OK"),
         });
+      }
+    } catch (error) {
+      console.error("Error fetching primary customers:", error);
+
+      Swal.fire({
+        title: "Failed to Send email",
+        text:
+          error.response?.data?.message ||
+          "An error occurred while sending email.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setEmailLoading(false);
     }
+  };
+  const handleCuttOffSubmit = async (entity) => {
+    setcutOffLoading(true);
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/auth/run/runBatchCutOffEntityWise?entity=${entity}`
+      );
 
-  } catch (error) {
-    console.error("Error fetching primary customers:", error);
+      if (data.status?.toLowerCase() === "ok" && (data?.failedOrders==0 )) {
+        Swal.fire({
+          title: t("Cut-off Run Successfully"),
+          text: t(data.message) || t("Cut-off Run Successfully"),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        });
+      } else {
+        const failedMessage = Object.entries(
+          (data?.failedOrders || [])
+            .filter((r) => r.status !== "success")
+            .reduce((acc, result) => {
+              const error = result?.error || "Unknown error";
+              acc[error] = (acc[error] || 0) + 1;
+              return acc;
+            }, {})
+        )
+          .map(([error, count]) => `• ${error}: ${count} order(s)`)
+          .join("\n");
+        Swal.fire({
+          title: "Cut-off Failed",
+          text:
+            t(failedMessage) ||
+            "Some orders failed during the cut-off process.",
+          icon: "error",
+          confirmButtonText: t("OK"),
+        });
+      }
+    } catch (error) {
+      console.error("An error occurred while running Cut-off:", error);
 
-    Swal.fire({
-      title: "Failed to Send email",
-      text:
-        (error.response?.data?.message) || 
-        "An error occurred while sending email.",
-      icon: "error",
-      confirmButtonText: "OK",
-    });
-  }finally{
-     setEmailLoading(false)
-  }
-};
+      Swal.fire({
+        title: "Cut-off Failed",
+        text:
+          error.response?.data?.message ||
+          "An error occurred while running Cut-off:",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setcutOffLoading(false);
+      setSelectedEntity("")
+    }
+  };
   return (
     <Sidebar title={t("General")}>
-      {/* Two separate open buttons */}
-      <h1
-        style={{
-          display: "flex",
-          justifyContent: "center" /* center horizontally */,
-          alignItems: "center" /* center vertically */,
-          gap: "20px",
-          marginBottom: "20px",
-        }}
-      >
-        Bulk Upload
-      </h1>
       <div
-        className="button-container"
         style={{
           display: "flex",
-          justifyContent: "center" /* center horizontally */,
-          alignItems: "center" /* center vertically */,
-          gap: "20px",
+          justifyContent: "center",
+          padding: "30px 16px",
         }}
       >
-        {isV("BulkCustomer") && (
-          <button
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "1100px",
+            background: "#fff",
+            borderRadius: "16px",
+            padding: "28px",
+            boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
+          }}
+        >
+          {/* Title */}
+          <h2
             style={{
-              padding: "12px 20px",
-              backgroundColor: "var(--light-blue)",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "16px",
-              cursor: "pointer",
-              fontWeight: 500,
-              transition: "background-color 0.3s ease",
-            }}
-            className="customer-btn"
-            onClick={() => {
-              console.log(isV("BulkCustomer"));
-              setUploadType("customer");
-              setPopup(true);
+              textAlign: "center",
+              marginBottom: "28px",
+              color: "#0B4C45",
+              fontWeight: 700,
             }}
           >
-            📤 Upload Customer Data
-          </button>
-        )}
+            📦 Bulk Upload Management
+          </h2>
 
-        {isV("BulkBranch") && (
-          <button
-            className="branch-btn"
+          {/* Upload Buttons */}
+          <div
             style={{
-              padding: "12px 20px",
-              backgroundColor: "var(--deep-green)",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "16px",
-              cursor: "pointer",
-              fontWeight: 500,
-              transition: "background-color 0.3s ease",
-            }}
-            onClick={() => {
-              setUploadType("branch");
-              setPopup(true);
+              display: "flex",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              gap: "16px",
+              marginBottom: "32px",
             }}
           >
-            📤 Upload Branch Data
-          </button>
-        )}
+            {isV("BulkCustomer") && (
+              <Button
+                variant="contained"
+                sx={{
+                  ...actionBtnStyle,
+                  backgroundColor: "#32A19F",
+                  "&:hover": { backgroundColor: "#278D8A" },
+                }}
+                onClick={() => {
+                  setUploadType("customer");
+                  setPopup(true);
+                }}
+              >
+                📤 Upload Customers
+              </Button>
+            )}
 
-        {isV("BulkProduct") && (
-          <button
-            className="branch-btn"
+            {isV("BulkBranch") && (
+              <Button
+                variant="contained"
+                sx={{
+                  ...actionBtnStyle,
+                  backgroundColor: "#009345",
+                  "&:hover": { backgroundColor: "#007C39" },
+                }}
+                onClick={() => {
+                  setUploadType("branch");
+                  setPopup(true);
+                }}
+              >
+                🏢 Upload Branches
+              </Button>
+            )}
+
+            {isV("BulkProduct") && (
+              <Button
+                variant="contained"
+                sx={{
+                  ...actionBtnStyle,
+                  backgroundColor: "#F6921E",
+                  "&:hover": { backgroundColor: "#DD7F0F" },
+                }}
+                onClick={() => {
+                  setUploadType("product");
+                  setPopup(true);
+                }}
+              >
+                📦 Upload Products
+              </Button>
+            )}
+          </div>
+
+ {isV("EntityWiseCutOff") && (
+          <><hr style={{ border: "none", borderTop: "1px solid #eee" }} />
+
+           <h2
             style={{
-              padding: "12px 20px",
-              backgroundColor: "var(--orange)",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "16px",
-              cursor: "pointer",
-              fontWeight: 500,
-              transition: "background-color 0.3s ease",
-            }}
-            onClick={() => {
-              setUploadType("product");
-              setPopup(true);
+              textAlign: "center",
+              // marginBottom: "28px",
+              color: "#0B4C45",
+              fontWeight: 700,
             }}
           >
-            📤 Upload Products Data
-          </button>
-        )}
-        {isV("BulkEmail") && (
-          <button
-            className="branch-btn"
+           {t("Entity Wise Cut-off")}
+          </h2>
+          <div
             style={{
-              padding: "12px 20px",
-              backgroundColor: "var(--orange)",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "16px",
-              cursor: "pointer",
-              fontWeight: 500,
-              transition: "background-color 0.3s ease",
+              // marginTop: "28px",
+              display: "flex",
+              justifyContent: "center",
             }}
-            disabled={emailloading}
-            onClick={() => handleSend()}
           >
-           { emailloading ?  "...seding bulk email" :"Send Bulk Email"}
-          </button>
-        )}
+            
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                background: "#F9FAFA",
+                padding: "18px 20px",
+                borderRadius: "14px",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
+                width: "100%",
+                maxWidth: "700px",
+              }}
+            >
+                 
+              <FormControl fullWidth>
+                <InputLabel>{t("Select Entity")}</InputLabel>
+                <Select
+                  value={selectedEntity}
+                  label="Select Entity"
+                  onChange={(e) => setSelectedEntity(e.target.value)}
+                >
+                  <MenuItem value="SHC">SHC</MenuItem>
+                  <MenuItem value="GMTC">GMTC</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Button
+                sx={{
+                  px: 4,
+                  py: 1.4,
+                  fontWeight: 700,
+                  borderRadius: "10px",
+                  backgroundColor: "#0B4C45",
+                  whiteSpace: "nowrap",
+                  "&:hover": { backgroundColor: "#083A35" },
+                }}
+                variant="contained"
+                disabled={!selectedEntity || cutOffLoading}
+                onClick={() => handleCuttOffSubmit(selectedEntity)}
+              >
+                {cutOffLoading ? "Running..." : "Run Cut-off"}
+              </Button>
+            </div>
+          </div></>)}
+        </div>
       </div>
 
       {popup && (
