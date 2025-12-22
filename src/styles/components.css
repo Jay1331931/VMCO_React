@@ -129,6 +129,42 @@
   margin-right: 0;
   margin-left: 20px;
 }
+/* Mobile Add Branch Button */
+.add-branch-mobile-btn {
+  background-color: var(--logo-deep-green);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.add-branch-mobile-btn:hover {
+  background-color: var(--logo-deep-green);
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.add-branch-mobile-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .add-branch-mobile-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
 .toggle-container {
   display: flex;
   align-items: center;
@@ -429,7 +465,7 @@ body.catalog-page #root {
 .catalog-fixed-header {
   flex-shrink: 0;
   background: white;
-  padding: 10px 0px;
+  padding: 10px 10px;
   border-bottom: 1px solid var(--cool-grey);
   z-index: 10;
 }
@@ -883,6 +919,10 @@ body.catalog-page #root {
 .checkout-btn:hover {
   background-color: #e67600;
 }
+.checkout-btn:disabled {
+  background-color: #f0f0f0;
+  color: #a0a0a0;
+}
 .cart-footer {
   display: flex;
   flex-direction: column;
@@ -1092,14 +1132,11 @@ body.catalog-page #root {
 }
 
 .catalog-wrapper .catalog-fixed-header.show {
-  top: 90px;   
+  top: 60px;   
 }
 .catalog-fixed-header.show {
   top: 60px;
   /* transform: translateY(0);  */
-}
-.orders-content.has-filter .catalog-fixed-header.show {
-  top: 90px;   
 }
   .page-header {
     flex-direction: column;
@@ -1230,8 +1267,7 @@ body.catalog-page #root {
   }
   .category-tab {
     padding: 4px;
-    min-width: 50px !important;
-    max-width: max-content;
+    width: 100%;
     font-size: 0.73rem;
   }
   .products-grid {
@@ -2654,6 +2690,18 @@ input:focus {
 .password-toggle-btn {
   position: absolute;
   right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+}
+
+[dir="rtl"] .password-toggle-btn{
+  position: absolute;
+  right: 220px;
   top: 50%;
   transform: translateY(-50%);
   background: none;

@@ -116,7 +116,7 @@ function MaintenanceCard({
                   item
                   xs={12}
                   sx={{
-                    backgroundColor: "#1565c0",
+                    backgroundColor: "var(--logo-cyan)",
                     color: "white",
                     borderTopLeftRadius: "16px",
                     borderTopRightRadius: "16px",
@@ -280,14 +280,14 @@ function MaintenanceCard({
                       variant="contained"
                       size="small"
                       sx={{
-                        backgroundColor: "#1976d2",
+                    backgroundColor: "var(--logo-cyan)",
                         textTransform: "none",
                         fontSize: "12px",
                         borderRadius: "20px",
                         px: 2,
                         py: 0.6,
                         "&:hover": {
-                          backgroundColor: "#1565c0",
+                    backgroundColor: "var(--logo-cyan)",
                         },
                       }}
                       onClick={(e) => {

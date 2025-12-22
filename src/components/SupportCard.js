@@ -101,7 +101,7 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
                   item
                   xs={12}
                   sx={{
-                    backgroundColor: "#1976d2",
+                    backgroundColor: "var(--logo-cyan)",
                     color: "white",
                     borderTopLeftRadius: "16px",
                     borderTopRightRadius: "16px",

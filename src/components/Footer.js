@@ -56,6 +56,7 @@ navigate(`/${pathname}`)
 
   .login-bottom-footer .footer-link:hover {
     text-decoration: underline;
+    cursor: pointer;
   }
 `}
       </style>
