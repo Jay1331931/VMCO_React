@@ -2086,60 +2086,119 @@ function OrderDetails() {
           confirmButtonText: t("OK"),
         });
       } else if (copyUrl) {
-        Swal.fire({
-          title: t(`Payment Link`),
-          html: `
-      <div style="display:flex;align-items:center;">
-        <input id="payment-link"
-               class="swal2-input"
-               style="flex:1;margin:0 8px 0 0;"
-               type="text"
-               value="${data.details.url}"
-               readonly />
-        <button id="copyBtn"
-                style="padding:10px 16px; border-radius:5px; background:#32a19f; color:#fff; border:none; cursor:pointer;">
-          Copy
-        </button>
-      </div>
-    `,
-          showConfirmButton: false,
-          showCancelButton: false, // we’ll add our own Close button in footer
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          footer: `
-      <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
-        <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style=" background:#009345">Send Link</button>
-        <button id="closeBtn" class="swal2-cancel swal2-styled">Close</button>
-      </div>
-    `,
-          didOpen: () => {
-            const input = document.getElementById("payment-link");
-            const copyBtn = document.getElementById("copyBtn");
-            const sendLinkBtn = document.getElementById("sendLinkBtn");
-            const closeBtn = document.getElementById("closeBtn");
+ Swal.fire({
+  title: t(`Payment Link`),
+  html: `
+    <div style="display:flex;align-items:center; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+      <input id="payment-link"
+             style="flex:1; border:none; padding:10px 12px; font-size:14px; outline:none;"
+             type="text"
+             value="${data.details.url}"
+             readonly />
+      <button id="copyBtn"
+              style="display:flex; align-items:center; gap:6px; padding:0 12px; height:44px; border:none; border-left:1px solid #ddd; background:#fff; cursor:pointer; transition:all 0.2s; white-space:nowrap;"
+              title="Copy to clipboard">
+        <i class="fas fa-copy" style="font-size:14px; color:#666;"></i>
+        <span id="copyText" style="font-size:14px; color:#666;">Copy</span>
+      </button>
+    </div>
+  `,
+  showConfirmButton: false,
+  showCancelButton: false,
+  allowOutsideClick: false,
+  allowEscapeKey: false,
+  footer: `
+    <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+      <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style="background:#009345; display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-paper-plane" style="font-size:14px;"></i>
+        <span>Send Link</span>
+      </button>
+      <button id="closeBtn" class="swal2-cancel swal2-styled" style="display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-times" style="font-size:14px;"></i>
+        <span>Close</span>
+      </button>
+    </div>
+  `,
+  didOpen: () => {
+    const input = document.getElementById("payment-link");
+    const copyBtn = document.getElementById("copyBtn");
+    const copyIcon = copyBtn.querySelector('i');
+    const copyText = document.getElementById("copyText");
+    const sendLinkBtn = document.getElementById("sendLinkBtn");
+    const closeBtn = document.getElementById("closeBtn");
 
-            // Copy button
-            copyBtn.addEventListener("click", async () => {
-              input.select();
-              input.setSelectionRange(0, 99999); // for mobile
-              await navigator.clipboard.writeText(input.value);
+    // Hover effect
+    copyBtn.addEventListener("mouseenter", () => {
+      copyBtn.style.background = "#f5f5f5";
+      copyIcon.style.color = "#333";
+      copyText.style.color = "#333";
+    });
+    
+    copyBtn.addEventListener("mouseleave", () => {
+      copyBtn.style.background = "#fff";
+      copyIcon.style.color = "#666";
+      copyText.style.color = "#666";
+    });
 
-              copyBtn.textContent = "Copied!";
-              copyBtn.style.background = "#0b4c45";
-            });
+    // Copy button
+    copyBtn.addEventListener("click", async () => {
+      input.select();
+      input.setSelectionRange(0, 99999);
+      
+      try {
+        await navigator.clipboard.writeText(input.value);
+        
+        // Success state
+        copyIcon.className = "fas fa-check";
+        copyIcon.style.color = "#28a745";
+        copyText.textContent = "Copied!";
+        copyText.style.color = "#28a745";
+        copyBtn.style.background = "#e8f5e9";
+        copyBtn.style.borderLeftColor = "#c3e6cb";
+        
+        // Revert after 2 seconds
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = "Copy";
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy: ", err);
+        
+        // Error state
+        copyIcon.className = "fas fa-times";
+        copyIcon.style.color = "#dc3545";
+        copyText.textContent = "Failed!";
+        copyText.style.color = "#dc3545";
+        copyBtn.style.background = "#f8d7da";
+        copyBtn.style.borderLeftColor = "#f5c6cb";
+        
+        setTimeout(() => {
+          copyIcon.className = "fas fa-copy";
+          copyIcon.style.color = "#666";
+          copyText.textContent = "Copy";
+          copyText.style.color = "#666";
+          copyBtn.style.background = "#fff";
+          copyBtn.style.borderLeftColor = "#ddd";
+        }, 2000);
+      }
+    });
 
-            // Send Link button
-            sendLinkBtn.addEventListener("click", () => {
-              handleCheckout(orderId, true, false);
-              Swal.close();
-            });
+    // Send Link button
+    sendLinkBtn.addEventListener("click", () => {
+      handleCheckout(orderId, true, false);
+      Swal.close();
+    });
 
-            // Close button
-            closeBtn.addEventListener("click", () => {
-              Swal.close();
-            });
-          },
-        });
+    // Close button
+    closeBtn.addEventListener("click", () => {
+      Swal.close();
+    });
+  },
+});
       } else if (!email && !copyUrl && data?.details?.url) {
         // window.open(data.details.url, "_blank");
         const extracted = data?.details?.url?.split('/payment-options')[1]

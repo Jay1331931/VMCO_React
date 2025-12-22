@@ -498,14 +498,14 @@ function CustomersDetails() {
     if (!user) {
       console.log("$$$$$$$$$$$ logging out - no user");
       logout();
-      navigate("/login");
+      navigate("/login",{replace:true});
       return;
     }
 
     if (user && !user.userType) {
       console.log("$$$$$$$$$$$ logging out - no userType");
       logout();
-      navigate("/login");
+      navigate("/login",{replace:true});
       return;
     }
 

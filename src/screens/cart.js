@@ -377,7 +377,7 @@ function Cart() {
     if (loading) return;
     if (!user) {
       logout();
-      navigate("/login");
+      navigate("/login",{replace:true});
       return;
     }
     // Only fetch cart items if we have user data and required IDs
@@ -800,7 +800,7 @@ function Cart() {
     Swal.fire({
       icon: icon,
       title: title,
-      text: `${messageText}. ${paymentText}`,
+      text: `${messageText}`,
       confirmButtonText: t("OK"),
     }).then(() => {
       if (shouldDeleteCart) {

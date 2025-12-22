@@ -385,7 +385,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
         navigate("/admin/upload");
         break;
       case "Dashboard":
-        navigate("/login");
+        navigate("/login",{replace:true});
         break;
       case "Company":
         try {
@@ -434,9 +434,9 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     logout(true);
 
     if (userLoggedOut?.userType === "employee") {
-      navigate("/login/employee");
+      navigate("/login/employee",{replace:true});
     } else {
-      navigate("/login");
+      navigate("/login",{replace:true});
     }
   };
 

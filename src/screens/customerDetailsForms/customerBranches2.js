@@ -57,7 +57,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const CUSTOMER_APPROVAL_CHECKLIST =
   Constants?.DOCUMENTS_NAME?.BRANCH_APPROVAL_CHECKLIST;
 const BRANCH_UPLOAD_FORMAT = Constants?.DOCUMENTS_NAME?.BRANCH_UPLOAD_FORMAT;
-const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
+const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight, mode, inApproval }) => {
   const { t, i18n } = useTranslation();
   const contentRef = useRef(null);
   const actionMenuRef = useRef(null);
@@ -1799,6 +1799,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                   branch={selectedBranch}
                   setBranches={setBranches}
                   customer={customer}
+                  customerPaymentMethodsData={customerPaymentMethodsData}
                   branchChanges={branchChanges}
                   handleBranchFieldChange={handleBranchFieldChange}
                   isApprovalMode={isApprovalMode}
@@ -1969,6 +1970,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                             branch={branch}
                             setBranches={setBranches}
                             customer={customer}
+                            customerPaymentMethodsData={customerPaymentMethodsData}
                             branchChanges={branchChanges}
                             handleBranchFieldChange={handleBranchFieldChange}
                             isApprovalMode={

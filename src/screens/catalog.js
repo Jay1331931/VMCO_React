@@ -493,7 +493,7 @@ function Catalog() {
     if (loading) return;
     if (!user) {
       logout();
-      navigate("/login");
+      navigate("/login",{replace:true});
       return;
     }
   }, [user, loading, logout, navigate]);
