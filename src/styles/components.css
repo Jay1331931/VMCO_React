@@ -1000,12 +1000,11 @@ body.catalog-page #root {
   cursor: pointer;
 }
 .filter-tabs {
-   display: flex;
-              flex-wrap: wrap;
-              align-items: center;
-              gap: 12;
-              overflow-x: auto;
-              scrollbar-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12;
+  scrollbar-width: none;
 }
 @media (max-width: 768px) {
   .cart-header {
@@ -1132,12 +1131,12 @@ body.catalog-page #root {
 }
 
 .catalog-wrapper .catalog-fixed-header.show {
-  top: 60px;   
+  top: calc(var(--catalog-header-top, 60px) + env(safe-area-inset-top)); 
 }
 .catalog-fixed-header.show {
-  top: 60px;
-  /* transform: translateY(0);  */
+  top: calc(var(--catalog-header-top, 60px) + env(safe-area-inset-top));
 }
+
   .page-header {
     flex-direction: column;
     gap: 10px;

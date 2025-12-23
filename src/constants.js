@@ -1,5 +1,7 @@
+const BLOB_STORAGE_URL = process.env.REACT_APP_BLOB_STORAGE_URL;
+const BLOB_CONTAINER_NAME = process.env.REACT_APP_BLOB_CONTAINER_NAME;
 const Constants = {
-    ROLES:{
+    ROLES: {
         SUPER_ADMIN: 'admin',
         EMPLOYEE: 'employee',
         BRANCH_PRIMARY: 'branch_primary',
@@ -18,7 +20,7 @@ const Constants = {
         DRIVER: 'driver',
         BRANCH_ACCOUNTANT: 'branch accountant',
     },
-    ENTITY:{
+    ENTITY: {
         VMCO: 'VMCO',
         SHC: 'SHC',
         NAQI: 'NAQI',
@@ -32,26 +34,27 @@ const Constants = {
         GMTC: 'Fresh Vegetables & Fruits',
         NAQI: 'Hygiene Chemicals',
         DAR: 'DAR Company',
-        VMCO:'Vending Machine Company'
+        VMCO: 'Vending Machine Company',
+        FAVORITES: 'Favorites',
     },
     TAB_IMAGES: {
-       VMCO_MACHINES: "VmcoMachinesTabImage.jpg",
-        VMCO_CONSUMABLES: "VmcoConsumablesTabImage.jpg",
-        SHC: "ShcTabImage.webp",
-        GMTC: "GmtcTabImage.jpg",
-        NAQI: "NaqiTabImage.jpg",
-        DAR: "DarTabImage.jpeg",
-        SPECIAL_PRODUCTS:"SpecialproductsTabImage.webp",
-        FAVORITES: "FavoritesTabImage.jpg"
+        VMCO_MACHINES: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/VmcoMachinesTabImage.jpg`,
+        VMCO_CONSUMABLES: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/VmcoConsumablesTabImage.jpg`,
+        SHC: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/ShcTabImage.webp`,
+        GMTC: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/GmtcTabImage.jpg`,
+        NAQI: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/NaqiTabImage.jpg`,
+        DAR: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/DarTabImage.jpeg`,
+        SPECIAL_PRODUCTS: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/SpecialproductsTabImage.png`,
+        FAVORITES: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/FavoritesTabImage.png`
     },
-    FAVORITES: 'Favorites',
-    CATEGORY:{
+
+    CATEGORY: {
         VMCO_MACHINES: 'VMCO Machines',
         VMCO_CONSUMABLES: 'VMCO Consumables',
         SHC_FRESH: 'SHC - Fresh',
         SHC_FROZEN: 'SHC - Frozen'
     },
-    MAINTENANCE_REGIONAL_CITY:{
+    MAINTENANCE_REGIONAL_CITY: {
         RIYADH: 'Riyadh',
         JEDDAH: 'Jeddah',
         DAMMAM: 'Dammam',
@@ -60,7 +63,7 @@ const Constants = {
         AL_JUBAIL: 'Al Jubail',
         AL_QASSIM: 'Al Qassim',
         AL_JOUF: 'Al Jouf',
-        TABUK: 'Tabuk', 
+        TABUK: 'Tabuk',
         HAIL: 'Hail',
         ASIR: 'Asir'
     },
@@ -71,7 +74,7 @@ const Constants = {
     DOCUMENTS_NAME: {
         BRANCH_APPROVAL_CHECKLIST: 'Branch_data_verification_checklist.pdf',
         BRANCH_UPLOAD_FORMAT: 'branches_upload_format.xlsx',
-        CUSTOMER_APPROVAL_CHECKLIST:"Customer_data_verification_checklist.pdf",
+        CUSTOMER_APPROVAL_CHECKLIST: "Customer_data_verification_checklist.pdf",
         TERMS_AND_CONDITIONS_AR: "Terms_and_condition_ar.pdf",
         TERMS_AND_CONDITIONS_EN: "Terms_and_condition_en.pdf",
         ORDERS_UPLOAD_FORMAT: "orders_upload_format.xlsx",

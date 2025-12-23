@@ -638,7 +638,7 @@ const BranchDetailsForm = ({
 
     if (mandatoryCheckRequired) {
       mandatoryFields.forEach((field) => {
-        if ((branch?.branchStatus?.toLowerCase() === "approved"  ? field in dataToValidate : true) && (!dataToValidate[field] || dataToValidate[field] === "")) {
+        if (field && (branch?.branchStatus?.toLowerCase() === "approved"  ? field in dataToValidate : true) && (!dataToValidate[field] || dataToValidate[field] === "")) {
         // if(!dataToValidate[field] || dataToValidate[field] === "") {
           errors[field] = "This field is required";
         }
