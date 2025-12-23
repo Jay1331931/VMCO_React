@@ -257,13 +257,14 @@ const CustomToolbar = ({
   return ( isMobile ? (<>
   <Toolbar
   sx={{
-    padding: 1.5,
+    padding: 0,
     backgroundColor: "background.paper",
     borderColor: "divider",
     display: "flex",
     flexDirection: "column",   // << make toolbar vertical
     gap: 1.2,
     width: "100%",
+    minHeight:"auto"
   }}
 >
   <Box
@@ -362,7 +363,7 @@ const CustomToolbar = ({
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "20px",
                     fontSize: "12px",
-                    minWidth: "250px",
+                    minWidth: "200px",
                     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                       border: "1px solid #3D5654",
                     },
@@ -377,7 +378,7 @@ const CustomToolbar = ({
               "& .MuiOutlinedInput-root": {
                 borderRadius: "10px",
                 fontSize: "15px",
-                minWidth: "250px",
+                minWidth: "200px",
                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                   border: "1px solid #3D5654",
                 },
