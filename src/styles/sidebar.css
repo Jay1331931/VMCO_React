@@ -718,3 +718,47 @@
   color: #fff;
   border-color: #00205b;
 }
+/* ===== SAFE AREA FIXES ===== */
+
+/* Mobile - adjust for safe areas */
+@media (max-width: 500px) {
+  /* Sidebar adjustments */
+  .sidebar {
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(100vh - env(safe-area-inset-bottom, 0px));
+  }
+  
+  /* Header adjustments */
+  .header {
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  }
+  
+  /* Main content adjustments */
+  /* .main-content {
+    margin-top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+    height: calc(100vh - var(--header-height) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  } */
+  
+  /* Bottom menu adjustments */
+  .mobile-bottom-menu {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(70px + env(safe-area-inset-bottom, 0px));
+    bottom: 0;
+  }
+  
+  .orders-bottom-bar {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  }
+  
+  /* Content area adjustments */
+  /* .content {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+    height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  } */
+  
+  /* When orders submenu is visible */
+  .main-content.has-orders-submenu .content {
+    padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}

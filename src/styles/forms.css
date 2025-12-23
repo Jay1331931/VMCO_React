@@ -1613,6 +1613,11 @@ td.file-display-cell {
     text-wrap: auto;
   }
 }
+@media(max-width :500px){
+      .customers .customer-onboarding-tabs-vertical{
+        top:calc(var(--catalog-header-top, 40px) + env(safe-area-inset-top)); 
+      }
+}
 .signature-wrapper {
   position: relative;
   border: 1px solid #ddd;
