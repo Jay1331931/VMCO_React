@@ -935,106 +935,106 @@ function CustomerDetails() {
     "businessHeadEmail",
     "businessHeadMobile",
     "businessHeadDesignation",
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadDesignation"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadDesignation"
@@ -1109,210 +1109,210 @@ function CustomerDetails() {
     // "interCompany",
     // "entity",
     // "zone",
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadDesignation"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadDesignation"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadDesignation"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadDesignation"
@@ -1388,210 +1388,210 @@ function CustomerDetails() {
     // "entity",
     "primaryBusinessUnit",
     "zone",
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadDesignation"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadDesignation"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "financeHeadDesignation"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadName"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadEmail"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadMobile"
     : null,
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
       ?.isAllowed || 
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
       ?.isAllowed ||
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
       ?.isAllowed
       ?
     "purchasingHeadDesignation"
@@ -3160,6 +3160,7 @@ function CustomerDetails() {
                     handleCustomerContactsDataChange
                   }
                   customerPaymentMethodsData={customerPaymentMethodsData}
+                  originalCustomerPaymentMethodsData={originalCustomerPaymentMethodsData}
                   verifiedData={verifiedData}
                   onChangeVerifiedData={handleVerifiedDataChange}
                   setGeoLocation={setGeoLocation}
@@ -3223,6 +3224,7 @@ function CustomerDetails() {
                     completeWorkflowData: completeWorkflowData,
                   }}
                   customerPaymentMethodsData={customerPaymentMethodsData}
+                  originalCustomerPaymentMethodsData={originalCustomerPaymentMethodsData}
                   setTabsHeight={setTabsHeight}
                   mode={mode}
                   inApproval={false}
