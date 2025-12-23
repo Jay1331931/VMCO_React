@@ -21,6 +21,7 @@
     "ajv": "^8.0.0",
     "ajv-keywords": "^5.0.0",
     "axios": "^1.10.0",
+    "cordova-plugin-inappbrowser": "^6.0.0",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.19",
     "i18next": "^21.6.16",
