@@ -19,6 +19,7 @@ const BranchDetailsForm = ({
   setBranches,
   customer, // required
   customerPaymentMethodsData,
+  originalCustomerPaymentMethodsData,
   branchChanges,
   handleBranchFieldChange,
   isApprovalMode,
@@ -481,54 +482,54 @@ const BranchDetailsForm = ({
     "primaryContactDesignation",
     "primaryContactEmail",
     "primaryContactMobile",
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
           ?.isAllowed || 
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
           ?.isAllowed ||
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
           ?.isAllowed ||
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
           ?.isAllowed ||
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
           ?.isAllowed
           ?
         "secondaryContactName"
         : null,
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
               ?.isAllowed || 
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
               ?.isAllowed ||
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
               ?.isAllowed ||
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
               ?.isAllowed ||
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
               ?.isAllowed
               ?
             "secondaryContactDesignation"
             : null,
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
                   ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
                   ?.isAllowed
                   ?
                 "secondaryContactEmail"
                 : null,
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
                       ?.isAllowed || 
-                    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
                       ?.isAllowed ||
-                    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
                       ?.isAllowed ||
-                    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
                       ?.isAllowed ||
-                    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
                       ?.isAllowed
                       ?
                     "secondaryContactMobile"
@@ -555,54 +556,54 @@ const BranchDetailsForm = ({
     "primaryContactDesignation",
     "primaryContactEmail",
     "primaryContactMobile",
-    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
           ?.isAllowed || 
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
           ?.isAllowed ||
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
           ?.isAllowed ||
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
           ?.isAllowed ||
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
           ?.isAllowed
           ?
         "secondaryContactName"
         : null,
-        customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
               ?.isAllowed || 
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
               ?.isAllowed ||
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
               ?.isAllowed ||
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
               ?.isAllowed ||
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
               ?.isAllowed
               ?
             "secondaryContactDesignation"
             : null,
-            customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
                   ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
                   ?.isAllowed
                   ?
                 "secondaryContactEmail"
                 : null,
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
                       ?.isAllowed || 
-                    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
                       ?.isAllowed ||
-                    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
                       ?.isAllowed ||
-                    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
                       ?.isAllowed ||
-                    customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
                       ?.isAllowed
                       ?
                     "secondaryContactMobile"
@@ -1363,6 +1364,7 @@ let branchdata;
         setBranchContacts={setBranchContacts}
         customer={customer}
         customerPaymentMethodsData={customerPaymentMethodsData}
+        originalCustomerPaymentMethodsData={originalCustomerPaymentMethodsData}
         branchChanges={branchChanges}
         handleBranchFieldChange={handleBranchContactsDataChange}
         inApproval={isApprovalMode}
