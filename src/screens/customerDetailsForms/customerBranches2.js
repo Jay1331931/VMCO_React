@@ -146,7 +146,7 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
     };
     setTemporaryBranches((prev) => [newBranch, ...prev]);
     setBranches((prev) => [newBranch, ...prev]);
-    !isMobile &&setExpandedRows([tempId]); // Expand the new branch row
+    !isMobile && setExpandedRows([tempId]); // Expand the new branch row
   };
   // const handleSearchChange = debounce((e) => {
   //   setSearch(e.target.value)
@@ -248,8 +248,8 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
     const contactsArray = Array.isArray(branchContacts)
       ? branchContacts
       : branchContacts
-      ? [branchContacts]
-      : [];
+        ? [branchContacts]
+        : [];
     return branchesArray.map((branch) => {
       const branchContacts = contactsArray.filter(
         (contact) => contact.branchId === branch.id
@@ -625,11 +625,11 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
         prev.map((branch) =>
           branch.id === id
             ? {
-                ...branch,
-                ...result.data,
-                id: result.data.id,
-                isNew: false,
-              }
+              ...branch,
+              ...result.data,
+              id: result.data.id,
+              isNew: false,
+            }
             : branch
         )
       );
@@ -746,11 +746,11 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
             prev.map((branch) =>
               branch.id === id
                 ? {
-                    ...branch,
-                    ...result.data,
-                    id: result.data.id,
-                    isNew: false,
-                  }
+                  ...branch,
+                  ...result.data,
+                  id: result.data.id,
+                  isNew: false,
+                }
                 : branch
             )
           );
@@ -1424,9 +1424,9 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
         </div>
       )} */}
       {user?.userType.toLowerCase() === "employee" && (
-        <div className="form-main-header" style={{marginTop: isMobile ? "20px" : "0px"}}>
+        <div className="form-main-header" style={{ marginTop: isMobile ? "20px" : "0px" }}>
           {t("ERP ID")}: {customer?.erpCustId ?? "-"}
-          </div>
+        </div>
       )}
       <div className="branches-page-header">
         <div className="branches-header-controls">
@@ -1507,13 +1507,11 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
                 const columnName =
                   columns.find((col) => col.field === option.column)
                     ?.headerName || option.column;
-                return `${columnName}: ${
-                  typeof option.searchString === "string"
+                return `${columnName}: ${typeof option.searchString === "string"
                     ? option.searchString
-                    : `${
-                        option.searchString?.startDate?.split("T")[0] ?? ""
-                      } - ${option.searchString?.endDate?.split("T")[0] ?? ""}`
-                }`;
+                    : `${option.searchString?.startDate?.split("T")[0] ?? ""
+                    } - ${option.searchString?.endDate?.split("T")[0] ?? ""}`
+                  }`;
               }}
               filterOptions={(options) => options} // Don't filter options, show all
               renderInput={(params) => (
@@ -1589,54 +1587,60 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
             </div>
           </div> */}
           <div className="branches-action-buttons">
-            <div className="action-menu-container" ref={actionMenuRef}>
-              <FontAwesomeIcon
-                icon={faEllipsisV}
-                className="action-menu-icon"
-                onClick={() => setActionMenuOpen(!isActionMenuOpen)}
-              />
-              {isActionMenuOpen && (
-                <div className="action-menu">
-                  {/* <div className="action-menu-item">
-          {t("Export")}
-        </div> */}
-                  {isV("btnUploadExcel") && !isMobile &&(
-                    <div
-                      className="action-menu-item"
-                      onClick={handleButtonClick}
-                    >
-                      {loading ? t("Uploading Excel...") : t("Upload Excel")}
-                    </div>
-                  )}
-                  {isV("btnBranchAdd") && (
-                    <div
-                      className="action-menu-item"
-                      onClick={handleAddBranch}
-                      style={{
-                        pointerEvents: branches.some((branch) => branch.id < 0)
-                          ? "none"
-                          : "auto",
-                        opacity: branches.some((branch) => branch.id < 0)
-                          ? 0.5
-                          : 1,
-                      }}
-                    >
-                      {t("Add Branch")}
-                    </div>
-                  )}
-                  {/* <div className="action-menu-item">{t("Import")}</div>
-        <div className="action-menu-item">{t("Settings")}</div> */}
-                </div>
-              )}
-            </div>
-            {/* Hidden file input stays outside */}
-            {/* <input
-    type="file"
-    accept=".xlsx,.xls"
-    ref={fileExcelInputRef}
-    onChange={handleFileChange}
-    style={{ display: "none" }}
-  /> */}
+            {/* Mobile View - Direct Add Branch Button */}
+            {isMobile ? (
+              isV("btnBranchAdd") && (
+                <button
+                  className="add-branch-mobile-btn"
+                  onClick={handleAddBranch}
+                  style={{
+                    pointerEvents: branches.some((branch) => branch.id < 0)
+                      ? "none"
+                      : "auto",
+                    opacity: branches.some((branch) => branch.id < 0) ? 0.5 : 1,
+                  }}
+                >
+                  {t("Add Branch")}
+                </button>
+              )
+            ) : (
+              /* Desktop View - Action Menu */
+              <div className="action-menu-container" ref={actionMenuRef}>
+                <FontAwesomeIcon
+                  icon={faEllipsisV}
+                  className="action-menu-icon"
+                  onClick={() => setActionMenuOpen(!isActionMenuOpen)}
+                />
+                {isActionMenuOpen && (
+                  <div className="action-menu">
+                    {isV("btnUploadExcel") && !isMobile && (
+                      <div
+                        className="action-menu-item"
+                        onClick={handleButtonClick}
+                      >
+                        {loading ? t("Uploading Excel...") : t("Upload Excel")}
+                      </div>
+                    )}
+                    {isV("btnBranchAdd") && (
+                      <div
+                        className="action-menu-item"
+                        onClick={handleAddBranch}
+                        style={{
+                          pointerEvents: branches.some((branch) => branch.id < 0)
+                            ? "none"
+                            : "auto",
+                          opacity: branches.some((branch) => branch.id < 0)
+                            ? 0.5
+                            : 1,
+                        }}
+                      >
+                        {t("Add Branch")}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1707,49 +1711,49 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
       ) : */}
       {isMobile ? (
         <>
-        {loading && (
-              <div style={{ padding: 24 }}>
-                <LoadingSpinner />
-              </div>
-        )}
+          {loading && (
+            <div style={{ padding: 24 }}>
+              <LoadingSpinner />
+            </div>
+          )}
           {!showAllDetails && !loading && (
             <div className="branches-list">
               {currentItems.map((branch, index) => (
-                <div key={branch.id} className={ 
-                mode === "edit" &&
-                index === 0 &&
-                String(branch?.id) ===
-                  String(customer?.completeWorkflowData?.workflowData?.id)
-                  ? "branch-card-highlight"
-                  : "branch-card"}>
+                <div key={branch.id} className={
+                  mode === "edit" &&
+                    index === 0 &&
+                    String(branch?.id) ===
+                    String(customer?.completeWorkflowData?.workflowData?.id)
+                    ? "branch-card-highlight"
+                    : "branch-card"}>
                   <div
                     // className="branch-summary"
-                    style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}
+                    style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}
                     onClick={() => toggleRow(branch.id)}
                   >
-                    <div style={{display: "flex"}}>
-                    <div className="branch-id">
-                      {branch.erp_branch_id || branch.id}
+                    <div style={{ display: "flex" }}>
+                      <div className="branch-id">
+                        {branch.erp_branch_id || branch.id}
+                      </div>
+                      <div className="branch-name">{branch.branchNameEn}</div>
                     </div>
-                    <div className="branch-name">{branch.branchNameEn}</div>
-                    </div>
-                    <div style={{display: "flex", justifySelf: "flex-end"}}>
-                    <div className="branch-status">
-                      <span
-                        className={`branches-status-badge ${getStatusClass(
-                          branch.branchStatus
-                        )}`}
-                      >
-                        {t(branch.branchStatus)}
-                      </span>
-                    </div>
-                    <button className="branches-toggle-row-btn">
-                      {isExpanded(branch.id) ? (
-                        <FontAwesomeIcon icon={faChevronDown} />
-                      ) : (
-                        <FontAwesomeIcon icon={faChevronRight} />
-                      )}
-                    </button>
+                    <div style={{ display: "flex", justifySelf: "flex-end" }}>
+                      <div className="branch-status">
+                        <span
+                          className={`branches-status-badge ${getStatusClass(
+                            branch.branchStatus
+                          )}`}
+                        >
+                          {t(branch.branchStatus)}
+                        </span>
+                      </div>
+                      <button className="branches-toggle-row-btn">
+                        {isExpanded(branch.id) ? (
+                          <FontAwesomeIcon icon={faChevronDown} />
+                        ) : (
+                          <FontAwesomeIcon icon={faChevronRight} />
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1787,9 +1791,9 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
              */}
               <div className="branch-form-sections">
                 {isApprovalMode &&
-                            customerFormMode === "custDetailsAdd" && (
-                              <span style={{display: 'flex', justifyContent: 'center', fontWeight: 'bold'}}>{t("Branch is currently under approval")}</span>
-                            )}
+                  customerFormMode === "custDetailsAdd" && (
+                    <span style={{ display: 'flex', justifyContent: 'center', fontWeight: 'bold' }}>{t("Branch is currently under approval")}</span>
+                  )}
                 <BranchDetailsForm
                   branchId={selectedBranch.id}
                   branch={selectedBranch}
@@ -1850,14 +1854,13 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
                     onClick={() => toggleRow(branch.id)}
                     className={`
               ${isExpanded(branch.id) ? "branches-expanded-row" : ""}
-              ${
-                mode === "edit" &&
-                index === 0 &&
-                String(branch?.id) ===
-                  String(customer?.completeWorkflowData?.workflowData?.id)
-                  ? "first-row-highlight"
-                  : ""
-              }
+              ${mode === "edit" &&
+                        index === 0 &&
+                        String(branch?.id) ===
+                        String(customer?.completeWorkflowData?.workflowData?.id)
+                        ? "first-row-highlight"
+                        : ""
+                      }
             `}
                   >
                     <td
@@ -1939,14 +1942,13 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
                         )}
                     </td>
                     <td>
-                      <button className={`${
-                mode === "edit" &&
-                index === 0 &&
-                String(branch?.id) ===
-                  String(customer?.completeWorkflowData?.workflowData?.id)
-                  ? "branches-toggle-row-btn-first-row-highlight"
-                  : "branches-toggle-row-btn"
-              }`}>
+                      <button className={`${mode === "edit" &&
+                          index === 0 &&
+                          String(branch?.id) ===
+                          String(customer?.completeWorkflowData?.workflowData?.id)
+                          ? "branches-toggle-row-btn-first-row-highlight"
+                          : "branches-toggle-row-btn"
+                        }`}>
                         {isExpanded(branch.id) ? (
                           <FontAwesomeIcon icon={faChevronDown} />
                         ) : (
@@ -1995,11 +1997,11 @@ const CustomerBranches = ({ customer, customerPaymentMethodsData, setTabsHeight,
                             subtitle={
                               approvalAction === "approve"
                                 ? t(
-                                    "Are you sure you want to approve this branch?"
-                                  )
+                                  "Are you sure you want to approve this branch?"
+                                )
                                 : t(
-                                    "Are you sure you want to reject this branch?"
-                                  )
+                                  "Are you sure you want to reject this branch?"
+                                )
                             }
                           />
                         </div>

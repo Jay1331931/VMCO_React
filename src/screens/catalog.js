@@ -24,41 +24,49 @@ const initialCategories = [
     value: Constants.ENTITY.SHC,
     entity: Constants.ENTITY.SHC,
     label: Constants.ENTITY.SHC,
+    imageUrl: Constants.TAB_IMAGES.SHC
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
+    imageUrl: Constants.TAB_IMAGES.VMCO_CONSUMABLES
   },
   {
     value: Constants.ENTITY.GMTC,
     entity: Constants.ENTITY.GMTC,
     label: Constants.ENTITY.GMTC,
+    imageUrl: Constants.TAB_IMAGES.GMTC
   },
   {
     value: Constants.ENTITY.NAQI,
     entity: Constants.ENTITY.NAQI,
     label: Constants.ENTITY.NAQI,
+    imageUrl: Constants.TAB_IMAGES.NAQI
   },
   {
     value: Constants.CATEGORY.VMCO_MACHINES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_MACHINES,
+    imageUrl: Constants.TAB_IMAGES.VMCO_MACHINES
   },
   {
     value: Constants.ENTITY.DAR,
     entity: Constants.ENTITY.DAR,
     label: Constants.ENTITY.DAR,
+    imageUrl: Constants.TAB_IMAGES.DAR
   },
   {
     value: "SPECIAL_PRODUCTS",
     entity: "",
     label: "Special Products",
+    imageUrl: Constants.TAB_IMAGES.SPECIAL_PRODUCTS
   },
   {
     value: "FAVORITES",
     entity: "",
     label: "Favorites",
+    imageUrl: Constants.TAB_IMAGES.FAVORITES
   },
 ];
 function Catalog() {
@@ -75,6 +83,7 @@ function Catalog() {
   const [selectedBranchCity, setSelectedBranchCity] = useState("");
   const [quantities, setQuantities] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
+ const [categoriesTabImages, setCategoriesTabImages] = useState(initialCategories);
 
   // Simplified pagination states
   const [products, setProducts] = useState([]);
@@ -529,7 +538,7 @@ function Catalog() {
     }
     if (!user) return;
 
-    const allLocalizedTabs = initialCategories.map((category) => {
+    const allLocalizedTabs = categoriesTabImages.map((category) => {
       const response = getLocalizedEntityName(
         category.label,
         i18n.language,
@@ -538,6 +547,7 @@ function Catalog() {
       return {
         value: category.value,
         label: response,
+        imageUrl: category.imageUrl
       };
     });
 
@@ -554,7 +564,7 @@ function Catalog() {
     if (user.userType === "customer" && user.interCompany === true && user.entity) {
       const customerEntity = user.entity.toLowerCase();
       tabsToShow = tabsToShow.filter(tab => {
-        const category = initialCategories.find(cat => cat.value === tab.value);
+        const category = categoriesTabImages.find(cat => cat.value === tab.value);
         if (!category || !category.entity) return true;
         const tabEntityExists = entityDescriptions.some(
           (desc) => desc.value.toLowerCase() === category.entity.toLowerCase()
@@ -568,7 +578,7 @@ function Catalog() {
 
     // APPLY DISABLED STATUS
     tabsToShow = tabsToShow.map(tab => {
-      const category = initialCategories.find(cat => cat.value === tab.value);
+      const category = categoriesTabImages.find(cat => cat.value === tab.value);
       if (category && category.entity && disabledEntities.includes(category.entity)) {
         return { ...tab, disabled: true };
       }
@@ -591,7 +601,7 @@ function Catalog() {
   }, [
     entityDescriptions,
     i18n.language,
-    initialCategories,
+    categoriesTabImages,
     user,
     activeCategory,
     disabledEntities
@@ -1132,67 +1142,67 @@ function Catalog() {
 
   return (
     <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart}>
-      {isPageLoading ? 
-      (
-          <div className="loading-container">
-                <LoadingSpinner size="medium" />
-              </div>    
-      )
-      :
-      (
-      <div
-        className={`catalog-wrapper${isRTL ? " rtl" : ""}`}
-        style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
-        dir={dir}
-      >
-        {/* Fixed Header Container */}
-        {activeCategory && (<div className={isMobile ? `catalog-fixed-header ${showHeader ? "show" : "hide"}` : "catalog-fixed-header"}>
-        {/* {activeCategory && (<div className={isMobile ? `catalog-fixed-header show` : "catalog-fixed-header"}> */}
-          {/* Location Selector and Cart Button */}
-          {isV("selectBranch") && (
-            <div className="catalog-header">
-              <div className="location-selector">
-                <SearchableDropdown
-                  id={`location-select-${catalogId}`}
-                  name="locationSelect"
-                  value={selectedLocation}
-                  onChange={handleBranchSelect}
-                  options={branches.map((b) => ({
-                    ...b,
-                    name: b.label || b.name || b.value,
-                    disabled: b.disabled,
-                  }))}
-                  className={isMobile ? "mobile-select-branch location-select" : "location-select"}
-                  placeholder={t("Select Branch")}
-                  disabled={isLoading || branches.length === 0}
-                />
-                {isLoading && !isMobile && branches.length === 0 && (
-                  <div className="dropdown-loading">
-                    <LoadingSpinner size="small" />
+      {isPageLoading ?
+        (
+          <div className="loading-container" style= {{position: "absolute", top: "50%", left: "50%"}}>
+            <LoadingSpinner size="medium" />
+          </div>
+        )
+        :
+        (
+          <div
+            className={`catalog-wrapper${isRTL ? " rtl" : ""}`}
+            style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
+            dir={dir}
+          >
+            {/* Fixed Header Container */}
+            {activeCategory && (<div className={isMobile ? `catalog-fixed-header ${showHeader ? "show" : "show"}` : "catalog-fixed-header"}>
+              {/* {activeCategory && (<div className={isMobile ? `catalog-fixed-header show` : "catalog-fixed-header"}> */}
+              {/* Location Selector and Cart Button */}
+              {isV("selectBranch") && (
+                <div className="catalog-header">
+                  <div className="location-selector">
+                    <SearchableDropdown
+                      id={`location-select-${catalogId}`}
+                      name="locationSelect"
+                      value={selectedLocation}
+                      onChange={handleBranchSelect}
+                      options={branches.map((b) => ({
+                        ...b,
+                        name: b.label || b.name || b.value,
+                        disabled: b.disabled,
+                      }))}
+                      className={isMobile ? "mobile-select-branch location-select" : "location-select"}
+                      placeholder={t("Select Branch")}
+                      disabled={isLoading || branches.length === 0}
+                    />
+                    {isLoading && !isMobile && branches.length === 0 && (
+                      <div className="dropdown-loading">
+                        <LoadingSpinner size="small" />
+                      </div>
+                    )}
+                    {!isLoading && branches.length === 0 && (
+                      <div className="no-branches-message">
+                        {t("No branches available")}
+                      </div>
+                    )}
                   </div>
-                )}
-                {!isLoading && branches.length === 0 && (
-                  <div className="no-branches-message">
-                    {t("No branches available")}
-                  </div>
-                )}
-              </div>
-              {isV("goToCart") && (
-                <button
-                  className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
-                  style={{
-                    opacity: !selectedLocation ? 0.6 : 1,
-                    cursor: !selectedLocation ? "not-allowed" : "pointer",
-                  }}
-                  onClick={handleGoToCart}
-                  disabled={!selectedLocation}
-                >
-                  <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
-                  {!isMobile && <span>{t("Go to Cart")}</span>}
-                </button>
+                  {isV("goToCart") && (
+                    <button
+                      className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
+                      style={{
+                        opacity: !selectedLocation ? 0.6 : 1,
+                        cursor: !selectedLocation ? "not-allowed" : "pointer",
+                      }}
+                      onClick={handleGoToCart}
+                      disabled={!selectedLocation}
+                    >
+                      <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+                      {!isMobile && <span>{t("Go to Cart")}</span>}
+                    </button>
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
               <div className="filter-section">
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none" }}>
@@ -1202,7 +1212,7 @@ function Catalog() {
                     onTabChange={(newCategory) => {
                       const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
                       if (targetTab && targetTab.disabled) {
-                        const categoryInfo = initialCategories.find(c => c.value === newCategory);
+                        const categoryInfo = categoriesTabImages.find(c => c.value === newCategory);
                         const entityName = categoryInfo?.entity;
                         const coolingInfo = coolingPeriodData.find(cp => cp.entity === entityName);
                         const timeDisplay = coolingInfo ? coolingInfo.toTime : "later";
@@ -1226,7 +1236,7 @@ function Catalog() {
                       }
 
                       setIsLoading(false);
-                      console.log("🔄 Tab changing from", activeCategory, "to", newCategory);
+                      console.log("Tab changing from", activeCategory, "to", newCategory);
                       setActiveCategory(newCategory);
                       setSearchQuery("");
                       setCategoryFilter("");
@@ -1234,7 +1244,8 @@ function Catalog() {
                       setSubCategoryOptions([]);
                     }}
                     className={isMobile ? "catalog" : ""}
-                    variant="category"
+                    variant={isMobile ? 'mobile' : 'pc'}
+                    catalog="true"
                   />
                 </div>
               </div>
@@ -1273,67 +1284,67 @@ function Catalog() {
                 </div>
               </div>
             </div>
-          )}
+            )}
 
-        {/* Scrollable Products Container */}
-        <div className="catalog-scrollable-content" style={{paddingTop: isMobile ? isV("goToCart") ? showHeader ? "160px": "10px" : showHeader ? "110px" : "10px" : "0px"}}>
-          <div className="products-grid">
-            {displayedProducts.length > 0
-              ? displayedProducts?.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={mapProductToCardProps(product)}
-                  quantities={quantities}
-                  onQuantityChange={handleQuantityChange}
-                  onAddToCart={() => handleAddToCart(product.id)}
-                  onProductClick={() => handleProductClick(product)}
-                  setQuantities={setQuantities}
-                  onToggleFavorite={handleToggleFavorite}
-                  isAdding={isAdding}
-                />
-              ))
-              : !isLoading && !isLoadingMore && !hasMore && (
-                <div className="no-products-message">
-                  {searchQuery ? (
-                    <p>{t('No products found matching your search term "{{searchTerm}}".', { searchTerm: searchQuery })}</p>
-                  ) : (
-                    <p>{t("No products found matching your criteria.")}</p>
+            {/* Scrollable Products Container */}
+            <div className="catalog-scrollable-content" style={{ paddingTop: isMobile ? isV("goToCart") ? showHeader ? "160px" : "10px" : showHeader ? "110px" : "10px" : "0px" }}>
+              <div className="products-grid">
+                {displayedProducts.length > 0
+                  ? displayedProducts?.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={mapProductToCardProps(product)}
+                      quantities={quantities}
+                      onQuantityChange={handleQuantityChange}
+                      onAddToCart={() => handleAddToCart(product.id)}
+                      onProductClick={() => handleProductClick(product)}
+                      setQuantities={setQuantities}
+                      onToggleFavorite={handleToggleFavorite}
+                      isAdding={isAdding}
+                    />
+                  ))
+                  : !isLoading && !isLoadingMore && !hasMore && (
+                    <div className="no-products-message">
+                      {searchQuery ? (
+                        <p>{t('No products found matching your search term "{{searchTerm}}".', { searchTerm: searchQuery })}</p>
+                      ) : (
+                        <p>{t("No products found matching your criteria.")}</p>
+                      )}
+                    </div>
                   )}
+                {isLoading && !isMobile && (
+                  <div className="loading-container" style= {{position: "absolute", top: "50%", left: "50%"}}><LoadingSpinner size="medium" /></div>
+                )}
+              </div>
+              {isLoading && isMobile && (
+                <div className="loading-container" style= {{position: "absolute", top: "50%", left: "50%"}}><LoadingSpinner size="medium" /></div>
+              )}
+              {isLoadingMore && (
+                <div className="loading-more-container">
+                  <LoadingSpinner size="medium" />
+                  <span className="loading-more-text">{t("Loading more products...")}</span>
                 </div>
               )}
-              {isLoading && !isMobile && (
-                <div className="loading-container"><LoadingSpinner size="medium" /></div>
+              {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && (
+                <div className="end-of-catalog-message">
+                  <p>{t("End of product catalog")}</p>
+                </div>
               )}
             </div>
-            {isLoading && isMobile && (
-              <div className="loading-container"><LoadingSpinner size="medium" /></div>
-            )}
-            {isLoadingMore && (
-              <div className="loading-more-container">
-                <LoadingSpinner size="medium" />
-                <span className="loading-more-text">{t("Loading more products...")}</span>
-              </div>
-            )}
-            {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && (
-              <div className="end-of-catalog-message">
-                <p>{t("End of product catalog")}</p>
-              </div>
+
+            {selectedProduct && (
+              <ProductPopup
+                product={mapProductToCardProps(selectedProduct)}
+                quantities={quantities}
+                onQuantityChange={handleQuantityChange}
+                onAddToCart={() => handleAddToCart(selectedProduct.id)}
+                onInputChange={(itemId, value) => setQuantities({ ...quantities, [itemId]: value })}
+                onClose={handleClosePopup}
+                isAdding={isAdding}
+              />
             )}
           </div>
-
-          {selectedProduct && (
-            <ProductPopup
-              product={mapProductToCardProps(selectedProduct)}
-              quantities={quantities}
-              onQuantityChange={handleQuantityChange}
-              onAddToCart={() => handleAddToCart(selectedProduct.id)}
-              onInputChange={(itemId, value) => setQuantities({ ...quantities, [itemId]: value })}
-              onClose={handleClosePopup}
-              isAdding={isAdding}
-            />
-          )}
-        </div>
-      )}
+        )}
       <style jsx="true">{`
         .no-products-message {
           width: 100%;

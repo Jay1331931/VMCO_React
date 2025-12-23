@@ -19,7 +19,21 @@ import {
   Stack,
 } from "@mui/material";
 import { Lock, Payment } from "@mui/icons-material";
+ 
 import Sidebar from "../components/Sidebar";
+function getCenteredOptions(width, height) {
+  const screenWidth = window.screen.width;
+  const screenHeight = window.screen.height;
+  
+  // Calculate centered position
+  const left = Math.max(0, (screenWidth - width) / 2);
+  const top = Math.max(0, (screenHeight - height) / 2);
+  
+  return {
+    left: Math.round(left),
+    top: Math.round(top)
+  };
+}
 const TapCardPayment = () => {
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -247,15 +261,29 @@ const TapCardPayment = () => {
           navigate("/catalog");
           // window.open(paymentUrl, "_blank", "noopener,noreferrer");
           // window.open(paymentUrl, "_system");
-          const width = Math.min(500, window.screen.width - 40);
-  const height = Math.min(700, window.screen.height - 100);
-  const left = (window.screen.width - width) / 2;
-  const top = (window.screen.height - height) / 2;
-   window.open(
-    paymentUrl,
-    'TapPayment',
-    `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
-  );
+         const width = 400;
+const height = 500;
+
+const centeredPosition = getCenteredOptions(width, height);
+
+// Create options string with centered position
+const options =
+  'toolbar=yes,' +
+  'hideurlbar=yes,' +
+  'zoom=no,' +
+  'hardwareback=yes,' +
+  'clearsessioncache=yes,' +
+  'clearcache=yes,' +
+  'width=' + width + ',' +
+  'height=' + height + ',' +
+  'left=' + centeredPosition.left + ',' +
+  'top=' + centeredPosition.top;
+
+window.cordova.InAppBrowser.open(
+  paymentUrl,
+  '_blank',
+  options
+);
         } else {
           window.location.replace(paymentUrl);
         }

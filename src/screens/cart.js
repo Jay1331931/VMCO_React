@@ -3790,57 +3790,41 @@ function Cart() {
                       </>
                     )}
 
-                    {/* Only show Place Order button when category is collapsed AND NOT disabled */}
+                    {/* Only show Place Order button when category is collapsed AND NOT disabled AND has items */}
                     {collapsedCategories.has(category.category) &&
-                      !isEntityDisabled && (
+                      !isEntityDisabled &&
+                      category.items.length > 0 && (
                         <button
                           className="checkout-btn"
                           onClick={async (event) => {
-                            event.stopPropagation(); // Prevent event bubbling
-
-                            // Double check in case button is somehow clickable
+                            event.stopPropagation();
                             if (isEntityDisabled) return;
 
-                            // Set category-specific loading state
-                            setProcessingCategories(
-                              (prev) => new Set([...prev, category.category])
-                            );
+                            setProcessingCategories(prev => new Set([...prev, category.category]));
 
                             try {
                               setPendingOrderCategory(category.category);
                               setPendingOrderItems(category.items);
+                              const entity = getEntityFromCategory(category.category);
 
-                              const entity = getEntityFromCategory(
-                                category.category
-                              );
-                              if (
-                                entity &&
-                                (entity.toLowerCase() ===
-                                  Constants.ENTITY.VMCO.toLowerCase() ||
-                                  entity.toLowerCase() ===
-                                  Constants.ENTITY.SHC.toLowerCase())
-                              ) {
-                                // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
-                                await handlePlaceOrder(
-                                  category.items,
-                                  category.category,
-                                  null
-                                );
+                              if (entity &&
+                                (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
+                                  entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
+                                await handlePlaceOrder(category.items, category.category, null);
                               } else {
                                 await handlePlaceOrder(category.items, category.category, null);
                               }
                             } finally {
-                              // Remove category-specific loading state
-                              setProcessingCategories((prev) => {
+                              setProcessingCategories(prev => {
                                 const newSet = new Set(prev);
                                 newSet.delete(category.category);
                                 return newSet;
                               });
                             }
                           }}
-                          disabled={processingCategories.has(category.category)}
+                          disabled={isPlacingOrder || processingCategories.has(category.category)}
                         >
-                          {processingCategories.has(category.category)
+                          {isPlacingOrder || processingCategories.has(category.category)
                             ? t("Processing...")
                             : t("Place Order")}
                         </button>

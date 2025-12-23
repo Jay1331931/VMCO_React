@@ -26,31 +26,38 @@ const initialEntities = [
   {
     value: Constants.ENTITY.VMCO,
     label:  Constants.TAB_NAMES.VMCO_MACHINES,
+    imageUrl: Constants.TAB_IMAGES.VMCO_MACHINES
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
+    imageUrl: Constants.TAB_IMAGES.VMCO_CONSUMABLES
   },
   {
     value: Constants.ENTITY.SHC,
     label: "Saudi Hospitality Company",
+    imageUrl: Constants.TAB_IMAGES.SHC
   },
   {
     value: Constants.ENTITY.GMTC,
     label: "Green Mast Factory Ltd",
+    imageUrl: Constants.TAB_IMAGES.GMTC
   },
   {
     value: Constants.ENTITY.NAQI,
     label: "Naqi Company",
+    imageUrl: Constants.TAB_IMAGES.NAQI
   },
   {
     value: Constants.ENTITY.DAR,
     label: "DAR Company",
+    imageUrl: Constants.TAB_IMAGES.DAR
   },
   {
     value: "Special Products",
     label: "Special Products",
+    imageUrl: Constants.TAB_IMAGES.SPECIAL_PRODUCTS
   },
 ];
 

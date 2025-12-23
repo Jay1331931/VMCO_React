@@ -148,6 +148,7 @@ function GetProducts({
     try {
       const params = new URLSearchParams({ entity });
       const apiParams = getApiParameters();
+      params.append("isCategory", true);
       if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
       if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
       const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
