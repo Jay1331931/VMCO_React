@@ -1422,22 +1422,10 @@ function Catalog() {
           .products-grid > * {
             max-width: none !important;
       }
-//             .catalog-fixed-header.show {
-//               top: 0px
-//             }
-//               .catalog-fixed-header.hide {
-//               top: -180px;
-//               height: 0px;
-//               }
-//               .catalog-fixed-header {
-//   position: relative;
-//   padding: 0px 10px 5px 10px;
-//   border-bottom: none !important;
-//   transition: top 0.35s ease-in-out, height 0.35s ease-in-out;
-// }
+
 .catalog-fixed-header {
   position: fixed;
-  top: 0;
+  // top: 0;
   left: 0;
   width: 100%;
   padding: 0px 10px 5px 10px;

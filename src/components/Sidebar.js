@@ -36,16 +36,16 @@ import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isMobileDevice = Capacitor.isNativePlatform();
+const isMobileDevice =true //Capacitor.isNativePlatform();
 
-function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
+function Sidebar({ children, title, MenuName = null }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
+  const [cartbranchData,setCartBranchData]=useState(null)
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -145,7 +145,35 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       isApprovalMode: isApprovalMode,
     };
   }
+useEffect(()=>{
+  if(!user?.userId) return;
+   const fetchCart = async (customerId, customer) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/cart/get-cart-by-userId?id=${user?.userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      if (result.status === "Ok") {
+        setCartBranchData(result.data)
 
+      } else {
+        throw new Error(
+          response.data.message || "Failed to fetch customer contacts"
+        );
+      }
+    } catch (err) {
+      console.error("Error fetching cart :", err);
+    }
+  };
+  fetchCart()
+},[user])
   const fetchCustomerContacts = async (customerId, customer) => {
     try {
       const response = await fetch(
@@ -270,7 +298,26 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       throw err;
     }
   };
+ const handleGoToCart = () => {
 
+    navigate("/Cart", {
+      state: {
+        selectedCustomerId:cartbranchData?.customerId,
+        selectedCustomerStatus: user?.customerStatus,
+        selectedBranchId: cartbranchData?.branchId,
+        selectedBranchName:  "",
+        selectedBranchNameLc: cartbranchData?.branchNameLc || "",
+        selectedBranchNameEn: cartbranchData.branchNameEn || "",
+        selectedBranchErpId: cartbranchData?.erpBranchId || "",
+        selectedBranchRegion:cartbranchData.branch,
+        selectedBranchCity:cartbranchData.city,
+        selectedBranchStatus: cartbranchData?.branchStatus || "",
+        selectedCustSequenceId: user?.sequenceId,
+        selectedBranchSequenceId: cartbranchData?.sequenceId,
+      },
+    });
+  };
+  
   useEffect(() => {
     document.body.dir = isRTL ? "rtl" : "ltr";
 
@@ -307,8 +354,8 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       case "/cart":
         setActiveMenu("Your Cart");
         break;
-      case "Menu":
-        setActiveMenu("Menu");
+      case "Others":
+        setActiveMenu("Others");
         break;
       case "Orders":
         console.log("Orders");
@@ -348,10 +395,11 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
   };
 
   const handleMenuClick = async (label) => {
-    if (label === "Menu") {
+    if (label === "Others") {
       setShowOrdersSubMenu(!showOrdersSubMenu);
       return;
     }
+   
     setShowOrdersSubMenu(false);
     setActiveMenu(label);
 
@@ -426,6 +474,8 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       default:
         break;
     }
+
+     
   };
 
   const handleLogout = async () => {
@@ -440,7 +490,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     }
   };
 
-  const menuItems = [
+  const baseMenuItems = [
     { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
     {
       icon: isMobileDevice ? faHouse : faBookOpen,
@@ -523,11 +573,28 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     },
     {
       icon: faList,
-      label: "Menu",
+      label: "Others",
       // UPDATED: Menu visible on all screens in mobile
       isVisible: isMobileDevice,
     },
   ];
+const menuItems = isMobileDevice
+  ? [
+      baseMenuItems.find(item => item.label === "Dashboard"),
+      baseMenuItems.find(item => item.label === "Catalog"),
+
+      // 🔥 3rd position
+      baseMenuItems.find(item => item.label === "Your Cart"),
+
+      // 🔥 4th position
+      baseMenuItems.find(item => item.label === "Orders"),
+
+      ...baseMenuItems.filter(
+        item =>
+          !["Dashboard", "Catalog", "Your Cart", "Orders"].includes(item.label)
+      ),
+    ]
+  : baseMenuItems;
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
 
@@ -571,6 +638,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       return false;
     else return true;
   };
+ 
 
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
@@ -835,19 +903,19 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                 <FontAwesomeIcon icon={faLanguage} />
                 <span>{isRTL ? "EN" : "عربى"}</span>
               </button>
-              {isMobileDevice && (
+              {/* {isMobileDevice && (
                 <>
                   <div className="logout-icon" onClick={handleLogout}>
                     <FontAwesomeIcon icon={faSignOutAlt} />
                   </div>
                 </>
-              )}
+              )} */}
             </div>
           </header>
           <div
             className="content"
             style={{
-              padding: isMobileDevice ? (activeMenu ? "0 0px 0px" : "0 20px") : "0 20px",
+              padding: isMobileDevice ? (activeMenu ? "0 0px 0px" : "0 20px") : "20px",
             }}
           >
             {children}
@@ -870,7 +938,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
 
                   // UPDATED: Menu item is active only when clicked
                   const isMenuItemActive = () => {
-                    if (label === "Menu") {
+                    if (label === "Others") {
                       return showOrdersSubMenu;
                     }
                     return activeMenu === t(label);
@@ -900,14 +968,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
           {/* UPDATED: Only show orders submenu on mobile */}
           {isMobile && isMobileDevice && showOrdersSubMenu && (
             <div className={`orders-bottom-bar ${showMenu ? "show" : "show"}`}>
-              {(isV("BankTransfer") || isV("Bank Transactions")) && (
-                <button
-                  className="orders-btn"
-                  onClick={() => handleMenuClick("Bank")}
-                >
-                  {t("Bank")}
-                </button>
-              )}
+            
 
               {isV("Support") && (
                 <button
@@ -926,6 +987,18 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                   {t("Maintenance")}
                 </button>
               )}
+                {(isV("BankTransfer") || isV("Bank Transactions")) && (
+                <button
+                  className="orders-btn"
+                  onClick={() => handleMenuClick("Bank")}
+                >
+                  {t("Bank")}
+                </button>
+              )} 
+              <div className="orders-btn" onClick={handleLogout}>
+                    {/* <FontAwesomeIcon icon={faSignOutAlt} /> */}
+                     {t("Logout")}
+                  </div>
             </div>
           )}
         </div>

@@ -20,6 +20,7 @@ import {
   Chip,
 } from "@mui/material";
 import { Lock, Payment } from "@mui/icons-material";
+import Sidebar from "../components/Sidebar";
 
 const ApplePayComponent = () => {
   const [sdkLoaded, setSdkLoaded] = useState(false);
@@ -171,6 +172,8 @@ const ApplePayComponent = () => {
   };
 
   return (
+    
+            <Sidebar title={t("Apple Payment")}>
     <Box
       sx={{
         display: "flex",
@@ -306,7 +309,7 @@ const ApplePayComponent = () => {
           )}
         </CardContent>
       </Card>
-    </Box>
+    </Box></Sidebar>
   );
 };
 
