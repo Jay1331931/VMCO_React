@@ -9,8 +9,8 @@ const ProductCard = ({
     product,
     quantities,
     onQuantityChange,
+    setQuantities={setQuantities},
     onProductClick,
-    setQuantities,
     onAddToCart,
     onToggleFavorite,
     isAdding

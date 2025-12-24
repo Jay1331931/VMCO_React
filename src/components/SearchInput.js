@@ -50,7 +50,7 @@ const SearchInput = ({ onSearch, className = 'search-input', debounceTime = 300 
         }
         @media (max-width: 768px) {
           .search-input {
-            width: 120px;
+            width: 100%;
             padding: 8px 10px;
             font-size: 0.98rem;
           }

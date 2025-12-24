@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { createPortal} from "react-dom";
+import { createPortal } from "react-dom";
+import usePlatform from "../utilities/platform";
+
 function SearchableDropdown({
   name,
   options,
@@ -19,61 +21,40 @@ function SearchableDropdown({
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
   const { t, i18n } = useTranslation();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [dropdownPosition, setDropdownPosition] = useState({});
+  const isMobile= usePlatform();
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (!isOpen) return;
 
-const inputRef = useRef(null);
-useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
-        console.log("isMobile", isMobile);
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-//     useEffect(() => {
-//   if (isOpen && dropdownRef.current) {
-//     const rect = dropdownRef.current.getBoundingClientRect();
+    const handleScroll = (e) => {
+      const dropdownEl = document.querySelector(".dropdown-content");
 
-//     setDropdownPosition({
-//       position: "absolute",
-//       top: rect.bottom + window.scrollY,  // just below header
-//       left: rect.left + window.scrollX,
-//       width: rect.width,                  // same width as header
-//       zIndex: 9999,
-//     });
-//   }
-// }, [isOpen]);
+      // If scroll happens inside dropdown, do NOT close it
+      if (dropdownEl && dropdownEl.contains(e.target)) return;
 
-useEffect(() => {
-  if (!isOpen) return;
+      // Otherwise close the dropdown
+      setIsOpen(false);
+    };
 
-  const handleScroll = (e) => {
-    const dropdownEl = document.querySelector(".dropdown-content");
+    // Use capture to detect scroll from all parents
+    window.addEventListener("scroll", handleScroll, true);
 
-    // If scroll happens inside dropdown, do NOT close it
-    if (dropdownEl && dropdownEl.contains(e.target)) return;
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [isOpen]);
 
-    // Otherwise close the dropdown
-    setIsOpen(false);
-  };
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const dropdownHeight = 300; // estimate, or dynamic later
 
-  // Use capture to detect scroll from all parents
-  window.addEventListener("scroll", handleScroll, true);
+      // space checks
+      const spaceAbove = rect.top;
+      const spaceBelow = window.innerHeight - rect.bottom;
 
-  return () => {
-    window.removeEventListener("scroll", handleScroll, true);
-  };
-}, [isOpen]);
-
-useEffect(() => {
-  if (isOpen && dropdownRef.current) {
-    const rect = dropdownRef.current.getBoundingClientRect();
-    const dropdownHeight = 300; // estimate, or dynamic later
-
-    // space checks
-    const spaceAbove = rect.top;
-    const spaceBelow = window.innerHeight - rect.bottom;
-
-    let topPosition;
+      let topPosition;
 
       //  Auto decide based on available space
       if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight && openUpwards) {
@@ -81,17 +62,17 @@ useEffect(() => {
       } else {
         topPosition = rect.bottom + window.scrollY; // open downwards
       }
-    
 
-    setDropdownPosition({
-      position: "absolute",
-      top: topPosition,
-      left: rect.left + window.scrollX,
-      // width: rect.width,
-      zIndex: 9999,
-    });
-  }
-}, [isOpen, openUpwards]);
+
+      setDropdownPosition({
+        position: "absolute",
+        top: topPosition,
+        left: rect.left + window.scrollX,
+        // width: rect.width,
+        zIndex: 9999,
+      });
+    }
+  }, [isOpen, openUpwards]);
 
 
   useEffect(() => {
@@ -110,20 +91,20 @@ useEffect(() => {
   //   document.addEventListener("mousedown", handleClickOutside);
   //   return () => document.removeEventListener("mousedown", handleClickOutside);
   // }, []);
-useEffect(() => {
-  const handleClickOutside = (event) => {
-    const triggerEl = dropdownRef.current;
-    const clickedInsideTrigger = triggerEl && triggerEl.contains(event.target);
-    const clickedInsidePortal = event.target.closest(".dropdown-content");
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const triggerEl = dropdownRef.current;
+      const clickedInsideTrigger = triggerEl && triggerEl.contains(event.target);
+      const clickedInsidePortal = event.target.closest(".dropdown-content");
 
-    if (!clickedInsideTrigger && !clickedInsidePortal) {
-      setIsOpen(false);
-    }
-  };
+      if (!clickedInsideTrigger && !clickedInsidePortal) {
+        setIsOpen(false);
+      }
+    };
 
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, []);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   // Get filtered options based on search term
   const filteredOptions = mergedOptions.filter((opt) => {
     const optionText =
@@ -174,24 +155,24 @@ useEffect(() => {
   return (
     <div className={`searchable-dropdown `} ref={dropdownRef}>
       <div
-        className={`dropdown-header ${className || ""}`}
+        className={`dropdown-header`}
         // onClick={() => !disabled && setIsOpen(!isOpen)}
         onClick={() => {
-  if (disabled) return;
+          if (disabled) return;
 
-  if (!isOpen && dropdownRef.current) {
-    const rect = dropdownRef.current.getBoundingClientRect();
-    setDropdownPosition({
-      position: "absolute",
-      top: rect.bottom + window.scrollY,
-      left: rect.left + window.scrollX,
-      width: rect.width,
-      zIndex: 9999,
-    });
-  }
+          if (!isOpen && dropdownRef.current) {
+            const rect = dropdownRef.current.getBoundingClientRect();
+            setDropdownPosition({
+              position: "absolute",
+              top: rect.bottom + window.scrollY,
+              left: rect.left + window.scrollX,
+              width: rect.width,
+              zIndex: 9999,
+            });
+          }
 
-  setIsOpen(!isOpen);
-}}
+          setIsOpen(!isOpen);
+        }}
 
         tabIndex={disabled ? -1 : 0}
         style={{
@@ -205,63 +186,63 @@ useEffect(() => {
         <span className="dropdown-arrow">▼</span>
       </div>
 
-      {isOpen && !disabled &&  createPortal(
-    <div
-  className={`dropdown-content ${className || ""}`}
-  style={dropdownPosition}
-  onClick={(e) => e.stopPropagation()}
->
-      <input
-        ref={inputRef}
-        type="text"
-        className="dropdown-search"
-        placeholder={t("Search...")}
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onClick={(e) => e.stopPropagation()}
-        autoFocus={window.innerWidth > 768}
-      />
+      {isOpen && !disabled && createPortal(
+        <div
+          className={`dropdown-content ${className || ""}`}
+          style={dropdownPosition}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            className="dropdown-search"
+            placeholder={t("Search...")}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            autoFocus={window.innerWidth > 768}
+          />
 
-      <div className="dropdown-options">
-        {filteredOptions.length > 0 ? (
-          filteredOptions.map((opt, idx) => {
-            const isOptDisabled = typeof opt === "object" && opt.disabled;
-            return (
-              <div
-                key={idx}
-                className={`dropdown-option${isOptDisabled ? " disabled" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();          // 👈 stop bubbling
-                  if (!isOptDisabled) handleOptionSelect(opt);
-                }}
-                style={
-                  isOptDisabled
-                    ? {
-                        color: "#aaa",
-                        cursor: "not-allowed",
-                        background: "#eae9e9ff",
-                      }
-                    : {}
-                }
-                aria-disabled={isOptDisabled}
-              >
-                {i18n.language === "en"
-                  ? typeof opt === "object"
-                    ? opt?.name.charAt(0).toUpperCase() + opt?.name.slice(1)
-                    : opt?.charAt(0).toUpperCase() + opt?.slice(1)
-                  : typeof opt === "object"
-                  ? opt?.name
-                  : opt}
-              </div>
-            );
-          })
-        ) : (
-          <div className="no-options">{t("No matches found")}</div>
-        )}
-      </div>
-    </div>,
-    document.body
-  )}
+          <div className="dropdown-options">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt, idx) => {
+                const isOptDisabled = typeof opt === "object" && opt.disabled;
+                return (
+                  <div
+                    key={idx}
+                    className={`dropdown-option${isOptDisabled ? " disabled" : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation();          // 👈 stop bubbling
+                      if (!isOptDisabled) handleOptionSelect(opt);
+                    }}
+                    style={
+                      isOptDisabled
+                        ? {
+                          color: "#aaa",
+                          cursor: "not-allowed",
+                          background: "#eae9e9ff",
+                        }
+                        : {}
+                    }
+                    aria-disabled={isOptDisabled}
+                  >
+                    {i18n.language === "en"
+                      ? typeof opt === "object"
+                        ? opt?.name.charAt(0).toUpperCase() + opt?.name.slice(1)
+                        : opt?.charAt(0).toUpperCase() + opt?.slice(1)
+                      : typeof opt === "object"
+                        ? opt?.name
+                        : opt}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="no-options">{t("No matches found")}</div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

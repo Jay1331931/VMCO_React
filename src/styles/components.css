@@ -1118,10 +1118,7 @@ body.catalog-page #root {
 }
 .catalog-fixed-header {
   position: sticky;
-  padding: 20px 10px 10px 10px;
-  /* border-bottom: 1px solid gray !important; */
   transition: top 0.7s ease-in-out;
-  /* border-radius: 10px; */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 .catalog-fixed-header.hide {
@@ -1262,6 +1259,11 @@ body.catalog-page #root {
   .subcategory-filter {
     flex: 1;
     min-width: 120px;
+    font-size: smaller;
+  }
+  .dropdown-header .category-filter-double {
+    flex: 2;
+    min-width: 200px;
     font-size: smaller;
   }
   .category-tab {

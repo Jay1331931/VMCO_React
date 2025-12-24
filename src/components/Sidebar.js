@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SaudiTime from "../components/Time";
 import RbacManager from "../utilities/rbac";
-import { Capacitor } from "@capacitor/core";
+import usePlatform from "../utilities/platform";
 import {
   faChevronLeft,
   faChevronRight,
@@ -36,7 +36,6 @@ import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isMobileDevice = Capacitor.isNativePlatform();
 
 function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
   const navigate = useNavigate();
@@ -44,14 +43,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const isMobile = usePlatform();
 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
@@ -325,7 +317,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
 
   useEffect(() => {
     const mainContent = document.querySelector(".main-content");
-    if (mainContent && isMobileDevice) {
+    if (mainContent && isMobile) {
       if (showOrdersSubMenu) {
         mainContent.classList.add("has-orders-submenu");
       } else {
@@ -339,7 +331,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
         mainContent.classList.remove("has-orders-submenu");
       }
     };
-  }, [showOrdersSubMenu, isMobileDevice]);
+  }, [showOrdersSubMenu, isMobile]);
 
   const toggleSidebar = () => setSidebarCollapsed(!isSidebarCollapsed);
   const handleMobileToggle = () => {
@@ -443,24 +435,24 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
   const menuItems = [
     { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
     {
-      icon: isMobileDevice ? faHouse : faBookOpen,
+      icon: isMobile ? faHouse : faBookOpen,
       label: "Catalog",
       isVisible: true,
     },
     {
-      icon: isMobileDevice ? faBoxOpen : faShoppingCart,
+      icon: isMobile ? faBoxOpen : faShoppingCart,
       label: "Orders",
       isVisible: true,
     },
     {
       icon: faCodeBranch,
       label: "Branches",
-      isVisible: isMobileDevice ? false : true,
+      isVisible: isMobile ? false : true,
     },
     {
       icon: faUsers,
       label: "Customers",
-      isVisible: isMobileDevice
+      isVisible: isMobile
         ? activeMenu === t("Catalog") ||
           activeMenu === t("Customers") ||
           activeMenu === t("Company")
@@ -481,11 +473,11 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     {
       icon: faFile,
       label: "Reports",
-      isVisible: isMobileDevice ? false : true,
+      isVisible: isMobile ? false : true,
     },
     {
       icon: faBank,
-      label: isMobileDevice ? "Bank" : "Bank Transfer",
+      label: isMobile ? "Bank" : "Bank Transfer",
       permission: "BankTransfer",
       isVisible: true,
     },
@@ -493,16 +485,16 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       icon: faShoppingCart,
       label: "Your Cart",
       permission: "Cart",
-      isVisible: isMobileDevice
+      isVisible: isMobile
         ? activeMenu === t("Catalog") || activeMenu === t("Your Cart")
           ? isV("goToCart")
           : false
         : false,
     },
     {
-      icon: isMobileDevice ? faUser : faBuilding,
+      icon: isMobile ? faUser : faBuilding,
       label: "Company",
-      isVisible: isMobileDevice
+      isVisible: isMobile
         ? activeMenu === t("Catalog") || activeMenu === t("Company")
           ? true
           : false
@@ -513,7 +505,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       icon: faUpload,
       label: isMobile ? "" : "General",
       permission: isMobile ? false : "General",
-      isVisible: isMobileDevice ? false : true,
+      isVisible: isMobile ? false : true,
     },
     {
       icon: faHistory,
@@ -525,7 +517,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       icon: faList,
       label: "Menu",
       // UPDATED: Menu visible on all screens in mobile
-      isVisible: isMobileDevice,
+      isVisible: isMobile,
     },
   ];
 
@@ -738,7 +730,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
           }
         >
           <header className={`header ${showMenu ? "show" : "show"}`}>
-            {!isMobileDevice && (
+            {!isMobile && (
               <button
                 className="mobile-menu-btn"
                 id="mobileMenuBtn"
@@ -747,7 +739,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                 <FontAwesomeIcon icon={faBars} />
               </button>
             )}
-            {isMobileDevice && (
+            {isMobile && (
               <img
                 src="/logos/talab_point_logo.png"
                 alt="Talab Point Logo"
@@ -835,7 +827,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                 <FontAwesomeIcon icon={faLanguage} />
                 <span>{isRTL ? "EN" : "عربى"}</span>
               </button>
-              {isMobileDevice && (
+              {isMobile && (
                 <>
                   <div className="logout-icon" onClick={handleLogout}>
                     <FontAwesomeIcon icon={faSignOutAlt} />
@@ -846,14 +838,11 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
           </header>
           <div
             className="content"
-            style={{
-              padding: isMobileDevice ? (activeMenu ? "0 0px 0px" : "20px") : "20px",
-            }}
           >
             {children}
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
-          {isMobile && isMobileDevice && (
+          {isMobile && isMobile && (
             <div className={`mobile-bottom-menu ${showMenu ? "show" : "show"}`}>
               {menuItems
                 .filter(
@@ -898,7 +887,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
             </div>
           )}
           {/* UPDATED: Only show orders submenu on mobile */}
-          {isMobile && isMobileDevice && showOrdersSubMenu && (
+          {isMobile && isMobile && showOrdersSubMenu && (
             <div className={`orders-bottom-bar ${showMenu ? "show" : "show"}`}>
               {(isV("BankTransfer") || isV("Bank Transactions")) && (
                 <button
