@@ -1565,6 +1565,11 @@ td.file-display-cell {
   text-align: right;
 }
 
+@media(max-width :500px){
+      .customers .customer-onboarding-tabs-vertical{
+        top:calc(var(--catalog-header-top, 35px) + env(safe-area-inset-top)); 
+      }
+}
 .signature-wrapper {
   position: relative;
   border: 1px solid #ddd;

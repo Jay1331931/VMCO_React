@@ -65,7 +65,7 @@ const ContactSection = ({
   originalBranchContacts,
   branchDetails,
   customer,
-  customerPaymentMethodsData,
+  originalCustomerPaymentMethodsData,
   branchChanges,
   handleBranchFieldChange,
   inApproval,
@@ -324,15 +324,15 @@ const validateEmail = (email) => {
     {
       type: "secondary",
       label: "Secondary Contact",
-      isRequired: customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+      isRequired: originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
                   ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
                   ?.isAllowed ? true : false,
       fields: [
         { name: "Name", field: "secondaryContactName" },

@@ -713,6 +713,8 @@ function Maintenance() {
                       backgroundColor: "rgba(0, 0, 0, 0.04)",
                     },
                   },
+                   "& .MuiDataGrid-toolbar": {
+                        padding: "0px"},
                   ...(isArabic
                     ? {
                       direction: "rtl",
