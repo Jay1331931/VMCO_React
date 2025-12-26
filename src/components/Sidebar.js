@@ -36,7 +36,7 @@ import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isMobileDevice =Capacitor.isNativePlatform();
+const isMobileDevice = Capacitor.isNativePlatform();
 
 function Sidebar({ children, title, MenuName = null }) {
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ function Sidebar({ children, title, MenuName = null }) {
     window.innerWidth > 768
   );
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [cartbranchData,setCartBranchData]=useState(null)
+  const [cartbranchData, setCartBranchData] = useState(null);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -116,8 +116,8 @@ function Sidebar({ children, title, MenuName = null }) {
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts
-        ? [customerContacts]
-        : [];
+      ? [customerContacts]
+      : [];
 
     const contactsMap = contacts.reduce((acc, contact) => {
       acc[contact.contactType] = contact;
@@ -145,9 +145,7 @@ function Sidebar({ children, title, MenuName = null }) {
       isApprovalMode: isApprovalMode,
     };
   }
-useEffect(()=>{
-  if(!user?.userId) return;
-   const fetchCart = async (customerId, customer) => {
+  const fetchCart = async () => {
     try {
       const response = await fetch(
         `${API_BASE_URL}/cart/get-cart-by-userId?id=${user?.userId}`,
@@ -161,19 +159,24 @@ useEffect(()=>{
       );
       const result = await response.json();
       if (result.status === "Ok") {
-        setCartBranchData(result.data)
-
+        setCartBranchData(result.data);
+        return result.data;
       } else {
-        throw new Error(
-          response.data.message || "Failed to fetch customer contacts"
-        );
+        return null;
+        // console.error(
+        //   result?.result?.message || "Failed to fetch customer contacts"
+        // );
       }
     } catch (err) {
       console.error("Error fetching cart :", err);
+      return null;
     }
   };
-  fetchCart()
-},[user])
+  // useEffect(()=>{
+  //   if(!user?.userId) return;
+
+  //   fetchCart()
+  // },[user])
   const fetchCustomerContacts = async (customerId, customer) => {
     try {
       const response = await fetch(
@@ -298,26 +301,33 @@ useEffect(()=>{
       throw err;
     }
   };
- const handleGoToCart = () => {
-
-    navigate("/Cart", {
-      state: {
-        selectedCustomerId:cartbranchData?.customerId,
-        selectedCustomerStatus: user?.customerStatus,
-        selectedBranchId: cartbranchData?.branchId,
-        selectedBranchName:  "",
-        selectedBranchNameLc: cartbranchData?.branchNameLc || "",
-        selectedBranchNameEn: cartbranchData.branchNameEn || "",
-        selectedBranchErpId: cartbranchData?.erpBranchId || "",
-        selectedBranchRegion:cartbranchData.branch,
-        selectedBranchCity:cartbranchData.city,
-        selectedBranchStatus: cartbranchData?.branchStatus || "",
-        selectedCustSequenceId: user?.sequenceId,
-        selectedBranchSequenceId: cartbranchData?.sequenceId,
-      },
-    });
+  const handleGoToCart = async () => {
+    const cartData = await fetchCart();
+    if (cartData?.id) {
+      navigate("/Cart", {
+        state: {
+          selectedCustomerId: user?.customerId,
+          selectedCustomerStatus: user?.customerStatus,
+          selectedBranchId: cartData?.branchId || null,
+          selectedBranchName:
+            i18n.language === "en"
+              ? cartData?.branchNameEn
+              : cartData?.branchNameLc,
+          selectedBranchNameLc: cartData?.branchNameLc || "",
+          selectedBranchNameEn: cartData?.branchNameEn || "",
+          selectedBranchErpId: cartData?.erpBranchId || "",
+          selectedBranchRegion: cartData?.branchRegion || "",
+          selectedBranchCity: cartData?.city || "",
+          selectedBranchStatus: cartData?.branchStatus || "",
+          selectedCustSequenceId: user?.sequenceId || "",
+          selectedBranchSequenceId: cartData?.sequenceId || "",
+        },
+      });
+    } else {
+      navigate("/Cart");
+    }
   };
-  
+
   useEffect(() => {
     document.body.dir = isRTL ? "rtl" : "ltr";
 
@@ -399,7 +409,7 @@ useEffect(()=>{
       setShowOrdersSubMenu(!showOrdersSubMenu);
       return;
     }
-   
+
     setShowOrdersSubMenu(false);
     setActiveMenu(label);
 
@@ -433,7 +443,7 @@ useEffect(()=>{
         navigate("/admin/upload");
         break;
       case "Dashboard":
-        navigate("/login",{replace:true});
+        navigate("/login", { replace: true });
         break;
       case "Company":
         try {
@@ -474,8 +484,6 @@ useEffect(()=>{
       default:
         break;
     }
-
-     
   };
 
   const handleLogout = async () => {
@@ -484,9 +492,9 @@ useEffect(()=>{
     logout(true);
 
     if (userLoggedOut?.userType === "employee") {
-      navigate("/login/employee",{replace:true});
+      navigate("/login/employee", { replace: true });
     } else {
-      navigate("/login",{replace:true});
+      navigate("/login", { replace: true });
     }
   };
 
@@ -578,23 +586,25 @@ useEffect(()=>{
       isVisible: isMobileDevice,
     },
   ];
-const menuItems = isMobileDevice
-  ? [
-      baseMenuItems.find(item => item.label === "Dashboard"),
-      baseMenuItems.find(item => item.label === "Catalog"),
+  const menuItems = isMobileDevice
+    ? [
+        baseMenuItems.find((item) => item.label === "Dashboard"),
+        baseMenuItems.find((item) => item.label === "Catalog"),
 
-      // 🔥 3rd position
-      baseMenuItems.find(item => item.label === "Your Cart"),
+        // 🔥 3rd position
+        baseMenuItems.find((item) => item.label === "Your Cart"),
 
-      // 🔥 4th position
-      baseMenuItems.find(item => item.label === "Orders"),
+        // 🔥 4th position
+        baseMenuItems.find((item) => item.label === "Orders"),
 
-      ...baseMenuItems.filter(
-        item =>
-          !["Dashboard", "Catalog", "Your Cart", "Orders"].includes(item.label)
-      ),
-    ]
-  : baseMenuItems;
+        ...baseMenuItems.filter(
+          (item) =>
+            !["Dashboard", "Catalog", "Your Cart", "Orders"].includes(
+              item.label
+            )
+        ),
+      ]
+    : baseMenuItems;
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
 
@@ -638,7 +648,6 @@ const menuItems = isMobileDevice
       return false;
     else return true;
   };
- 
 
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
@@ -915,7 +924,11 @@ const menuItems = isMobileDevice
           <div
             className="content"
             style={{
-              padding: isMobileDevice ? (activeMenu ? "0 0px 0px" : "0 20px") : "20px",
+              padding: isMobileDevice
+                ? activeMenu
+                  ? "0 0px 0px"
+                  : "0 20px"
+                : "20px",
             }}
           >
             {children}
@@ -968,8 +981,6 @@ const menuItems = isMobileDevice
           {/* UPDATED: Only show orders submenu on mobile */}
           {isMobile && isMobileDevice && showOrdersSubMenu && (
             <div className={`orders-bottom-bar ${showMenu ? "show" : "show"}`}>
-            
-
               {isV("Support") && (
                 <button
                   className="orders-btn"
@@ -987,18 +998,18 @@ const menuItems = isMobileDevice
                   {t("Maintenance")}
                 </button>
               )}
-                {(isV("BankTransfer") || isV("Bank Transactions")) && (
+              {(isV("BankTransfer") || isV("Bank Transactions")) && (
                 <button
                   className="orders-btn"
                   onClick={() => handleMenuClick("Bank")}
                 >
                   {t("Bank")}
                 </button>
-              )} 
+              )}
               <div className="orders-btn" onClick={handleLogout}>
-                    {/* <FontAwesomeIcon icon={faSignOutAlt} /> */}
-                     {t("Logout")}
-                  </div>
+                {/* <FontAwesomeIcon icon={faSignOutAlt} /> */}
+                {t("Logout")}
+              </div>
             </div>
           )}
         </div>
