@@ -186,6 +186,7 @@ const CatalogLayout = ({
                                     onAddToCart={() => handleAddToCart(product.id)}
                                     onProductClick={() => handleProductClick(product)}
                                     isAdding={isAdding}
+                                    isMobile={false}
                                 />
                             ))
                         ) : (
@@ -314,7 +315,7 @@ const CatalogLayout = ({
                     </div>
                     {/* Filter section */}
                     <div className="filter-section">
-                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none" }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", marginBottom: "10px", scrollbarWidth: "none" }}>
                             <Tabs
                                 tabs={filteredCategoryTabs}
                                 activeTab={activeCategory}
@@ -355,7 +356,16 @@ const CatalogLayout = ({
 
             {/* Mobile Scrollable Products Container */}
             <div className="catalog-scrollable-content" style={{ paddingTop: "10px" }}>
-                <div className="products-grid">
+                <div
+                    className="products-grid"
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
+                        marginTop: '20px',
+                        width: '100%'
+                    }}
+                >
                     {displayedProducts?.length > 0 ? (
                         displayedProducts.map((product) => (
                             <ProductCard
@@ -367,6 +377,7 @@ const CatalogLayout = ({
                                 onAddToCart={() => handleAddToCart(product.id)}
                                 onProductClick={() => handleProductClick(product)}
                                 isAdding={isAdding}
+                                isMobile={true}
                             />
                         ))
                     ) : (
