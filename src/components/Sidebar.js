@@ -45,12 +45,12 @@ function Sidebar({ children, title, MenuName = null }) {
   );
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [cartbranchData, setCartBranchData] = useState(null);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // useEffect(() => {
+  //   const handleResize = () => setIsMobile(window.innerWidth < 768);
+  //   console.log("isMobile", isMobile);
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
   const isMobile = usePlatform();
 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
@@ -586,7 +586,7 @@ function Sidebar({ children, title, MenuName = null }) {
       isVisible: isMobile,
     },
   ];
-  const menuItems = isMobileDevice
+  const menuItems = isMobile
     ? [
         baseMenuItems.find((item) => item.label === "Dashboard"),
         baseMenuItems.find((item) => item.label === "Catalog"),
