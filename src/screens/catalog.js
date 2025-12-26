@@ -964,7 +964,7 @@ function Catalog() {
           body: JSON.stringify(cartItem),
         });
         if (!response.ok) {
-          throw new Error("Failed to add item to cart");
+          throw new Error("Failed to add item to cart",response);
         }
         Swal.fire({
           icon: "success",

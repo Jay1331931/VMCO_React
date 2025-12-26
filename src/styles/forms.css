@@ -1567,7 +1567,7 @@ td.file-display-cell {
 
 @media(max-width :500px){
       .customers .customer-onboarding-tabs-vertical{
-        top:calc(var(--catalog-header-top, 35px) + env(safe-area-inset-top)); 
+        top:calc(var(--catalog-header-top, 25px) + env(safe-area-inset-top)); 
       }
 }
 .signature-wrapper {

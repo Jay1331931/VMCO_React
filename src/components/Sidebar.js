@@ -37,12 +37,20 @@ import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
+function Sidebar({ children, title, MenuName = null }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
+  //const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [cartbranchData, setCartBranchData] = useState(null);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const isMobile = usePlatform();
 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
@@ -108,8 +116,8 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts
-        ? [customerContacts]
-        : [];
+      ? [customerContacts]
+      : [];
 
     const contactsMap = contacts.reduce((acc, contact) => {
       acc[contact.contactType] = contact;
@@ -137,7 +145,38 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       isApprovalMode: isApprovalMode,
     };
   }
+  const fetchCart = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/cart/get-cart-by-userId?id=${user?.userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      if (result.status === "Ok") {
+        setCartBranchData(result.data);
+        return result.data;
+      } else {
+        return null;
+        // console.error(
+        //   result?.result?.message || "Failed to fetch customer contacts"
+        // );
+      }
+    } catch (err) {
+      console.error("Error fetching cart :", err);
+      return null;
+    }
+  };
+  // useEffect(()=>{
+  //   if(!user?.userId) return;
 
+  //   fetchCart()
+  // },[user])
   const fetchCustomerContacts = async (customerId, customer) => {
     try {
       const response = await fetch(
@@ -262,6 +301,32 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       throw err;
     }
   };
+  const handleGoToCart = async () => {
+    const cartData = await fetchCart();
+    if (cartData?.id) {
+      navigate("/Cart", {
+        state: {
+          selectedCustomerId: user?.customerId,
+          selectedCustomerStatus: user?.customerStatus,
+          selectedBranchId: cartData?.branchId || null,
+          selectedBranchName:
+            i18n.language === "en"
+              ? cartData?.branchNameEn
+              : cartData?.branchNameLc,
+          selectedBranchNameLc: cartData?.branchNameLc || "",
+          selectedBranchNameEn: cartData?.branchNameEn || "",
+          selectedBranchErpId: cartData?.erpBranchId || "",
+          selectedBranchRegion: cartData?.branchRegion || "",
+          selectedBranchCity: cartData?.city || "",
+          selectedBranchStatus: cartData?.branchStatus || "",
+          selectedCustSequenceId: user?.sequenceId || "",
+          selectedBranchSequenceId: cartData?.sequenceId || "",
+        },
+      });
+    } else {
+      navigate("/Cart");
+    }
+  };
 
   useEffect(() => {
     document.body.dir = isRTL ? "rtl" : "ltr";
@@ -299,8 +364,8 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       case "/cart":
         setActiveMenu("Your Cart");
         break;
-      case "Menu":
-        setActiveMenu("Menu");
+      case "Others":
+        setActiveMenu("Others");
         break;
       case "Orders":
         console.log("Orders");
@@ -340,10 +405,11 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
   };
 
   const handleMenuClick = async (label) => {
-    if (label === "Menu") {
+    if (label === "Others") {
       setShowOrdersSubMenu(!showOrdersSubMenu);
       return;
     }
+
     setShowOrdersSubMenu(false);
     setActiveMenu(label);
 
@@ -377,7 +443,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
         navigate("/admin/upload");
         break;
       case "Dashboard":
-        navigate("/login",{replace:true});
+        navigate("/login", { replace: true });
         break;
       case "Company":
         try {
@@ -426,13 +492,13 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     logout(true);
 
     if (userLoggedOut?.userType === "employee") {
-      navigate("/login/employee",{replace:true});
+      navigate("/login/employee", { replace: true });
     } else {
-      navigate("/login",{replace:true});
+      navigate("/login", { replace: true });
     }
   };
 
-  const menuItems = [
+  const baseMenuItems = [
     { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
     {
       icon: isMobile ? faHouse : faBookOpen,
@@ -515,11 +581,30 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     },
     {
       icon: faList,
-      label: "Menu",
+      label: "Others",
       // UPDATED: Menu visible on all screens in mobile
       isVisible: isMobile,
     },
   ];
+  const menuItems = isMobileDevice
+    ? [
+        baseMenuItems.find((item) => item.label === "Dashboard"),
+        baseMenuItems.find((item) => item.label === "Catalog"),
+
+        // 🔥 3rd position
+        baseMenuItems.find((item) => item.label === "Your Cart"),
+
+        // 🔥 4th position
+        baseMenuItems.find((item) => item.label === "Orders"),
+
+        ...baseMenuItems.filter(
+          (item) =>
+            !["Dashboard", "Catalog", "Your Cart", "Orders"].includes(
+              item.label
+            )
+        ),
+      ]
+    : baseMenuItems;
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
 
@@ -833,7 +918,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                     <FontAwesomeIcon icon={faSignOutAlt} />
                   </div>
                 </>
-              )}
+              )} 
             </div>
           </header>
           <div
@@ -862,7 +947,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
 
                   // UPDATED: Menu item is active only when clicked
                   const isMenuItemActive = () => {
-                    if (label === "Menu") {
+                    if (label === "Others") {
                       return showOrdersSubMenu;
                     }
                     return activeMenu === t(label);
@@ -892,15 +977,6 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
           {/* UPDATED: Only show orders submenu on mobile */}
           {isMobile && isMobile && showOrdersSubMenu && (
             <div className={`orders-bottom-bar ${showMenu ? "show" : "show"}`}>
-              {(isV("BankTransfer") || isV("Bank Transactions")) && (
-                <button
-                  className="orders-btn"
-                  onClick={() => handleMenuClick("Bank")}
-                >
-                  {t("Bank")}
-                </button>
-              )}
-
               {isV("Support") && (
                 <button
                   className="orders-btn"
@@ -918,6 +994,18 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                   {t("Maintenance")}
                 </button>
               )}
+              {(isV("BankTransfer") || isV("Bank Transactions")) && (
+                <button
+                  className="orders-btn"
+                  onClick={() => handleMenuClick("Bank")}
+                >
+                  {t("Bank")}
+                </button>
+              )}
+              <div className="orders-btn" onClick={handleLogout}>
+                {/* <FontAwesomeIcon icon={faSignOutAlt} /> */}
+                {t("Logout")}
+              </div>
             </div>
           )}
         </div>
