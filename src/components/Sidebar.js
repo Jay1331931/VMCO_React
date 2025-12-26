@@ -838,9 +838,9 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
           </header>
           <div
             className="content"
-            style={{
-              padding: isMobileDevice ? (activeMenu ? "0 0px 0px" : "0 20px") : "0 20px",
-            }}
+            // style={{
+            //   padding: isMobile ? (activeMenu ? "0 0px 0px" : "0 20px") : "0 20px",
+            // }}
           >
             {children}
           </div>
