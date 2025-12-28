@@ -265,7 +265,7 @@ const CatalogLayout = ({
                                         name: b.label || b.name || b.value || "",
                                         disabled: b.disabled,
                                     }))}
-                                    className="mobile-branch-selector"
+                                    className="mobile-select-branch"
                                     placeholder={t("Select Branch")}
                                     disabled={isBranchesLoading || branches.length === 0}
                                     style={{

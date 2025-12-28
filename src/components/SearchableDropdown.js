@@ -155,7 +155,7 @@ function SearchableDropdown({
   return (
     <div className={`searchable-dropdown `} ref={dropdownRef}>
       <div
-        className={`dropdown-header`}
+        className={`dropdown-header ${className}`}
         // onClick={() => !disabled && setIsOpen(!isOpen)}
         onClick={() => {
           if (disabled) return;
@@ -188,7 +188,7 @@ function SearchableDropdown({
 
       {isOpen && !disabled && createPortal(
         <div
-          className={`dropdown-content ${className || ""}`}
+          className={`dropdown-content ${className || isMobile ? "mobile" : ""}`}
           style={dropdownPosition}
           onClick={(e) => e.stopPropagation()}
         >
@@ -207,6 +207,18 @@ function SearchableDropdown({
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt, idx) => {
                 const isOptDisabled = typeof opt === "object" && opt.disabled;
+
+  const optValue =
+    typeof opt === "object"
+      ? opt.employeeId || opt.value || opt.name
+      : opt;
+
+  const selectedValue =
+    typeof selectedOption === "object"
+      ? selectedOption.employeeId || selectedOption.value || selectedOption.name
+      : selectedOption;
+
+  const isChecked = optValue === selectedValue;
                 return (
                   <div
                     key={idx}
@@ -233,6 +245,16 @@ function SearchableDropdown({
                       : typeof opt === "object"
                         ? opt?.name
                         : opt}
+                         {/* ✅ Radio Button */}
+                         <div style={{ float: "right" , color: isChecked ? '#007bff' : '#ccc'}}>
+          <input
+            type="radio"
+            checked={isChecked}
+            disabled={isOptDisabled}
+            onChange={() => !isOptDisabled && handleOptionSelect(opt)}
+            onClick={(e) => e.stopPropagation()}
+          />  
+          </div>
                   </div>
                 );
               })
