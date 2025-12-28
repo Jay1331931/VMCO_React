@@ -44,14 +44,8 @@ function Sidebar({ children, title, MenuName = null }) {
     window.innerWidth > 768
   );
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [cartbranchData, setCartBranchData] = useState(null);
-  // useEffect(() => {
-  //   const handleResize = () => setIsMobile(window.innerWidth < 768);
-  //   console.log("isMobile", isMobile);
-  //   window.addEventListener("resize", handleResize);
-  //   return () => window.removeEventListener("resize", handleResize);
-  // }, []);
   const isMobile = usePlatform();
+  const [cartbranchData, setCartBranchData] = useState(null);
 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
