@@ -1194,6 +1194,7 @@ function Catalog() {
           handleQuantityChange={handleQuantityChange}
           handleAddToCart={handleAddToCart}
           handleProductClick={handleProductClick}
+          onToggleFavorite={handleToggleFavorite}
           isLoading={isLoading}
           isLoadingMore={isLoadingMore}
           hasMore={hasMore}

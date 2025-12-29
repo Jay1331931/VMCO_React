@@ -97,7 +97,17 @@ const ProductCard = ({
 
             <div className="product-details">
                 <div className="product-info-section">
-                    <h3 className="product-name" title={product.name}>{product.name}</h3>
+                    <div className="product-name-row">
+                        <h3 className="product-name" title={product.name}>{product.name}</h3>
+                        {isV('favoriteButton') && isMobile && (
+                            <div className="mobile-favorite-wrapper">
+                                <FavButton
+                                    initialState={product.favorite || false}
+                                    onToggle={handleFavoriteToggle}
+                                />
+                            </div>
+                        )}
+                    </div>
                     <p className="product-code">{product.code}</p>
                     <h4 className="unit-price">{t('Price: ')}{(product.unitPrice).toFixed(2)}</h4>
                 </div>
@@ -270,6 +280,22 @@ const ProductCard = ({
                     margin-bottom: 8px;
                 }
 
+                /* Product name row with favorite button */
+                .product-name-row {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 8px;
+                    width: 100%;
+                }
+
+                .mobile-favorite-wrapper {
+                    flex-shrink: 0;
+                    display: flex;
+                    align-items: center;
+                    margin-top: -2px;
+                }
+
                 .product-card.mobile-layout .product-name {
                     font-size: 0.9rem;
                     font-weight: 600;
@@ -282,6 +308,7 @@ const ProductCard = ({
                     text-overflow: ellipsis;
                     line-height: 1.3;
                     word-break: break-word;
+                    flex: 1;
                 }
 
                 .product-card.mobile-layout .product-code {
@@ -400,6 +427,11 @@ const ProductCard = ({
                     text-align: right;
                 }
 
+                /* RTL support for mobile favorite button */
+                .product-card.rtl .product-name-row {
+                    flex-direction: row-reverse;
+                }
+
                 /* Responsive adjustments for different mobile sizes */
                 @media (max-width: 425px) {
                     .product-card.mobile-layout {
@@ -470,6 +502,10 @@ const ProductCard = ({
                         padding: 0 6px;
                         min-width: 70px;
                     }
+
+                    .product-name-row {
+                        gap: 6px;
+                    }
                 }
 
                 @media (max-width: 320px) {
@@ -512,6 +548,10 @@ const ProductCard = ({
                         font-size: 0.55rem;
                         padding: 0 6px;
                         min-width: 65px;
+                    }
+
+                    .product-name-row {
+                        gap: 4px;
                     }
                 }
 
