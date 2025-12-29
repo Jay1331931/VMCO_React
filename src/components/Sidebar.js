@@ -36,7 +36,7 @@ import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isMobileDevice = Capacitor.isNativePlatform();
+const isMobileDevice =Capacitor.isNativePlatform();
 
 function Sidebar({ children, title, MenuName = null }) {
   const navigate = useNavigate();
@@ -345,36 +345,7 @@ function Sidebar({ children, title, MenuName = null }) {
     return () => document.removeEventListener("click", handleClickOutside);
   }, [isRTL]);
 
-  useEffect(() => {
-    const path = location.pathname;
-    console.log("MenuName", MenuName);
-    switch (MenuName || path) {
-      case "/orders":
-        setActiveMenu("Orders");
-        break;
-      case "/customers":
-        setActiveMenu("Customers");
-        break;
-      case "/catalog":
-        setActiveMenu("Catalog");
-        break;
-      case "/admin/upload":
-        setActiveMenu("General");
-        break;
-      case "/cart":
-        setActiveMenu("Your Cart");
-        break;
-      case "Others":
-        setActiveMenu("Others");
-        break;
-      case "Orders":
-        console.log("Orders");
-        setActiveMenu("Orders");
-        break;
-      default:
-        setActiveMenu("Dashboard");
-    }
-  }, [location.pathname, MenuName]);
+
 
   useEffect(() => {
     setActiveMenu(title);
@@ -508,7 +479,7 @@ function Sidebar({ children, title, MenuName = null }) {
     {
       icon: isMobileDevice ? faBoxOpen : faShoppingCart,
       label: "Orders",
-      isVisible: true,
+      isVisible: isMobileDevice ?  true :true
     },
     {
       icon: faCodeBranch,
@@ -519,12 +490,8 @@ function Sidebar({ children, title, MenuName = null }) {
       icon: faUsers,
       label: "Customers",
       isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") ||
-          activeMenu === t("Customers") ||
-          activeMenu === t("Company")
-          ? true
-          : false
-        : true,
+        ?  true
+          : true
     },
     {
       icon: faHeadset,
@@ -551,20 +518,16 @@ function Sidebar({ children, title, MenuName = null }) {
       icon: faShoppingCart,
       label: "Your Cart",
       permission: "Cart",
-      isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") || activeMenu === t("Your Cart")
-          ? isV("goToCart")
+      isVisible: isMobileDevice ? isV("goToCart")
           : false
-        : false,
+        
     },
     {
       icon: isMobileDevice ? faUser : faBuilding,
       label: "Company",
-      isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") || activeMenu === t("Company")
-          ? true
-          : false
-        : true,
+      isVisible: isMobileDevice  ? true
+        
+        : true
     },
     { icon: faCog, label: "Settings", isVisible: true },
     {
@@ -648,7 +611,35 @@ function Sidebar({ children, title, MenuName = null }) {
       return false;
     else return true;
   };
-
+  useEffect(() => {
+    const path = location.pathname;
+    switch (MenuName || path) {
+      case "/orders":
+        setActiveMenu("Orders");
+        break;
+      case "/customers":
+        setActiveMenu("Customers");
+        break;
+      case "/catalog":
+        setActiveMenu("Catalog");
+        break;
+      case "/admin/upload":
+        setActiveMenu("General");
+        break;
+      case "/cart":
+        setActiveMenu("Your Cart");
+        break;
+      case "Others":
+        setActiveMenu("Others");
+        break;
+      case "Orders":
+        console.log("Orders");
+        setActiveMenu("Orders");
+        break;
+      default:
+        setActiveMenu("Dashboard");
+    }
+  }, [location.pathname, MenuName]);
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
@@ -998,12 +989,12 @@ function Sidebar({ children, title, MenuName = null }) {
                   {t("Maintenance")}
                 </button>
               )}
-              {(isV("BankTransfer") || isV("Bank Transactions")) && (
+              {(isV("BankTransfer") ) && (
                 <button
                   className="orders-btn"
                   onClick={() => handleMenuClick("Bank")}
                 >
-                  {t("Bank")}
+                  {t("Bank")} {isV("BankTransfer")}
                 </button>
               )}
               <div className="orders-btn" onClick={handleLogout}>

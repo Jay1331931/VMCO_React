@@ -505,7 +505,7 @@ function Support() {
     };
 
     return (
-        <Sidebar title={t("Support")} isV={isV("supportContent")}>
+        <Sidebar title={t("Support")} isV={isV("supportContent")} MenuName={"Others"}>
             <div className="support-content">
                 {isMobile ? (
                     <div className="orders-content">
