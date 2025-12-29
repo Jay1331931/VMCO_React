@@ -3067,6 +3067,8 @@ display: flex;
   top: calc(var(--catalog-header-top, 60px) + env(safe-area-inset-top));
 }
 .catalog-fixed-header.show {
-padding: 10px;}
+padding: 10px;
+top:7%;
+}
 
 }
