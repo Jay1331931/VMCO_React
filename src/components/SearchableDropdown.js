@@ -253,7 +253,7 @@ function SearchableDropdown({
                         ? opt?.name
                         : opt}
                          {/* ✅ Radio Button */}
-                         <div style={{ float: "right" , color: isChecked ? '#007bff' : '#ccc'}}>
+                         { isMobile &&  <div style={{ float: "right" , color: isChecked ? '#007bff' : '#ccc'}}>
           <input
             type="radio"
             checked={isChecked}
@@ -261,7 +261,8 @@ function SearchableDropdown({
             onChange={() => !isOptDisabled && handleOptionSelect(opt)}
             onClick={(e) => e.stopPropagation()}
           />  
-          </div>
+          </div>}
+                        
                   </div>
                 );
               })

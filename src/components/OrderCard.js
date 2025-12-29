@@ -114,6 +114,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
         color: "#545454",
         height: "92%",
         position: "relative",
+        padding: "10px"
       }}
     >
       {/* Optional toolbar */}

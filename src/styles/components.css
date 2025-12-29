@@ -3626,6 +3626,7 @@ input:focus {
 
   .catalog-fixed-header.show {
     padding: 20px 10px 10px 10px;
+    top:7%;
   }
 
 }
