@@ -3508,8 +3508,7 @@ input:focus {
 .branch-location-select.mobile .dropdown-header {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 16px;
+  gap: 8px;
   padding: 8px 12px;
   background-color: #f5f5f5;
   border: none !important;
@@ -3517,6 +3516,8 @@ input:focus {
   cursor: pointer;
   transition: background-color 0.2s ease;
   min-height: 38px;
+  width: 100%;
+  /* Make it take full width of parent */
 }
 
 .branch-location-select.mobile .dropdown-header:hover {
@@ -3541,7 +3542,7 @@ input:focus {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 150px;
+  /* Remove max-width to allow it to grow with container */
 }
 
 .branch-location-select.mobile .dropdown-arrow {
@@ -3553,6 +3554,34 @@ input:focus {
   background-color: #e9ecef !important;
   cursor: not-allowed !important;
   opacity: 0.7;
+}
+
+/* Mobile header layout */
+.catalog-mobile-header {
+  padding: 10px;
+}
+
+/* Ensure branch selector wrapper takes available space */
+.branch-selector {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Go to cart button fixed size */
+.catalog-mobile-header .go-to-cart-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.catalog-mobile-header .go-to-cart-btn .cart-icon {
+  font-size: 1.1rem;
 }
 
 

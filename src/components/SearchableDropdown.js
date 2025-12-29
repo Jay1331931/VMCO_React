@@ -126,7 +126,7 @@ function SearchableDropdown({
     });
   };
 
-  const truncateText = (text, maxLength = 20) => {
+  const truncateText = (text, maxLength = 35) => {
     if (!text) return text;
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
@@ -186,7 +186,7 @@ function SearchableDropdown({
         )}
         <span className="selected-value">
           {isBranchDropdown
-            ? truncateText(displayText.charAt(0).toUpperCase() + displayText.slice(1), 20)
+            ? truncateText(displayText.charAt(0).toUpperCase() + displayText.slice(1), 30)
             : displayText.charAt(0).toUpperCase() + displayText.slice(1)
           }
         </span>

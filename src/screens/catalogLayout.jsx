@@ -263,9 +263,10 @@ const CatalogLayout = ({
                                 width: "100%",
                                 alignItems: "center",
                                 gap: "10px",
+                                padding: "0 10px"
                             }}
                         >
-                            <div className="branch-selector" style={{ flex: 1, minWidth: 0 }}>
+                            <div className="branch-selector" style={{ flex: 1, minWidth: 0,  width: '100%'}}>
                                 <SearchableDropdown
                                     id={`location-select-${catalogId}`}
                                     name="locationSelect"
@@ -284,11 +285,17 @@ const CatalogLayout = ({
                             {isV("goToCart") && (
                                 <button
                                     className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
-                                    style={{
-                                        flexShrink: 0,
-                                        opacity: !selectedLocation ? 0.6 : 1,
-                                        cursor: !selectedLocation ? "not-allowed" : "pointer",
-                                    }}
+                                     style={{
+                                    flexShrink: 0,
+                                    opacity: !selectedLocation ? 0.6 : 1,
+                                    cursor: !selectedLocation ? "not-allowed" : "pointer",
+                                    width: '40px',
+                                    height: '40px',
+                                    padding: '0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
                                     onClick={handleGoToCart}
                                     disabled={!selectedLocation}
                                 >
