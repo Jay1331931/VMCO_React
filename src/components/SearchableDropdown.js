@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 import usePlatform from "../utilities/platform";
 
 function SearchableDropdown({
@@ -14,7 +16,6 @@ function SearchableDropdown({
   style = {},
   openUpwards = false,
 }) {
-  // Add default 'All' option at the top
   const allOption = { name: "Select", value: null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
   const [isOpen, setIsOpen] = useState(false);
@@ -22,8 +23,10 @@ function SearchableDropdown({
   const dropdownRef = useRef(null);
   const { t, i18n } = useTranslation();
   const [dropdownPosition, setDropdownPosition] = useState({});
-  const isMobile= usePlatform();
+  const isMobile = usePlatform();
   const inputRef = useRef(null);
+  const isBranchDropdown = className?.includes('branch-location-select');
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -63,7 +66,6 @@ function SearchableDropdown({
         topPosition = rect.bottom + window.scrollY; // open downwards
       }
 
-
       setDropdownPosition({
         position: "absolute",
         top: topPosition,
@@ -74,23 +76,13 @@ function SearchableDropdown({
     }
   }, [isOpen, openUpwards]);
 
-
   useEffect(() => {
     //  Only focus on desktop
     if (!isMobile && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isMobile]);
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-  //       setIsOpen(false);
-  //     }
-  //   };
 
-  //   document.addEventListener("mousedown", handleClickOutside);
-  //   return () => document.removeEventListener("mousedown", handleClickOutside);
-  // }, []);
   useEffect(() => {
     const handleClickOutside = (event) => {
       const triggerEl = dropdownRef.current;
@@ -105,7 +97,7 @@ function SearchableDropdown({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  // Get filtered options based on search term
+
   const filteredOptions = mergedOptions.filter((opt) => {
     const optionText =
       typeof opt === "object" ? opt.name || opt.label || "" : opt || "";
@@ -134,6 +126,12 @@ function SearchableDropdown({
     });
   };
 
+  const truncateText = (text, maxLength = 20) => {
+    if (!text) return text;
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   // Find display text for current value
   let selectedOption;
   if (value == null) {
@@ -153,10 +151,9 @@ function SearchableDropdown({
     : placeholder;
 
   return (
-    <div className={`searchable-dropdown `} ref={dropdownRef}>
+    <div className={`searchable-dropdown ${className || ''}`} ref={dropdownRef}>
       <div
-        className={`dropdown-header ${className}`}
-        // onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`dropdown-header ${isBranchDropdown ? 'branch-dropdown-header' : ''}`}
         onClick={() => {
           if (disabled) return;
 
@@ -173,7 +170,6 @@ function SearchableDropdown({
 
           setIsOpen(!isOpen);
         }}
-
         tabIndex={disabled ? -1 : 0}
         style={{
           ...(disabled
@@ -182,8 +178,19 @@ function SearchableDropdown({
           ...style,
         }}
       >
-        <span className="selected-value">{displayText.charAt(0).toUpperCase() + displayText.slice(1)}</span>
-        <span className="dropdown-arrow">▼</span>
+        {isBranchDropdown && (
+          <FontAwesomeIcon
+            icon={faMapMarkerAlt}
+            className="branch-location-icon"
+          />
+        )}
+        <span className="selected-value">
+          {isBranchDropdown
+            ? truncateText(displayText.charAt(0).toUpperCase() + displayText.slice(1), 20)
+            : displayText.charAt(0).toUpperCase() + displayText.slice(1)
+          }
+        </span>
+        {!isBranchDropdown && <span className="dropdown-arrow">▼</span>}
       </div>
 
       {isOpen && !disabled && createPortal(
@@ -224,7 +231,7 @@ function SearchableDropdown({
                     key={idx}
                     className={`dropdown-option${isOptDisabled ? " disabled" : ""}`}
                     onClick={(e) => {
-                      e.stopPropagation();          // 👈 stop bubbling
+                      e.stopPropagation();
                       if (!isOptDisabled) handleOptionSelect(opt);
                     }}
                     style={
