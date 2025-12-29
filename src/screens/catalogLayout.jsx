@@ -53,26 +53,42 @@ const CatalogLayout = ({
 
     // Calculate header height dynamically
     useEffect(() => {
-        if (headerRef.current && isMobile) {
-            const updateHeight = () => {
+        if (!isMobile) return; // Only run for mobile
+
+        const updateHeight = () => {
+            // Add null check here
+            if (headerRef.current) {
                 const height = headerRef.current.offsetHeight;
                 setHeaderHeight(height);
-            };
+            }
+        };
 
-            updateHeight();
+        // Initial height calculation with small delay to ensure DOM is ready
+        const timeoutId = setTimeout(updateHeight, 0);
 
-            // Use ResizeObserver to track header size changes
-            const resizeObserver = new ResizeObserver(updateHeight);
+        // Use ResizeObserver to track header size changes
+        let resizeObserver;
+        if (headerRef.current) {
+            resizeObserver = new ResizeObserver(() => {
+                // Add null check in callback
+                if (headerRef.current) {
+                    const height = headerRef.current.offsetHeight;
+                    setHeaderHeight(height);
+                }
+            });
             resizeObserver.observe(headerRef.current);
-
-            // Also update on window resize
-            window.addEventListener('resize', updateHeight);
-
-            return () => {
-                resizeObserver.disconnect();
-                window.removeEventListener('resize', updateHeight);
-            };
         }
+
+        // Also update on window resize
+        window.addEventListener('resize', updateHeight);
+
+        return () => {
+            clearTimeout(timeoutId);
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
+            window.removeEventListener('resize', updateHeight);
+        };
     }, [isMobile, activeCategory, categoryFilter, subCategoryFilter]);
 
     const renderWebLayout = () => (
@@ -266,7 +282,7 @@ const CatalogLayout = ({
                                 padding: "0 10px"
                             }}
                         >
-                            <div className="branch-selector" style={{ flex: 1, minWidth: 0,  width: '100%'}}>
+                            <div className="branch-selector" style={{ flex: 1, minWidth: 0, width: '100%' }}>
                                 <SearchableDropdown
                                     id={`location-select-${catalogId}`}
                                     name="locationSelect"
@@ -285,17 +301,17 @@ const CatalogLayout = ({
                             {isV("goToCart") && (
                                 <button
                                     className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
-                                     style={{
-                                    flexShrink: 0,
-                                    opacity: !selectedLocation ? 0.6 : 1,
-                                    cursor: !selectedLocation ? "not-allowed" : "pointer",
-                                    width: '40px',
-                                    height: '40px',
-                                    padding: '0',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}
+                                    style={{
+                                        flexShrink: 0,
+                                        opacity: !selectedLocation ? 0.6 : 1,
+                                        cursor: !selectedLocation ? "not-allowed" : "pointer",
+                                        width: '40px',
+                                        height: '40px',
+                                        padding: '0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
                                     onClick={handleGoToCart}
                                     disabled={!selectedLocation}
                                 >
