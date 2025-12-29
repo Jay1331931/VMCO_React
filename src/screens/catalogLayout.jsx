@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SearchInput from "../components/SearchInput";
@@ -11,7 +11,6 @@ import Constants from "../constants";
 import { useTranslation } from "react-i18next";
 
 const CatalogLayout = ({
-    // Header section props
     isMobile,
     showHeader,
     selectedLocation,
@@ -22,21 +21,15 @@ const CatalogLayout = ({
     isV,
     handleGoToCart,
     t,
-
-    // Filter section props
     filteredCategoryTabs,
     activeCategory,
     handleTabChange,
-
-    // Search section props
     categoryFilter,
     handleCategoryFilterChange,
     categoryOptions,
     subCategoryFilter,
     handleSubCategoryFilterChange,
     subCategoryOptions,
-
-    // Products section props
     displayedProducts,
     mapProductToCardProps,
     quantities,
@@ -49,16 +42,38 @@ const CatalogLayout = ({
     hasMore,
     searchQuery,
     isAdding,
-
-    // Product popup props
     selectedProduct,
     handleClosePopup,
-
-    // Platform & RTL props
     isRTL,
     dir
 }) => {
     const { i18n } = useTranslation();
+    const headerRef = useRef(null);
+    const [headerHeight, setHeaderHeight] = useState(0);
+
+    // Calculate header height dynamically
+    useEffect(() => {
+        if (headerRef.current && isMobile) {
+            const updateHeight = () => {
+                const height = headerRef.current.offsetHeight;
+                setHeaderHeight(height);
+            };
+
+            updateHeight();
+
+            // Use ResizeObserver to track header size changes
+            const resizeObserver = new ResizeObserver(updateHeight);
+            resizeObserver.observe(headerRef.current);
+
+            // Also update on window resize
+            window.addEventListener('resize', updateHeight);
+
+            return () => {
+                resizeObserver.disconnect();
+                window.removeEventListener('resize', updateHeight);
+            };
+        }
+    }, [isMobile, activeCategory, categoryFilter, subCategoryFilter]);
 
     const renderWebLayout = () => (
         <div className="content" style={{ padding: "0px !important" }}>
@@ -67,10 +82,8 @@ const CatalogLayout = ({
                 style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
                 dir={dir}
             >
-                {/* Desktop Fixed Header Container */}
                 {activeCategory && (
                     <div className="catalog-fixed-header">
-                        {/* Location Selector and Cart Button */}
                         {isV("selectBranch") && (
                             <div className="catalog-header">
                                 <div className="location-selector">
@@ -116,7 +129,6 @@ const CatalogLayout = ({
                             </div>
                         )}
 
-                        {/* Filter section */}
                         <div className="filter-section">
                             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none" }}>
                                 <Tabs
@@ -130,7 +142,6 @@ const CatalogLayout = ({
                             </div>
                         </div>
 
-                        {/* Search section */}
                         <div className="search-section">
                             <div className="search-container">
                                 {isV("search") && (
@@ -140,7 +151,6 @@ const CatalogLayout = ({
                                     />
                                 )}
 
-                                {/* Wrapper for dropdowns on same line */}
                                 <div style={{
                                     display: 'flex',
                                     gap: '10px',
@@ -172,7 +182,6 @@ const CatalogLayout = ({
                     </div>
                 )}
 
-                {/* Desktop Scrollable Products Container */}
                 <div className="catalog-scrollable-content">
                     <div className="products-grid">
                         {displayedProducts?.length > 0 ? (
@@ -241,10 +250,11 @@ const CatalogLayout = ({
 
     const renderMobileLayout = () => (
         <div>
-            {/* Mobile Fixed Header Container */}
             {activeCategory && (
-                <div className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}>
-                    {/* Location Selector and Cart Button */}
+                <div
+                    ref={headerRef}
+                    className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
+                >
                     {isV("selectBranch") && (
                         <div
                             className="catalog-mobile-header"
@@ -266,24 +276,9 @@ const CatalogLayout = ({
                                         name: b.label || b.name || b.value || "",
                                         disabled: b.disabled,
                                     }))}
-                                    className="mobile-select-branch"
+                                    className="branch-location-select mobile"
                                     placeholder={t("Select Branch")}
                                     disabled={isBranchesLoading || branches.length === 0}
-                                    style={{
-                                        width: "100% !important",
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                        padding: "8px 12px",
-                                        border: "1px solid #ccc",
-                                        borderRadius: "8px",
-                                        backgroundColor: "white",
-                                        cursor: "pointer",
-                                        minHeight: "38px",
-                                        fontSize: "12px",
-                                        position: "relative",
-                                        zIndex: 0,
-                                    }}
                                 />
                             </div>
                             {isV("goToCart") && (
@@ -302,7 +297,7 @@ const CatalogLayout = ({
                             )}
                         </div>
                     )}
-                    {/* Search section */}
+
                     <div className="search-section">
                         <div className="search-container">
                             {isV("search") && (
@@ -313,7 +308,7 @@ const CatalogLayout = ({
                             )}
                         </div>
                     </div>
-                    {/* Filter section */}
+
                     <div className="filter-section">
                         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", marginBottom: "10px", scrollbarWidth: "none" }}>
                             <Tabs
@@ -353,9 +348,11 @@ const CatalogLayout = ({
                 </div>
             )}
 
-
-            {/* Mobile Scrollable Products Container */}
-            <div className="catalog-scrollable-content" style={{ paddingTop: "10px" }}>
+            {/* Mobile Scrollable Products Container with dynamic padding */}
+            <div
+                className="catalog-scrollable-content"
+                style={{ paddingTop: headerHeight > 0 ? `${headerHeight}px` : '320px' }}
+            >
                 <div
                     className="products-grid"
                     style={{
