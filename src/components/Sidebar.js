@@ -897,13 +897,13 @@ function Sidebar({ children, title, MenuName = null }) {
                 <FontAwesomeIcon icon={faLanguage} />
                 <span>{isRTL ? "EN" : "عربى"}</span>
               </button>
-              {isMobile && (
+              {/* {isMobile && (
                 <>
                   <div className="logout-icon" onClick={handleLogout}>
                     <FontAwesomeIcon icon={faSignOutAlt} />
                   </div>
                 </>
-              )} 
+              )}  */}
             </div>
           </header>
           <div
