@@ -263,6 +263,7 @@
   border-bottom: 1px solid #eee;
   outline: none;
   height: 30px;
+  margin: 10px;
 }
 .dropdown-options {
   max-height: 315px;
@@ -272,9 +273,9 @@
   font-weight: 450;
 }
 .dropdown-option {
-  padding: 8px 12px;
+  padding: 12px 12px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   text-align: left;
 }
 [dir="rtl"] .dropdown-option {
@@ -1331,6 +1332,7 @@ td.file-display-cell {
   .customers .customer-onboarding-content {
     padding: 0px;
     width: 100%;
+    margin-top: 40px;
   }
   .expanded-form-container-footer {
     display: flex;
@@ -1707,7 +1709,7 @@ td.file-display-cell {
     border-left: none;
     width: 100%;
     min-height: 200px;
-    margin-top: 20px;
+    margin-top: 30px;
   }
    .customers .branches-content  .form-main-header {
     margin-bottom: 0px;
@@ -1841,7 +1843,7 @@ td.file-display-cell {
   .products-content {
     display: flex;
     flex-direction: column;
-    padding: 30px 10px;
+    padding: 40px 10px 10px 10px;
     border-left: none;
   }
   [dir="rtl"] .products-content {

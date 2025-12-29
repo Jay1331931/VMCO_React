@@ -244,11 +244,11 @@ function SearchableDropdown({
                   >
                     {i18n.language === "en"
                       ? typeof opt === "object"
-                        ? opt?.name.charAt(0).toUpperCase() + opt?.name.slice(1)
-                        : opt?.charAt(0).toUpperCase() + opt?.slice(1)
+                        ? truncateText(opt?.name.charAt(0).toUpperCase() + opt?.name.slice(1),40)
+                        : truncateText(opt?.charAt(0).toUpperCase() + opt?.slice(1),30)
                       : typeof opt === "object"
-                        ? opt?.name
-                        : opt}
+                        ? truncateText(opt?.name,30)
+                        : truncateText(opt,30)}
                          {/* ✅ Radio Button */}
                          { isMobile &&  <div style={{ float: "right" , color: isChecked ? '#007bff' : '#ccc'}}>
           <input
