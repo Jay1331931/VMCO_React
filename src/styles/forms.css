@@ -2331,3 +2331,17 @@ td.file-display-cell {
     height: 14px;
   }
 }
+
+@media(max-width:500px){
+  .dropdown-content.open-upwards {
+  top: auto !important;
+  bottom: calc(100% + 5px) !important; 
+ border-radius: 16px 16px 0px 0px;
+}
+
+/* For mobile bottom sheets, keep them at bottom */
+.dropdown-content.mobile.open-upwards {
+  bottom: 0 !important;
+  top: auto !important;
+}
+}

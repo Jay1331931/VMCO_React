@@ -110,7 +110,7 @@ function Catalog() {
   const [isAdding, setIsAdding] = useState(null);
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
   const [disabledEntities, setDisabledEntities] = useState([]);
-
+const [branchName,setBranchName]=useState(null)
   // Refs for pagination and observer
   const currentPageRef = useRef(1);
   const isLoadingRef = useRef(false);
@@ -772,9 +772,10 @@ function Catalog() {
       const result = await response.json();
       const cartItems = result?.data?.data || [];
       const cartBranchIds = [...new Set(cartItems.map((item) => String(item.branch_id || item.branchId)))];
-
+    
       if (cartBranchIds.length === 0 || (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId)) {
         setSelectedLocation(newBranchId);
+        setBranchName(selectedBranch.branchNameEn )
         if (selectedBranch) {
           setSelectedBranchRegion(selectedBranch.branchRegion || "");
           setSelectedBranchCity(selectedBranch.branchCity || "");
@@ -812,6 +813,7 @@ function Catalog() {
               }
             );
             setSelectedLocation(newBranchId);
+             setBranchName(selectedBranch.branchNameEn )
             if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
               setSelectedBranchCity(selectedBranch.branchCity || "");
@@ -1134,6 +1136,47 @@ function Catalog() {
       setSubCategoryOptions([]);
     }
   }, [categoryFilter]);
+const fetchCart = async (userID) => {
+  console.log("userID",userID)
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/cart/get-cart-by-userId?id=${userID}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      console.log(result?.data)
+      if (result.status === "Ok") {
+        setSelectedLocation(result?.data?.branchId || null);
+        setSelectedBranchCity(result?.data?.city || null);
+        setSelectedBranchRegion(result?.data?.region || null);
+        setBranchName(result?.data?.branchNameEn||null )
+        // setSelectedBranchRegion(result.data)
+        // return result.data;
+      } else {
+        return null;
+        // console.error(
+        //   result?.result?.message || "Failed to fetch customer contacts"
+        // );
+      }
+    } catch (err) {
+      console.error("Error fetching cart :", err);
+      return null;
+    }
+  };
+useEffect(()=>{
+  console.log("excuted1",user)
+  if (!user?.userId ) return;
+  //   console.log("excuted",user)
+    fetchCart(user?.userId)
+},[user])
+ 
+console.log("selectedLocation",selectedLocation)
 
   return (
     <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart}>
@@ -1154,7 +1197,7 @@ function Catalog() {
           isV={isV}
           handleGoToCart={handleGoToCart}
           t={t}
-
+branchName={branchName}
           // Filter section props
           filteredCategoryTabs={filteredCategoryTabs}
           activeCategory={activeCategory}

@@ -98,7 +98,7 @@ const ProductCard = ({
             <div className="product-details">
                 <div className="product-info-section">
                     <div className="product-name-row">
-                        <h3 className="product-name" title={product.name}>{product.name}</h3>
+                        <h3 className={`product-name ${isMobile ? "product-name-mobile":""}`} title={product.name}>{product.name}</h3>
                         {isV('favoriteButton') && isMobile && (
                             <div className="mobile-favorite-wrapper">
                                 <FavButton
@@ -138,6 +138,9 @@ const ProductCard = ({
 
             <style>{`
                 /* Desktop Layout - Vertical Card */
+                .product-name-mobile {
+                padding:0px 30px;
+                }
                 .product-card.desktop-layout {
                     border: 1px solid #D9D9D6;
                     border-radius: 14px;
@@ -295,6 +298,8 @@ const ProductCard = ({
                     align-items: center;
                     margin-top: -2px;
                 }
+                    top:0px !important;
+                    }
 
                 .product-card.mobile-layout .product-name {
                     font-size: 0.9rem;

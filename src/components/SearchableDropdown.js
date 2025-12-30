@@ -15,8 +15,9 @@ function SearchableDropdown({
   placeholder = "Value",
   style = {},
   openUpwards = false,
+  branchName=null
 }) {
-  const allOption = { name: "Select", value: null };
+  const allOption = { name: branchName || "Select", value: value || null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,32 +50,60 @@ function SearchableDropdown({
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      const dropdownHeight = 300; // estimate, or dynamic later
-
-      // space checks
-      const spaceAbove = rect.top;
-      const spaceBelow = window.innerHeight - rect.bottom;
-
-      let topPosition;
-
-      //  Auto decide based on available space
-      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight && openUpwards) {
-        topPosition = rect.top + window.scrollY - dropdownHeight; // open upwards
-      } else {
-        topPosition = rect.bottom + window.scrollY; // open downwards
-      }
-
-      setDropdownPosition({
-        position: "absolute",
-        top: topPosition,
-        left: rect.left + window.scrollX,
-        // width: rect.width,
-        zIndex: 9999,
-      });
+  if (isOpen && dropdownRef.current) {
+    const rect = dropdownRef.current.getBoundingClientRect();
+    const dropdownHeight = 200; // estimate dropdown height
+    
+    // Calculate available space
+    const spaceAbove = rect.top;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    
+    let topPosition;
+    let openUpward = false;
+    
+    // Check if we should open upwards
+    // If there's not enough space below AND there's more space above
+    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+      // Open upwards - position above the trigger
+      topPosition = rect.top + window.scrollY - dropdownHeight;
+      openUpward = true;
+    } else {
+      // Open downwards - position below the trigger
+      topPosition = rect.bottom + window.scrollY;
+      openUpward = false;
     }
-  }, [isOpen, openUpwards]);
+    
+    // Ensure dropdown doesn't go above the viewport
+    if (topPosition < window.scrollY) {
+      topPosition = window.scrollY;
+    }
+    
+    // Ensure dropdown doesn't go below the viewport
+    const maxBottom = window.scrollY + window.innerHeight;
+    const dropdownBottom = topPosition + dropdownHeight;
+    if (dropdownBottom > maxBottom) {
+      topPosition = maxBottom - dropdownHeight;
+    }
+    
+    setDropdownPosition({
+      position: "absolute",
+      top: topPosition,
+      left: rect.left + window.scrollX,
+      width: rect.width,
+      zIndex: 9999,
+    });
+    
+    // Add class for upward opening if needed
+    const dropdownContent = document.querySelector('.dropdown-content');
+    if (dropdownContent) {
+      if (openUpward) {
+        dropdownContent.classList.add('open-upwards');
+      } else {
+        dropdownContent.classList.remove('open-upwards');
+      }
+    }
+  }
+}, [isOpen, openUpwards]);
 
   useEffect(() => {
     //  Only focus on desktop
@@ -270,6 +299,8 @@ function SearchableDropdown({
         </div>,
         document.body
       )}
+
+  
     </div>
   );
 }

@@ -46,12 +46,12 @@ const CatalogLayout = ({
     selectedProduct,
     handleClosePopup,
     isRTL,
-    dir
+    dir,
+    branchName
 }) => {
     const { i18n } = useTranslation();
     const headerRef = useRef(null);
     const [headerHeight, setHeaderHeight] = useState(0);
-
     // Calculate header height dynamically
     useEffect(() => {
         if (!isMobile) return; // Only run for mobile
@@ -268,11 +268,12 @@ const CatalogLayout = ({
     );
 
     const renderMobileLayout = () => (
+       
         <div>
             {activeCategory && (
                 <div
                     ref={headerRef}
-                    className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
+                    className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}
                 >
                     {isV("selectBranch") && (
                         <div
@@ -287,6 +288,7 @@ const CatalogLayout = ({
                         >
                             <div className="branch-selector" style={{ flex: 1, minWidth: 0, width: '100%' }}>
                                 <SearchableDropdown
+                                branchName={branchName}
                                     id={`location-select-${catalogId}`}
                                     name="locationSelect"
                                     value={selectedLocation}
