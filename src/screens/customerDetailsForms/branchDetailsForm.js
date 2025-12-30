@@ -10,6 +10,17 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import constants from "../../constants";
 import Swal from "sweetalert2";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faSave, 
+  faPaperPlane, 
+  faEdit, 
+  faBan, 
+  faCheckCircle, 
+  faCheck, 
+  faTimes, 
+  faSpinner 
+} from '@fortawesome/free-solid-svg-icons';
 import LoadingSpinner from "../../components/LoadingSpinner"; // Import the LoadingSpinner component
 import RbacManager from "../../utilities/rbac";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;

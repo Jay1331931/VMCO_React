@@ -263,17 +263,19 @@
   border-bottom: 1px solid #eee;
   outline: none;
   height: 30px;
+  margin: 10px;
 }
 .dropdown-options {
   max-height: 315px;
   overflow-y: auto;
   scrollbar-width: none;
   /* width: 250px; */
+  font-weight: 450;
 }
 .dropdown-option {
-  padding: 8px 12px;
+  padding: 12px 12px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   text-align: left;
 }
 [dir="rtl"] .dropdown-option {
@@ -762,7 +764,7 @@ body::-webkit-scrollbar {
   justify-content: space-between;
   margin-bottom: 20px;
   gap: 20px;
-  width: 115%;
+  width: 100%;
 }
 .branches-header-controls {
   display: flex;
@@ -1330,6 +1332,7 @@ td.file-display-cell {
   .customers .customer-onboarding-content {
     padding: 0px;
     width: 100%;
+    margin-top: 40px;
   }
   .expanded-form-container-footer {
     display: flex;
@@ -1584,7 +1587,7 @@ td.file-display-cell {
     min-height: min-content;
     border-radius: 0px 0px 12px 12px;
     z-index: 9999 !important;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+    /* box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2); */
   }
   .dropdown-content.mobile-select-branch {
     position: fixed !important;
@@ -1655,6 +1658,7 @@ td.file-display-cell {
   width: fit-content;
 }
 /* Mobile styles */
+
 @media (max-width: 768px) {
   .mobile-only,
   .mobile-primary,
@@ -1705,7 +1709,7 @@ td.file-display-cell {
     border-left: none;
     width: 100%;
     min-height: 200px;
-    margin-top: 20px;
+    margin-top: 30px;
   }
    .customers .branches-content  .form-main-header {
     margin-bottom: 0px;
@@ -1839,7 +1843,7 @@ td.file-display-cell {
   .products-content {
     display: flex;
     flex-direction: column;
-    padding: 30px 10px;
+    padding: 40px 10px 10px 10px;
     border-left: none;
   }
   [dir="rtl"] .products-content {
@@ -2326,4 +2330,18 @@ td.file-display-cell {
     width: 14px;
     height: 14px;
   }
+}
+
+@media(max-width:500px){
+  .dropdown-content.open-upwards {
+  top: auto !important;
+  bottom: calc(100% + 5px) !important; 
+ border-radius: 16px 16px 0px 0px;
+}
+
+/* For mobile bottom sheets, keep them at bottom */
+.dropdown-content.mobile.open-upwards {
+  bottom: 0 !important;
+  top: auto !important;
+}
 }

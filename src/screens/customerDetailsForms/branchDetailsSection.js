@@ -14,6 +14,19 @@ import {
   faChevronRight,
   faLocationDot,
   faXmark,
+  faBuilding,
+  faClock,
+  faTimes,
+  faUser,
+  faTruck,
+  faExclamationCircle,
+  faMapMarkerAlt,
+  faPen,
+  faMap,
+  faLanguage,
+  faHistory,
+  faExclamationTriangle,
+  faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import RbacManager from "../../utilities/rbac";
 import "../../styles/components.css";
@@ -47,7 +60,7 @@ const BranchDetailsForm = ({
   const [geoData, setGeoData] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 500);
   const GOOGLE_MAPS_API_KEY =
   process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "YOUR_GOOGLE_MAPS_API_KEY";
 
@@ -988,7 +1001,8 @@ const BranchDetailsForm = ({
   const hasCheckboxUpdate =
     inApproval && workflowData && "isDeliveryChargesApplicable" in workflowData;
   return (
-    <div className="form-section">
+    !isMobile ?
+    (<div className="form-section">
       {console.log(isUnderApproval)}
       {/* {(isUnderApproval) && <h2>{t('Branch is currently under Approval')}</h2>} */}
       <div style={{
@@ -1074,6 +1088,7 @@ const BranchDetailsForm = ({
 
       <div className="form-row">
         {fields.map((field, index) => {
+            
           if (
             (field.name === "locationTypeOther" &&
             branch?.locationType !== "Others (specify)")||
@@ -1283,6 +1298,907 @@ const BranchDetailsForm = ({
     width: "140px !important"}`}
       </style>
     </div>
-  );
+  ) :(<div className="form-section-mobile">
+  {/* Header */}
+  <div className="form-header-mobile">
+    <div className="header-content">
+      <h3 className="form-title-mobile">
+        <FontAwesomeIcon icon={faBuilding} className="title-icon" />
+        {t("Branch Details")}
+      </h3>
+      {isUnderApproval && (
+        <div className="approval-badge-mobile">
+          <FontAwesomeIcon icon={faClock} />
+          <span>{t("Under Approval")}</span>
+        </div>
+      )}
+    </div>
+    
+    {isMobile && (
+      <button
+        className="form-close-btn-mobile"
+        onClick={() => {
+          setShowAllDetails(false);
+          setExpandedRows([]);
+        }}
+      >
+        <FontAwesomeIcon icon={faTimes} />
+      </button>
+    )}
+  </div>
+
+  {/* Checkbox Section */}
+   { (user?.userType?.toLowerCase() !== "customer")&& <div className="checkbox-section-mobile">
+  {isFirstBranch && mode !== "edit"  &&  (
+    <label className="checkbox-group-mobile">
+      <input
+        type="checkbox"
+        id="sameAsCustomer"
+        name="sameAsCustomer"
+        checked={
+          branch?.street === customer?.street &&
+          branch?.buildingName === customer?.buildingName &&
+          branch?.city === customer?.city &&
+          branch?.region === customer?.region &&
+          branch?.geolocation === customer?.geolocation
+        }
+        onChange={(e) => setSameAsCustomer(e.target.checked)}
+        className="checkbox-input-mobile"
+      />
+      <div className="checkbox-label-mobile">
+        <span className="checkbox-custom"></span>
+        <FontAwesomeIcon icon={faUser} className="checkbox-icon" />
+        <span className="checkbox-text">{t("Same as Customer Details")}</span>
+      </div>
+    </label>
+  )}
+  
+  {isV("isDeliveryChargesApplicable") && (
+    <label className="checkbox-group-mobile">
+      <input
+        type="checkbox"
+        id="isDeliveryChargesApplicable"
+        name="isDeliveryChargesApplicable"
+        checked={branch?.isDeliveryChargesApplicable}
+        onChange={handleDeliveryChargesChange}
+        className="checkbox-input-mobile"
+      />
+      <div className="checkbox-label-mobile">
+        <span className="checkbox-custom"></span>
+        <FontAwesomeIcon icon={faTruck} className="checkbox-icon" />
+        <span className="checkbox-text">{t("Is Delivery Charges Applicable")}</span>
+        {hasCheckboxUpdate && (
+          <span className="update-badge-mobile">
+            <FontAwesomeIcon icon={faExclamationCircle} />
+            <span>Updated</span>
+          </span>
+        )}
+      </div>
+    </label>
+  )}
+</div>}
+
+  {/* Form Fields */}
+  <div className="form-grid-mobile">
+    {fields.map((field, index) => {
+      if (
+        (field.name === "locationTypeOther" &&
+          branch?.locationType !== "Others (specify)") ||
+        (field.name === "cityOther" &&
+          branch?.city !== "Others (Specify)") ||
+        (field.name === "districtOther" &&
+          branch?.district !== "Others (Specify)")
+      ) {
+        return null;
+      }
+       if (
+    user?.userType?.toLowerCase() === "customer" && 
+    (field.name === "branch" || field.name === "zone")
+  ) {
+    return null;
+  }
+      const hasUpdate =
+        (mode === "edit" && inApproval && workflowData
+          ? field.name in workflowData
+          : false) ||
+        (mode === "edit" &&
+          inApproval &&
+          branch.branchStatus === "pending");
+      const currentValue = originalBranch?.[field.name] || "";
+      const value = hasUpdate
+        ? workflowData?.[field.name]
+        : getFieldValue(field.name);
+
+      return (
+        <div
+          className={`form-field-mobile ${hasUpdate ? "field-update" : ""} ${
+            field.required ? "field-required" : ""
+          }`}
+          key={index}
+        >
+          {isV(field.name) && !field?.hidden && (
+            <div className="field-header-mobile">
+              <label className="field-label-mobile">
+                {field?.isLocation ? (
+                  <FontAwesomeIcon icon={faMapMarkerAlt} />
+                ) : field.type === "dropdown" ? (
+                  <FontAwesomeIcon icon={faPen} />
+                ) : (
+                  <FontAwesomeIcon icon={faPen} />
+                )}
+                {t(field.label)}
+                {field.required && <span className="required-star">*</span>}
+              </label>
+              
+              {hasUpdate && (
+                <div className="update-indicator-mobile">
+                  <span className="update-dot"></span>
+                  <span className="update-text">{t("Updated")}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="field-input-container-mobile">
+            {field?.isLocation ? (
+              <div className="location-input-wrapper-mobile">
+                <div className="location-display-mobile">
+                  <span className="location-text">
+                    {branch?.[field.name]
+                      ? getLocationDisplay(branch[field.name])
+                      : "Select Location"}
+                  </span>
+                </div>
+                <button
+                  className="location-picker-btn-mobile"
+                  onClick={() => setShowMap(true)}
+                  disabled={customerFormMode === "custDetailsAdd" && inApproval}
+                >
+                  <FontAwesomeIcon icon={faMap} />
+                  <span>Pick Location</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                {(() => {
+                  switch (field.type) {
+                    case "text":
+                      return (
+                        <div className="text-input-wrapper-mobile">
+                          <input
+                            type="text"
+                            name={field.name}
+                            value={branch?.[field.name] || ""}
+                            placeholder={t(field.placeholder)}
+                            onChange={handleBranchFieldChange}
+                            className={`text-input-mobile ${
+                              field.name === "branchNameLc" ? "arabic-input" : ""
+                            } ${hasUpdate ? "input-update" : ""}`}
+                            disabled={
+                              customerFormMode === "custDetailsAdd" && inApproval
+                            }
+                            hidden={field?.hidden}
+                          />
+                          {field.name.includes("branchName") && (
+                            <div className="input-icon-mobile">
+                              <FontAwesomeIcon 
+                                icon={field.name === "branchNameLc" ? faLanguage : faBuilding} 
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    case "dropdown":
+                      return isV(field.name) ? (
+                        <div className="dropdown-wrapper-mobile">
+                          <SearchableDropdown
+                            name={field.name}
+                            value={branch?.[field.name]}
+                            onChange={field.onChange || handleBranchFieldChange}
+                            className="dropdown-mobile"
+                            disabled={
+                              (customerFormMode === "custDetailsAdd" && inApproval) ||
+                              field.disabled
+                            }
+                            hidden={!isV(field.name)}
+                            options={field.options}
+                          />
+                         
+                        </div>
+                      ) : null;
+                    default:
+                      return null;
+                  }
+                })()}
+              </>
+            )}
+          </div>
+
+          {hasUpdate && (
+            <div className="current-value-mobile">
+              <FontAwesomeIcon icon={faHistory} />
+              <span className="previous-label">Previous:</span>
+              <span className="previous-value">
+                {field.isLocation
+                  ? getLocationDisplay(currentValue)
+                  : originalBranch?.[field.name] || "(empty)"}
+              </span>
+            </div>
+          )}
+          
+          {formErrors[field.name] && (
+            <div className="error-message-mobile">
+              <FontAwesomeIcon icon={faExclamationTriangle} />
+              <span>{t(formErrors[field.name])}</span>
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+
+  {/* Map Modal */}
+   {showMap && (
+        <div className="map-modal">
+          <div className="map-modal-content">
+            <button
+              className="close-modal-button"
+              onClick={() => setShowMap(false)}
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+            <h3>{t("Select Location")}</h3>
+            <LocationPicker
+              onLocationSelect={() => {}}
+              initialLat={getFieldValue("geolocation")?.x}
+              initialLng={getFieldValue("geolocation")?.y}
+            />
+          </div>
+        </div>
+      )}
+
+  {/* Add some custom styles */}
+  <style jsx>{`
+    .dropdown-mobile .dropdown-header {
+      width: 100% !important;
+      min-height: 44px !important;
+    }
+
+    /* Mobile Form Section */
+.form-section-mobile {
+  padding: 20px;
+  background: linear-gradient(135deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 89, 76, 0.08);
+  border: 1px solid rgba(0, 89, 76, 0.1);
+}
+
+/* Form Header */
+.form-header-mobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(0, 89, 76, 0.1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.form-title-mobile {
+  font-size: 18px;
+  font-weight: 700;
+  color: #00594C;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-icon {
+  font-size: 20px;
+  color: #00594C;
+}
+
+.approval-badge-mobile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #ffd700;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #856404;
+}
+
+.form-close-btn-mobile {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-close-btn-mobile:hover {
+  background: #00594C;
+  color: white;
+  transform: rotate(90deg);
+}
+
+/* Checkbox Section */
+/* Checkbox Section */
+.checkbox-section-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(0, 89, 76, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 89, 76, 0.05);
+}
+
+.checkbox-group-mobile {
+  position: relative;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.checkbox-input-mobile {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-label-mobile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+  min-height: 56px;
+}
+
+.checkbox-group-mobile:hover .checkbox-label-mobile {
+  border-color: #00594C;
+  box-shadow: 0 4px 12px rgba(0, 89, 76, 0.1);
+  transform: translateY(-2px);
+}
+
+.checkbox-input-mobile:checked ~ .checkbox-label-mobile {
+  background: rgba(0, 89, 76, 0.08);
+  border-color: #00594C;
+}
+
+.checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.checkbox-input-mobile:checked ~ .checkbox-label-mobile .checkbox-custom {
+  background: #00594C;
+  border-color: #00594C;
+}
+
+.checkbox-input-mobile:checked ~ .checkbox-label-mobile .checkbox-custom::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.checkbox-icon {
+  font-size: 16px;
+  color: #00594C;
+  flex-shrink: 0;
+}
+
+.checkbox-text {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.update-badge-mobile {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #ffd700;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #856404;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.update-badge-mobile svg {
+  font-size: 10px;
+}
+
+/* Ensure text is visible - add these styles */
+.checkbox-label-mobile {
+  color: #333; /* Explicit text color */
+}
+
+.checkbox-group-mobile:focus-within .checkbox-label-mobile {
+  outline: 2px solid #00594C;
+  outline-offset: 2px;
+}
+
+/* Accessibility improvements */
+.checkbox-group-mobile:focus {
+  outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .checkbox-label-mobile {
+    padding: 10px;
+    gap: 10px;
+    min-height: 52px;
+  }
+  
+  .checkbox-text {
+    font-size: 13px;
+  }
+  
+  .update-badge-mobile {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+}
+
+.update-badge-mobile {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #ffd700;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #856404;
+}
+
+/* Form Grid */
+.form-grid-mobile {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.form-field-mobile {
+  position: relative;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.form-field-mobile:hover {
+  border-color: #00594C;
+  box-shadow: 0 4px 12px rgba(0, 89, 76, 0.05);
+}
+
+.form-field-mobile.field-update {
+  border-left: 4px solid #00594C;
+  background: linear-gradient(135deg, #fff, #fff8e1);
+}
+
+.field-header-mobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.field-label-mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin: 0;
+}
+
+.field-label-mobile svg {
+  color: #00594C;
+  font-size: 14px;
+}
+
+.required-star {
+  color: #ff4757;
+  margin-left: 4px;
+}
+
+.update-indicator-mobile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.update-dot {
+  width: 8px;
+  height: 8px;
+  background: #00594C;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.update-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #00594C;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Input Fields */
+.field-input-container-mobile {
+  margin-bottom: 8px;
+}
+
+/* Location Input */
+.location-input-wrapper-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.location-display-mobile {
+  padding: 12px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.location-picker-btn-mobile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, #00594C, #007B6B);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.location-picker-btn-mobile:hover:not(:disabled) {
+  background: linear-gradient(135deg, #007B6B, #009380);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 89, 76, 0.3);
+}
+
+.location-picker-btn-mobile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Text Input */
+.text-input-wrapper-mobile {
+  position: relative;
+}
+
+.text-input-mobile {
+  width: 100%;
+  padding: 12px 40px 12px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+  min-height: 44px;
+}
+
+.text-input-mobile:focus {
+  outline: none;
+  border-color: #00594C;
+  box-shadow: 0 0 0 3px rgba(0, 89, 76, 0.1);
+  background: white;
+}
+
+.text-input-mobile.input-update {
+  background: #fff8e1;
+  border-color: #ffd700;
+}
+
+.text-input-mobile.arabic-input {
+  text-align: right;
+  direction: rtl;
+  padding: 12px 12px 12px 40px;
+}
+
+.input-icon-mobile {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: #00594C;
+  font-size: 16px;
+}
+
+.text-input-mobile.arabic-input + .input-icon-mobile {
+  right: auto;
+  left: 12px;
+}
+
+/* Dropdown */
+.dropdown-wrapper-mobile {
+  position: relative;
+}
+
+.dropdown-mobile {
+  width: 100% !important;
+}
+
+.dropdown-mobile .dropdown-header {
+  min-height: 44px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.dropdown-mobile .dropdown-header:hover {
+  border-color: #00594C;
+}
+
+.dropdown-icon-mobile {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: #00594C;
+  pointer-events: none;
+}
+
+/* Current Value */
+.current-value-mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(0, 89, 76, 0.05);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+}
+
+.current-value-mobile svg {
+  color: #00594C;
+  font-size: 12px;
+}
+
+.previous-label {
+  font-weight: 600;
+  color: #444;
+}
+
+.previous-value {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Error Message */
+.error-message-mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(255, 71, 87, 0.1);
+  border: 1px solid rgba(255, 71, 87, 0.2);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #ff4757;
+  margin-top: 8px;
+}
+
+.error-message-mobile svg {
+  font-size: 14px;
+}
+
+/* Map Modal */
+.map-modal-overlay-mobile {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(5px);
+}
+
+.map-modal-content-mobile {
+  width: 100%;
+  max-width: 500px;
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.map-modal-header-mobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #00594C, #007B6B);
+  color: white;
+}
+
+.map-modal-title-mobile {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-close-btn-mobile {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.map-close-btn-mobile:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.map-container-mobile {
+  height: 400px;
+  padding: 20px;
+}
+
+.map-actions-mobile {
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: center;
+}
+
+.map-confirm-btn-mobile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, #00594C, #007B6B);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.map-confirm-btn-mobile:hover {
+  background: linear-gradient(135deg, #007B6B, #009380);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 89, 76, 0.4);
+}
+
+/* Animations */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .form-section-mobile {
+    padding: 16px;
+  }
+  
+  .form-grid-mobile {
+    gap: 16px;
+  }
+  
+  .form-field-mobile {
+    padding: 14px;
+  }
+  
+  .checkbox-label-mobile {
+    padding: 10px;
+  }
+  
+  .location-picker-btn-mobile,
+  .text-input-mobile {
+    min-height: 42px;
+  }
+  
+  .map-container-mobile {
+    height: 300px;
+    padding: 10px;
+  }
+}
+
+@media (min-width: 768px) {
+  .form-grid-mobile {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .form-field-mobile:nth-child(13),
+  .form-field-mobile:nth-child(14) {
+    grid-column: span 2;
+  }
+}
+  `}</style>
+</div>));
 };
 export default BranchDetailsForm;

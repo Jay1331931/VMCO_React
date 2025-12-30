@@ -1688,53 +1688,45 @@ const checkDisabledStatus = (fieldPath) => {
                     <span className="update-badge">{t("Updated")}</span>
                   )}
               </label>
-              <div className="input-with-verification">
-              <select
-                id="primaryBusinessUnit"
-                name="primaryBusinessUnit"
-                className={`dropdown ${
-                  originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.primaryBusinessUnit !=
-                    customerData?.primaryBusinessUnit &&
-                  mode === "edit"
-                    ? "update-field"
-                    : ""
-                }`}
-                value={customerData?.primaryBusinessUnit || ""}
-                onChange={onChangeCustomerData}
-                disabled={
-            checkDisabledStatus("primaryBusinessUnit") || customerData?.customerStatus === "new"
-          }
-                required
-              >
-                <option value="" disabled>
-                  {t("Select")}
-                </option>
-                {basicMasterLists?.entity?.map((loc) => (
-                  <option key={loc.value} value={loc.value}>
-                    {loc.value}
-                  </option>
-                ))}
-              </select>
-              {isV("primaryBusinessUnitVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+             <div className="input-with-verification">
+  <SearchableDropdown
+    name="primaryBusinessUnit"
+    options={(basicMasterLists?.entity || []).map((item) => ({
+      value: item.value,
+      name: currentLanguage === "ar" ? item.valueLc : item.value,
+    }))}
+    value={customerData?.primaryBusinessUnit || ""}
+    onChange={(e) => {
+      onChangeCustomerData({
+        target: { name: "primaryBusinessUnit", value: e.target.value },
+      });
+    }}
+    disabled={checkDisabledStatus("primaryBusinessUnit") || customerData?.customerStatus === "new"}
+    className={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.primaryBusinessUnit !== customerData?.primaryBusinessUnit &&
+      mode === "edit"
+        ? "update-field"
+        : ""
+    }
+    placeholder={t("Select")}
+    required
+  />
+  {isV("primaryBusinessUnitVerified") && (
+    (mode === "edit" && customerData?.customerStatus === "pending")) && (
+    <div className="verification-checkbox">
       <input
         type="checkbox"
         id="primaryBusinessUnitVerified"
         name="primaryBusinessUnitVerified"
         checked={verifiedData?.primaryBusinessUnitVerified || false}
         onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
       />
       <label htmlFor="primaryBusinessUnitVerified">Verified</label>
-      </div>)}
-              </div>
+    </div>
+  )}
+</div>
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.primaryBusinessUnit !=

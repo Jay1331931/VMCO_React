@@ -61,6 +61,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                            {isV('favoriteButton') && <FavButton 
                                 initialState={product.favorite || false}
                                 onToggle={handleFavoriteToggle}
+                                isPopup={true}
                             />}
                             {selectedImage ? (
                                 <img
