@@ -61,6 +61,7 @@ const defaultOrder = {
 };
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const APP_BLOB_URL = process.env.REACT_APP_BLOB_STORAGE_URL;
 
 // Helper function to convert payment percentage from decimal to dropdown format
 const convertPaymentPercentageToDropdown = (paymentPercentage) => {
@@ -5083,17 +5084,17 @@ function OrderDetails() {
                                 <>
                                   <div key={item.id || idx} className="cart-item">
                                     {/* Product Image */}
-                                    <div className="item-image">
+                                    <div className="item-image" style={{ flexDirection: "row", justifyContent: "left" }}>
                                       <img
-                                        src={`https://vmcowebportalprod.blob.core.windows.net/vmco-products/${item.erpProdId}/default.jpg`}
+                                        src={`${APP_BLOB_URL}/vmco-products/${item.erpProdId}/default.jpg`}
                                         alt={item.name}
                                         onError={(e) => {
                                           e.target.onerror = null;
-                                          e.target.src = `https://vmcowebportalprod.blob.core.windows.net/vmco-products/${item.erpProdId}/default.jpg`;
+                                          e.target.src = `${APP_BLOB_URL}/vmco-products/${item.erpProdId}/default.jpg`;
                                         }}
                                         style={{
-                                          width: "100%",
-                                          height: "100%",
+                                          width: "100px",
+                                          height: "100px",
                                           objectFit: "contain",
                                           borderRadius: 8,
                                         }}
@@ -5102,7 +5103,7 @@ function OrderDetails() {
 
                                     {/* Product Details */}
                                     <div className="item-details" style={{ gap: 0, marginTop: 0 }}>
-                                      {/* <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4> */}
+                                      <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
                                       <p className="item-code">{item.productCode}</p>
                                       {item.description && (
                                         <p className="item-description">{item.description}</p>
@@ -5124,7 +5125,7 @@ function OrderDetails() {
                                           style={{
                                             display: "flex",
                                             alignItems: "center",
-                                            justifyContent: "center",
+                                            justifyContent: "flex-start",
                                           }}
                                         >
                                           <QuantityController
@@ -5202,11 +5203,11 @@ function OrderDetails() {
                                       </div>
                                     </div>
                                   </div>
-                                  <div style={{ marginBottom: 10 }}>
-                                    <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
-                                  </div>
+                                  {/* <div style={{ marginBottom: 10 }}>
+                                   <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
+                                  </div> */}
                                   {/* Price Summary */}
-                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px" }} >
+                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px", justifyContent: "space-between" }} >
                                     <div className="item-price-panel" >
                                       <span className="tax-row" style={{ fontSize: 13 }} >
                                         {t("VAT: ")}
