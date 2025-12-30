@@ -634,8 +634,9 @@ function Cart() {
       // Check for existing order of the SAME type (not opposite type)
       const existingOrderFilters = new URLSearchParams();
       const filters = {
-        customerId: selectedCustomerId,
-        branchId: selectedBranchId,
+        customerId: parseInt(selectedCustomerId),
+        branchId: parseInt(selectedBranchId),
+        purpose: "existing orders",
         status: "Open",
         entity: Constants.ENTITY.SHC,
         paymentMethod:
