@@ -626,16 +626,12 @@ function Maintenance() {
                     }
                   />
                 </div>
-                <MaintenanceCard
-                  tickets={initialTickets}
-                  setSelectedRow={handleShowAllDetailsClick}
-                // handleViewDetails={(ticket) =>
-                //   navigate("/maintenanceDetails", { state: { ticket, mode: "edit" } })
-                // }
-                // handleAdd={() =>
-                //   navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } })
-                // }
-                />
+                 <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
+    <MaintenanceCard
+      tickets={initialTickets}
+      setSelectedRow={handleShowAllDetailsClick}
+    />
+  </div>
               </>
             )}
           </div>
@@ -760,6 +756,7 @@ function Maintenance() {
           />
         )}
       </div>
+   
     </Sidebar>
   );
 }

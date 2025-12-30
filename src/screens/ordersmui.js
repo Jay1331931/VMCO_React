@@ -2495,42 +2495,7 @@ function Orders() {
       <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin") ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
       >
-        {user?.userType.toLowerCase() === "employee" && (
-          <div className="filter-section">
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                gap: 12,
-                overflowX: "auto",
-                scrollbarWidth: "none",
-              }}
-            >
-              <Tabs
-                tabs={filteredCategoryTabs}
-                activeTab={activeCategory}
-                onTabChange={(newCategory) => {
-                  console.log(
-                    "🔄 Tab changing from",
-                    activeCategory,
-                    "to",
-                    newCategory
-                  );
-                  setActiveCategory(newCategory);
-                  setFilters({ entity: newCategory });
-                  setApprovalMode(false);
-                  fetchOrders(1, searchQuery, { entity: newCategory });
-                  setSearchQuery("");
-                  setCategoryFilter("");
-                  setSubCategoryFilter("");
-                  setSubCategoryOptions([]);
-                }}
-                variant={isMobile ? 'mobile' : 'pc'}
-              />
-            </div>
-          </div>
-        )}
+       
 
         {/* {isMobile ? (
           <div className="table-container">
@@ -2632,166 +2597,144 @@ function Orders() {
             <div className="error-message">{error}</div>
           ) : (
             <>
-              <div
-                className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}
-              // style={{
-              //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
-              //   position: "sticky",
-              //   zIndex: 20,
-              //   transition: "top 0.3s ease",
-              //   background: "#fff",
-              // }}
-              >
-                <TableMobile
-                  columns={visibleColumns}
-                  // columns={[]}
-                  allColumns={isApprovalMode ? approvalColumns : orderColumns}
-                  data={filteredOrders}
-                  showAllDetails={true}
-                  handleAllDetailsClick={handleShowAllDetailsClick}
-                  selectedRow={selectedRow}
-                  setSelectedRow={setSelectedRow}
-                  showRowPopup={showRowPopup}
-                  setShowRowPopup={setShowRowPopup}
-                  getPaymentStatusClass={getPaymentStatusClass}
-                  disableExtendRowFullWidth={true}
-                  dataGridComponent={
-                    <DataGrid
-                      apiRef={gridApiRef}
-                      rows={[]}
-                      columns={[]}
-                      pageSize={pageSize}
-                      rowCount={total}
-                      onRowClick={handleRowClick}
-                      columnVisibilityModel={columnVisibilityModel}
-                      onColumnVisibilityModelChange={setColumnVisibilityModel}
-                      sortModel={sortModel}
-                      onSortModelChange={handleSortModelChange}
-                      disableSelectionOnClick
-                      disableColumnMenu
-                      hideFooter={true}
-                      hideFooterPagination={true}
-                      disableExtendRowFullWidth={true}
-                      pagination={false}
-                      autoHeight
-                      rowHeight={55}
-                      showToolbar
-                      slots={{
-                        toolbar: () => (
-                          <CustomToolbar
-                            searchQuery={searchQuery}
-                            filterAnchor={filterAnchor}
-                            onSearch={handleSearch}
-                            setSearchQuery={setSearchQuery}
-                            setFilterAnchor={setFilterAnchor}
-                            handleFilterChange={handleFilterChange}
-                            onColumnVisibilityChange={setColumnVisibilityModel}
-                            columns={filteredData}
-                            filters={filters}
-                            columnVisibilityModel={columnVisibilityModel}
-                            searchPlaceholder="Search orders..."
-                            showColumnVisibility={false}
-                            showFilters={false}
-                            showExport={false}
-                            // showUpload={isV("uploadButton")}
-                            showUpload={false}
-                            showAdd={isV("addButton")}
-                            buttonName={t("add")}
-                            showApproval={
-                              isV("approvalButton") &&
-                              filters.entity?.toLowerCase() ===
-                              Constants.ENTITY.VMCO?.toLowerCase()
-                            }
-                            handleAddClick={handleAddOrder}
-                            handleUploadClick={HandleBulkOrderUpload}
-                            columnsToDisplay={columnsToDisplay}
-                            handleApproval={handleApproval}
-                            isApprovalMode={isApprovalMode}
-                          />
-                        ),
-                      }}
-                      // sx={{
-                      // "& .MuiDataGrid-row": {
-                      //   cursor: "default",
-                      //   "&:hover": {
-                      //     backgroundColor: "rgba(0, 0, 0, 0.04)",
-                      //   },
-                      // },
-                      // ".MuiDataGrid-cell": {
-                      //   textAlign: "center",
-                      //   display: "flex",
-                      //   alignItems: "center",
-                      //   justifyContent: "center",
-                      // },
-                      sx={{
-                        border: "none !important",
-                        "& .MuiDataGrid-overlay": {
-                          display: "none !important", // ✅ hides “No rows” message
-                        },
-                        "& .MuiDataGrid-row": {
-                          // cursor: "default",
-                          // "&:hover": {
-                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
-                          // },
-                          display: "none !important",
-                        },
-                        ".MuiDataGrid-cell": {
-                          display: "none !important",
-                        },
-                        "& .MuiDataGrid-main": {
-                          display: "none", // ✅ hides the main grid body
-                        },
-                        "& .MuiDataGrid-toolbar": {
-                          // position: "sticky",
-                          // top: 0,
-                          // zIndex: 10, // keeps it above rows
-                          // backgroundColor: "#fff", // ensures it doesn't become transparent
-                          // borderBottom: "1px solid #e0e0e0",
-                          padding: "0px",
-                          gap: "10px",
-                          border: "none",
-                        },
-
-                        "&.catalog-datagrid": {
-                          border: "2px solid black",
-                          borderRadius: "8px",
-                          backgroundColor: "#f8f9fa",
-                        },
-                        "& .MuiOutlinedInput-root": {
-                          width: "100% !important",
-                          minWidth: "230px !important",
-                        },
-
-                      }}
-                    // }}
-                    />
-                  }
-                />
-              </div>
-
-              <OrderCard
-                orders={filteredOrders}
-                orderIds={filteredOrders.map((o) => o.id)}
-                setSelectedRow={handleOrderNumberClick}
-                handlePay={handlePay}
-              // toolbarProps={{
-              //   searchQuery,
-              //   setSearchQuery,
-              //   filterAnchor,
-              //   setFilterAnchor,
-              //   handleFilterChange,
-              //   onSearch: handleSearch,
-              //   visibleColumns,
-              //   columnVisibilityModel,
-              //   setColumnVisibilityModel,
-              //   isV,
-              //   handleAddOrder,
-              //   HandleBulkOrderUpload,
-              //   handleApproval,
-              //   isApprovalMode,
-              //   t,
-              // }}
-              />
+             <div>
+  <div className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}>
+    {user?.userType.toLowerCase() === "employee" && (
+      <div className="filter-section">
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+            overflowX: "auto",
+            scrollbarWidth: "none",
+          }}
+        >
+          <Tabs
+            tabs={filteredCategoryTabs}
+            activeTab={activeCategory}
+            onTabChange={(newCategory) => {
+              console.log(
+                "🔄 Tab changing from",
+                activeCategory,
+                "to",
+                newCategory
+              );
+              setActiveCategory(newCategory);
+              setFilters({ entity: newCategory });
+              setApprovalMode(false);
+              fetchOrders(1, searchQuery, { entity: newCategory });
+              setSearchQuery("");
+              setCategoryFilter("");
+              setSubCategoryFilter("");
+              setSubCategoryOptions([]);
+            }}
+            variant={isMobile ? 'mobile' : 'pc'}
+          />
+        </div>
+      </div>
+    )}
+    
+    {/* This DataGrid is only for the toolbar, not for displaying rows */}
+    <div style={{ height: "auto", marginBottom: "16px" }}>
+      <DataGrid
+        apiRef={gridApiRef}
+        rows={[]}
+        columns={[]}
+        pageSize={pageSize}
+        rowCount={total}
+        onRowClick={handleRowClick}
+        columnVisibilityModel={columnVisibilityModel}
+        onColumnVisibilityModelChange={setColumnVisibilityModel}
+        sortModel={sortModel}
+        onSortModelChange={handleSortModelChange}
+        disableSelectionOnClick
+        disableColumnMenu
+        hideFooter={true}
+        hideFooterPagination={true}
+        disableExtendRowFullWidth={true}
+        pagination={false}
+        autoHeight
+        rowHeight={55}
+        showToolbar
+        slots={{
+          toolbar: () => (
+            <CustomToolbar
+              searchQuery={searchQuery}
+              filterAnchor={filterAnchor}
+              onSearch={handleSearch}
+              setSearchQuery={setSearchQuery}
+              setFilterAnchor={setFilterAnchor}
+              handleFilterChange={handleFilterChange}
+              onColumnVisibilityChange={setColumnVisibilityModel}
+              columns={filteredData}
+              filters={filters}
+              columnVisibilityModel={columnVisibilityModel}
+              searchPlaceholder="Search orders..."
+              showColumnVisibility={false}
+              showFilters={false}
+              showExport={false}
+              showUpload={false}
+              showAdd={isV("addButton")}
+              buttonName={t("add")}
+              showApproval={
+                isV("approvalButton") &&
+                filters.entity?.toLowerCase() ===
+                Constants.ENTITY.VMCO?.toLowerCase()
+              }
+              handleAddClick={handleAddOrder}
+              handleUploadClick={HandleBulkOrderUpload}
+              columnsToDisplay={columnsToDisplay}
+              handleApproval={handleApproval}
+              isApprovalMode={isApprovalMode}
+            />
+          ),
+        }}
+        sx={{
+          border: "none !important",
+          "& .MuiDataGrid-overlay": {
+            display: "none !important",
+          },
+          "& .MuiDataGrid-row": {
+            display: "none !important",
+          },
+          ".MuiDataGrid-cell": {
+            display: "none !important",
+          },
+          "& .MuiDataGrid-main": {
+            display: "none",
+          },
+          "& .MuiDataGrid-toolbar": {
+            padding: "0px",
+            gap: "10px",
+            border: "none",
+            marginBottom: "0",
+          },
+          "&.catalog-datagrid": {
+            border: "2px solid black",
+            borderRadius: "8px",
+            backgroundColor: "#f8f9fa",
+          },
+          "& .MuiOutlinedInput-root": {
+            width: "100% !important",
+            minWidth: "230px !important",
+          },
+        }}
+      />
+    </div>
+  </div>
+  
+  {/* Order cards section - This should be separate from the fixed header */}
+  <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
+    <OrderCard
+      orders={filteredOrders}
+      orderIds={filteredOrders.map((o) => o.id)}
+      setSelectedRow={handleOrderNumberClick}
+      handlePay={handlePay}
+    />
+  </div>
+</div>
             </>
           )
         ) : (
@@ -3135,7 +3078,10 @@ function Orders() {
             onPageChange={setPage}
           />
         )}
+
+       
       </div>
+
     </Sidebar>
   );
 }

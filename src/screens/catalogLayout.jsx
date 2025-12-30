@@ -374,7 +374,7 @@ const CatalogLayout = ({
             {/* Mobile Scrollable Products Container with dynamic padding */}
             <div
                 className="catalog-scrollable-content"
-                style={{ paddingTop: headerHeight > 0 ? `${headerHeight}px` : '320px' }}
+                // style={{ paddingTop: headerHeight > 0 ? `${headerHeight}px` : '320px' }}
             >
                 <div
                     className="products-grid"
