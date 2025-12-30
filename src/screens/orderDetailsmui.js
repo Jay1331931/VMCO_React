@@ -5103,7 +5103,7 @@ function OrderDetails() {
 
                                     {/* Product Details */}
                                     <div className="item-details" style={{ gap: 0, marginTop: 0 }}>
-                                      {/* <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4> */}
+                                      <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
                                       <p className="item-code">{item.productCode}</p>
                                       {item.description && (
                                         <p className="item-description">{item.description}</p>
@@ -5203,9 +5203,9 @@ function OrderDetails() {
                                       </div>
                                     </div>
                                   </div>
-                                  <div style={{ marginBottom: 10 }}>
-                                    <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
-                                  </div>
+                                  {/* <div style={{ marginBottom: 10 }}>
+                                   <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
+                                  </div> */}
                                   {/* Price Summary */}
                                   <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px", justifyContent: "space-between" }} >
                                     <div className="item-price-panel" >
