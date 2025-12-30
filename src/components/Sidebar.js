@@ -37,7 +37,7 @@ import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-function Sidebar({ children, title, MenuName = null }) {
+function Sidebar({ children, title=null, MenuName = null }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -48,7 +48,7 @@ function Sidebar({ children, title, MenuName = null }) {
   const [cartbranchData, setCartBranchData] = useState(null);
 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
-  const [activeMenu, setActiveMenu] = useState("Dashboard");
+  const [activeMenu, setActiveMenu] = useState(title || "Dashboard");
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout } = useAuth();
   const [showOrdersSubMenu, setShowOrdersSubMenu] = useState(false);
@@ -338,37 +338,9 @@ function Sidebar({ children, title, MenuName = null }) {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, [isRTL]);
-
-
-
   useEffect(() => {
     setActiveMenu(title);
   }, [title]);
-
-  useEffect(() => {
-    const mainContent = document.querySelector(".main-content");
-    if (mainContent && isMobile) {
-      if (showOrdersSubMenu) {
-        mainContent.classList.add("has-orders-submenu");
-      } else {
-        mainContent.classList.remove("has-orders-submenu");
-      }
-    }
-
-    return () => {
-      const mainContent = document.querySelector(".main-content");
-      if (mainContent) {
-        mainContent.classList.remove("has-orders-submenu");
-      }
-    };
-  }, [showOrdersSubMenu, isMobile]);
-
-  const toggleSidebar = () => setSidebarCollapsed(!isSidebarCollapsed);
-  const handleMobileToggle = () => {
-    setSidebarCollapsed(false);
-    setSidebarExpanded(!isSidebarExpanded);
-  };
-
   const handleMenuClick = async (label) => {
     if (label === "Others") {
       setShowOrdersSubMenu(!showOrdersSubMenu);
@@ -450,6 +422,34 @@ function Sidebar({ children, title, MenuName = null }) {
         break;
     }
   };
+
+
+
+  useEffect(() => {
+    const mainContent = document.querySelector(".main-content");
+    if (mainContent && isMobile) {
+      if (showOrdersSubMenu) {
+        mainContent.classList.add("has-orders-submenu");
+      } else {
+        mainContent.classList.remove("has-orders-submenu");
+      }
+    }
+
+    return () => {
+      const mainContent = document.querySelector(".main-content");
+      if (mainContent) {
+        mainContent.classList.remove("has-orders-submenu");
+      }
+    };
+  }, [showOrdersSubMenu, isMobile]);
+
+  const toggleSidebar = () => setSidebarCollapsed(!isSidebarCollapsed);
+  const handleMobileToggle = () => {
+    setSidebarCollapsed(false);
+    setSidebarExpanded(!isSidebarExpanded);
+  };
+
+
 
   const handleLogout = async () => {
     const userLoggedOut = user;
@@ -623,15 +623,15 @@ function Sidebar({ children, title, MenuName = null }) {
       case "/cart":
         setActiveMenu("Your Cart");
         break;
-      case "Others":
-        setActiveMenu("Others");
-        break;
+      // case "Others":
+      //   setActiveMenu("Others");
+      //   break;
       case "Orders":
         console.log("Orders");
         setActiveMenu("Orders");
         break;
-      default:
-        setActiveMenu("Dashboard");
+      // default:
+      //   setActiveMenu("Dashboard");
     }
   }, [location.pathname, MenuName]);
   return (
