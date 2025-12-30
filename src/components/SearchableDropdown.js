@@ -17,7 +17,7 @@ function SearchableDropdown({
   openUpwards = false,
   branchName=null
 }) {
-  const allOption = { name: branchName || "Select", value: value || null };
+  const allOption = { name:  "Select", value: null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");

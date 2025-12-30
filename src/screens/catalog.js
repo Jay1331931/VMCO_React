@@ -110,7 +110,6 @@ function Catalog() {
   const [isAdding, setIsAdding] = useState(null);
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
   const [disabledEntities, setDisabledEntities] = useState([]);
-const [branchName,setBranchName]=useState(null)
   // Refs for pagination and observer
   const currentPageRef = useRef(1);
   const isLoadingRef = useRef(false);
@@ -775,7 +774,6 @@ const [branchName,setBranchName]=useState(null)
     
       if (cartBranchIds.length === 0 || (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId)) {
         setSelectedLocation(newBranchId);
-        setBranchName(selectedBranch.branchNameEn )
         if (selectedBranch) {
           setSelectedBranchRegion(selectedBranch.branchRegion || "");
           setSelectedBranchCity(selectedBranch.branchCity || "");
@@ -813,7 +811,6 @@ const [branchName,setBranchName]=useState(null)
               }
             );
             setSelectedLocation(newBranchId);
-             setBranchName(selectedBranch.branchNameEn )
             if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
               setSelectedBranchCity(selectedBranch.branchCity || "");
@@ -1155,7 +1152,6 @@ const fetchCart = async (userID) => {
         setSelectedLocation(result?.data?.branchId || null);
         setSelectedBranchCity(result?.data?.city || null);
         setSelectedBranchRegion(result?.data?.region || null);
-        setBranchName(result?.data?.branchNameEn||null )
         // setSelectedBranchRegion(result.data)
         // return result.data;
       } else {
@@ -1169,12 +1165,6 @@ const fetchCart = async (userID) => {
       return null;
     }
   };
-useEffect(()=>{
-  console.log("excuted1",user)
-  if (!user?.userId ) return;
-  //   console.log("excuted",user)
-    fetchCart(user?.userId)
-},[user])
  
 console.log("selectedLocation",selectedLocation)
 
@@ -1197,7 +1187,6 @@ console.log("selectedLocation",selectedLocation)
           isV={isV}
           handleGoToCart={handleGoToCart}
           t={t}
-branchName={branchName}
           // Filter section props
           filteredCategoryTabs={filteredCategoryTabs}
           activeCategory={activeCategory}

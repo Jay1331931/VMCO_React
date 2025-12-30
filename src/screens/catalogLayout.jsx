@@ -47,7 +47,7 @@ const CatalogLayout = ({
     handleClosePopup,
     isRTL,
     dir,
-    branchName
+    
 }) => {
     const { i18n } = useTranslation();
     const headerRef = useRef(null);
@@ -288,7 +288,6 @@ const CatalogLayout = ({
                         >
                             <div className="branch-selector" style={{ flex: 1, minWidth: 0, width: '100%' }}>
                                 <SearchableDropdown
-                                branchName={branchName}
                                     id={`location-select-${catalogId}`}
                                     name="locationSelect"
                                     value={selectedLocation}
