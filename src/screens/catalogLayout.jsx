@@ -37,6 +37,7 @@ const CatalogLayout = ({
     handleQuantityChange,
     handleAddToCart,
     handleProductClick,
+    onToggleFavorite,
     isLoading,
     isLoadingMore,
     hasMore,
@@ -209,6 +210,7 @@ const CatalogLayout = ({
                                     setQuantities={setQuantities}
                                     onQuantityChange={handleQuantityChange}
                                     onAddToCart={() => handleAddToCart(product.id)}
+                                    onToggleFavorite={onToggleFavorite}
                                     onProductClick={() => handleProductClick(product)}
                                     isAdding={isAdding}
                                     isMobile={false}
@@ -255,6 +257,7 @@ const CatalogLayout = ({
                         product={mapProductToCardProps(selectedProduct)}
                         quantities={quantities}
                         onQuantityChange={handleQuantityChange}
+                        onToggleFavorite={onToggleFavorite}
                         onAddToCart={() => handleAddToCart(selectedProduct.id)}
                         onClose={handleClosePopup}
                         isAdding={isAdding}
@@ -394,6 +397,7 @@ const CatalogLayout = ({
                                 quantities={quantities}
                                 setQuantities={setQuantities}
                                 onQuantityChange={handleQuantityChange}
+                                onToggleFavorite={onToggleFavorite}
                                 onAddToCart={() => handleAddToCart(product.id)}
                                 onProductClick={() => handleProductClick(product)}
                                 isAdding={isAdding}
@@ -441,6 +445,7 @@ const CatalogLayout = ({
                     product={mapProductToCardProps(selectedProduct)}
                     quantities={quantities}
                     onQuantityChange={handleQuantityChange}
+                    onToggleFavorite={onToggleFavorite}
                     onAddToCart={() => handleAddToCart(selectedProduct.id)}
                     onClose={handleClosePopup}
                     isAdding={isAdding}
