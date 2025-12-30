@@ -321,8 +321,8 @@ const BranchDetailsForm = ({
          );
          const [defaultCenter] = useState({ lat: 12.9716, lng: 77.5946 }); // Default center for Google Maps
          const [selectedLocation, setSelectedLocation] = useState(null);
-         const [marker, setMarker] = useState(null);
-     
+        //  const [marker, setMarker] = useState(null);
+         const markerRef = useRef(null);
          // Search states
          const [searchQuery, setSearchQuery] = useState("");
          const [searchResults, setSearchResults] = useState([]);
@@ -420,9 +420,10 @@ const BranchDetailsForm = ({
            if (!mapRef) return;
      
            // Remove existing marker
-           if (marker) {
-             marker.setMap(null);
-           }
+           if (markerRef?.current) {
+    markerRef.current.setMap(null);
+    markerRef.current = null;
+  }
      
            // Create new draggable marker
            const newMarker = new window.google.maps.Marker({
@@ -447,8 +448,8 @@ const BranchDetailsForm = ({
              setManualLat(newLat.toFixed(6));
              setManualLng(newLng.toFixed(6));
            });
-     
-           setMarker(newMarker);
+     markerRef.current = newMarker;
+          //  setMarker(newMarker);
            setSelectedLocation({ lat, lng });
            setCoords(
              `Latitude: ${Number(lat).toFixed(6)}, Longitude: ${Number(lng).toFixed(6)}`
@@ -607,13 +608,9 @@ const BranchDetailsForm = ({
            }
      
            return () => {
-             if (mapInstance) {
-               try {
-                 if (marker) marker.setMap(null);
-               } catch (error) {
-                 console.error("Error cleaning up map:", error);
-               }
-             }
+             if (markerRef.current) {
+    markerRef.current.setMap(null);
+  }
            };
          }, []);
      
@@ -663,10 +660,14 @@ const BranchDetailsForm = ({
      
          const handleReset = () => {
            // Remove marker
-           if (marker) {
-             marker.setMap(null);
-             setMarker(null);
-           }
+          //  if (marker) {
+          //    marker.setMap(null);
+          //    setMarker(null);
+          //  }
+          if (markerRef?.current) {
+    markerRef.current.setMap(null);
+    markerRef.current = null;
+  }
      
            // Reset states
            setSelectedLocation(null);
