@@ -1160,7 +1160,7 @@ const checkDisabledStatus = (fieldPath) => {
               : ""
           }`}
           placeholder={t("Enter brand name")}
-          value={customerData?.brandNameEn || ""}
+          value={customerData?.brandNameEn || customerData?.companyNameEn || ""}
           onChange={onChangeCustomerData}
           disabled={
             checkDisabledStatus("brandNameEn")
@@ -1219,7 +1219,7 @@ const checkDisabledStatus = (fieldPath) => {
               : ""
           }`}
           placeholder={t("أدخل اسم العلامة التجارية")}
-          value={customerData?.brandNameAr || ""}
+          value={customerData?.brandNameAr || customerData?.companyNameAr || ""}
           onChange={onChangeCustomerData}
           disabled={
             checkDisabledStatus("brandNameAr")
