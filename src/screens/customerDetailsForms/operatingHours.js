@@ -8,7 +8,22 @@ import React, {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faXmark, faCheck,
+  faCheckCircle,
+  faCopy,
+  faTimes,
+  faClock,
+  faArrowLeft,
+  faArrowRight,
+  faChevronUp,
+  faChevronDown,
+  faHistory,
+  faTruck,
+  faBuilding,
+  faMosque,
+  faStar,
+  faCalendarDay,
 } from "@fortawesome/free-solid-svg-icons";
+import "../../styles/operatingHours.css"
 import { useTranslation } from "react-i18next";
 const parseTimeRange = (timeRange) => {
   if (typeof timeRange === "object") return timeRange;
@@ -41,7 +56,8 @@ const OperatingHours = ({
   ];
   const { t } = useTranslation();
   const [hours, setHours] = useState({});
-
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 500);
+  const [isExpanded,setIsExpanded]=useState(false)
   let customerFormMode;
 
   if (mode === "edit") {
@@ -200,7 +216,7 @@ const OperatingHours = ({
   const formatDayName = (day) => day.charAt(0).toUpperCase() + day.slice(1);
 
   return (
-    <div className="form-section">
+    !isMobile ? <div className="form-section">
       <h3>
         {t("Operating And Delivery Hours")}
         <span className="required-field">*</span>
@@ -309,7 +325,178 @@ const OperatingHours = ({
           })}
         </tbody>
       </table>
+    </div> :<div className="operating-hours-section-mobile">
+    {/* Section Header */}
+    <div className="section-header-mobile">
+      <div className="header-content">
+        <FontAwesomeIcon icon={faClock} className="section-icon" />
+        <h3 className="section-title-mobile">
+          {t("Operating And Delivery Hours")}
+          <span className="required-badge">*</span>
+        </h3>
+      </div>
+      <div className="section-subtitle-mobile">
+        Set working hours for each day of the week
+      </div>
     </div>
+
+    {/* Days Cards */}
+    <div className="days-cards-container-mobile">
+      {weekdays.map((day) => (
+        <div 
+          key={day} 
+          className={`day-card-mobile ${day === "friday" ? "friday-card" : ""}`}
+        >
+          {/* Day Header */}
+          <div className="day-header-mobile">
+            <div className="day-info">
+              <div className="day-name-mobile">
+                <FontAwesomeIcon 
+                  icon={day === "friday" ? faStar : faCalendarDay} 
+                  className="day-icon" 
+                />
+                {t(formatDayName(day))}
+              </div>
+              {day === "friday" && (
+                <span className="special-day-badge">
+                  <FontAwesomeIcon icon={faMosque} />
+                  Special Hours
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Operating Hours Card */}
+          <div className="hours-card-mobile">
+            <div className="hours-card-header">
+              <div className="hours-type-mobile">
+                <FontAwesomeIcon icon={faBuilding} className="hours-icon" />
+                <span className="hours-label">{t("Operating Hours")}</span>
+              </div>
+              {hoursData[day]?.operating?.from !==
+                  originalHoursData[day]?.operating?.from ||
+                hoursData[day]?.operating?.to !==
+                  originalHoursData[day]?.operating?.to ||
+                branchDetails?.branchStatus === "pending" ? (
+                <span className="modified-badge">
+                  <span className="modified-dot"></span>
+                  Modified
+                </span>
+              ) : null}
+            </div>
+            
+            <TimeInputGroup
+              day={day}
+              type="operating"
+              time={hoursData[day]?.operating}
+              isActive={activeField}
+              inApproval={inApproval}
+              isModified={
+                hoursData[day]?.operating?.from !==
+                  originalHoursData[day]?.operating?.from ||
+                hoursData[day]?.operating?.to !==
+                  originalHoursData[day]?.operating?.to ||
+                branchDetails?.branchStatus === "pending"
+              }
+              onChange={handleHoursChange}
+              onCancel={() => handleCancelHours(day)}
+              onFocus={(field, value) => {
+                setActiveField(`${day}-operating-${field}`);
+                setOriginalValues((prev) => ({
+                  ...prev,
+                  [`${day}-operating-${field}`]: value,
+                }));
+              }}
+              onApplyAll={() => applyAllHours(day, "operating")}
+              customerFormMode={customerFormMode}
+              mode={mode}
+            />
+            
+            {inApproval &&
+              mode === "edit" &&
+              (hoursData[day]?.operating?.from !==
+                originalHoursData[day]?.operating?.from ||
+                hoursData[day]?.operating?.to !==
+                  originalHoursData[day]?.operating?.to ||
+                branchDetails?.branchStatus === "pending") && (
+                <div className="previous-value-mobile">
+                  <FontAwesomeIcon icon={faHistory} className="previous-icon" />
+                  <span className="previous-label">Previous:</span>
+                  <span className="previous-time">
+                    {originalHoursData[day]?.operating?.from || "09:00"} -{" "}
+                    {originalHoursData[day]?.operating?.to || "18:00"}
+                  </span>
+                </div>
+              )}
+          </div>
+
+          {/* Delivery Hours Card */}
+          <div className="hours-card-mobile">
+            <div className="hours-card-header">
+              <div className="hours-type-mobile">
+                <FontAwesomeIcon icon={faTruck} className="hours-icon" />
+                <span className="hours-label">{t("Delivery Hours")}</span>
+              </div>
+              {hoursData[day]?.delivery?.from !==
+                  originalHoursData[day]?.delivery?.from ||
+                hoursData[day]?.delivery?.to !==
+                  originalHoursData[day]?.delivery?.to ||
+                branchDetails?.branchStatus === "pending" ? (
+                <span className="modified-badge">
+                  <span className="modified-dot"></span>
+                  Modified
+                </span>
+              ) : null}
+            </div>
+            
+            <TimeInputGroup
+              day={day}
+              type="delivery"
+              time={hoursData[day]?.delivery}
+              isActive={activeField}
+              inApproval={inApproval}
+              isModified={
+                hoursData[day]?.delivery?.from !==
+                  originalHoursData[day]?.delivery?.from ||
+                hoursData[day]?.delivery?.to !==
+                  originalHoursData[day]?.delivery?.to ||
+                branchDetails?.branchStatus === "pending"
+              }
+              onChange={handleHoursChange}
+              onCancel={() => handleCancelHours(day)}
+              onFocus={(field, value) => {
+                setActiveField(`${day}-delivery-${field}`);
+                setOriginalValues((prev) => ({
+                  ...prev,
+                  [`${day}-delivery-${field}`]: value,
+                }));
+              }}
+              onApplyAll={() => applyAllHours(day, "delivery")}
+              customerFormMode={customerFormMode}
+              mode={mode}
+            />
+            
+            {inApproval &&
+              mode === "edit" &&
+              (hoursData[day]?.delivery?.from !==
+                originalHoursData[day]?.delivery?.from ||
+                hoursData[day]?.delivery?.to !==
+                  originalHoursData[day]?.delivery?.to ||
+                branchDetails?.branchStatus === "pending") && (
+                <div className="previous-value-mobile">
+                  <FontAwesomeIcon icon={faHistory} className="previous-icon" />
+                  <span className="previous-label">Previous:</span>
+                  <span className="previous-time">
+                    {originalHoursData[day]?.delivery?.from || "09:00"} -{" "}
+                    {originalHoursData[day]?.delivery?.to || "18:00"}
+                  </span>
+                </div>
+              )}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
   );
 };
 const TimeInputGroup = ({
@@ -327,8 +514,10 @@ const TimeInputGroup = ({
   mode,
 }) => {
   const {t} = useTranslation();
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 500);
+    const [isExpanded,setIsExpanded]=useState(false)
   return (
-    <div
+   !isMobile ? <div
       className={`time-input-group ${
         day === "friday" ? "friday-time-input-group" : ""
       }`}
@@ -390,6 +579,137 @@ const TimeInputGroup = ({
         >
           Apply All
         </button>
+      )}
+    </div> : <div className={`time-input-group-mobile ${isModified ? "modified" : ""}`}>
+      {/* Time Display Row */}
+      <div 
+        className="time-display-row-mobile"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="time-display-mobile">
+          <div className="time-slot-mobile">
+            <FontAwesomeIcon icon={faClock} className="time-icon" />
+            <span className="time-value">{time?.from || "--:--"}</span>
+            <span className="time-label">From</span>
+          </div>
+          <div className="time-separator-mobile">
+            <FontAwesomeIcon icon={faArrowRight} />
+          </div>
+          <div className="time-slot-mobile">
+            <FontAwesomeIcon icon={faClock} className="time-icon" />
+            <span className="time-value">{time?.to || "--:--"}</span>
+            <span className="time-label">To</span>
+          </div>
+        </div>
+        <FontAwesomeIcon 
+          icon={isExpanded ? faChevronUp : faChevronDown} 
+          className="expand-icon" 
+        />
+      </div>
+
+      {/* Expanded Time Inputs */}
+      {isExpanded && (
+        <div className="time-inputs-expanded-mobile">
+          <div className="time-inputs-row-mobile">
+            {/* From Time Input */}
+            <div className="time-input-field-mobile">
+              <label className="time-input-label">
+                <FontAwesomeIcon icon={faArrowRight} />
+                {t("From")}
+              </label>
+              <div className="time-input-wrapper-mobile">
+                <input
+                  type="time"
+                  value={time?.from || ""}
+                  onChange={(e) => onChange(day, type, "from", e.target.value)}
+                  onFocus={() => onFocus("from", time?.from)}
+                  className={`time-input ${isModified ? "input-modified" : ""}`}
+                  style={
+                    inApproval && isModified && mode === "edit"
+                      ? {
+                          backgroundColor: "#fff8e1",
+                        }
+                      : {}
+                  }
+                />
+                <FontAwesomeIcon icon={faClock} className="time-input-icon" />
+              </div>
+            </div>
+
+            {/* To Time Input */}
+            <div className="time-input-field-mobile">
+              <label className="time-input-label">
+                <FontAwesomeIcon icon={faArrowLeft} />
+                {t("To")}
+              </label>
+              <div className="time-input-wrapper-mobile">
+                <input
+                  type="time"
+                  value={time?.to || ""}
+                  onChange={(e) => onChange(day, type, "to", e.target.value)}
+                  onFocus={() => onFocus("to", time?.to)}
+                  className={`time-input ${isModified ? "input-modified" : ""}`}
+                  style={
+                    inApproval && isModified && mode === "edit"
+                      ? {
+                          backgroundColor: "#fff8e1",
+                        }
+                      : {}
+                  }
+                />
+                <FontAwesomeIcon icon={faClock} className="time-input-icon" />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="time-actions-mobile">
+            {(isActive === `${day}-${type}-from` ||
+              isActive === `${day}-${type}-to`) && (
+              <>
+                <button 
+                  className="time-action-btn confirm-btn-mobile"
+                  onClick={() => setIsExpanded(false)}
+                >
+                  <FontAwesomeIcon icon={faCheck} />
+                  <span>Confirm</span>
+                </button>
+                <button 
+                  className="time-action-btn cancel-btn-mobile"
+                  onClick={() => {
+                    onCancel();
+                    setIsExpanded(false);
+                  }}
+                >
+                  <FontAwesomeIcon icon={faTimes} />
+                  <span>Cancel</span>
+                </button>
+              </>
+            )}
+            
+            {isModified && (
+              <button
+                className="time-action-btn apply-all-btn-mobile"
+                onClick={() => {
+                  onApplyAll();
+                  setIsExpanded(false);
+                }}
+                title="Apply to all days"
+              >
+                <FontAwesomeIcon icon={faCopy} />
+                <span>Apply All</span>
+              </button>
+            )}
+            
+            <button 
+              className="time-action-btn done-btn-mobile"
+              onClick={() => setIsExpanded(false)}
+            >
+              <FontAwesomeIcon icon={faCheckCircle} />
+              <span>Done</span>
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

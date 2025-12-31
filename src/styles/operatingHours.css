@@ -1,0 +1,506 @@
+/* Operating Hours Mobile Section */
+.operating-hours-section-mobile {
+  padding: 20px;
+  background: linear-gradient(135deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  margin: 16px 0;
+  box-shadow: 0 4px 20px rgba(0, 89, 76, 0.08);
+  border: 1px solid rgba(0, 89, 76, 0.1);
+}
+
+/* Section Header */
+.section-header-mobile {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(0, 89, 76, 0.1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.section-icon {
+  font-size: 24px;
+  color: #00594C;
+  background: rgba(0, 89, 76, 0.1);
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.section-title-mobile {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.required-badge {
+  color: #ff4757;
+  font-size: 16px;
+  margin-left: 4px;
+}
+
+.section-subtitle-mobile {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Days Cards Container */
+.days-cards-container-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Day Card */
+.day-card-mobile {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.day-card-mobile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 89, 76, 0.1);
+}
+
+.day-card-mobile.friday-card {
+  border-color: #F6921E;
+  background: linear-gradient(135deg, #ffffff, rgba(246, 146, 30, 0.03));
+}
+
+/* Day Header */
+.day-header-mobile {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 89, 76, 0.1);
+}
+
+.day-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.day-name-mobile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.day-icon {
+  color: #00594C;
+  font-size: 18px;
+}
+
+.friday-card .day-icon {
+  color: #F6921E;
+}
+
+.special-day-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #FFF3CD, #FFEAA7);
+  border: 1px solid #FFD700;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #856404;
+}
+
+.special-day-badge svg {
+  font-size: 12px;
+}
+
+/* Hours Card */
+.hours-card-mobile {
+  background: rgba(0, 89, 76, 0.02);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(0, 89, 76, 0.05);
+  transition: all 0.3s ease;
+}
+
+.hours-card-mobile:last-child {
+  margin-bottom: 0;
+}
+
+.hours-card-mobile:hover {
+  border-color: rgba(0, 89, 76, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 89, 76, 0.05);
+}
+
+.hours-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.hours-type-mobile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hours-icon {
+  color: #00594C;
+  font-size: 16px;
+  background: rgba(0, 89, 76, 0.1);
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.hours-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+}
+
+.modified-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #fff8e1, #fff3cd);
+  border: 1px solid #ffd700;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #856404;
+}
+
+.modified-dot {
+  width: 8px;
+  height: 8px;
+  background: #00594C;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Time Input Group Mobile */
+.time-input-group-mobile {
+  position: relative;
+}
+
+.time-input-group-mobile.modified {
+  background: linear-gradient(135deg, rgba(255, 248, 225, 0.3), rgba(255, 243, 205, 0.3));
+  border-radius: 10px;
+  padding: 12px;
+}
+
+/* Time Display Row */
+.time-display-row-mobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border: 2px solid #f0f0f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.time-display-row-mobile:hover {
+  border-color: #00594C;
+  background: #f8f9fa;
+}
+
+.time-display-mobile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.time-slot-mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+}
+
+.time-icon {
+  color: #00594C;
+  font-size: 14px;
+}
+
+.time-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.time-label {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.time-separator-mobile {
+  color: #999;
+  font-size: 14px;
+}
+
+.expand-icon {
+  color: #666;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+/* Expanded Time Inputs */
+.time-inputs-expanded-mobile {
+  margin-top: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.time-inputs-row-mobile {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.time-input-field-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-input-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.time-input-label svg {
+  color: #00594C;
+  font-size: 12px;
+}
+
+.time-input-wrapper-mobile {
+  position: relative;
+}
+
+.time-input {
+  width: 100%;
+  padding: 12px 40px 12px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #333;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #00594C;
+  box-shadow: 0 0 0 3px rgba(0, 89, 76, 0.1);
+  background: white;
+}
+
+.time-input.input-modified {
+  background: #fff8e1;
+  border-color: #ffd700;
+}
+
+.time-input-icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: #00594C;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* Time Actions */
+.time-actions-mobile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.time-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 120px;
+}
+
+.confirm-btn-mobile {
+  background: linear-gradient(135deg, #28a745, #34c759);
+  color: white;
+}
+
+.confirm-btn-mobile:hover {
+  background: linear-gradient(135deg, #34c759, #40e267);
+  transform: translateY(-2px);
+}
+
+.cancel-btn-mobile {
+  background: linear-gradient(135deg, #ff4757, #ff6b81);
+  color: white;
+}
+
+.cancel-btn-mobile:hover {
+  background: linear-gradient(135deg, #ff6b81, #ff8fa3);
+  transform: translateY(-2px);
+}
+
+.apply-all-btn-mobile {
+  background: linear-gradient(135deg, #32A19F, #4CB5B3);
+  color: white;
+}
+
+.apply-all-btn-mobile:hover {
+  background: linear-gradient(135deg, #4CB5B3, #66C9C7);
+  transform: translateY(-2px);
+}
+
+.done-btn-mobile {
+  background: linear-gradient(135deg, #00594C, #007B6B);
+  color: white;
+}
+
+.done-btn-mobile:hover {
+  background: linear-gradient(135deg, #007B6B, #009380);
+  transform: translateY(-2px);
+}
+
+/* Previous Value */
+.previous-value-mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(0, 89, 76, 0.05);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #666;
+  margin-top: 12px;
+}
+
+.previous-icon {
+  color: #00594C;
+  font-size: 12px;
+}
+
+.previous-label {
+  font-weight: 600;
+  color: #444;
+}
+
+.previous-time {
+  color: #333;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .operating-hours-section-mobile {
+    padding: 16px;
+  }
+  
+  .day-card-mobile {
+    padding: 16px;
+  }
+  
+  .section-title-mobile {
+    font-size: 18px;
+  }
+  
+  .day-name-mobile {
+    font-size: 15px;
+  }
+  
+  .time-inputs-row-mobile {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .time-action-btn {
+    min-width: 100%;
+  }
+  
+  .time-display-mobile {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .time-slot-mobile {
+    flex-direction: row;
+    gap: 8px;
+    min-width: auto;
+  }
+  
+  .time-separator-mobile {
+    display: none;
+  }
+}
+
+/* Tablet View */
+@media (min-width: 768px) {
+  .days-cards-container-mobile {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
