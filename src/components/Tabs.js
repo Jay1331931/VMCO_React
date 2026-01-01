@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 
 const Tabs = ({
@@ -10,10 +10,53 @@ const Tabs = ({
   catalog = false
 }) => {
   const { t } = useTranslation();
+const tabsRef = useRef(null);
 
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const threshold = 2;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - threshold);
+  };
+
+  const scrollTabs = (direction) => {
+    tabsRef.current?.scrollBy({
+      left: direction === "left" ? -150 : 150,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+
+    requestAnimationFrame(checkScroll);
+
+    el.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [tabs]);
   return (
     <div className={`tab-container ${className}`}>
+      {/* LEFT ARROW */}
+      
+      {
+      variant === "mobile" && 
+      canScrollLeft && (
+        <button className="scroll-arrow left" onClick={() => scrollTabs("left")}>
+          ‹
+        </button>
+      )}
       <div
+      ref={tabsRef}
         className={`tabs ${catalog && variant === 'pc' ? 'category-tabs' : 'category-tabs-mobile'} ${catalog ? 'with-catalog' : 'without-catalog'}`}
       >
         {tabs.map((tab) => (
@@ -40,12 +83,35 @@ const Tabs = ({
           </button>
         ))}
       </div>
+{/* RIGHT ARROW */}
+      {
+      variant === "mobile" && 
+      canScrollRight && (
+        <button
+          className="scroll-arrow right"
+          onClick={() => scrollTabs("right")}
+        >
+          ›
+        </button>
+      )}
 
       <style>{`
         .tabs {
           display: flex;
-          gap: 2px;
+          gap: 10px;
           border-bottom: 2px solid #D9D9D6;
+          overflow-x: auto;
+          width: 100%;
+          white-space: nowrap;
+          box-sizing: border-box;
+          scroll-behavior: smooth;
+        }
+
+        .tabs::-webkit-scrollbar {
+          display: none;
+        }
+        .tabs {
+          scrollbar-width: none;
         }
 
         .tab-button {
@@ -109,6 +175,7 @@ const Tabs = ({
           cursor: pointer;
           color: rgb(99, 107, 110);
           transition: all 0.3s ease;
+          flex-shrink: 0;
         }
 
         /* With catalog (has images) - fixed width and smaller font */
@@ -291,6 +358,33 @@ const Tabs = ({
             font-size: 0.75rem;
           }
         }
+          @media (max-width: 768px) {
+          .scroll-arrow {
+            position: absolute;
+            top: 25%;
+            // transform: translateY(-50%);
+            z-index: 10;
+            background: transparent;
+            border: 0px solid #ccc;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+          }
+
+          .scroll-arrow.left {
+            left: 4px;
+          }
+
+          .scroll-arrow.right {
+            right: 4px;
+          }
+        }
+
       `}</style>
     </div>
   );
