@@ -2038,7 +2038,7 @@ function Customers() {
                               // zIndex: 10, // keeps it above rows
                               // backgroundColor: "#fff", // ensures it doesn't become transparent
                               // borderBottom: "1px solid #e0e0e0",
-                              padding: "0px",
+                              padding: "0px 8px",
                               gap: "10px",
                               border: "none",
                             },

@@ -445,7 +445,7 @@ const BankTransactions = () => {
                               display: "none",
                             },
                             "& .MuiDataGrid-toolbar": {
-                              padding: "0px",
+                              padding: "0px 8px",
                               gap: "10px",
                               border: "none",
                             },

@@ -710,7 +710,7 @@ function Maintenance() {
                     },
                   },
                    "& .MuiDataGrid-toolbar": {
-                        padding: "0px"},
+                        padding: "0px 8px"},
                   ...(isArabic
                     ? {
                       direction: "rtl",
