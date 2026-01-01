@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
 
+
 function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoint, apiParams, t = (x) => x }) {
   const { i18n } = useTranslation();
   const { token } = useAuth();
@@ -21,16 +22,18 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
   });
   const debounceTimeout = useRef();
 
+
   // Debounce search input
   useEffect(() => {
     if (!open) return;
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => {
       setSearchQuery(search);
-      setPagination(prev => ({ ...prev, page: 1 })); // Reset to page 1 on new search
+      setPagination(prev => ({ ...prev, page: 1 }));
     }, 400);
     return () => clearTimeout(debounceTimeout.current);
   }, [search, open]);
+
 
   useEffect(() => {
     if (open) {
@@ -38,11 +41,11 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
     }
   }, [open, pagination.page, pagination.pageSize, searchQuery]);
 
+
   const fetchCustomers = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Use the provided apiParams and add pagination and search parameters
       const params = new URLSearchParams({
         ...apiParams,
         page: pagination.page,
@@ -54,11 +57,10 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        
       });
-      
+
       if (!response.ok) throw new Error('Failed to fetch customers');
-      
+
       const result = await response.json();
       if (result.status === 'Ok' && result.data) {
         setCustomers(result.data.data);
@@ -79,7 +81,6 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
 
   if (!open) return null;
 
-  // Calculate totalPages
   const totalPages = pagination.total > 0 ? Math.ceil(pagination.total / pagination.pageSize) : 1;
 
   return (
@@ -141,19 +142,28 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
                   customers.map((customer) => {
                     const status = (customer.customerStatus || '').toLowerCase();
                     const isApproved = status === 'approved';
+                    const companyName = isRTL
+                      ? (customer.company_name_ar || customer.companyNameAr)
+                      : (customer.company_name_en || customer.companyNameEn);
+
                     return (
                       <tr key={customer.id}>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.id}</td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.erp_cust_id || customer.erpCustId || '-'}</td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                          {isRTL 
-                            ? (customer.company_name_ar || customer.companyNameAr)
-                            : (customer.company_name_en || customer.companyNameEn)
-                          }
+                        <td
+                          style={{
+                            padding: '10px',
+                            borderBottom: '1px solid #ddd',
+                            maxWidth: '300px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                          title={companyName}
+                        >
+                          {companyName}
                         </td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd', 
-                          // position: 'sticky', right: 0, zIndex: 1, background: 'white'  
-                          }}>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                           <button
                             className="gp-product-btn"
                             onClick={() => onSelectCustomer(customer)}
@@ -224,17 +234,17 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
           padding: 6px;
           border: 1.9px solid #eee;
           border-radius: 10px;
-          max-height: 400px;
+          max-height: 300px;
           overflow-y: auto;
         }
-          .gp-table-container table th:last-child,
-.gp-table-container table td:last-child {
-  position: sticky;
-  right: 0;
-  background: white;      /* Important: avoids overlap transparency */
-  z-index: 5;             /* Keep above other cells */
-  white-space: nowrap;
-}
+        .gp-table-container table th:last-child,
+        .gp-table-container table td:last-child {
+          position: sticky;
+          right: 0;
+          background: white;
+          z-index: 5;
+          white-space: nowrap;
+        }
         .gp-product-btn {
           width: 100%;
           text-align: center;
@@ -247,8 +257,13 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
           font-size: 0.9rem;
           transition: background 0.15s;
         }
-        .gp-product-btn:hover {
+        .gp-product-btn:hover:not(:disabled) {
           background: #084532;
+        }
+        .gp-product-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background: #ccc;
         }
         .gp-footer {
           display: flex;
