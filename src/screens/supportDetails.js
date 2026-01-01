@@ -15,6 +15,7 @@ import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import Constants from "../constants";
 import axios from "axios";
+import ApprovalDialog from '../components/ApprovalDialog';
 
 function SupportDetails() {
   const defaultTicket = {
@@ -125,12 +126,20 @@ function SupportDetails() {
   // State for saving
   const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false); // Track closing state
+
+  // State for Approval Dialog box
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogSubTitle, setDialogSubTitle] = useState('');
+  const [approvalAction, setApprovalAction] = useState(null);
+  const [dialogPlaceholder, setDialogPlaceholder] = useState('');
+
   useEffect(() => {
-          const handleResize = () => setIsMobile(window.innerWidth < 768);
-          console.log("isMobile", isMobile);
-          window.addEventListener("resize", handleResize);
-          return () => window.removeEventListener("resize", handleResize);
-      }, []);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   // Handle image add
   const handleFileUpload = async (e, type) => {
     const file = e.target.files && e.target.files[0];
@@ -391,7 +400,7 @@ function SupportDetails() {
     console.log("$$$$$$$$$$$ logging out");
     // Logout instead of showing loading message
     logout();
-    navigate("/login",{replace:true});
+    navigate("/login", { replace: true });
     return null; // Return null while logout is processing
   }
   //For fetching the user again after browser refersh - End
@@ -409,7 +418,7 @@ function SupportDetails() {
   const isE = rbacMgr.isE.bind(rbacMgr);
 
   // Check if ticket is in read-only state (closed or cancelled)
-  const isReadOnly = ticket.status === "Closed" || ticket.status === "Cancelled";
+  const isReadOnly = !ticket.isOpen && formMode=== 'edit';
 
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
@@ -538,99 +547,7 @@ function SupportDetails() {
     }
   };
 
-  const handleCancel = async () => {
-    if (formMode === "add") {
-      // In add mode, just reload the page
-      for (let file of images) {
-        await handleRemoveFile(file, "image");
-      }
-      for (let video of videos) {
-        await handleRemoveFile(video, "video");
-      }
-      navigate("/support");
-      // window.location.reload();
-    } else {
-      // In edit mode, ask for confirmation to cancel the ticket
-      const result = await Swal.fire({
-        title: t("Cancel Ticket?"),
-        text: t("Are you sure you want to cancel this ticket? This will change the ticket status to 'Cancelled'."),
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: t("Yes, Cancel Ticket"),
-        cancelButtonText: t("No, Keep Editing"),
-        confirmButtonColor: "#dc3545",
-        cancelButtonColor: "#6c757d"
-      });
 
-      if (result.isConfirmed) {
-        try {
-          setSaving(true);
-
-          // Update ticket status to "Cancelled"
-          const ticketData = {
-            ...ticket,
-            status: "Cancelled",
-            // Ensure comments is always an array
-            comments: Array.isArray(ticket.comments)
-              ? ticket.comments
-              : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
-                ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
-                : []
-          };
-
-          const endPoint = `/grievances/id/${ticket.id}`;
-          const apiUrl = `${API_BASE_URL}${endPoint}`;
-
-          const response = await fetch(apiUrl, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
-
-            body: JSON.stringify(ticketData),
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error("API Error:", errorText);
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-          }
-
-          const responseResult = await response.json();
-          console.log("Cancel ticket successful:", responseResult);
-
-          // Show success message
-          await Swal.fire({
-            title: t("Success!"),
-            text: t("Ticket cancelled successfully!"),
-            icon: "success",
-            confirmButtonText: t("OK"),
-            confirmButtonColor: "#28a745"
-          });
-
-          // Update local state and redirect
-          setTicket(prev => ({ ...prev, status: "Cancelled" }));
-          setIsEditing(false);
-          navigate("/support");
-        } catch (error) {
-          console.error("Error cancelling ticket:", error);
-
-          // Show error message
-          await Swal.fire({
-            title: t("Error!"),
-            text: t("Failed to cancel ticket. Please try again."),
-            icon: "error",
-            confirmButtonText: t("OK"),
-            confirmButtonColor: "#dc3545"
-          });
-        } finally {
-          setSaving(false);
-        }
-      }
-      // If user chose "No, Keep Editing", do nothing and stay in edit mode
-    }
-  };
 
   // Rest of your existing state variables...
   // State for image popup
@@ -924,82 +841,142 @@ function SupportDetails() {
   };
 
   // Handle close ticket
-  const handleCloseTicket = async () => {
-    setClosing(true); // Start closing
-    try {
-      // Show confirmation dialog
-      const result = await Swal.fire({
-        title: t("Close Ticket?"),
-        text: t("Are you sure you want to close this ticket? This action cannot be undone."),
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: t("Yes, Close Ticket"),
-        cancelButtonText: t("Cancel"),
-        confirmButtonColor: "#dc3545",
-        cancelButtonColor: "#6c757d"
-      });
+  const handleCloseTicket = () => {
+    setDialogTitle('Close Ticket');
+    setDialogSubTitle('Are you sure you want to close this ticket? Please provide closing comments.');
+    setDialogPlaceholder('Enter closing comment');
+    setApprovalAction('close');
+    setIsApprovalDialogOpen(true);
+  };
 
-      if (!result.isConfirmed) {
-        return; // User cancelled
+  const handleRejectTicket = () => {
+    setDialogTitle('Reject Ticket');
+    setDialogSubTitle('Do you want to reject this ticket? Please provide a reason.');
+    setDialogPlaceholder('Enter rejection reason');
+    setApprovalAction('reject');
+    setIsApprovalDialogOpen(true);
+  };
+
+  const handleCancelTicket = () => {
+    setDialogTitle('Cancel Ticket');
+    setDialogSubTitle('Are you sure you want to cancel this ticket? Please provide a reason.');
+    setDialogPlaceholder('Enter cancellation reason');
+    setApprovalAction('cancel');
+    setIsApprovalDialogOpen(true);
+  };
+
+  const handleCancel = async () => {
+    if (formMode === "add") {
+      // In add mode, just clean up and navigate
+      for (let file of images) {
+        await handleRemoveFile(file, "image");
       }
+      for (let video of videos) {
+        await handleRemoveFile(video, "video");
+      }
+      navigate("/support");
+    } else {
+      // In edit mode, call the cancel ticket dialog
+      handleCancelTicket();
+    }
+  };
 
-      const endPoint = `/grievances/id/${ticket.id}`;
-      const apiUrl = `${API_BASE_URL}${endPoint}`;
+  const handleApprovalDialogSubmit = async (commentText) => {
+    setIsApprovalDialogOpen(false);
 
+    if (!commentText?.trim()) {
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t('Please provide a reason.'),
+        confirmButtonText: t('OK'),
+        confirmButtonColor: '#dc3545'
+      });
+      return;
+    }
+
+    const newComment = {
+      date: formatDate(new Date(), 'DD/MM/YYYY HH:MM'),
+      action: approvalAction,
+      close: approvalAction === 'close',
+      reject: approvalAction === 'reject',
+      cancel: approvalAction === 'cancel',
+      userId: String(user.userId),
+      message: commentText,
+      userName: user.userName,
+      status: approvalAction === 'close' ? 'Closed' :
+        approvalAction === 'reject' ? 'Rejected' :
+          approvalAction === 'cancel' ? 'Cancelled' : ticket.status,
+    };
+
+    try {
+      setClosing(true);
+
+      const updatedComments = Array.isArray(ticket.comments)
+        ? [...ticket.comments, newComment]
+        : [newComment];
+
+      const newStatus = approvalAction === 'close' ? 'Closed' :
+        approvalAction === 'reject' ? 'Rejected' :
+          approvalAction === 'cancel' ? 'Cancelled' : ticket.status;
+
+      const ticketUpdatePayload = {
+        status: newStatus,
+        isOpen: (approvalAction === 'close' || approvalAction === 'reject' || approvalAction === 'cancel') ? false : true,
+        comments: updatedComments,
+      };
+
+      const apiUrl = `${API_BASE_URL}/grievances/id/${ticket.id}`;
       const response = await fetch(apiUrl, {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-
-        body: JSON.stringify({
-          status: "Closed",
-          isOpen: false,
-          comments: ticket.comments // Explicitly preserve comments
-        }),
+        body: JSON.stringify(ticketUpdatePayload),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("API Error:", errorText);
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+        throw new Error(errorText);
       }
 
       const responseResult = await response.json();
-      console.log("Close ticket successful:", responseResult);
+      console.log('Ticket updated successfully:', responseResult);
 
-      // Show success message
-      await Swal.fire({
-        title: t("Success!"),
-        text: t("Ticket closed successfully!"),
-        icon: "success",
-        confirmButtonText: t("OK"),
-        confirmButtonColor: "#28a745"
-      });
-
-      // Update local state and redirect
       setTicket(prev => ({
         ...prev,
-        status: "Closed"
+        status: newStatus,
+        comments: updatedComments,
       }));
-      setIsEditing(false);
-      navigate("/support");
-    } catch (error) {
-      console.error("Error closing ticket:", error);
 
-      // Show error message
       await Swal.fire({
-        title: t("Error!"),
-        text: t("Failed to close ticket. Please try again."),
-        icon: "error",
-        confirmButtonText: t("OK"),
-        confirmButtonColor: "#dc3545"
+        icon: 'success',
+        title: t('Success'),
+        text: approvalAction === 'close'
+          ? t('Ticket closed successfully!')
+          : approvalAction === 'reject'
+            ? t('Ticket rejected successfully!')
+            : t('Ticket cancelled successfully!'),
+        confirmButtonText: t('OK'),
+        confirmButtonColor: '#28a745'
+      });
+
+      navigate('/support');
+    } catch (error) {
+      console.error('Failed to update ticket:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t('Failed to update ticket. Please try again.'),
+        confirmButtonText: t('OK'),
+        confirmButtonColor: '#dc3545'
       });
     } finally {
-      setClosing(false); // End closing
+      setClosing(false);
     }
   };
+
 
   // Add comment to ticket.comments in correct format and save to backend immediately
   const handleAddComment = async (commentText, newCommentObj) => {
@@ -1166,8 +1143,8 @@ function SupportDetails() {
 
   return (
     // <Sidebar title={`${formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}`} >
-     
-      <Sidebar title={t("Support")} >
+
+    <Sidebar title={t("Support")} >
       <div className='support-details-container'>
         <h2 className='support-details-title'>{formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}</h2>
         <div className='support-details-section'>
@@ -1214,7 +1191,7 @@ function SupportDetails() {
                   onChange={handleInputChange}
                   disabled={!isE("entity") || isReadOnly}
                   style={{
-                    color:'#999',
+                    color: '#999',
                   }}
                 >
                   <option value="" style={{ color: '#000000ff' }}>
@@ -1453,21 +1430,36 @@ function SupportDetails() {
                     className="support-action-btn close"
                     onClick={handleCloseTicket}
                     disabled={closing || saving}
-                    style={{ backgroundColor: "#ffdf4f" }}
+                    style={{ backgroundColor: "#28a745" }}
                   >
                     {closing ? t("Closing...") : t("Close Ticket")}
                   </button>
                 )}
-                {/* {isV('btnCancel') && isE('btnCancel') && (
-                  <button className="support-action-btn cancel" onClick={handleCancel} disabled={isReadOnly || saving || closing}>
+
+                {/* Reject Ticket Button - for edit mode */}
+                {formMode === "edit" && !isReadOnly && isV('btnReject') && isE('btnReject') && (
+                  <button
+                    className="support-action-btn reject"
+                    onClick={handleRejectTicket}
+                    disabled={closing || saving}
+                    style={{ backgroundColor: "#dc3545" }}
+                  >
+                    {t("Reject")}
+                  </button>
+                )}
+
+                {/* Cancel Button */}
+                {isV('btnCancel') && isE('btnCancel') && (
+                  <button
+                    className="support-action-btn cancel"
+                    onClick={handleCancel}
+                    disabled={isReadOnly || saving || closing}
+                  >
                     {t("Cancel")}
                   </button>
-                )} */}
+                )}
               </>
-            ) : (
-              <>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -1483,7 +1475,6 @@ function SupportDetails() {
         </div>
       )}
 
-
       {isV('videoPopup') && popupVideo && (
         <div className='image-popup-overlay' onClick={() => setPopupVideo(null)}>
           <div className='image-popup-content' onClick={(e) => e.stopPropagation()}>
@@ -1494,7 +1485,7 @@ function SupportDetails() {
           </div>
         </div>
       )}
-      {/*TODO: part of params like currentUser Details must be dynamic */}
+
       {isV('commentPanel') && formMode === 'edit' && (
         <CommentPopup
           isOpen={isCommentPanelOpen}
@@ -1537,6 +1528,17 @@ function SupportDetails() {
         customerId={user?.userType === 'customer' ? user.customerId : ticket.customerId}
         API_BASE_URL={API_BASE_URL}
         t={t}
+      />
+
+      {/* Approval Dialog box Popup */}
+      <ApprovalDialog
+        action={approvalAction}
+        isOpen={isApprovalDialogOpen}
+        onClose={() => setIsApprovalDialogOpen(false)}
+        onSubmit={handleApprovalDialogSubmit}
+        title={dialogTitle}
+        subtitle={dialogSubTitle}
+        placeholder={dialogPlaceholder}
       />
 
       <style>
