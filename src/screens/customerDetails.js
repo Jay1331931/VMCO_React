@@ -1715,6 +1715,26 @@ function CustomerDetails() {
       // { name: "financeHeadEmail", field: "email" },
       // { name: "purchasingHeadEmail", field: "email" },
     ];
+
+    const skipValidationFieldList = [
+      "methodDetails",
+    ];
+    let shouldSkipValidation = false;
+
+    skipValidationFieldList?.forEach((field) => {
+if (field === "methodDetails" &&
+        mandatoryFields.includes("methodDetails") &&
+        dataToValidate.methodDetails &&
+        typeof dataToValidate.methodDetails === "object"
+      ) {
+        if(customerPaymentMethodsData?.methodDetails?.COD?.isAllowed !== originalCustomerPaymentMethodsData?.methodDetails?.COD?.isAllowed || 
+          customerPaymentMethodsData?.methodDetails?.COD?.limit !== originalCustomerPaymentMethodsData?.methodDetails?.COD?.limit 
+        ){
+          shouldSkipValidation = true;
+        }
+      }
+    }
+    )
     // If mandatoryCheckReguired is true, check all mandatory fields
     console.log(
       "check mandtaory fields has assigned to entity wise",
@@ -2048,6 +2068,9 @@ function CustomerDetails() {
         errors.bankNameOther = t("This field is required.");
       }
     }
+    if (shouldSkipValidation) {
+  return {}; // ✅ exits validateData correctly
+}
     return errors;
   };
 
