@@ -2495,7 +2495,7 @@ function Orders() {
       <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin") ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
       >
-       
+
 
         {/* {isMobile ? (
           <div className="table-container">
@@ -2597,311 +2597,350 @@ function Orders() {
             <div className="error-message">{error}</div>
           ) : (
             <>
-             <div>
-  <div className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}>
-    {user?.userType.toLowerCase() === "employee" && (
-      <div className="filter-section">
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: 12,
-            overflowX: "auto",
-            scrollbarWidth: "none",
-          }}
-        >
-          <Tabs
-            tabs={filteredCategoryTabs}
-            activeTab={activeCategory}
-            onTabChange={(newCategory) => {
-              console.log(
-                "🔄 Tab changing from",
-                activeCategory,
-                "to",
-                newCategory
-              );
-              setActiveCategory(newCategory);
-              setFilters({ entity: newCategory });
-              setApprovalMode(false);
-              fetchOrders(1, searchQuery, { entity: newCategory });
-              setSearchQuery("");
-              setCategoryFilter("");
-              setSubCategoryFilter("");
-              setSubCategoryOptions([]);
-            }}
-            variant={isMobile ? 'mobile' : 'pc'}
-          />
-        </div>
-      </div>
-    )}
-    
-    {/* This DataGrid is only for the toolbar, not for displaying rows */}
-    <div style={{ height: "auto", marginBottom: "16px" }}>
-      <DataGrid
-        apiRef={gridApiRef}
-        rows={[]}
-        columns={[]}
-        pageSize={pageSize}
-        rowCount={total}
-        onRowClick={handleRowClick}
-        columnVisibilityModel={columnVisibilityModel}
-        onColumnVisibilityModelChange={setColumnVisibilityModel}
-        sortModel={sortModel}
-        onSortModelChange={handleSortModelChange}
-        disableSelectionOnClick
-        disableColumnMenu
-        hideFooter={true}
-        hideFooterPagination={true}
-        disableExtendRowFullWidth={true}
-        pagination={false}
-        autoHeight
-        rowHeight={55}
-        showToolbar
-        slots={{
-          toolbar: () => (
-            <CustomToolbar
-              searchQuery={searchQuery}
-              filterAnchor={filterAnchor}
-              onSearch={handleSearch}
-              setSearchQuery={setSearchQuery}
-              setFilterAnchor={setFilterAnchor}
-              handleFilterChange={handleFilterChange}
-              onColumnVisibilityChange={setColumnVisibilityModel}
-              columns={filteredData}
-              filters={filters}
-              columnVisibilityModel={columnVisibilityModel}
-              searchPlaceholder="Search orders..."
-              showColumnVisibility={false}
-              showFilters={false}
-              showExport={false}
-              showUpload={false}
-              showAdd={isV("addButton")}
-              buttonName={t("add")}
-              showApproval={
-                isV("approvalButton") &&
-                filters.entity?.toLowerCase() ===
-                Constants.ENTITY.VMCO?.toLowerCase()
-              }
-              handleAddClick={handleAddOrder}
-              handleUploadClick={HandleBulkOrderUpload}
-              columnsToDisplay={columnsToDisplay}
-              handleApproval={handleApproval}
-              isApprovalMode={isApprovalMode}
-            />
-          ),
-        }}
-        sx={{
-          border: "none !important",
-          "& .MuiDataGrid-overlay": {
-            display: "none !important",
-          },
-          "& .MuiDataGrid-row": {
-            display: "none !important",
-          },
-          ".MuiDataGrid-cell": {
-            display: "none !important",
-          },
-          "& .MuiDataGrid-main": {
-            display: "none",
-          },
-          "& .MuiDataGrid-toolbar": {
-            padding: "0px",
-            gap: "10px",
-            border: "none",
-            marginBottom: "0",
-          },
-          "&.catalog-datagrid": {
-            border: "2px solid black",
-            borderRadius: "8px",
-            backgroundColor: "#f8f9fa",
-          },
-          "& .MuiOutlinedInput-root": {
-            width: "100% !important",
-            minWidth: "230px !important",
-          },
-        }}
-      />
-    </div>
-  </div>
-  
-  {/* Order cards section - This should be separate from the fixed header */}
-  <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
-    <OrderCard
-      orders={filteredOrders}
-      orderIds={filteredOrders.map((o) => o.id)}
-      setSelectedRow={handleOrderNumberClick}
-      handlePay={handlePay}
-    />
-  </div>
-</div>
+              <div>
+                <div className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}>
+                  {user?.userType.toLowerCase() === "employee" && (
+                    <div className="filter-section">
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                          gap: 12,
+                          overflowX: "auto",
+                          scrollbarWidth: "none",
+                        }}
+                      >
+                        <Tabs
+                          tabs={filteredCategoryTabs}
+                          activeTab={activeCategory}
+                          onTabChange={(newCategory) => {
+                            console.log(
+                              "🔄 Tab changing from",
+                              activeCategory,
+                              "to",
+                              newCategory
+                            );
+                            setActiveCategory(newCategory);
+                            setFilters({ entity: newCategory });
+                            setApprovalMode(false);
+                            fetchOrders(1, searchQuery, { entity: newCategory });
+                            setSearchQuery("");
+                            setCategoryFilter("");
+                            setSubCategoryFilter("");
+                            setSubCategoryOptions([]);
+                          }}
+                          variant={isMobile ? 'mobile' : 'pc'}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* This DataGrid is only for the toolbar, not for displaying rows */}
+                  <div style={{ height: "auto", marginBottom: "16px" }}>
+                    <DataGrid
+                      apiRef={gridApiRef}
+                      rows={[]}
+                      columns={[]}
+                      pageSize={pageSize}
+                      rowCount={total}
+                      onRowClick={handleRowClick}
+                      columnVisibilityModel={columnVisibilityModel}
+                      onColumnVisibilityModelChange={setColumnVisibilityModel}
+                      sortModel={sortModel}
+                      onSortModelChange={handleSortModelChange}
+                      disableSelectionOnClick
+                      disableColumnMenu
+                      hideFooter={true}
+                      hideFooterPagination={true}
+                      disableExtendRowFullWidth={true}
+                      pagination={false}
+                      autoHeight
+                      rowHeight={55}
+                      showToolbar
+                      slots={{
+                        toolbar: () => (
+                          <CustomToolbar
+                            searchQuery={searchQuery}
+                            filterAnchor={filterAnchor}
+                            onSearch={handleSearch}
+                            setSearchQuery={setSearchQuery}
+                            setFilterAnchor={setFilterAnchor}
+                            handleFilterChange={handleFilterChange}
+                            onColumnVisibilityChange={setColumnVisibilityModel}
+                            columns={filteredData}
+                            filters={filters}
+                            columnVisibilityModel={columnVisibilityModel}
+                            searchPlaceholder="Search orders..."
+                            showColumnVisibility={false}
+                            showFilters={false}
+                            showExport={false}
+                            showUpload={false}
+                            showAdd={isV("addButton")}
+                            buttonName={t("add")}
+                            showApproval={
+                              isV("approvalButton") &&
+                              filters.entity?.toLowerCase() ===
+                              Constants.ENTITY.VMCO?.toLowerCase()
+                            }
+                            handleAddClick={handleAddOrder}
+                            handleUploadClick={HandleBulkOrderUpload}
+                            columnsToDisplay={columnsToDisplay}
+                            handleApproval={handleApproval}
+                            isApprovalMode={isApprovalMode}
+                          />
+                        ),
+                      }}
+                      sx={{
+                        border: "none !important",
+                        "& .MuiDataGrid-overlay": {
+                          display: "none !important",
+                        },
+                        "& .MuiDataGrid-row": {
+                          display: "none !important",
+                        },
+                        ".MuiDataGrid-cell": {
+                          display: "none !important",
+                        },
+                        "& .MuiDataGrid-main": {
+                          display: "none",
+                        },
+                        "& .MuiDataGrid-toolbar": {
+                          padding: "0px",
+                          gap: "10px",
+                          border: "none",
+                          marginBottom: "0",
+                        },
+                        "&.catalog-datagrid": {
+                          border: "2px solid black",
+                          borderRadius: "8px",
+                          backgroundColor: "#f8f9fa",
+                        },
+                        "& .MuiOutlinedInput-root": {
+                          width: "100% !important",
+                          minWidth: "230px !important",
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Order cards section - This should be separate from the fixed header */}
+                <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
+                  <OrderCard
+                    orders={filteredOrders}
+                    orderIds={filteredOrders.map((o) => o.id)}
+                    setSelectedRow={handleOrderNumberClick}
+                    handlePay={handlePay}
+                  />
+                </div>
+              </div>
             </>
           )
         ) : (
-          <div className="table-container">
-            {loading ? (
-              <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                <LoadingSpinner size="medium" />
-              </div>
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <>
-                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
-                <Grid
-                  item
-                  xs={12}
-                  sx={{
-                    // height: {
-                    //   xs: "250px !important", // extra small
-                    //   sm: "300px !important", // small
-                    //   md: "386px !important", // medium
-                    //   lg: "489px !important", // large
-                    //   xl: "800px !important", // extra large
-                    // },
-                    width: "100%",
+          <>
+            {user?.userType.toLowerCase() === "employee" && (
+              <div className="filter-section">
+                <div
+                  style={{
                     display: "flex",
-                    flexDirection: "column",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 12,
+                    overflowX: "auto",
+                    scrollbarWidth: "none",
                   }}
                 >
-                  <DataGrid
-                    apiRef={gridApiRef}
-                    rows={filteredOrders}
-                    columns={visibleColumns}
-                    pageSize={pageSize}
-                    rowCount={total}
-                    onRowClick={handleRowClick}
-                    columnVisibilityModel={columnVisibilityModel}
-                    onColumnVisibilityModelChange={handleColumnVisibilityChange}
-                    columnDimensions={columnDimensions}
-                    onColumnResize={handleColumnResize}
-                    sortModel={sortModel}
-                    onSortModelChange={handleSortModelChange}
-                    disableSelectionOnClick
-                    disableColumnMenu
-                    hideFooter={true}
-                    getRowId={(row) => row?.workflowInstanceId | row?.id}
-                    hideFooterPagination={true}
-                    pagination={false}
-                    rowHeight={55}
-                    showToolbar
-                    slots={{
-                      toolbar: () => (
-                        <CustomToolbar
-                          searchQuery={searchQuery}
-                          filterAnchor={filterAnchor}
-                          onSearch={handleSearch}
-                          setSearchQuery={setSearchQuery}
-                          setFilterAnchor={setFilterAnchor}
-                          handleFilterChange={handleFilterChange}
-                          onColumnVisibilityChange={setColumnVisibilityModel}
-                          columns={filteredData}
-                          filters={filters}
-                          columnVisibilityModel={columnVisibilityModel}
-                          searchPlaceholder="Search orders..."
-                          showColumnVisibility={true}
-                          showFilters={true}
-                          showExport={true}
-                          showUpload={isV("uploadButton")}
-                          showAdd={isV("addButton")}
-                          buttonName={t("add")}
-                          showApproval={
-                            isV("approvalButton") &&
-                            filters.entity?.toLowerCase() ===
-                            Constants.ENTITY.VMCO?.toLowerCase()
-                          }
-                          handleAddClick={handleAddOrder}
-                          handleUploadClick={HandleBulkOrderUpload}
-                          columnsToDisplay={columnsToDisplay}
-                          handleApproval={handleApproval}
-                          isApprovalMode={isApprovalMode}
-                          handleExportClick={
-                            isApprovalMode ? handleExportData : handleExportAll
-                          }
-                          showAssignfilters={isV("AssignmentFilters")}
-                        />
-                      ),
+                  <Tabs
+                    tabs={filteredCategoryTabs}
+                    activeTab={activeCategory}
+                    onTabChange={(newCategory) => {
+                      console.log(
+                        "🔄 Tab changing from",
+                        activeCategory,
+                        "to",
+                        newCategory
+                      );
+                      setActiveCategory(newCategory);
+                      setFilters({ entity: newCategory });
+                      setApprovalMode(false);
+                      fetchOrders(1, searchQuery, { entity: newCategory });
+                      setSearchQuery("");
+                      setCategoryFilter("");
+                      setSubCategoryFilter("");
+                      setSubCategoryOptions([]);
                     }}
+                    variant={isMobile ? 'mobile' : 'pc'}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="table-container">
+              {loading ? (
+                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                  <LoadingSpinner size="medium" />
+                </div>
+              ) : error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <>
+                  {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                  <Grid
+                    item
+                    xs={12}
                     sx={{
-                      // Flex grow to fill available space
-                      flex: 1,
+                      // height: {
+                      //   xs: "250px !important", // extra small
+                      //   sm: "300px !important", // small
+                      //   md: "386px !important", // medium
+                      //   lg: "489px !important", // large
+                      //   xl: "800px !important", // extra large
+                      // },
+                      width: "100%",
                       display: "flex",
                       flexDirection: "column",
-
-                      "& .MuiDataGrid-toolbar": {
-                        padding: "0px 8px  !important",
-                        minHeight: "56px !important",
-                        flexShrink: 0,
-                      },
-
-                      "& .MuiDataGrid-main": {
+                    }}
+                  >
+                    <DataGrid
+                      apiRef={gridApiRef}
+                      rows={filteredOrders}
+                      columns={visibleColumns}
+                      pageSize={pageSize}
+                      rowCount={total}
+                      onRowClick={handleRowClick}
+                      columnVisibilityModel={columnVisibilityModel}
+                      onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                      columnDimensions={columnDimensions}
+                      onColumnResize={handleColumnResize}
+                      sortModel={sortModel}
+                      onSortModelChange={handleSortModelChange}
+                      disableSelectionOnClick
+                      disableColumnMenu
+                      hideFooter={true}
+                      getRowId={(row) => row?.workflowInstanceId | row?.id}
+                      hideFooterPagination={true}
+                      pagination={false}
+                      rowHeight={55}
+                      showToolbar
+                      slots={{
+                        toolbar: () => (
+                          <CustomToolbar
+                            searchQuery={searchQuery}
+                            filterAnchor={filterAnchor}
+                            onSearch={handleSearch}
+                            setSearchQuery={setSearchQuery}
+                            setFilterAnchor={setFilterAnchor}
+                            handleFilterChange={handleFilterChange}
+                            onColumnVisibilityChange={setColumnVisibilityModel}
+                            columns={filteredData}
+                            filters={filters}
+                            columnVisibilityModel={columnVisibilityModel}
+                            searchPlaceholder="Search orders..."
+                            showColumnVisibility={true}
+                            showFilters={true}
+                            showExport={true}
+                            showUpload={isV("uploadButton")}
+                            showAdd={isV("addButton")}
+                            buttonName={t("add")}
+                            showApproval={
+                              isV("approvalButton") &&
+                              filters.entity?.toLowerCase() ===
+                              Constants.ENTITY.VMCO?.toLowerCase()
+                            }
+                            handleAddClick={handleAddOrder}
+                            handleUploadClick={HandleBulkOrderUpload}
+                            columnsToDisplay={columnsToDisplay}
+                            handleApproval={handleApproval}
+                            isApprovalMode={isApprovalMode}
+                            handleExportClick={
+                              isApprovalMode ? handleExportData : handleExportAll
+                            }
+                            showAssignfilters={isV("AssignmentFilters")}
+                          />
+                        ),
+                      }}
+                      sx={{
+                        // Flex grow to fill available space
                         flex: 1,
-                        overflow: "hidden",
                         display: "flex",
                         flexDirection: "column",
-                      },
 
-                      // Ensure only the virtual scroller (rows) is scrollable
-                      "& .MuiDataGrid-virtualScroller": {
-                        //overflow: 'auto !important',
-                        flex: 1,
-                      },
+                        "& .MuiDataGrid-toolbar": {
+                          padding: "0px 8px  !important",
+                          minHeight: "56px !important",
+                          flexShrink: 0,
+                        },
 
-                      // Keep headers sticky and non-scrollable
-                      "& .MuiDataGrid-columnHeaders": {
-                        //position: 'sticky',
-                        top: 0,
-                        zIndex: 1,
-                        backgroundColor: "white",
-                        borderBottom: "1px solid #e0e0e0",
-                        flexShrink: 0, // Prevent header from shrinking
-                      },
+                        "& .MuiDataGrid-main": {
+                          flex: 1,
+                          overflow: "hidden",
+                          display: "flex",
+                          flexDirection: "column",
+                        },
 
-                      "& .MuiDataGrid-row": {
-                        cursor: "default",
-                        "&:hover": {
-                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        // Ensure only the virtual scroller (rows) is scrollable
+                        "& .MuiDataGrid-virtualScroller": {
+                          //overflow: 'auto !important',
+                          flex: 1,
                         },
-                      },
 
-                      // Arabic RTL styling
-                      ...(i18n.language === "ar" && {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
+                        // Keep headers sticky and non-scrollable
+                        "& .MuiDataGrid-columnHeaders": {
+                          //position: 'sticky',
+                          top: 0,
+                          zIndex: 1,
+                          backgroundColor: "white",
+                          borderBottom: "1px solid #e0e0e0",
+                          flexShrink: 0, // Prevent header from shrinking
                         },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        },
-                      }),
 
-                      // Default LTR styling (left alignment)
-                      ...(!i18n.language === "ar" && {
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "left",
+                        "& .MuiDataGrid-row": {
+                          cursor: "default",
+                          "&:hover": {
+                            backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          },
                         },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "left",
-                        },
-                      }),
-                    }}
-                  />
-                </Grid>
-              </>
-            )}
-          </div>
+
+                        // Arabic RTL styling
+                        ...(i18n.language === "ar" && {
+                          direction: "rtl",
+                          "& .MuiDataGrid-cell": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-columnHeader": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-columnHeaderTitle": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-cellContent": {
+                            textAlign: "right !important",
+                          },
+                        }),
+
+                        // Default LTR styling (left alignment)
+                        ...(!i18n.language === "ar" && {
+                          "& .MuiDataGrid-cell": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-columnHeader": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-columnHeaderTitle": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-cellContent": {
+                            textAlign: "left",
+                          },
+                        }),
+                      }}
+                    />
+                  </Grid>
+                </>
+              )}
+            </div>
+
+          </>
         )}
         {bulkUploadPopUp && (
           <div>
@@ -3079,10 +3118,13 @@ function Orders() {
           />
         )}
 
-       
+
+
       </div>
 
     </Sidebar>
+
+
   );
 }
 
