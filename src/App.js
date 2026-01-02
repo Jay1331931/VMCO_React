@@ -15,9 +15,11 @@ import usePlatform from "../src/utilities/platform";
 const currentVersion = process.env.REACT_APP_TALAB_VERSION;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
+          const lastSkippedVersion = localStorage.getItem('last_skipped_version');
 function App() {
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
+  const [appVersion,setAppVersions] =useState(null);
 const isMobile=usePlatform()
   const updateHeaderTop = () => {
     const header = document.querySelector(".app-header");
@@ -43,21 +45,21 @@ const isMobile=usePlatform()
   // Call in useEffect or componentDidMount
 
   const checkForUpdates = async () => {
-    if(isIOSsMobile){
-      return;
-    }
-        if (!isMobile ) {
+   
+        if (!isMobile  || isIOSsMobile ) {
           return;
         }
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/get-latest-version`);
+      const response = await fetch(`${API_BASE_URL}/auth/get-latest-version?platform=android`);
       const result = await response.json();
 
       if (result.status === "Ok" && result.data) {
-        const latestVersion = result.data.version_number;
+        const latestVersion = result?.data?.version_number;
         setLatestVersion(latestVersion);
-
-        // Compare versions
+        setAppVersions(result.data)
+          if (lastSkippedVersion ==  result?.data?.version_number) {
+      return; 
+    }
         if (latestVersion !== currentVersion) {
           setShowUpdatePopup(true);
         }
@@ -71,11 +73,11 @@ const isMobile=usePlatform()
     
     checkForUpdates();
 
-    const updateInterval = setInterval(checkForUpdates, 5000);
+    // const updateInterval = setInterval(checkForUpdates, 5000);
 
-    return () => {
-      clearInterval(updateInterval);
-    };
+    // return () => {
+    //   clearInterval(updateInterval);
+    // };
   }, []);
   const handleUpdateClick = () => {
     if (Capacitor.isNativePlatform()) {
@@ -95,9 +97,11 @@ const isMobile=usePlatform()
 
       {showUpdatePopup && latestVersion && (
         <VersionPopup
+        appVersion={appVersion}
           currentVersion={currentVersion}
           latestVersion={latestVersion}
           onUpdate={handleUpdateClick}
+          
           onClose={() => setShowUpdatePopup(false)}
         />
       )}
