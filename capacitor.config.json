@@ -1,5 +1,5 @@
 {
-  "appId": "com.vmco.ios.talabpoint",
+  "appId": "com.vmco.android.talabpoint",
   "appName": "Talabpoint",
   "bundledWebRuntime": false,
   "npmClient": "npm",
