@@ -43,7 +43,10 @@ const isMobile=usePlatform()
   // Call in useEffect or componentDidMount
 
   const checkForUpdates = async () => {
-        if (!isMobile && isIOSsMobile) {
+    if(isIOSsMobile){
+      return;
+    }
+        if (!isMobile ) {
           return;
         }
     try {
