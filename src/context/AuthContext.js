@@ -14,7 +14,7 @@ const fetchUser = async (token) => {
   const response = await fetch(`${API_SERVER_URL}/auth/me`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
-    
+
   });
 
   //console.log('Response received:', response);
@@ -72,10 +72,10 @@ export const AuthProvider = ({ children }) => {
       fetchUser(tokenFromCookie)
         .then((userData) => {
           setUser(userData);
-              const role= userData?.roles[0] && userData?.roles[0]?.toLowerCase() ==="employee" ?  userData?.designation : userData?.roles[0];
-          
-            RbacManager.loadRbacConfig(role,tokenFromCookie);
-            
+          const role = userData?.roles[0] && userData?.roles[0]?.toLowerCase() === "employee" ? userData?.designation : userData?.roles[0];
+
+          RbacManager.loadRbacConfig(role, tokenFromCookie);
+
           setLoading(false); // Done loading
         })
         .catch(() => {
@@ -107,14 +107,18 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem("token");
+    localStorage.removeItem("ordersfilters");
+    localStorage.removeItem("supportFilters");
+    localStorage.removeItem("customersFilters");
+    localStorage.removeItem("invitesFilters");
     setButtonClicked(buttonClickedValue);
-    
+
     // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   return (
     <AuthContext.Provider
-      value={{ token, user, isAuthenticated, loading, login, logout ,buttonClicked}}
+      value={{ token, user, isAuthenticated, loading, login, logout, buttonClicked }}
     >
       {children}
     </AuthContext.Provider>

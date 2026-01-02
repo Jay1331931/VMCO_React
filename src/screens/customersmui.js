@@ -61,7 +61,8 @@ function Customers() {
   const [filteredApprovals, setFilteredApprovals] = useState([]);
   const [customerContacts, setCustomerContacts] = useState({});
   const [filteredInvites, setFilteredInvites] = useState([]);
-
+  const [customersFiltersInitialized, setCustomersFiltersInitialized] = useState(false);
+  const [invitesFiltersInitialized, setInvitesFiltersInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -126,6 +127,60 @@ function Customers() {
   const dragStartY = useRef(0);
 
   useEffect(() => {
+    if (activeTab === "customers") {
+      const savedFilters = localStorage.getItem('customersFilters');
+      if (savedFilters) {
+        const parsed = JSON.parse(savedFilters);
+        if (parsed.filters) setFilters(parsed.filters);
+        if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+        if (parsed.isApprovalMode !== undefined) setApprovalMode(parsed.isApprovalMode);
+      }
+      setCustomersFiltersInitialized(true);
+    } else if (activeTab === "invites") {
+      const savedFilters = localStorage.getItem('invitesFilters');
+      if (savedFilters) {
+        const parsed = JSON.parse(savedFilters);
+        if (parsed.filters) setFilters(parsed.filters);
+        if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+      }
+      setInvitesFiltersInitialized(true);
+    }
+  }, [activeTab]);
+
+
+  // Save customers filters to localStorage
+  useEffect(() => {
+    if (!customersFiltersInitialized || activeTab !== "customers") return;
+    const filtersToSave = { filters, searchQuery, isApprovalMode };
+    localStorage.setItem('customersFilters', JSON.stringify(filtersToSave));
+  }, [filters, searchQuery, isApprovalMode, customersFiltersInitialized, activeTab]);
+
+  // Save invites filters to localStorage
+  useEffect(() => {
+    if (!invitesFiltersInitialized || activeTab !== "invites") return;
+    const filtersToSave = { filters, searchQuery };
+    localStorage.setItem('invitesFilters', JSON.stringify(filtersToSave));
+  }, [filters, searchQuery, invitesFiltersInitialized, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "customers") {
+      if (!customersFiltersInitialized) return; // Guard clause
+      if (isApprovalMode) {
+        setFilteredCustomers([]);
+        fetchApprovals(page, searchQuery, filters);
+      } else {
+        setFilteredApprovals([]);
+        fetchCustomers(page, searchQuery, filters);
+      }
+    } else if (activeTab === "invites") {
+      if (!invitesFiltersInitialized) return; // Guard clause
+      fetchInvites(page, searchQuery, filters);
+    }
+  }, [activeTab, isApprovalMode, page, searchQuery, filters, customersFiltersInitialized, invitesFiltersInitialized]);
+
+
+
+  useEffect(() => {
     const handleTouchStart = (e) => {
       dragStartY.current = e.touches[0].clientY;
     };
@@ -152,6 +207,7 @@ function Customers() {
       window.removeEventListener("touchmove", handleTouchMove);
     };
   }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = contentRef.current?.scrollTop || 0;
@@ -162,12 +218,14 @@ function Customers() {
     container?.addEventListener("scroll", handleScroll);
     return () => container?.removeEventListener("scroll", handleScroll);
   }, []);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
   const [showTableMobilePopup, setShowTableMobilePopup] = useState(false);
   const columnsToDisplay = {
     id: t("Registration ID"),
@@ -209,18 +267,6 @@ function Customers() {
       return []; // Return empty array on error
     }
   };
-  // const toggleApprovalMode = () => {
-  //   setApprovalMode(!isApprovalMode);
-  //   console.log("Approval mode:", isApprovalMode);
-  //   if (!isApprovalMode) {
-  //     fetchApprovals();
-  //   } else {
-  //     fetchCustomers();
-  //   }
-  // };
-  //  const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
-  //   const isV = rbacMgr.isV.bind(rbacMgr);
-  //   const isE = rbacMgr.isE.bind(rbacMgr);
   const handleResend = async (invite) => {
     try {
       const response = await fetch(
@@ -256,9 +302,9 @@ function Customers() {
               },
             }),
           });
-         Swal.fire({
-  title: t("Invite Resent"),
-  html: `
+          Swal.fire({
+            title: t("Invite Resent"),
+            html: `
     <p>${t("The invite has been resent successfully.")}</p>
 
     <div style="display:flex;align-items:center;border:1px solid #ddd;border-radius:4px;overflow:hidden;">
@@ -279,72 +325,72 @@ function Customers() {
       </button>
     </div>
   `,
-  icon: "success",
-  showConfirmButton: true,
-  confirmButtonText: "OK",
+            icon: "success",
+            showConfirmButton: true,
+            confirmButtonText: "OK",
 
-  didOpen: () => {
-    const input = document.getElementById("invite-link");
-    const copyBtn = document.getElementById("copyInviteBtn");
-    const copyIcon = copyBtn.querySelector("i");
-    const copyText = document.getElementById("copyInviteText");
+            didOpen: () => {
+              const input = document.getElementById("invite-link");
+              const copyBtn = document.getElementById("copyInviteBtn");
+              const copyIcon = copyBtn.querySelector("i");
+              const copyText = document.getElementById("copyInviteText");
 
-    /* Hover effect */
-    copyBtn.addEventListener("mouseenter", () => {
-      copyBtn.style.background = "#f5f5f5";
-      copyIcon.style.color = "#333";
-      copyText.style.color = "#333";
-    });
+              /* Hover effect */
+              copyBtn.addEventListener("mouseenter", () => {
+                copyBtn.style.background = "#f5f5f5";
+                copyIcon.style.color = "#333";
+                copyText.style.color = "#333";
+              });
 
-    copyBtn.addEventListener("mouseleave", () => {
-      copyBtn.style.background = "#fff";
-      copyIcon.style.color = "#666";
-      copyText.style.color = "#666";
-    });
+              copyBtn.addEventListener("mouseleave", () => {
+                copyBtn.style.background = "#fff";
+                copyIcon.style.color = "#666";
+                copyText.style.color = "#666";
+              });
 
-    /* Copy action */
-    copyBtn.addEventListener("click", async () => {
-      input.select();
-      input.setSelectionRange(0, 99999);
+              /* Copy action */
+              copyBtn.addEventListener("click", async () => {
+                input.select();
+                input.setSelectionRange(0, 99999);
 
-      try {
-        await navigator.clipboard.writeText(input.value);
+                try {
+                  await navigator.clipboard.writeText(input.value);
 
-        copyIcon.className = "fas fa-check";
-        copyIcon.style.color = "#28a745";
-        copyText.textContent = "Copied!";
-        copyText.style.color = "#28a745";
-        copyBtn.style.background = "#e8f5e9";
-        copyBtn.style.borderLeftColor = "#c3e6cb";
+                  copyIcon.className = "fas fa-check";
+                  copyIcon.style.color = "#28a745";
+                  copyText.textContent = "Copied!";
+                  copyText.style.color = "#28a745";
+                  copyBtn.style.background = "#e8f5e9";
+                  copyBtn.style.borderLeftColor = "#c3e6cb";
 
-        setTimeout(() => {
-          copyIcon.className = "fas fa-copy";
-          copyIcon.style.color = "#666";
-          copyText.textContent = "Copy";
-          copyText.style.color = "#666";
-          copyBtn.style.background = "#fff";
-          copyBtn.style.borderLeftColor = "#ddd";
-        }, 2000);
-      } catch (err) {
-        copyIcon.className = "fas fa-times";
-        copyIcon.style.color = "#dc3545";
-        copyText.textContent = "Failed!";
-        copyText.style.color = "#dc3545";
-        copyBtn.style.background = "#f8d7da";
-        copyBtn.style.borderLeftColor = "#f5c6cb";
+                  setTimeout(() => {
+                    copyIcon.className = "fas fa-copy";
+                    copyIcon.style.color = "#666";
+                    copyText.textContent = "Copy";
+                    copyText.style.color = "#666";
+                    copyBtn.style.background = "#fff";
+                    copyBtn.style.borderLeftColor = "#ddd";
+                  }, 2000);
+                } catch (err) {
+                  copyIcon.className = "fas fa-times";
+                  copyIcon.style.color = "#dc3545";
+                  copyText.textContent = "Failed!";
+                  copyText.style.color = "#dc3545";
+                  copyBtn.style.background = "#f8d7da";
+                  copyBtn.style.borderLeftColor = "#f5c6cb";
 
-        setTimeout(() => {
-          copyIcon.className = "fas fa-copy";
-          copyIcon.style.color = "#666";
-          copyText.textContent = "Copy";
-          copyText.style.color = "#666";
-          copyBtn.style.background = "#fff";
-          copyBtn.style.borderLeftColor = "#ddd";
-        }, 2000);
-      }
-    });
-  },
-});
+                  setTimeout(() => {
+                    copyIcon.className = "fas fa-copy";
+                    copyIcon.style.color = "#666";
+                    copyText.textContent = "Copy";
+                    copyText.style.color = "#666";
+                    copyBtn.style.background = "#fff";
+                    copyBtn.style.borderLeftColor = "#ddd";
+                  }, 2000);
+                }
+              });
+            },
+          });
 
         } catch (err) {
           console.error("Error generating invite link:", err);
@@ -555,9 +601,9 @@ function Customers() {
             });
             return;
           }
-         Swal.fire({
-  title: t("Invite Link Sent1"),
-  html: `
+          Swal.fire({
+            title: t("Invite Link Sent1"),
+            html: `
     <p>${t("The invite has been sent successfully.")}</p>
  <div style="display:flex;align-items:center;border:1px solid #ddd;border-radius:4px;overflow:hidden;">
       <input
@@ -578,74 +624,74 @@ function Customers() {
     </div>
       
   `,
-  icon: "success",
-  showConfirmButton: true,
-  confirmButtonText: t("OK"),
+            icon: "success",
+            showConfirmButton: true,
+            confirmButtonText: t("OK"),
 
-  didOpen: () => {
-    const input = document.getElementById("invite-link");
-    const copyBtn = document.getElementById("copyInviteBtn");
-    const copyIcon = copyBtn.querySelector("i");
-    const copyText = document.getElementById("copyInviteText");
+            didOpen: () => {
+              const input = document.getElementById("invite-link");
+              const copyBtn = document.getElementById("copyInviteBtn");
+              const copyIcon = copyBtn.querySelector("i");
+              const copyText = document.getElementById("copyInviteText");
 
-    /* Hover effect */
-    copyBtn.addEventListener("mouseenter", () => {
-      copyBtn.style.background = "#f5f5f5";
-      copyIcon.style.color = "#333";
-      copyText.style.color = "#333";
-    });
+              /* Hover effect */
+              copyBtn.addEventListener("mouseenter", () => {
+                copyBtn.style.background = "#f5f5f5";
+                copyIcon.style.color = "#333";
+                copyText.style.color = "#333";
+              });
 
-    copyBtn.addEventListener("mouseleave", () => {
-      copyBtn.style.background = "#fff";
-      copyIcon.style.color = "#666";
-      copyText.style.color = "#666";
-    });
+              copyBtn.addEventListener("mouseleave", () => {
+                copyBtn.style.background = "#fff";
+                copyIcon.style.color = "#666";
+                copyText.style.color = "#666";
+              });
 
-    /* Copy action */
-    copyBtn.addEventListener("click", async () => {
-      input.select();
-      input.setSelectionRange(0, 99999);
+              /* Copy action */
+              copyBtn.addEventListener("click", async () => {
+                input.select();
+                input.setSelectionRange(0, 99999);
 
-      try {
-        await navigator.clipboard.writeText(input.value);
+                try {
+                  await navigator.clipboard.writeText(input.value);
 
-        // success state
-        copyIcon.className = "fas fa-check";
-        copyIcon.style.color = "#28a745";
-        copyText.textContent = t("Copied!");
-        copyText.style.color = "#28a745";
-        copyBtn.style.background = "#e8f5e9";
-        copyBtn.style.borderLeftColor = "#c3e6cb";
+                  // success state
+                  copyIcon.className = "fas fa-check";
+                  copyIcon.style.color = "#28a745";
+                  copyText.textContent = t("Copied!");
+                  copyText.style.color = "#28a745";
+                  copyBtn.style.background = "#e8f5e9";
+                  copyBtn.style.borderLeftColor = "#c3e6cb";
 
-        setTimeout(() => {
-          copyIcon.className = "fas fa-copy";
-          copyIcon.style.color = "#666";
-          copyText.textContent = t("Copy");
-          copyText.style.color = "#666";
-          copyBtn.style.background = "#fff";
-          copyBtn.style.borderLeftColor = "#ddd";
-        }, 2000);
-      } catch {
-        // error state
-        copyIcon.className = "fas fa-times";
-        copyIcon.style.color = "#dc3545";
-        copyText.textContent = t("Failed!");
-        copyText.style.color = "#dc3545";
-        copyBtn.style.background = "#f8d7da";
-        copyBtn.style.borderLeftColor = "#f5c6cb";
+                  setTimeout(() => {
+                    copyIcon.className = "fas fa-copy";
+                    copyIcon.style.color = "#666";
+                    copyText.textContent = t("Copy");
+                    copyText.style.color = "#666";
+                    copyBtn.style.background = "#fff";
+                    copyBtn.style.borderLeftColor = "#ddd";
+                  }, 2000);
+                } catch {
+                  // error state
+                  copyIcon.className = "fas fa-times";
+                  copyIcon.style.color = "#dc3545";
+                  copyText.textContent = t("Failed!");
+                  copyText.style.color = "#dc3545";
+                  copyBtn.style.background = "#f8d7da";
+                  copyBtn.style.borderLeftColor = "#f5c6cb";
 
-        setTimeout(() => {
-          copyIcon.className = "fas fa-copy";
-          copyIcon.style.color = "#666";
-          copyText.textContent = t("Copy");
-          copyText.style.color = "#666";
-          copyBtn.style.background = "#fff";
-          copyBtn.style.borderLeftColor = "#ddd";
-        }, 2000);
-      }
-    });
-  },
-});
+                  setTimeout(() => {
+                    copyIcon.className = "fas fa-copy";
+                    copyIcon.style.color = "#666";
+                    copyText.textContent = t("Copy");
+                    copyText.style.color = "#666";
+                    copyBtn.style.background = "#fff";
+                    copyBtn.style.borderLeftColor = "#ddd";
+                  }, 2000);
+                }
+              });
+            },
+          });
 
 
           // }
@@ -686,27 +732,6 @@ function Customers() {
       }));
     }
   };
-  // const handleSearch = (searchTerm) => {
-  //   if (activeTab === 'customers') {
-  //     const filtered = filteredCustomers.filter((customer) =>
-  //       Object.values(customer).some((value) =>
-  //         typeof value === 'object'
-  //           ? Object.values(value).some(v =>
-  //               v.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  //             )
-  //           : value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  //       )
-  //     );
-  //     setFilteredCustomers(filtered);
-  //   } else {
-  //     const filtered = filteredInvites.filter((invite) =>
-  //       Object.values(invite).some((value) =>
-  //         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  //       )
-  //     );
-  //     setFilteredInvites(filtered);
-  //   }
-  // };
   const handleSearch = (searchTerm) => {
     setSearchQuery(searchTerm);
     setPage(1);
@@ -723,35 +748,6 @@ function Customers() {
     }
 
     const searchLower = searchTerm.toLowerCase();
-
-    // if (activeTab === "customers") {
-    //   const filtered = filteredCustomers.filter((customer) => {
-    //     if (!customer) return false; // Skip null/undefined customers
-
-    //     return Object.values(customer).some((value) => {
-    //       if (value === null || value === undefined) return false;
-
-    //       if (typeof value === "object") {
-    //         const nestedValues = Object.values(value || {});
-    //         return nestedValues.some((v) =>
-    //           v?.toString().toLowerCase().includes(searchLower)
-    //         );
-    //       }
-
-    //       return value?.toString().toLowerCase().includes(searchLower);
-    //     });
-    //   });
-    //   setFilteredCustomers(filtered);
-    // } else {
-    //   const filtered = filteredInvites.filter((invite) => {
-    //     if (!invite) return false; // Skip null/undefined invites
-
-    //     return Object.values(invite).some((value) =>
-    //       value?.toString().toLowerCase().includes(searchLower)
-    //     );
-    //   });
-    //   setFilteredInvites(filtered);
-    // }
     if (activeTab === "customers") {
       fetchCustomers(1, searchLower);
     } else {
@@ -1022,26 +1018,6 @@ function Customers() {
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
-    // {
-    //   field: "companyType",
-    //   headerName: t("Company Type"),
-    //   include: isV("companyType"),
-    //   searchable: true,
-    //   minWidth: 120,
-    //   flex: 1,
-    //   align: isArabic ? 'right' : 'left',
-    //   renderCell: (params) => { <span>{params.value}</span> }
-    // },
-    // {
-    //   field: "typeOfBusiness",
-    //   headerName: t("Type Of Business"),
-    //   include: isV("typeOfBusiness"),
-    //   searchable: true,
-    //   minWidth: 140,
-    //   flex: 1,
-    //   align: isArabic ? 'right' : 'left',
-    //   renderCell: (params) => { <span>{params.value}</span> }
-    // },
     {
       field: "createdAt",
       headerName: t("Created Date"),
@@ -1403,10 +1379,6 @@ function Customers() {
       console.log("API Response:", result);
       if (result.status === "Ok") {
         setFilteredInvites(result.data.data);
-        // setPagination(prev => ({
-        //   ...prev,
-        //   page,
-        //   total: result.data.data.length
         // }));
         setTotal(result.data.totalRecords);
       } else {
@@ -1441,33 +1413,6 @@ function Customers() {
     return {
       ...customer,
       ...customerContacts,
-      // Contact details - each contact type is a separate row in DB
-      // primaryContactName: contactsMap.primary?.name || "",
-      // primaryContactDesignation: contactsMap.primary?.designation || "",
-      // primaryContactEmail: contactsMap.primary?.email || "",
-      // primaryContactMobile: contactsMap.primary?.mobile || "", // Changed from phone to mobile
-
-      // businessHeadName: contactsMap.business?.name || "",
-      // businessHeadDesignation: contactsMap.business?.designation || "",
-      // businessHeadEmail: contactsMap.business?.email || "",
-      // businessHeadMobile: contactsMap.business?.mobile || "",
-
-      // financeHeadName: contactsMap.finance?.name || "",
-      // financeHeadDesignation: contactsMap.finance?.designation || "",
-      // financeHeadEmail: contactsMap.finance?.email || "",
-      // financeHeadMobile: contactsMap.finance?.mobile || "",
-
-      // purchasingHeadName: contactsMap.purchasing?.name || "",
-      // purchasingHeadDesignation: contactsMap.purchasing?.designation || "",
-      // purchasingHeadEmail: contactsMap.purchasing?.email || "",
-      // purchasingHeadMobile: contactsMap.purchasing?.mobile || "",
-
-      // // Adding operations contact if needed
-      // operationsHeadName: contactsMap.operations?.name || "",
-      // operationsHeadDesignation: contactsMap.operations?.designation || "",
-      // operationsHeadEmail: contactsMap.operations?.email || "",
-      // operationsHeadMobile: contactsMap.operations?.mobile || "",
-      // Adding isApprovalMode to indicate if the customer is in approval mode
       isApprovalMode: false,
       workflowData: [],
     };
@@ -1563,18 +1508,17 @@ function Customers() {
 
   useEffect(() => {
     if (activeTab === "customers") {
+      if (!customersFiltersInitialized) return;
       if (isApprovalMode) {
-        setFilteredCustomers([])
-
         fetchApprovals(page, searchQuery, filters);
       } else {
-        setFilteredApprovals([]);
         fetchCustomers(page, searchQuery, filters);
       }
     } else if (activeTab === "invites") {
+      if (!invitesFiltersInitialized) return;
       fetchInvites(page, searchQuery, filters);
     }
-  }, [activeTab, isApprovalMode, page, searchQuery, filters]);
+  }, [activeTab, isApprovalMode, page, searchQuery, filters, customersFiltersInitialized, invitesFiltersInitialized]);
 
   useEffect(() => {
     getOptionsFromBasicsMaster("entity").then(setEntityOptions);
@@ -1662,14 +1606,6 @@ function Customers() {
           {t("Resend")}
         </button>
       )}
-      {/* {!invite.registered && (
-        <button
-          className="action-button invite"
-          onClick={() => handleInvite(invite)}
-        >
-          {t('Invite')}
-        </button>
-      )} */}
     </div>
   );
 
@@ -1785,18 +1721,6 @@ function Customers() {
             "Purchasing Head Email": customer.purchasingHeadEmail || "",
             "Purchasing Head Mobile": customer.purchasingHeadMobile || "",
 
-            // Operations Head Contact
-            // "Operations Head Name": customer.operationsHeadName || "",
-            // "Operations Head Designation":
-            //   customer.operationsHeadDesignation || "",
-            // "Operations Head Email": customer.operationsHeadEmail || "",
-            // "Operations Head Mobile": customer.operationsHeadMobile || "",
-
-            // Payment Method Information
-            // "Credit Limit": customer.creditLimit || "",
-            // "Credit Period": customer.creditPeriod || "",
-            // "Credit Balance": customer.creditBalance || "",
-
             // Geolocation
             Latitude: customer.geolocation?.x || "",
             Longitude: customer.geolocation?.y || "",
@@ -1889,7 +1813,7 @@ function Customers() {
     {
       key: "download customers",
       label: t("Download Customers"),
-      onClick: downloadCustomersAsExcel, // Add the download functionality
+      onClick: downloadCustomersAsExcel,
       visible: isV("btnDownloadCustomers"),
     },
   ];
@@ -1935,13 +1859,6 @@ function Customers() {
                 <>
                   <div
                     className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
-                  // style={{
-                  //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
-                  //   position: "sticky",
-                  //   zIndex: 20,
-                  //   transition: "top 0.3s ease",
-                  //   background: "#fff",
-                  // }}
                   >
                     <TableMobile
                       columns={customerColumnsToUse}
@@ -2000,30 +1917,12 @@ function Customers() {
                               />
                             ),
                           }}
-                          // sx={{
-                          //   "& .MuiDataGrid-row": {
-                          //     cursor: "pointer",
-                          //     "&:hover": {
-                          //       backgroundColor: "rgba(0, 0, 0, 0.04)",
-                          //     },
-                          //   },
-                          //   '.MuiDataGrid-cell': {
-                          //     textAlign: 'center',
-                          //     display: 'flex',
-                          //     alignItems: 'center',
-                          //     justifyContent: 'center',
-                          //   }
-                          // }}
                           sx={{
                             border: "none !important",
                             "& .MuiDataGrid-overlay": {
                               display: "none !important", // ✅ hides “No rows” message
                             },
                             "& .MuiDataGrid-row": {
-                              // cursor: "default",
-                              // "&:hover": {
-                              //   backgroundColor: "rgba(0, 0, 0, 0.04)",
-                              // },
                               display: "none !important",
                             },
                             ".MuiDataGrid-cell": {
@@ -2033,11 +1932,6 @@ function Customers() {
                               display: "none", // ✅ hides the main grid body
                             },
                             "& .MuiDataGrid-toolbar": {
-                              // position: "sticky",
-                              // top: 0,
-                              // zIndex: 10, // keeps it above rows
-                              // backgroundColor: "#fff", // ensures it doesn't become transparent
-                              // borderBottom: "1px solid #e0e0e0",
                               padding: "0px 8px",
                               gap: "10px",
                               border: "none",
@@ -2059,79 +1953,6 @@ function Customers() {
                     handleSync={HandleFandOFailCustomer}
                   />
                 </>
-                // <TableMobile
-                //   columns={customerColumnsToUse}
-                //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
-                //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-                //   showAllDetails={true}
-                //   handleAllDetailsClick={handleShowAllDetailsClick}
-                //   selectedRow={selectedRow}
-                //   setSelectedRow={setSelectedRow}
-                //   showRowPopup={showRowPopup}
-                //   setShowRowPopup={setShowRowPopup}
-                //   dataGridComponent={
-                //     <DataGrid
-                //       rows={[]}
-                //       columns={[]}
-                //       pageSize={pageSize}
-                //       rowCount={total}
-                //       getRowId={(row) => row?.workflowInstanceId || row?.id}
-                //       onRowClick={handleRowClick}
-                //       columnVisibilityModel={columnVisibilityModel}
-                //       onColumnVisibilityModelChange={setColumnVisibilityModel}
-                //       sortModel={sortModel}
-                //       onSortModelChange={handleSortModelChange}
-                //       disableSelectionOnClick
-                //       disableColumnMenu
-                //       hideFooter={true}
-                //       hideFooterPagination={true}
-                //       disableExtendRowFullWidth={true}
-                //       pagination={false}
-                //       autoHeight
-                //       rowHeight={55}
-                //       showToolbar
-                //       slots={{
-                //         toolbar: () => (
-                //           <CustomToolbar
-                //             searchQuery={searchQuery}
-                //             filterAnchor={filterAnchor}
-                //             onSearch={handleSearch}
-                //             setSearchQuery={setSearchQuery}
-                //             setFilterAnchor={setFilterAnchor}
-                //             handleFilterChange={handleFilterChange}
-                //             onColumnVisibilityChange={setColumnVisibilityModel}
-                //             columns={filteredData}
-                //             filters={filters}
-                //             columnVisibilityModel={columnVisibilityModel}
-                //             searchPlaceholder="Search customers..."
-                //             showColumnVisibility={true}
-                //             showFilters={true}
-                //             showExport={false}
-                //             showUpload={false}
-                //             showApproval={true}
-                //             columnsToDisplay={columnsToDisplay}
-                //             handleApproval={handleApproval}
-                //             isApprovalMode={isApprovalMode}
-                //           />
-                //         ),
-                //       }}
-                //       sx={{
-                //         "& .MuiDataGrid-row": {
-                //           cursor: "pointer",
-                //           "&:hover": {
-                //             backgroundColor: "rgba(0, 0, 0, 0.04)",
-                //           },
-                //         },
-                //         '.MuiDataGrid-cell': {
-                //           textAlign: 'center',
-                //           display: 'flex',
-                //           alignItems: 'center',
-                //           justifyContent: 'center',
-                //         }
-                //       }}
-                //     />
-                //   }
-                // />
               )}
             </div>
           )
@@ -2367,10 +2188,6 @@ function Customers() {
                               display: "none !important", // ✅ hides “No rows” message
                             },
                             "& .MuiDataGrid-row": {
-                              // cursor: "default",
-                              // "&:hover": {
-                              //   backgroundColor: "rgba(0, 0, 0, 0.04)",
-                              // },
                               display: "none !important",
                             },
                             ".MuiDataGrid-cell": {
@@ -2380,11 +2197,6 @@ function Customers() {
                               display: "none", // ✅ hides the main grid body
                             },
                             "& .MuiDataGrid-toolbar": {
-                              // position: "sticky",
-                              // top: 0,
-                              // zIndex: 10, // keeps it above rows
-                              // backgroundColor: "#fff", // ensures it doesn't become transparent
-                              // borderBottom: "1px solid #e0e0e0",
                               padding: "0px",
                               gap: "10px",
                               border: "none",
@@ -2405,79 +2217,6 @@ function Customers() {
                     handleResend={handleResend}
                   />
                 </>
-                // <TableMobile
-                //   columns={customerColumnsToUse}
-                //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
-                //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-                //   showAllDetails={true}
-                //   handleAllDetailsClick={handleShowAllDetailsClick}
-                //   selectedRow={selectedRow}
-                //   setSelectedRow={setSelectedRow}
-                //   showRowPopup={showRowPopup}
-                //   setShowRowPopup={setShowRowPopup}
-                //   dataGridComponent={
-                //     <DataGrid
-                //       rows={[]}
-                //       columns={[]}
-                //       pageSize={pageSize}
-                //       rowCount={total}
-                //       getRowId={(row) => row?.workflowInstanceId || row?.id}
-                //       onRowClick={handleRowClick}
-                //       columnVisibilityModel={columnVisibilityModel}
-                //       onColumnVisibilityModelChange={setColumnVisibilityModel}
-                //       sortModel={sortModel}
-                //       onSortModelChange={handleSortModelChange}
-                //       disableSelectionOnClick
-                //       disableColumnMenu
-                //       hideFooter={true}
-                //       hideFooterPagination={true}
-                //       disableExtendRowFullWidth={true}
-                //       pagination={false}
-                //       autoHeight
-                //       rowHeight={55}
-                //       showToolbar
-                //       slots={{
-                //         toolbar: () => (
-                //           <CustomToolbar
-                //             searchQuery={searchQuery}
-                //             filterAnchor={filterAnchor}
-                //             onSearch={handleSearch}
-                //             setSearchQuery={setSearchQuery}
-                //             setFilterAnchor={setFilterAnchor}
-                //             handleFilterChange={handleFilterChange}
-                //             onColumnVisibilityChange={setColumnVisibilityModel}
-                //             columns={filteredData}
-                //             filters={filters}
-                //             columnVisibilityModel={columnVisibilityModel}
-                //             searchPlaceholder="Search customers..."
-                //             showColumnVisibility={true}
-                //             showFilters={true}
-                //             showExport={false}
-                //             showUpload={false}
-                //             showApproval={true}
-                //             columnsToDisplay={columnsToDisplay}
-                //             handleApproval={handleApproval}
-                //             isApprovalMode={isApprovalMode}
-                //           />
-                //         ),
-                //       }}
-                //       sx={{
-                //         "& .MuiDataGrid-row": {
-                //           cursor: "pointer",
-                //           "&:hover": {
-                //             backgroundColor: "rgba(0, 0, 0, 0.04)",
-                //           },
-                //         },
-                //         '.MuiDataGrid-cell': {
-                //           textAlign: 'center',
-                //           display: 'flex',
-                //           alignItems: 'center',
-                //           justifyContent: 'center',
-                //         }
-                //       }}
-                //     />
-                //   }
-                // />
               )}
             </div>
           )
@@ -2754,9 +2493,7 @@ function Customers() {
       console.error('Error downloading approval history:', error);
     }
   };
-  useEffect(() => {
-    setFilters({});
-  }, [activeTab]);
+
   const storageKey = `${pageName}_${role}_columns`;
   useEffect(() => {
     const savedModel = localStorage.getItem(storageKey);
@@ -2858,28 +2595,6 @@ function Customers() {
                   required
                 />
               </div>
-
-              {/* <div className="form-group-1">
-                    <label
-                      style={{ marginBottom: "6px", display: "inline-block" }}
-                    >
-                      {t("Phone Number")}
-                    </label>
-                    <input
-                      type="text"
-                      name="mobile"
-                      value={inviteData.mobile}
-                      onChange={handleInputChange}
-                      required
-                      style={inviteErrors.mobile ? { borderColor: "red" } : {}}
-                    />
-                    {inviteErrors.mobile && (
-                      <div style={{ color: "red", fontSize: "0.8em" }}>
-                        {inviteErrors.mobile}
-                      </div>
-                    )}
-                  </div> */}
-
               <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
                 <label
                   style={{ marginBottom: "6px", display: "inline-block" }}
@@ -2933,7 +2648,6 @@ function Customers() {
                 <span className="required-field">*</span>
                 <SearchableDropdown
                   name="region"
-                  // options={basicMasterLists?.region || []}
                   options={
                     geoData
                       ? Object.keys(geoData).map((region) => ({
