@@ -45,6 +45,7 @@ function DeliveryScheduleEditor() {
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
     const [filterAnchor, setFilterAnchor] = useState(null);
     const [switchLoading, setSwitchLoading] = useState({});
+    const [filtersInitialized, setFiltersInitialized] = useState(false);
 
     // Geographic data states
     const [geoData, setGeoData] = useState(null);
@@ -58,7 +59,7 @@ function DeliveryScheduleEditor() {
 
     const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-    // Define tabs array - same structure as orders page
+    // Define tabs array
     const categoryTabs = [
         { value: "VMCO", label: "VMCO", disabled: true },
         { value: "SHC", label: "SHC", disabled: false },
@@ -66,6 +67,7 @@ function DeliveryScheduleEditor() {
         { value: "NAQI", label: "NAQI", disabled: true },
         { value: "DAR", label: "DAR", disabled: true }
     ];
+    const excludeFiltersFromChips = [];
 
     // RBAC
     const rbacMgr = new RbacManager(
@@ -74,13 +76,45 @@ function DeliveryScheduleEditor() {
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
 
-    // Updated handleToggleActive function to use your specified API format
+    // Load filters from localStorage on component mount
+    useEffect(() => {
+        console.log("Loading filters from localStorage...");
+        const savedFilters = localStorage.getItem('deliveryScheduleFilters');
+        if (savedFilters) {
+            console.log("Saved filters found:", savedFilters);
+            try {
+                const parsed = JSON.parse(savedFilters);
+                if (parsed.filters) setFilters(parsed.filters);
+                if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+                if (parsed.activeCategory) setActiveCategory(parsed.activeCategory);
+            } catch (error) {
+                console.error('Error parsing saved filters:', error);
+            }
+        }
+        setFiltersInitialized(true);
+    }, []);
+
+    // Save filters to localStorage whenever they change
+    useEffect(() => {
+        if (!filtersInitialized) {
+            return;
+        }
+
+        const filtersToSave = {
+            filters,
+            searchQuery,
+            activeCategory
+        };
+        localStorage.setItem('deliveryScheduleFilters', JSON.stringify(filtersToSave));
+        console.log("Filters saved to localStorage:", filtersToSave);
+    }, [filters, searchQuery, activeCategory, filtersInitialized]);
+
+    // Updated handleToggleActive function
     const handleToggleActive = async (schedule, newValue) => {
         const scheduleKey = `${schedule.region}-${schedule.city}-${schedule.cutoffDay}`;
         setSwitchLoading(prev => ({ ...prev, [scheduleKey]: true }));
 
         try {
-            // Using your specified API format: router.patch("/delivery-schedule/:entity/:region/:city/:cutoffDay", DeliveryScheduleController.updateDeliverySchedule);
             const apiUrl = `${API_BASE_URL}/delivery-schedule/${activeCategory}/${schedule.region}/${schedule.city}/${schedule.cutoffDay}`;
             const payload = {
                 isActive: newValue
@@ -310,7 +344,9 @@ function DeliveryScheduleEditor() {
 
     // useEffect to call fetchDeliverySchedules - exactly like support page
     useEffect(() => {
-        if (loading) return;
+        if (!filtersInitialized || loading) {
+            return;
+        }
 
         if (user && activeCategory) {
             fetchDeliverySchedules(page, searchQuery, filters);
@@ -319,7 +355,7 @@ function DeliveryScheduleEditor() {
         if (!user) {
             console.log("logging out");
         }
-    }, [page, searchQuery, user, fetchDeliverySchedules, filters, activeCategory]);
+    }, [page, searchQuery, user, fetchDeliverySchedules, filters, activeCategory, filtersInitialized]);
 
     const fetchGeoData = async () => {
         try {
@@ -389,10 +425,21 @@ function DeliveryScheduleEditor() {
         });
     };
 
-    // Handle search functionality - exactly like support page
+    // Handle search functionality - UPDATED to handle both search and clear
     const handleSearch = (searchTerm) => {
+        console.log("Search called with:", searchTerm);
+        const previousSearch = searchQuery;
         setSearchQuery(searchTerm);
         setPage(1);
+
+        // If clearing search (empty string) and previous had value, force immediate refresh
+        if (searchTerm === "" && previousSearch !== "") {
+            console.log("Clearing search, forcing immediate refresh");
+            // Use setTimeout to ensure state updates have completed
+            setTimeout(() => {
+                fetchDeliverySchedules(1, "", filters);
+            }, 0);
+        }
     };
 
     const handleAddSchedule = async () => {
@@ -577,6 +624,7 @@ function DeliveryScheduleEditor() {
     };
 
     const handleFilterChange = (newFilters) => {
+        console.log("Filter change called with:", newFilters);
         setFilters(newFilters);
         setPage(1);
         setFilterAnchor(null);
@@ -603,7 +651,7 @@ function DeliveryScheduleEditor() {
     return (
         <Sidebar title={t("Delivery Schedule Editor")}>
             <div className="orders-content">
-                {/* Entity Tabs Section - Same as orders page */}
+                {/* Entity Tabs Section */}
                 <div className="filter-section">
                     <div style={{
                         display: "flex",
@@ -758,7 +806,6 @@ function DeliveryScheduleEditor() {
                 {/* Main Table Container */}
                 <div className="table-container">
                     <div style={{
-                        //height: "400px",
                         width: "100%",
                         display: "flex",
                         flexDirection: "column"
@@ -795,7 +842,7 @@ function DeliveryScheduleEditor() {
                                     columnVisibilityModel: columnVisibilityModel,
                                     searchPlaceholder: "Search delivery schedules...",
                                     showColumnVisibility: false,
-                                    showFilters: false,
+                                    showFilters: true,
                                     showExport: false,
                                     showUpload: false,
                                     showCalendar: false,
@@ -805,6 +852,7 @@ function DeliveryScheduleEditor() {
                                     handleAddClick: handleAddClick,
                                     columnsToDisplay: columnsToDisplay,
                                     showAddForm: showAddForm,
+                                    excludeFiltersFromChips: excludeFiltersFromChips,
                                 },
                             }}
                             sx={{
@@ -827,7 +875,6 @@ function DeliveryScheduleEditor() {
                                     flex: 1,
                                 },
                                 "& .MuiDataGrid-columnHeaders": {
-                                    //position: "sticky",
                                     top: 0,
                                     zIndex: 1,
                                     backgroundColor: "white",
@@ -944,25 +991,16 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
 
-                            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
                                 <button
-                                    onClick={() => {
-                                        setShowEditModal(false);
-                                        setEditData({
-                                            region: "",
-                                            city: "",
-                                            cutoffDay: "",
-                                            pickupDay: "",
-                                            deliveryDay: ""
-                                        });
-                                    }}
+                                    onClick={() => setShowEditModal(false)}
                                     style={{
-                                        padding: "8px 16px",
-                                        backgroundColor: "#6c757d",
-                                        color: "#fff",
-                                        border: "none",
-                                        borderRadius: "4px",
-                                        cursor: "pointer"
+                                        padding: '8px 16px',
+                                        backgroundColor: '#6c757d',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
                                     }}
                                 >
                                     Cancel
@@ -971,15 +1009,15 @@ function DeliveryScheduleEditor() {
                                     onClick={handleEditSubmit}
                                     disabled={loading}
                                     style={{
-                                        padding: "8px 16px",
-                                        backgroundColor: "#007bff",
-                                        color: "#fff",
-                                        border: "none",
-                                        borderRadius: "4px",
-                                        cursor: "pointer"
+                                        padding: '8px 16px',
+                                        backgroundColor: 'var(--logo-deep-green)',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
                                     }}
                                 >
-                                    {loading ? 'Updating...' : 'Update Schedule'}
+                                    {loading ? 'Updating...' : 'Update'}
                                 </button>
                             </div>
                         </div>

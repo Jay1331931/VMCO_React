@@ -146,7 +146,7 @@ function Orders() {
   const pageName = isApprovalMode ? "ordersApproval" : "orders";
   const columnWidthsKey = `${pageName}_${role}_columnWidths`;
   const [columnDimensions, setColumnDimensions] = useState({});
-
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(
     initialCategories[0].value
@@ -173,6 +173,40 @@ function Orders() {
       ? match.descriptionLc || match.description
       : match.description;
   };
+
+  useEffect(() => {
+    console.log("Getting Filters from local Storage...");
+    const savedFilters = localStorage.getItem('ordersfilters');
+    if (savedFilters) {
+      console.log("Fliters from local storage:", savedFilters);
+      try {
+        const parsed = JSON.parse(savedFilters);
+        if (parsed.filters) setFilters(parsed.filters);
+        if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+        if (parsed.activeCategory) setActiveCategory(parsed.activeCategory);
+        if (parsed.categoryFilter) setCategoryFilter(parsed.categoryFilter);
+        if (parsed.subCategoryFilter) setSubCategoryFilter(parsed.subCategoryFilter);
+      } catch (error) {
+        console.error('Error parsing saved filters:', error);
+      }
+    }
+    setFiltersInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (!filtersInitialized) {
+    return;
+  }
+    const filtersToSave = {
+      filters,
+      searchQuery,
+      activeCategory,
+      categoryFilter,
+      subCategoryFilter
+    };
+    localStorage.setItem('ordersfilters', JSON.stringify(filtersToSave));
+  }, [filters, searchQuery, activeCategory, categoryFilter, subCategoryFilter]);
+
   const storageKey = `${pageName}_${role}_columns`;
   useEffect(() => {
     const savedModel = localStorage.getItem(storageKey);
@@ -180,10 +214,11 @@ function Orders() {
       setColumnVisibilityModel(JSON.parse(savedModel));
     }
   }, [storageKey]);
+
+
   const [isAtTop, setIsAtTop] = useState(true);
   const [showHeader, setShowHeader] = useState(true);
   const dragStartY = useRef(0);
-
   useEffect(() => {
     const handleTouchStart = (e) => {
       dragStartY.current = e.touches[0].clientY;
@@ -222,6 +257,7 @@ function Orders() {
     container?.addEventListener("scroll", handleScroll);
     return () => container?.removeEventListener("scroll", handleScroll);
   }, []);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -646,20 +682,21 @@ function Orders() {
   };
 
   useEffect(() => {
-    if (loading) {
+    if (!filtersInitialized || loading) {
       return;
     }
     if (user) {
       if (isApprovalMode) {
         fetchApprovals(page, searchQuery, filters);
       } else {
-        console.log("ddddd");
         if (user?.userType === "employee") {
-          setFilters({ entity: initialCategories[0].entity, ...filters });
-          fetchOrders(page, searchQuery, {
-            entity: initialCategories[0].entity,
-            ...filters,
-          });
+          if (!filters.entity && Object.keys(filters).length === 0) {
+            const updatedFilters = { entity: initialCategories[0].entity };
+            setFilters(updatedFilters);
+            fetchOrders(page, searchQuery, updatedFilters);
+          } else {
+            fetchOrders(page, searchQuery, filters);
+          }
         } else {
           fetchOrders(page, searchQuery, filters);
         }
@@ -671,8 +708,8 @@ function Orders() {
     user,
     fetchOrders,
     filters,
-    // isApprovalMode,
     activeCategory,
+    filtersInitialized,
   ]);
 
   const rbacMgr = new RbacManager(
