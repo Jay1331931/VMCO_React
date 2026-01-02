@@ -75,6 +75,7 @@ const AddBankTransaction = () => {
   const [totalamount, setAmount] = useState(0);
   const [isSubmitting, setisSubmitting] = useState(null);
   const [isUploading,setIsUploading]=useState(null)
+   const [maxDate, setMaxDate] = useState('');
   const isMobile=usePlatform()
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
@@ -488,7 +489,32 @@ setIsUploading(true)
   // };
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
+ const fetchSystemDate = useCallback(
+    async () => {
+     
+      try {
 
+        const { data } = await api.get(
+          `${API_BASE_URL}/server-date`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if(data?.status?.toLowerCase()==="success"){
+          console.log("data?.data",data?.data)
+ setMaxDate(data?.data);
+        }
+       
+      } catch (err) {
+        console.error("Error fetching date:", err);
+       
+      } 
+    },
+    []
+  );
+  useEffect(()=>{
+fetchSystemDate()
+  },[])
   const renderTemplate = () => {
     return (
       <div className="bank-add-container">
@@ -604,7 +630,7 @@ setIsUploading(true)
                 }
                 onChange={handleChange}
                 disabled={!!updateTransaction?.transactionDate}
-                max={new Date().toISOString().split("T")[0]}
+                max={maxDate}
               />
               {fieldErrors.transactionDate && (
                 <div className="error-message" style={{ color: "red" }}>
