@@ -38,8 +38,12 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import SyncIcon from "@mui/icons-material/Sync";
 import FileUploadProgress from "../components/FileUploadProgress";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import { getDateOnly, getTimeOnly } from "../utilities/convertUtcToTimeZone";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const userTimezone = dayjs.tz.guess();
 const getStatusClass = (status) => {
   switch (status?.toLowerCase()) {
     case "approved":
@@ -1126,6 +1130,11 @@ function Orders() {
       },
     ],
   };
+// Test in your component or console
+const testDate = "2026-01-02 05:03:17.724959";
+const DATSSS=getTimeOnly(testDate)
+console.log("Test date:", DATSSS);
+
 
   const orderColumns = [
     {
@@ -1342,48 +1351,21 @@ function Orders() {
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
     },
-    {
-      field: "createdAt",
-      headerName: t("Order Placement Date"),
-      include: isV("createdAt"),
-      searchable: false,
-      width: columnDimensions["createdAt"]?.width || 150,
-      // flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => {
-        if (!params?.row?.createdAt) return <span> </span>;
+   {
+  field: "createdAt",
+  headerName: t("Order Placement Date"),
+  include: isV("createdAt"),
+  searchable: false,
+  width: columnDimensions["createdAt"]?.width || 150,
+  align: isArabic ? "right" : "left",
+  headerAlign: isArabic ? "right" : "left",
+renderCell: (params) => {
+  if (!params?.row?.createdAt) return <span> </span>;
 
-        const date = new Date(params.row.createdAt);
-        console.log(
-          "As UTC date:",
-          new Date(params.row.createdAt + "Z").toISOString()
-        );
-        console.log("Original Date:", params.row.createdAt);
-        console.log(date);
-        console.log("Timezone Offset (minutes):", date.getTimezoneOffset());
-        console.log("UTC Time:", date.toISOString());
-        // Convert to Riyadh timezone (UTC+3)
-        const riyadhDate = new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Riyadh",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(date);
+  // const dateObj = dayjs(, "MM/DD/YYYY, HH:mm:ss").utc();
+  // const riyadhTime = dateObj.tz('Asia/Riyadh');
 
-        console.log("Riyadh Date:", riyadhDate);
-
-        const riyadhTime = new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Riyadh",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }).format(date);
-
-        console.log("Riyadh Time:", riyadhTime);
-
-        return (
+    return (
           <div
             style={{
               display: "flex",
@@ -1395,15 +1377,14 @@ function Orders() {
             }}
           >
             <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
-              {riyadhDate}
+             {  getDateOnly(params.row.createdAt)} 
             </span>
             <span style={{ fontSize: "0.8rem", color: "#666" }}>
-              {riyadhTime}
+              {getTimeOnly(params.row.createdAt)}
             </span>
           </div>
         );
-      },
-    },
+},},
     {
       field: "totalAmount",
       headerName: t("Total Amount"),
@@ -1953,24 +1934,24 @@ function Orders() {
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         if (!params?.row?.createdAt) return <span> </span>;
+   
+        // const date = new Date(params.row.createdAt);
 
-        const date = new Date(params.row.createdAt);
+        // // Convert to Riyadh timezone (UTC+3)
+        // const riyadhDate = new Intl.DateTimeFormat("en-GB", {
+        //   timeZone: "Asia/Riyadh",
+        //   year: "numeric",
+        //   month: "2-digit",
+        //   day: "2-digit",
+        // }).format(date);
 
-        // Convert to Riyadh timezone (UTC+3)
-        const riyadhDate = new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Riyadh",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(date);
-
-        const riyadhTime = new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Riyadh",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }).format(date);
+        // const riyadhTime = new Intl.DateTimeFormat("en-GB", {
+        //   timeZone: "Asia/Riyadh",
+        //   hour: "2-digit",
+        //   minute: "2-digit",
+        //   second: "2-digit",
+        //   hour12: false,
+        // }).format(date);
 
         return (
           <div
@@ -1983,11 +1964,11 @@ function Orders() {
               lineHeight: "1.2",
             }}
           >
-            <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
-              {riyadhDate}
+           <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
+             {  getDateOnly(params.row.createdAt)} 
             </span>
             <span style={{ fontSize: "0.8rem", color: "#666" }}>
-              {riyadhTime}
+              {getTimeOnly(params.row.createdAt)}
             </span>
           </div>
         );

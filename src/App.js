@@ -14,7 +14,7 @@ import AppRoutes from "./AppRoutes";
 import usePlatform from "../src/utilities/platform";
 const currentVersion = process.env.REACT_APP_TALAB_VERSION;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
 function App() {
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
@@ -43,7 +43,10 @@ const isMobile=usePlatform()
   // Call in useEffect or componentDidMount
 
   const checkForUpdates = async () => {
-        if (!isMobile) {
+    if(isIOSsMobile){
+      return;
+    }
+        if (!isMobile ) {
           return;
         }
     try {
