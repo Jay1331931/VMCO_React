@@ -76,7 +76,7 @@ const commonStyles = {
     },
     "& .MuiInputBase-root": {
       flexWrap: "nowrap",
-      overflow: "hidden",
+      overflowX: "scroll",
       position: "relative",
       scrollbarWidth: "none",
       msOverflowStyle: "none",
