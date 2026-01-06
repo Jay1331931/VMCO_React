@@ -4,6 +4,6 @@
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "build",
-  "server": { "url": "https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net"},
+
   "cordova": {}
 }

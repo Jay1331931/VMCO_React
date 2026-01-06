@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
@@ -74,8 +74,9 @@ function Catalog() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const {entityname}=useParams()
   const [categories] = useState(initialCategories);
-  const [activeCategory, setActiveCategory] = useState(initialCategories[0].value);
+  const [activeCategory, setActiveCategory] = useState( entityname || initialCategories[0].value);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCustSequenceId, setSelectedCustSequenceId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
@@ -1169,7 +1170,7 @@ const fetchCart = async (userID) => {
 console.log("selectedLocation",selectedLocation)
 
   return (
-    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart}>
+    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation}>
       {isPageLoading ? (
         <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
           <LoadingSpinner size="medium" />

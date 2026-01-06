@@ -48,6 +48,7 @@ import ContactUs from "./screens/ContactUs";
 import CoolingPeriodEditor from "./screens/coolingPeriodEditor";
 import { App } from '@capacitor/app';
 import Swal from "sweetalert2";
+import HomePage from "./screens/homePage";
 function AppRoutes() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("")
@@ -127,6 +128,7 @@ useEffect(() => {
         {/* <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/> */}
         <Route path="/customers" element={<ProtectedRoute page="customers"><CustomersMUI /></ProtectedRoute>} />
         <Route path="/catalog" element={<Catalog />} />
+          <Route path="/catalog/:entityname" element={<Catalog />} />
         <Route path="/support" element={<ProtectedRoute page="support"><SupportMui /></ProtectedRoute>} />
         <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><MaintenanceMui /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute page="cart"><Cart /></ProtectedRoute>} />
@@ -172,6 +174,7 @@ useEffect(() => {
          <Route path="/apple-pay/:orderId/:amount/:customerId/:orderType" element={<ApplePayComponent/>}/>
         <Route path="/payments/:orderId" element={<PaymentLines />} />
         <Route path='/apple-pay/testing' element={<ApplePaymentReact/>} />
+        <Route path="/home" element={<HomePage/>} />
       </Routes>
    
   );

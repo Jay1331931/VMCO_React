@@ -417,7 +417,7 @@ function Maintenance() {
   const maintenanceColumns = [
     { field: "requestId", headerName: t("Request ID"), width: 100, searchable: true, },
     { field: "erpOrderId", headerName: t("erp Order Id"), width: 100, searchable: true, },
-    { field: "issueType", headerName: t("Issue Type"), width: 120, searchable: true },
+    // { field: "issueType", headerName: t("Issue Type"), width: 120, searchable: true },
     { field: "erpCustomerId", headerName: t("Customer ID"), width: 120, searchable: true, },
     { field: "companyNameEn", headerName: t("Customer"), width: 150, searchable: false, },
     { field: "brandNameEn", headerName: t("Brand Name"), width: 140, searchable: false, },

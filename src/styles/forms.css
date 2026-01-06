@@ -219,17 +219,17 @@
   position: relative;
 }
 .dropdown-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-  min-height: 38px;
-  width: 250px;
-  font-size: 12px;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    font-size: 12px;
+    justify-content: space-between;
+    min-height: 38px;
+    padding: 8px 12px;
+    width: 250px;
 }
 .dropdown-header[disabled] {
   background-color: #e9ecef;
@@ -850,7 +850,7 @@ body::-webkit-scrollbar {
 .branch-phone-input select {
   width: 30px !important;
 }
-.branchDropDown {
+.branchDropDown .dropdown-header {
   width: 140px !important;
   min-height: 30px !important;
   border: 1px solid #ccc;

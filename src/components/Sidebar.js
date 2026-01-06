@@ -34,10 +34,14 @@ import {
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
-
+import SearchableDropdown from "./SearchableDropdown";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Swal from "sweetalert2";
+const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
-function Sidebar({ children, title=null, MenuName = null }) {
+const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
+function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -52,6 +56,11 @@ function Sidebar({ children, title=null, MenuName = null }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout } = useAuth();
   const [showOrdersSubMenu, setShowOrdersSubMenu] = useState(false);
+  const [selectedBranchRegion, setSelectedBranchRegion] = useState("");
+  const [selectedBranchCity, setSelectedBranchCity] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [branches, setBranches] = useState([]);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -60,7 +69,9 @@ function Sidebar({ children, title=null, MenuName = null }) {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
+  const customerId = user?.customerId;
+  const custSequenceId = user?.sequenceId;
+  const userId = user?.userId;
   const isRTL = i18n.language === "ar";
 
   const toggleLanguage = () => {
@@ -295,6 +306,7 @@ function Sidebar({ children, title=null, MenuName = null }) {
       throw err;
     }
   };
+
   const handleGoToCart = async () => {
     const cartData = await fetchCart();
     if (cartData?.id) {
@@ -423,8 +435,6 @@ function Sidebar({ children, title=null, MenuName = null }) {
     }
   };
 
-
-
   useEffect(() => {
     const mainContent = document.querySelector(".main-content");
     if (mainContent && isMobile) {
@@ -449,8 +459,6 @@ function Sidebar({ children, title=null, MenuName = null }) {
     setSidebarExpanded(!isSidebarExpanded);
   };
 
-
-
   const handleLogout = async () => {
     const userLoggedOut = user;
 
@@ -473,7 +481,7 @@ function Sidebar({ children, title=null, MenuName = null }) {
     {
       icon: isMobile ? faBoxOpen : faShoppingCart,
       label: "Orders",
-      isVisible: isMobile ?  true :true
+      isVisible: isMobile ? true : true,
     },
     {
       icon: faCodeBranch,
@@ -483,9 +491,7 @@ function Sidebar({ children, title=null, MenuName = null }) {
     {
       icon: faUsers,
       label: "Customers",
-      isVisible: isMobile
-        ?  true
-          : true
+      isVisible: isMobile ? true : true,
     },
     {
       icon: faHeadset,
@@ -512,16 +518,12 @@ function Sidebar({ children, title=null, MenuName = null }) {
       icon: faShoppingCart,
       label: "Your Cart",
       permission: "Cart",
-      isVisible: isMobile ? isV("goToCart")
-          : false
-        
+      isVisible: isMobile ? isV("goToCart") : false,
     },
     {
       icon: isMobile ? faUser : faBuilding,
       label: "Company",
-      isVisible: isMobile  ? true
-        
-        : true
+      isVisible: isMobile ? true : true,
     },
     { icon: faCog, label: "Settings", isVisible: true },
     {
@@ -634,6 +636,196 @@ function Sidebar({ children, title=null, MenuName = null }) {
       //   setActiveMenu("Dashboard");
     }
   }, [location.pathname, MenuName]);
+  const catalogId = React.useId();
+  const handleBranchSelect = async (e) => {
+    const newBranchId = e.target.value;
+    const currentBranchId = selectedLocation;
+    if (newBranchId === currentBranchId) return;
+    const selectedBranch = branches.find(
+      (b) => String(b.value) === String(newBranchId)
+    );
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page: 1,
+        pageSize: 100,
+        sortBy: "id",
+        sortOrder: "asc",
+        filters: JSON.stringify({
+          user_id: userId,
+          customer_id: customerId,
+        }),
+      });
+      const response = await fetch(
+        `${API_BASE_URL}/cart/pagination?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch cart items");
+      const result = await response.json();
+      const cartItems = result?.data?.data || [];
+      const cartBranchIds = [
+        ...new Set(
+          cartItems.map((item) => String(item.branch_id || item.branchId))
+        ),
+      ];
+
+      if (
+        cartBranchIds.length === 0 ||
+        (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId)
+      ) {
+        setSelectedLocation(newBranchId);
+        setSelectedBranchLocation(newBranchId)
+        if (selectedBranch) {
+          setSelectedBranchRegion(selectedBranch.branchRegion || "");
+          setSelectedBranchCity(selectedBranch.branchCity || "");
+        }
+        return;
+      }
+
+      const otherBranchId = cartBranchIds.find((id) => id !== newBranchId);
+      if (otherBranchId) {
+        const otherBranch = branches.find(
+          (branch) => String(branch.value) === String(otherBranchId)
+        );
+        const otherBranchLabel = otherBranch
+          ? otherBranch.label
+          : otherBranchId;
+
+        const { isConfirmed } = await Swal.fire({
+          icon: "warning",
+          title: t("Discard items?"),
+          html: `${t(
+            "There are items in the cart for branch"
+          )} <strong>${otherBranchLabel}</strong>.<br>${t(
+            "Do you want to discard them?"
+          )}`,
+          showCancelButton: true,
+          focusCancel: true,
+          confirmButtonText: t("Yes, discard"),
+          cancelButtonText: t("No, keep"),
+          reverseButtons: true,
+        });
+
+        if (isConfirmed) {
+          try {
+            await fetch(
+              `${API_BASE_URL}/cart/delete?customer_id=${customerId}&branch_id=${otherBranchId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            setSelectedLocation(newBranchId);
+            setSelectedBranchLocation(newBranchId)
+            if (selectedBranch) {
+              setSelectedBranchRegion(selectedBranch.branchRegion || "");
+              setSelectedBranchCity(selectedBranch.branchCity || "");
+            }
+            await Swal.fire({
+              icon: "success",
+              title: t("Success"),
+              text: t(
+                `Items discarded from the cart for branch ${otherBranchLabel}`
+              ),
+              confirmButtonText: t("OK"),
+            });
+          } catch (deleteError) {
+            await Swal.fire({
+              icon: "error",
+              title: t("Error"),
+              text: t(
+                "Failed to discard items from the cart. Please try again."
+              ),
+              confirmButtonText: t("OK"),
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error during branch change:", error);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t("Error checking cart. Branch change may not work correctly."),
+        confirmButtonText: t("OK"),
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `${API_BASE_URL}/customer-branches/pagination?pageSize=10000`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch branches");
+        }
+        const result = await response.json();
+        let branchData = [];
+        if (Array.isArray(result)) {
+          branchData = result;
+        } else if (result.status === "Ok" && Array.isArray(result.data)) {
+          branchData = result.data;
+        } else if (result && Array.isArray(result.data)) {
+          branchData = result.data;
+        }
+
+        const branchOptions = branchData.map((branch) => {
+          const status = branch.branchStatus.toLowerCase();
+          const isApproved = status === "approved";
+          return {
+            value: String(branch.id || branch.branch_id),
+            label:
+              i18n.language === "en"
+                ? branch.branch_name_en || branch.branchNameEn
+                : branch.branch_name_lc ||
+                  branch.branchNameLc ||
+                  branch.branch_name_en ||
+                  branch.branchNameEn,
+            erpBranchId: branch.erpBranchId || branch.erp_branch_id,
+            branchRegion: branch.region || branch.region,
+            branchCity: branch.city || branch.branchCity || branch.branch_city,
+            raw: branch,
+            disabled: !isApproved || !branch.erpBranchId,
+            branch_name_en: branch.branch_name_en || branch.branchNameEn,
+            branch_name_lc: branch.branch_name_lc || branch.branchNameLc,
+          };
+        });
+        setBranches(branchOptions);
+      } catch (error) {
+        console.error("Error fetching branches:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchBranches();
+  }, [API_BASE_URL, i18n.language]);
+  const handleback =()=>{
+    navigate(-1)
+  }
+  console.log("isIOSsMobile",isIOSsMobile)
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
@@ -809,6 +1001,10 @@ function Sidebar({ children, title=null, MenuName = null }) {
                 <FontAwesomeIcon icon={faBars} />
               </button>
             )}
+                  {isIOSsMobile &&isMobile&& (
+i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><ArrowForwardIcon/></span>
+:<span className="nav-btn " onClick={()=>handleback()}><ArrowBackIcon/> </span>
+                  )}
             {isMobile && (
               <img
                 src="/logos/talab_point_logo.png"
@@ -817,7 +1013,65 @@ function Sidebar({ children, title=null, MenuName = null }) {
                 style={{ maxWidth: "100%", maxHeight: "100%" }}
               />
             )}
+
             <div className="header-title">{t(activeMenu)}</div>
+
+            {!isMobile &&searchable && !isMobileResponsive&& <><div 
+              style={{
+                display: "flex",
+                // justifyContent: "space-between",
+                gap: "10px",
+                width: "100%",
+                alignItems:"center"
+              }}
+            >
+              <div className="location-selector">
+                <SearchableDropdown
+                  id={`location-select-${catalogId}`}
+                  name="locationSelect"
+                  value={selectedLocation}
+                  onChange={handleBranchSelect}
+                  options={branches?.map((b) => ({
+                    ...b,
+                    name: b.label || b.name || b.value,
+                    disabled: b.disabled,
+                  }))}
+                  className="location-select"
+                  placeholder={t("Select Branch")}
+                  disabled={branches?.length === 0}
+                />
+                {/* {isBranchesLoading && branches.length === 0 && (
+                                                <div className="dropdown-loading">
+                                                    <LoadingSpinner size="small" />
+                                                </div>
+                                            )} */}
+                {branches?.length === 0 && (
+                  <div className="no-branches-message">
+                    {t("No branches available")}
+                  </div>
+                )}
+              </div>
+              {(user?.userType?.toLowerCase() !== "employee" ||
+                user?.userType?.toLowerCase() !== "admin") && (
+                <button
+                  className={`go-to-cart-btn ${
+                    !selectedLocation ? "disabled" : ""
+                  }`}
+                  style={{
+                    opacity: !selectedLocation ? 0.6 : 1,
+                    cursor: !selectedLocation ? "not-allowed" : "pointer",
+                  }}
+                  onClick={handleGoToCart}
+                  disabled={!selectedLocation}
+                >
+                  <FontAwesomeIcon
+                    icon={faShoppingCart}
+                    className="cart-icon"
+                  />
+                  {window.innerWidth >= 350 && <span>{t("Go to Cart")}</span>}
+                </button>
+              )}
+            </div></>}
             <div className="user-text-header">
               {!isMobile && (
                 <div className="text">
@@ -840,7 +1094,7 @@ function Sidebar({ children, title=null, MenuName = null }) {
                       </div>
                     </div>
                   )}
-                  {user?.userType?.toLowerCase() === "customer" &&
+                  {/* {user?.userType?.toLowerCase() === "customer" &&
                     user?.roles[0] === "customer_primary" && (
                       <div className="text">
                         <div
@@ -869,8 +1123,8 @@ function Sidebar({ children, title=null, MenuName = null }) {
                           {t("Branches")}: {user?.branchNumber}
                         </div>
                       </div>
-                    )}
-                  {user?.userType?.toLowerCase() === "customer" &&
+                    )} */}
+                  {/* {user?.userType?.toLowerCase() === "customer" &&
                     user?.roles[0] === "branch_primary" && (
                       <div className="text">
                         <div
@@ -889,7 +1143,7 @@ function Sidebar({ children, title=null, MenuName = null }) {
                           : {user?.branchNumberPrimary}
                         </div>
                       </div>
-                    )}
+                    )} */}
                 </div>
               )}
 
@@ -897,13 +1151,6 @@ function Sidebar({ children, title=null, MenuName = null }) {
                 <FontAwesomeIcon icon={faLanguage} />
                 <span>{isRTL ? "EN" : "عربى"}</span>
               </button>
-              {/* {isMobile && (
-                <>
-                  <div className="logout-icon" onClick={handleLogout}>
-                    <FontAwesomeIcon icon={faSignOutAlt} />
-                  </div>
-                </>
-              )}  */}
             </div>
           </header>
           <div
@@ -979,7 +1226,7 @@ function Sidebar({ children, title=null, MenuName = null }) {
                   {t("Maintenance")}
                 </button>
               )}
-              {(isV("BankTransfer") ) && (
+              {isV("BankTransfer") && (
                 <button
                   className="orders-btn"
                   onClick={() => handleMenuClick("Bank")}
