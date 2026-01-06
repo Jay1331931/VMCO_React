@@ -95,8 +95,8 @@ const commonStyles = {
     minWidth: isMobile ? "200px" : "250px",
     padding: 0,
     margin: 0,
-    border: isMobile ? "1px solid inherit" : "1px solid rgba(0, 0, 0, 0.23)",
-    borderRadius: isMobile ? "8px" : "20px",
+    border: isMobile ? "1px solid rgba(0, 0, 0, 0.23)" : "1px solid rgba(0, 0, 0, 0.23)",
+    borderRadius: isMobile ? "20px" : "20px",
     verticalAlign: "top",
     transition: "border-color 0.2s ease",
     "&:hover": {

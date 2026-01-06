@@ -18,7 +18,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function App() {
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
-const isMobile=usePlatform()
+  const isMobile=usePlatform()
   const updateHeaderTop = () => {
     const header = document.querySelector(".app-header");
     if (header) {
