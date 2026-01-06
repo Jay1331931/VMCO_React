@@ -258,32 +258,31 @@ const TapCardPayment = () => {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
-          navigate("/catalog");
-          // window.open(paymentUrl, "_blank", "noopener,noreferrer");
-          // window.open(paymentUrl, "_system");
-         const width = 400;
-const height = 500;
-
-const centeredPosition = getCenteredOptions(width, height);
-
-// Create options string with centered position
-const options =
-  'toolbar=yes,' +
-  'hideurlbar=yes,' +
-  'zoom=no,' +
-  'hardwareback=yes,' +
-  'clearsessioncache=yes,' +
-  'clearcache=yes,' +
-  'width=' + width + ',' +
-  'height=' + height + ',' +
-  'left=' + centeredPosition.left + ',' +
-  'top=' + centeredPosition.top;
-
-window.cordova.InAppBrowser.open(
-  paymentUrl,
-  '_blank',
-  options
-);
+          // For iOS: use window.open with _blank to open Safari
+          // For Android: InAppBrowser if available, otherwise window.open
+          if (window.cordova && window.cordova.InAppBrowser) {
+            // Try InAppBrowser for Android
+            const width = 400;
+            const height = 500;
+            const centeredPosition = getCenteredOptions(width, height);
+            const options =
+              'toolbar=yes,' +
+              'hideurlbar=yes,' +
+              'zoom=no,' +
+              'hardwareback=yes,' +
+              'clearsessioncache=yes,' +
+              'clearcache=yes,' +
+              'width=' + width + ',' +
+              'height=' + height + ',' +
+              'left=' + centeredPosition.left + ',' +
+              'top=' + centeredPosition.top;
+            window.cordova.InAppBrowser.open(paymentUrl, '_blank', options);
+            console.log('[Tap Debug] Opened with InAppBrowser');
+          } else {
+            // iOS fallback: use window.open with _blank to open Safari
+            window.open(paymentUrl, '_blank');
+            console.log('[Tap Debug] Opened with window.open (iOS Safari)');
+          }
         } else {
           window.location.replace(paymentUrl);
         }

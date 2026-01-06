@@ -66,6 +66,7 @@ function Maintenance() {
   const [showRowPopup, setShowRowPopup] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
 
   // Add these state variables near the top of your component
   const role =
@@ -77,6 +78,38 @@ function Maintenance() {
   const [isAtTop, setIsAtTop] = useState(true);
 
   useEffect(() => {
+    console.log("Loading filters from localStorage...");
+    const savedFilters = localStorage.getItem('maintenanceFilters');
+    if (savedFilters) {
+      console.log("Saved filters found:", savedFilters);
+      try {
+        const parsed = JSON.parse(savedFilters);
+        if (parsed.filters) setFilters(parsed.filters);
+        if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+        if (parsed.isClosedMode) setClosedMode(parsed.isClosedMode);
+      } catch (error) {
+        console.error('Error parsing saved filters:', error);
+      }
+    }
+    setFiltersInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (!filtersInitialized) {
+      return;
+    }
+
+    const filtersToSave = {
+      filters,
+      searchQuery,
+      isClosedMode
+    };
+    localStorage.setItem('maintenanceFilters', JSON.stringify(filtersToSave));
+    console.log("Filters saved to localStorage:", filtersToSave);
+  }, [filters, searchQuery, isClosedMode, filtersInitialized]);
+
+
+  useEffect(() => {
     const handleScroll = () => {
       const scrollTop = contentRef.current?.scrollTop || 0;
       setIsAtTop(scrollTop < 20); // detect near top
@@ -86,6 +119,7 @@ function Maintenance() {
     container?.addEventListener("scroll", handleScroll);
     return () => container?.removeEventListener("scroll", handleScroll);
   }, []);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -124,6 +158,7 @@ function Maintenance() {
       window.removeEventListener("touchmove", handleTouchMove);
     };
   }, []);
+
   useEffect(() => {
     const savedModel = localStorage.getItem(storageKey);
     if (savedModel) {
@@ -262,12 +297,13 @@ function Maintenance() {
     ]
   );
 
-  // NOTE: For fetching the user again after browser refresh - start
   useEffect(() => {
     if (loading) return;
-    console.log("user in maintenance page:", user);
+    if (!filtersInitialized || loading) {
+      return;
+    }
     if (user) {
-      fetchMaintenanceTickets(page, searchQuery, filters, sortModel);
+      fetchMaintenanceTickets(page, searchQuery, filters, sortModel, filtersInitialized);
     }
     if (!user) {
       console.log("logging out");
@@ -380,8 +416,8 @@ function Maintenance() {
 
   const maintenanceColumns = [
     { field: "requestId", headerName: t("Request ID"), width: 100, searchable: true, },
-    {field:"erpOrderId",headerName: t("erp Order Id"), width: 100, searchable: true, },
-        { field: "issueType", headerName: t("Issue Type"), width: 120, searchable: true },
+    { field: "erpOrderId", headerName: t("erp Order Id"), width: 100, searchable: true, },
+    { field: "issueType", headerName: t("Issue Type"), width: 120, searchable: true },
     { field: "erpCustomerId", headerName: t("Customer ID"), width: 120, searchable: true, },
     { field: "companyNameEn", headerName: t("Customer"), width: 150, searchable: false, },
     { field: "brandNameEn", headerName: t("Brand Name"), width: 140, searchable: false, },
@@ -475,7 +511,7 @@ function Maintenance() {
     status: "Status",
   };
 
-  // Pagination calculation - same as Orders and Support pages
+  // Pagination calculation
   const totalPages =
     Number.isFinite(total) &&
       Number.isFinite(pageSize) &&
@@ -626,12 +662,12 @@ function Maintenance() {
                     }
                   />
                 </div>
-                 <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
-    <MaintenanceCard
-      tickets={initialTickets}
-      setSelectedRow={handleShowAllDetailsClick}
-    />
-  </div>
+                <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
+                  <MaintenanceCard
+                    tickets={initialTickets}
+                    setSelectedRow={handleShowAllDetailsClick}
+                  />
+                </div>
               </>
             )}
           </div>
@@ -709,8 +745,9 @@ function Maintenance() {
                       backgroundColor: "rgba(0, 0, 0, 0.04)",
                     },
                   },
-                   "& .MuiDataGrid-toolbar": {
-                        padding: "0px 8px"},
+                  "& .MuiDataGrid-toolbar": {
+                    padding: "0px 8px"
+                  },
                   ...(isArabic
                     ? {
                       direction: "rtl",
@@ -756,7 +793,7 @@ function Maintenance() {
           />
         )}
       </div>
-   
+
     </Sidebar>
   );
 }
