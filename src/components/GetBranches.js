@@ -4,6 +4,7 @@ import Pagination from './Pagination';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
+
 function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, t = (x) => x }) {
   const { i18n } = useTranslation();
   const { token } = useAuth();
@@ -20,22 +21,25 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
   });
   const debounceTimeout = useRef();
 
+
   // Debounce search input
   useEffect(() => {
     if (!open) return;
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => {
       setSearchQuery(search);
-      setPagination(prev => ({ ...prev, page: 1 })); // Reset to page 1 on new search
+      setPagination(prev => ({ ...prev, page: 1 }));
     }, 400);
     return () => clearTimeout(debounceTimeout.current);
   }, [search, open]);
+
 
   useEffect(() => {
     if (open && customerId) {
       fetchBranches();
     }
   }, [open, customerId, pagination.page, pagination.pageSize, searchQuery]);
+
 
   const fetchBranches = async () => {
     if (!customerId) {
@@ -47,7 +51,6 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
     setLoading(true);
     setError(null);
     try {
-      // Use the same API as Catalog: /customer-branches/pagination with filters
       const filters = encodeURIComponent(JSON.stringify({ customerId: customerId }));
       const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
       const url = `${API_BASE_URL}/customer-branches/pagination?filters=${filters}&page=${pagination.page}&pageSize=${pagination.pageSize}${searchParam}`;
@@ -162,15 +165,26 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
                   branches.map((branch) => {
                     const status = (branch.branchStatus || '').toLowerCase();
                     const isApproved = status === 'approved';
+                    const branchName = isRTL
+                      ? (branch.branch_name_lc || branch.branchNameLc)
+                      : (branch.branch_name_en || branch.branchNameEn);
+
                     return (
                       <tr key={branch.id}>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.id}</td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.erp_branch_id || branch.erpBranchId || '-'}</td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                          {isRTL
-                            ? (branch.branch_name_lc || branch.branchNameLc)
-                            : (branch.branch_name_en || branch.branchNameEn)
-                          }
+                        <td
+                          style={{
+                            padding: '10px',
+                            borderBottom: '1px solid #ddd',
+                            maxWidth: '300px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                          title={branchName}
+                        >
+                          {branchName}
                         </td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                           <button
@@ -191,7 +205,6 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
           )}
         </div>
 
-        {/* Footer with Pagination - Updated to match GetProducts */}
         <div className="gb-footer">
           {totalPages > 0 && (
             <Pagination
@@ -245,17 +258,17 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
           padding: 6px;
           border: 1.9px solid #eee;
           border-radius: 10px;
-          max-height: 400px;
+          max-height: 300px;
           overflow-y: auto;
         }
         .gb-table-container table th:last-child,
-.gb-table-container table td:last-child {
-  position: sticky;
-  right: 0;
-  background: white;      /* Important: avoids overlap transparency */
-  z-index: 5;             /* Keep above other cells */
-  white-space: nowrap;
-}
+        .gb-table-container table td:last-child {
+          position: sticky;
+          right: 0;
+          background: white;
+          z-index: 5;
+          white-space: nowrap;
+        }
         .gb-branch-btn {
           width: 100%;
           text-align: center;

@@ -175,7 +175,7 @@
     "Sub category": "الفئة الفرعية",
     "ADD TO CART": "أضف إلى السلة",
     "Price: ": " السعر:",
-    "Unit Price: ": ": سعر الوحدة ",
+    "Unit Price: ": "سعر الوحدة :",
     "VMCO Machines": "آلات VMCO",
     "VMCO Consumables": "VMCO مستهلكات",
     "VMCO": "شركة الماكينة الالية",
@@ -905,7 +905,13 @@
 "Menu":"قائمة طعام",
 "Bank":"بنك",
 "Only one  entity credit details can be updated at a time":"لا يمكن تحديث بيانات ائتمان إلا لجهة واحدة في كل مرة",
-"Maintenance Charges With VAT":"رسوم الصيانة شاملة ضريبة القيمة المضافة"
+"Maintenance Charges With VAT":"رسوم الصيانة شاملة ضريبة القيمة المضافة",
+"Others":"آحرون",
+"Required":"مطلوب",
+"Get fresh groceries, vending-machine snacks & hygiene supplies delivered":"احصل على البقالة الطازجة والوجبات الخفيفة من آلات البيع ومستلزمات النظافة الشخصية مع خدمة التوصيل"
+
+
+
 
 
 

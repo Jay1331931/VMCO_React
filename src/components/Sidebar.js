@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SaudiTime from "../components/Time";
 import RbacManager from "../utilities/rbac";
-import { Capacitor } from "@capacitor/core";
+import usePlatform from "../utilities/platform";
 import {
   faChevronLeft,
   faChevronRight,
@@ -34,30 +34,33 @@ import {
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
-
+import SearchableDropdown from "./SearchableDropdown";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Swal from "sweetalert2";
+const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isMobileDevice = Capacitor.isNativePlatform();
-
-function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
+const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
+function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  //const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isMobile = usePlatform();
+  const [cartbranchData, setCartBranchData] = useState(null);
 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
-  const [activeMenu, setActiveMenu] = useState("Dashboard");
+  const [activeMenu, setActiveMenu] = useState(title || "Dashboard");
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout } = useAuth();
   const [showOrdersSubMenu, setShowOrdersSubMenu] = useState(false);
+  const [selectedBranchRegion, setSelectedBranchRegion] = useState("");
+  const [selectedBranchCity, setSelectedBranchCity] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [branches, setBranches] = useState([]);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -66,7 +69,9 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
+  const customerId = user?.customerId;
+  const custSequenceId = user?.sequenceId;
+  const userId = user?.userId;
   const isRTL = i18n.language === "ar";
 
   const toggleLanguage = () => {
@@ -116,8 +121,8 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts
-        ? [customerContacts]
-        : [];
+      ? [customerContacts]
+      : [];
 
     const contactsMap = contacts.reduce((acc, contact) => {
       acc[contact.contactType] = contact;
@@ -145,7 +150,38 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       isApprovalMode: isApprovalMode,
     };
   }
+  const fetchCart = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/cart/get-cart-by-userId?id=${user?.userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      if (result.status === "Ok") {
+        setCartBranchData(result.data);
+        return result.data;
+      } else {
+        return null;
+        // console.error(
+        //   result?.result?.message || "Failed to fetch customer contacts"
+        // );
+      }
+    } catch (err) {
+      console.error("Error fetching cart :", err);
+      return null;
+    }
+  };
+  // useEffect(()=>{
+  //   if(!user?.userId) return;
 
+  //   fetchCart()
+  // },[user])
   const fetchCustomerContacts = async (customerId, customer) => {
     try {
       const response = await fetch(
@@ -271,6 +307,33 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     }
   };
 
+  const handleGoToCart = async () => {
+    const cartData = await fetchCart();
+    if (cartData?.id) {
+      navigate("/Cart", {
+        state: {
+          selectedCustomerId: user?.customerId,
+          selectedCustomerStatus: user?.customerStatus,
+          selectedBranchId: cartData?.branchId || null,
+          selectedBranchName:
+            i18n.language === "en"
+              ? cartData?.branchNameEn
+              : cartData?.branchNameLc,
+          selectedBranchNameLc: cartData?.branchNameLc || "",
+          selectedBranchNameEn: cartData?.branchNameEn || "",
+          selectedBranchErpId: cartData?.erpBranchId || "",
+          selectedBranchRegion: cartData?.branchRegion || "",
+          selectedBranchCity: cartData?.city || "",
+          selectedBranchStatus: cartData?.branchStatus || "",
+          selectedCustSequenceId: user?.sequenceId || "",
+          selectedBranchSequenceId: cartData?.sequenceId || "",
+        },
+      });
+    } else {
+      navigate("/Cart");
+    }
+  };
+
   useEffect(() => {
     document.body.dir = isRTL ? "rtl" : "ltr";
 
@@ -287,71 +350,15 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, [isRTL]);
-
-  useEffect(() => {
-    const path = location.pathname;
-    console.log("MenuName", MenuName);
-    switch (MenuName || path) {
-      case "/orders":
-        setActiveMenu("Orders");
-        break;
-      case "/customers":
-        setActiveMenu("Customers");
-        break;
-      case "/catalog":
-        setActiveMenu("Catalog");
-        break;
-      case "/admin/upload":
-        setActiveMenu("General");
-        break;
-      case "/cart":
-        setActiveMenu("Your Cart");
-        break;
-      case "Menu":
-        setActiveMenu("Menu");
-        break;
-      case "Orders":
-        console.log("Orders");
-        setActiveMenu("Orders");
-        break;
-      default:
-        setActiveMenu("Dashboard");
-    }
-  }, [location.pathname, MenuName]);
-
   useEffect(() => {
     setActiveMenu(title);
   }, [title]);
-
-  useEffect(() => {
-    const mainContent = document.querySelector(".main-content");
-    if (mainContent && isMobileDevice) {
-      if (showOrdersSubMenu) {
-        mainContent.classList.add("has-orders-submenu");
-      } else {
-        mainContent.classList.remove("has-orders-submenu");
-      }
-    }
-
-    return () => {
-      const mainContent = document.querySelector(".main-content");
-      if (mainContent) {
-        mainContent.classList.remove("has-orders-submenu");
-      }
-    };
-  }, [showOrdersSubMenu, isMobileDevice]);
-
-  const toggleSidebar = () => setSidebarCollapsed(!isSidebarCollapsed);
-  const handleMobileToggle = () => {
-    setSidebarCollapsed(false);
-    setSidebarExpanded(!isSidebarExpanded);
-  };
-
   const handleMenuClick = async (label) => {
-    if (label === "Menu") {
+    if (label === "Others") {
       setShowOrdersSubMenu(!showOrdersSubMenu);
       return;
     }
+
     setShowOrdersSubMenu(false);
     setActiveMenu(label);
 
@@ -385,7 +392,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
         navigate("/admin/upload");
         break;
       case "Dashboard":
-        navigate("/login",{replace:true});
+        navigate("/login", { replace: true });
         break;
       case "Company":
         try {
@@ -428,45 +435,63 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     }
   };
 
+  useEffect(() => {
+    const mainContent = document.querySelector(".main-content");
+    if (mainContent && isMobile) {
+      if (showOrdersSubMenu) {
+        mainContent.classList.add("has-orders-submenu");
+      } else {
+        mainContent.classList.remove("has-orders-submenu");
+      }
+    }
+
+    return () => {
+      const mainContent = document.querySelector(".main-content");
+      if (mainContent) {
+        mainContent.classList.remove("has-orders-submenu");
+      }
+    };
+  }, [showOrdersSubMenu, isMobile]);
+
+  const toggleSidebar = () => setSidebarCollapsed(!isSidebarCollapsed);
+  const handleMobileToggle = () => {
+    setSidebarCollapsed(false);
+    setSidebarExpanded(!isSidebarExpanded);
+  };
+
   const handleLogout = async () => {
     const userLoggedOut = user;
 
     logout(true);
 
     if (userLoggedOut?.userType === "employee") {
-      navigate("/login/employee",{replace:true});
+      navigate("/login/employee", { replace: true });
     } else {
-      navigate("/login",{replace:true});
+      navigate("/login", { replace: true });
     }
   };
 
-  const menuItems = [
+  const baseMenuItems = [
     { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
     {
-      icon: isMobileDevice ? faHouse : faBookOpen,
+      icon: isMobile ? faHouse : faBookOpen,
       label: "Catalog",
       isVisible: true,
     },
     {
-      icon: isMobileDevice ? faBoxOpen : faShoppingCart,
+      icon: isMobile ? faBoxOpen : faShoppingCart,
       label: "Orders",
-      isVisible: true,
+      isVisible: isMobile ? true : true,
     },
     {
       icon: faCodeBranch,
       label: "Branches",
-      isVisible: isMobileDevice ? false : true,
+      isVisible: isMobile ? false : true,
     },
     {
       icon: faUsers,
       label: "Customers",
-      isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") ||
-          activeMenu === t("Customers") ||
-          activeMenu === t("Company")
-          ? true
-          : false
-        : true,
+      isVisible: isMobile ? true : true,
     },
     {
       icon: faHeadset,
@@ -481,11 +506,11 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     {
       icon: faFile,
       label: "Reports",
-      isVisible: isMobileDevice ? false : true,
+      isVisible: isMobile ? false : true,
     },
     {
       icon: faBank,
-      label: isMobileDevice ? "Bank" : "Bank Transfer",
+      label: isMobile ? "Bank" : "Bank Transfer",
       permission: "BankTransfer",
       isVisible: true,
     },
@@ -493,27 +518,19 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       icon: faShoppingCart,
       label: "Your Cart",
       permission: "Cart",
-      isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") || activeMenu === t("Your Cart")
-          ? isV("goToCart")
-          : false
-        : false,
+      isVisible: isMobile ? isV("goToCart") : false,
     },
     {
-      icon: isMobileDevice ? faUser : faBuilding,
+      icon: isMobile ? faUser : faBuilding,
       label: "Company",
-      isVisible: isMobileDevice
-        ? activeMenu === t("Catalog") || activeMenu === t("Company")
-          ? true
-          : false
-        : true,
+      isVisible: isMobile ? true : true,
     },
     { icon: faCog, label: "Settings", isVisible: true },
     {
       icon: faUpload,
       label: isMobile ? "" : "General",
       permission: isMobile ? false : "General",
-      isVisible: isMobileDevice ? false : true,
+      isVisible: isMobile ? false : true,
     },
     {
       icon: faHistory,
@@ -523,11 +540,30 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
     },
     {
       icon: faList,
-      label: "Menu",
+      label: "Others",
       // UPDATED: Menu visible on all screens in mobile
-      isVisible: isMobileDevice,
+      isVisible: isMobile,
     },
   ];
+  const menuItems = isMobile
+    ? [
+        baseMenuItems.find((item) => item.label === "Dashboard"),
+        baseMenuItems.find((item) => item.label === "Catalog"),
+
+        // 🔥 3rd position
+        baseMenuItems.find((item) => item.label === "Your Cart"),
+
+        // 🔥 4th position
+        baseMenuItems.find((item) => item.label === "Orders"),
+
+        ...baseMenuItems.filter(
+          (item) =>
+            !["Dashboard", "Catalog", "Your Cart", "Orders"].includes(
+              item.label
+            )
+        ),
+      ]
+    : baseMenuItems;
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
 
@@ -571,7 +607,225 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
       return false;
     else return true;
   };
+  useEffect(() => {
+    const path = location.pathname;
+    switch (MenuName || path) {
+      case "/orders":
+        setActiveMenu("Orders");
+        break;
+      case "/customers":
+        setActiveMenu("Customers");
+        break;
+      case "/catalog":
+        setActiveMenu("Catalog");
+        break;
+      case "/admin/upload":
+        setActiveMenu("General");
+        break;
+      case "/cart":
+        setActiveMenu("Your Cart");
+        break;
+      // case "Others":
+      //   setActiveMenu("Others");
+      //   break;
+      case "Orders":
+        console.log("Orders");
+        setActiveMenu("Orders");
+        break;
+      // default:
+      //   setActiveMenu("Dashboard");
+    }
+  }, [location.pathname, MenuName]);
+  const catalogId = React.useId();
+  const handleBranchSelect = async (e) => {
+    const newBranchId = e.target.value;
+    const currentBranchId = selectedLocation;
+    if (newBranchId === currentBranchId) return;
+    const selectedBranch = branches.find(
+      (b) => String(b.value) === String(newBranchId)
+    );
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page: 1,
+        pageSize: 100,
+        sortBy: "id",
+        sortOrder: "asc",
+        filters: JSON.stringify({
+          user_id: userId,
+          customer_id: customerId,
+        }),
+      });
+      const response = await fetch(
+        `${API_BASE_URL}/cart/pagination?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch cart items");
+      const result = await response.json();
+      const cartItems = result?.data?.data || [];
+      const cartBranchIds = [
+        ...new Set(
+          cartItems.map((item) => String(item.branch_id || item.branchId))
+        ),
+      ];
 
+      if (
+        cartBranchIds.length === 0 ||
+        (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId)
+      ) {
+        setSelectedLocation(newBranchId);
+        setSelectedBranchLocation(newBranchId)
+        if (selectedBranch) {
+          setSelectedBranchRegion(selectedBranch.branchRegion || "");
+          setSelectedBranchCity(selectedBranch.branchCity || "");
+        }
+        return;
+      }
+
+      const otherBranchId = cartBranchIds.find((id) => id !== newBranchId);
+      if (otherBranchId) {
+        const otherBranch = branches.find(
+          (branch) => String(branch.value) === String(otherBranchId)
+        );
+        const otherBranchLabel = otherBranch
+          ? otherBranch.label
+          : otherBranchId;
+
+        const { isConfirmed } = await Swal.fire({
+          icon: "warning",
+          title: t("Discard items?"),
+          html: `${t(
+            "There are items in the cart for branch"
+          )} <strong>${otherBranchLabel}</strong>.<br>${t(
+            "Do you want to discard them?"
+          )}`,
+          showCancelButton: true,
+          focusCancel: true,
+          confirmButtonText: t("Yes, discard"),
+          cancelButtonText: t("No, keep"),
+          reverseButtons: true,
+        });
+
+        if (isConfirmed) {
+          try {
+            await fetch(
+              `${API_BASE_URL}/cart/delete?customer_id=${customerId}&branch_id=${otherBranchId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            setSelectedLocation(newBranchId);
+            setSelectedBranchLocation(newBranchId)
+            if (selectedBranch) {
+              setSelectedBranchRegion(selectedBranch.branchRegion || "");
+              setSelectedBranchCity(selectedBranch.branchCity || "");
+            }
+            await Swal.fire({
+              icon: "success",
+              title: t("Success"),
+              text: t(
+                `Items discarded from the cart for branch ${otherBranchLabel}`
+              ),
+              confirmButtonText: t("OK"),
+            });
+          } catch (deleteError) {
+            await Swal.fire({
+              icon: "error",
+              title: t("Error"),
+              text: t(
+                "Failed to discard items from the cart. Please try again."
+              ),
+              confirmButtonText: t("OK"),
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error during branch change:", error);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t("Error checking cart. Branch change may not work correctly."),
+        confirmButtonText: t("OK"),
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `${API_BASE_URL}/customer-branches/pagination?pageSize=10000`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch branches");
+        }
+        const result = await response.json();
+        let branchData = [];
+        if (Array.isArray(result)) {
+          branchData = result;
+        } else if (result.status === "Ok" && Array.isArray(result.data)) {
+          branchData = result.data;
+        } else if (result && Array.isArray(result.data)) {
+          branchData = result.data;
+        }
+
+        const branchOptions = branchData.map((branch) => {
+          const status = branch.branchStatus.toLowerCase();
+          const isApproved = status === "approved";
+          return {
+            value: String(branch.id || branch.branch_id),
+            label:
+              i18n.language === "en"
+                ? branch.branch_name_en || branch.branchNameEn
+                : branch.branch_name_lc ||
+                  branch.branchNameLc ||
+                  branch.branch_name_en ||
+                  branch.branchNameEn,
+            erpBranchId: branch.erpBranchId || branch.erp_branch_id,
+            branchRegion: branch.region || branch.region,
+            branchCity: branch.city || branch.branchCity || branch.branch_city,
+            raw: branch,
+            disabled: !isApproved || !branch.erpBranchId,
+            branch_name_en: branch.branch_name_en || branch.branchNameEn,
+            branch_name_lc: branch.branch_name_lc || branch.branchNameLc,
+          };
+        });
+        setBranches(branchOptions);
+      } catch (error) {
+        console.error("Error fetching branches:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchBranches();
+  }, [API_BASE_URL, i18n.language]);
+  const handleback =()=>{
+    navigate(-1)
+  }
+  console.log("isIOSsMobile",isIOSsMobile)
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
@@ -738,7 +992,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
           }
         >
           <header className={`header ${showMenu ? "show" : "show"}`}>
-            {!isMobileDevice && (
+            {!isMobile && (
               <button
                 className="mobile-menu-btn"
                 id="mobileMenuBtn"
@@ -747,7 +1001,11 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                 <FontAwesomeIcon icon={faBars} />
               </button>
             )}
-            {isMobileDevice && (
+                  {isIOSsMobile &&isMobile&& (
+i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><ArrowForwardIcon/></span>
+:<span className="nav-btn " onClick={()=>handleback()}><ArrowBackIcon/> </span>
+                  )}
+            {isMobile && (
               <img
                 src="/logos/talab_point_logo.png"
                 alt="Talab Point Logo"
@@ -755,7 +1013,65 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                 style={{ maxWidth: "100%", maxHeight: "100%" }}
               />
             )}
+
             <div className="header-title">{t(activeMenu)}</div>
+
+            {!isMobile &&searchable && !isMobileResponsive&& <><div 
+              style={{
+                display: "flex",
+                // justifyContent: "space-between",
+                gap: "10px",
+                width: "100%",
+                alignItems:"center"
+              }}
+            >
+              <div className="location-selector">
+                <SearchableDropdown
+                  id={`location-select-${catalogId}`}
+                  name="locationSelect"
+                  value={selectedLocation}
+                  onChange={handleBranchSelect}
+                  options={branches?.map((b) => ({
+                    ...b,
+                    name: b.label || b.name || b.value,
+                    disabled: b.disabled,
+                  }))}
+                  className="location-select"
+                  placeholder={t("Select Branch")}
+                  disabled={branches?.length === 0}
+                />
+                {/* {isBranchesLoading && branches.length === 0 && (
+                                                <div className="dropdown-loading">
+                                                    <LoadingSpinner size="small" />
+                                                </div>
+                                            )} */}
+                {branches?.length === 0 && (
+                  <div className="no-branches-message">
+                    {t("No branches available")}
+                  </div>
+                )}
+              </div>
+              {(user?.userType?.toLowerCase() !== "employee" ||
+                user?.userType?.toLowerCase() !== "admin") && (
+                <button
+                  className={`go-to-cart-btn ${
+                    !selectedLocation ? "disabled" : ""
+                  }`}
+                  style={{
+                    opacity: !selectedLocation ? 0.6 : 1,
+                    cursor: !selectedLocation ? "not-allowed" : "pointer",
+                  }}
+                  onClick={handleGoToCart}
+                  disabled={!selectedLocation}
+                >
+                  <FontAwesomeIcon
+                    icon={faShoppingCart}
+                    className="cart-icon"
+                  />
+                  {window.innerWidth >= 350 && <span>{t("Go to Cart")}</span>}
+                </button>
+              )}
+            </div></>}
             <div className="user-text-header">
               {!isMobile && (
                 <div className="text">
@@ -778,7 +1094,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                       </div>
                     </div>
                   )}
-                  {user?.userType?.toLowerCase() === "customer" &&
+                  {/* {user?.userType?.toLowerCase() === "customer" &&
                     user?.roles[0] === "customer_primary" && (
                       <div className="text">
                         <div
@@ -807,8 +1123,8 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                           {t("Branches")}: {user?.branchNumber}
                         </div>
                       </div>
-                    )}
-                  {user?.userType?.toLowerCase() === "customer" &&
+                    )} */}
+                  {/* {user?.userType?.toLowerCase() === "customer" &&
                     user?.roles[0] === "branch_primary" && (
                       <div className="text">
                         <div
@@ -827,7 +1143,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                           : {user?.branchNumberPrimary}
                         </div>
                       </div>
-                    )}
+                    )} */}
                 </div>
               )}
 
@@ -835,25 +1151,18 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                 <FontAwesomeIcon icon={faLanguage} />
                 <span>{isRTL ? "EN" : "عربى"}</span>
               </button>
-              {isMobileDevice && (
-                <>
-                  <div className="logout-icon" onClick={handleLogout}>
-                    <FontAwesomeIcon icon={faSignOutAlt} />
-                  </div>
-                </>
-              )}
             </div>
           </header>
           <div
             className="content"
             style={{
-              padding: isMobileDevice ? (activeMenu ? "0 0px 0px" : "0 20px") : "0 20px",
+              padding: isMobile ? (activeMenu ? "0 0px 0px" : "0 20px") : "20px",
             }}
           >
             {children}
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
-          {isMobile && isMobileDevice && (
+          {isMobile && isMobile && (
             <div className={`mobile-bottom-menu ${showMenu ? "show" : "show"}`}>
               {menuItems
                 .filter(
@@ -870,7 +1179,7 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
 
                   // UPDATED: Menu item is active only when clicked
                   const isMenuItemActive = () => {
-                    if (label === "Menu") {
+                    if (label === "Others") {
                       return showOrdersSubMenu;
                     }
                     return activeMenu === t(label);
@@ -898,17 +1207,8 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
             </div>
           )}
           {/* UPDATED: Only show orders submenu on mobile */}
-          {isMobile && isMobileDevice && showOrdersSubMenu && (
+          {isMobile && isMobile && showOrdersSubMenu && (
             <div className={`orders-bottom-bar ${showMenu ? "show" : "show"}`}>
-              {(isV("BankTransfer") || isV("Bank Transactions")) && (
-                <button
-                  className="orders-btn"
-                  onClick={() => handleMenuClick("Bank")}
-                >
-                  {t("Bank")}
-                </button>
-              )}
-
               {isV("Support") && (
                 <button
                   className="orders-btn"
@@ -926,6 +1226,18 @@ function Sidebar({ children, title, handleGoToCart, MenuName = null }) {
                   {t("Maintenance")}
                 </button>
               )}
+              {isV("BankTransfer") && (
+                <button
+                  className="orders-btn"
+                  onClick={() => handleMenuClick("Bank")}
+                >
+                  {t("Bank")} {isV("BankTransfer")}
+                </button>
+              )}
+              <div className="orders-btn" onClick={handleLogout}>
+                {/* <FontAwesomeIcon icon={faSignOutAlt} /> */}
+                {t("Logout")}
+              </div>
             </div>
           )}
         </div>

@@ -13,30 +13,32 @@ const ApprovalDialog = ({
   customerName,
   title,
   subtitle,
-  placeholder
+  placeholder,
+  pageType // Add this prop to differentiate between 'order' and 'support'
 }) => {
   const { t } = useTranslation();
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!comment.trim() && action === 'reject') {
+    // Require comment for reject, cancel, close, and reassign actions
+    if (!comment.trim() && ['reject', 'cancel', 'close', 'reassign'].includes(action)) {
       Swal.fire({
         icon: 'warning',
         title: t('Warning'),
-        text: t('Please provide a reason for rejection'),
+        text: t('Please provide a reason'),
         confirmButtonText: t('OK')
       });
-      // alert(t('Please provide a reason for rejection'));
       return;
     }
 
     setIsSubmitting(true);
     try {
       await onSubmit(comment);
+      setComment(''); // Reset comment after submission
       onClose();
     } catch (error) {
-      console.error('Error submitting approval:', error);
+      console.error('Error submitting:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -44,24 +46,38 @@ const ApprovalDialog = ({
 
   if (!isOpen) return null;
 
+  // Determine button text based on action and pageType
+  const getActionButtonText = () => {
+    if (isSubmitting) return t('Processing...');
+
+    switch (action) {
+      case 'approve':
+        return t('Approve');
+      case 'reject':
+        return t('Reject');
+      case 'cancel':
+        return pageType === 'order' ? t('Cancel Order') : t('Cancel Ticket');
+      case 'close':
+        return t('Close Ticket');
+      case 'reassign':
+        return t('Request to Reassign');
+      default:
+        return t('Submit');
+    }
+  };
+
   return (
     <div className="approval-dialog-overlay">
       <div className="approval-dialog">
         <div className="approval-dialog-header">
-          <h3>
-            {action === 'approve' ? t(title) : t(title)}
-          </h3>
+          <h3>{t(title)}</h3>
           <button className="close-button" onClick={onClose}>
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
 
         <div className="approval-dialog-body">
-          <p>
-            {action === 'approve'
-              ? t(subtitle)
-              : t(subtitle)}
-          </p>
+          <p>{t(subtitle)}</p>
 
           <textarea
             className="approval-comment-textarea"
@@ -83,13 +99,12 @@ const ApprovalDialog = ({
           <button
             className={`action-button ${action}`}
             onClick={handleSubmit}
-            disabled={isSubmitting || (action === 'reject' && !comment.trim()) || (action === 'close' && !comment.trim()) || (action === 'reassign' && !comment.trim())}
+            disabled={
+              isSubmitting ||
+              (['reject', 'cancel', 'close', 'reassign'].includes(action) && !comment.trim())
+            }
           >
-            {isSubmitting ? t('Processing...') :
-              action === 'approve' ? t('Approve') :
-                action === 'reject' ? t('Reject') :
-                  action === 'close' ? t('Close Ticket') :
-                    action === 'reassign' ? t('Request to Reassign') : ''}
+            {getActionButtonText()}
           </button>
         </div>
       </div>

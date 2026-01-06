@@ -445,7 +445,7 @@ const BankTransactions = () => {
                               display: "none",
                             },
                             "& .MuiDataGrid-toolbar": {
-                              padding: "0px",
+                              padding: "0px 8px",
                               gap: "10px",
                               border: "none",
                             },
@@ -463,10 +463,11 @@ const BankTransactions = () => {
                       }
                     />
                   </div>
+                    <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
                   <BankTransactionsCard
                     transactions={transactions}
                     setSelectedRow={handleRowClick}
-                  />
+                  /></div>
                 </>
               )}
             </div>
@@ -597,6 +598,8 @@ const BankTransactions = () => {
           )}
         </div>
       )}
+
+       
     </Sidebar>
   );
 };

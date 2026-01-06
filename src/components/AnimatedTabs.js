@@ -96,7 +96,7 @@ const AnimatedTabs = ({
                 backgroundColor: mode === "dark" ? "#7F8C8D" : "#E6EDF5",
                 borderRadius: "30px",
                 padding: "4px",
-                width: "300px",
+                width: "210px",
             }}
         >
             <Tabs

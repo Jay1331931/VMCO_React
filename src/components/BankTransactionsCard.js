@@ -53,6 +53,7 @@ function BankTransactionsCard({ transactions, setSelectedRow, handleAddClick }) 
         color: "#545454",
         height: "92%",
         position: "relative",
+        padding:"10px"
       }}
     >
       <Grid

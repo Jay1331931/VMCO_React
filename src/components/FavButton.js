@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MdFavoriteBorder, MdFavorite } from "react-icons/md";
-
-const FavoritesButton = ({ initialState = false, onToggle = null }) => {
+import usePlatform from "../utilities/platform";
+const FavoritesButton = ({ initialState = false, onToggle = null,isPopup=null }) => {
     const [isFavorite, setIsFavorite] = useState(initialState);
-    
+     const { t, i18n } = useTranslation();
+     const isMobile=usePlatform()
     // Update when initialState changes (for example when the product changes)
     useEffect(() => {
         setIsFavorite(initialState);
     }, [initialState]);
-    
+        const dir = i18n.dir();
+    const isRTL = dir === 'rtl';
     const styles = {
         favoriteBtn: {
             position: 'absolute',
             top: '10px',
-            right: '10px',
+                 ...(isRTL ? { left: '10px' } : isMobile && isPopup ? {left: '10px' }:{ right: '10px'} ),
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',

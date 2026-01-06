@@ -352,7 +352,9 @@ function MaintenanceDetails() {
         ticket.branchId &&
         branches.length > 0
       ) {
-        calculateMaintenanceCharges();
+          const selectBranch= branches.filter((res)=>res.id== ticket.branchId);
+        const city=selectBranch?.city?.toLowerCase()
+          calculateMaintenanceCharges(city, ticket.warrantyEndDate);
       }
     };
 
@@ -1154,8 +1156,9 @@ function MaintenanceDetails() {
       console.warn('Branch city not found');
       return;
     }
-
+let warrantyEndDate =null
     try {
+      
       const { data } = await axios.get(
         `${API_BASE_URL}/warranty-end-date/${ticket?.erpCustId}/${SNo}`,
         {
@@ -1167,11 +1170,15 @@ function MaintenanceDetails() {
         }
       );
       const rawDate = data?.details?.warrantdate || "";
+  
       if (data?.success) {
+            warrantyEndDate=rawDate
         setTicket((prev) => ({
           ...prev,
           warrantyEndDate: formatDateInput(rawDate, "date") || "",
         }));
+      
+
       } 
       // else {
       //   Swal.fire({
@@ -1186,10 +1193,8 @@ function MaintenanceDetails() {
       console.error("Error handling serial number change:", error);
     }
     const city = selectedBranch.city.toLowerCase();
-    const warrantyEndDate = ticket.warrantyEndDate || null;
 
-    await calculateMaintenanceCharges(city, warrantyEndDate);
-
+    await calculateMaintenanceCharges(city,warrantyEndDate);
   };
 
   const handleAddFeedback = async () => {

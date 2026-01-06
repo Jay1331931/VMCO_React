@@ -61,6 +61,7 @@ const defaultOrder = {
 };
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const APP_BLOB_URL = process.env.REACT_APP_BLOB_STORAGE_URL;
 
 // Helper function to convert payment percentage from decimal to dropdown format
 const convertPaymentPercentageToDropdown = (paymentPercentage) => {
@@ -146,6 +147,7 @@ function OrderDetails() {
 
   // State variables
   const [loading, setLoading] = useState(true);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState(null);
   const [showInventory, setShowInventory] = useState(false);
@@ -1998,69 +2000,103 @@ function OrderDetails() {
   };
 
   // cancel handler
-  const handleCancelOrder = async (orderId) => {
-    console.log("Cancelling order");
-    if (!orderId) {
+  const handleCancelOrderClick = () => {
+    if (!formData.id) {
       Swal.fire({
-        icon: "warning",
-        title: t("Validation Error"),
-        text: t("Order ID is missing."),
-        confirmButtonText: t("OK"),
+        icon: 'warning',
+        title: t('Validation Error'),
+        text: t('Order ID is missing.'),
+        confirmButtonText: t('OK')
+      });
+      return;
+    }
+    setIsCancelDialogOpen(true);
+  };
+
+  const handleCancelOrderSubmit = async (comment) => {
+    console.log('Cancelling order with comment:', comment);
+
+    if (!formData.id) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('Validation Error'),
+        text: t('Order ID is missing.'),
+        confirmButtonText: t('OK')
       });
       return;
     }
 
-    const payload = {
-      status: "Cancelled",
-    };
-
     try {
       setCancelling(true);
 
-      const response = await fetch(
-        `${API_BASE_URL}/sales-order/id/${formData.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      // First, update the order status to 'Cancelled'
+      const statusResponse = await fetch(`${API_BASE_URL}sales-order/id/${formData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          status: 'Cancelled'
+        }),
+      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Server response:", errorText);
+      if (!statusResponse.ok) {
+        const errorText = await statusResponse.text();
+        console.error('Server response:', errorText);
         try {
           const errorData = JSON.parse(errorText);
-          throw new Error(errorData.message || "Failed to cancel order");
+          throw new Error(errorData.message || 'Failed to cancel order');
         } catch (e) {
-          throw new Error(
-            `Failed to cancel order: ${response.status} ${response.statusText}`
-          );
+          throw new Error(`Failed to cancel order: ${statusResponse.status} ${statusResponse.statusText}`);
         }
       }
-      Swal.fire({
-        icon: "success",
-        title: t("Order Cancelled"),
-        text: t("Order cancelled successfully!"),
-        confirmButtonText: t("OK"),
+
+      // Second, add the comment with cancellation details to the comments column
+      const commentPayload = {
+        comment: comment,
+        action: 'Cancelled',
+        createdBy: user?.name || user?.username || user?.employeeId,
+        createdAt: new Date().toISOString()
+      };
+
+      const commentResponse = await fetch(`${API_BASE_URL}sales-order/id/${formData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          comments: JSON.stringify(commentPayload)
+        }),
       });
-      navigate("/orders"); // or refresh the current view if needed
-    } catch (err) {
-      console.error("Error cancelling order:", err);
-      setError(err.message);
+
+      if (!commentResponse.ok) {
+        console.error('Failed to save comment, but order was cancelled');
+      }
+
       Swal.fire({
-        icon: "error",
-        title: t("Error Cancelling Order"),
-        text: err.message || t("Failed to cancel order: "),
-        confirmButtonText: t("OK"),
+        icon: 'success',
+        title: t('Order Cancelled'),
+        text: t('Order cancelled successfully!'),
+        confirmButtonText: t('OK')
+      });
+
+      navigate('/orders');
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      Swal.fire({
+        icon: 'error',
+        title: t('Error Cancelling Order'),
+        text: err.message || t('Failed to cancel order'),
+        confirmButtonText: t('OK')
       });
     } finally {
       setCancelling(false);
+      setIsCancelDialogOpen(false);
     }
   };
+
 
   const handleCheckout = async (orderId, email = false, copyUrl = false) => {
     try {
@@ -2086,9 +2122,9 @@ function OrderDetails() {
           confirmButtonText: t("OK"),
         });
       } else if (copyUrl) {
- Swal.fire({
-  title: t(`Payment Link`),
-  html: `
+        Swal.fire({
+          title: t(`Payment Link`),
+          html: `
     <div style="display:flex;align-items:center; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <input id="payment-link"
              style="flex:1; border:none; padding:10px 12px; font-size:14px; outline:none;"
@@ -2103,11 +2139,11 @@ function OrderDetails() {
       </button>
     </div>
   `,
-  showConfirmButton: false,
-  showCancelButton: false,
-  allowOutsideClick: false,
-  allowEscapeKey: false,
-  footer: `
+          showConfirmButton: false,
+          showCancelButton: false,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          footer: `
     <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
       <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style="background:#009345; display:flex; align-items:center; gap:8px;">
         <i class="fas fa-paper-plane" style="font-size:14px;"></i>
@@ -2119,86 +2155,86 @@ function OrderDetails() {
       </button>
     </div>
   `,
-  didOpen: () => {
-    const input = document.getElementById("payment-link");
-    const copyBtn = document.getElementById("copyBtn");
-    const copyIcon = copyBtn.querySelector('i');
-    const copyText = document.getElementById("copyText");
-    const sendLinkBtn = document.getElementById("sendLinkBtn");
-    const closeBtn = document.getElementById("closeBtn");
+          didOpen: () => {
+            const input = document.getElementById("payment-link");
+            const copyBtn = document.getElementById("copyBtn");
+            const copyIcon = copyBtn.querySelector('i');
+            const copyText = document.getElementById("copyText");
+            const sendLinkBtn = document.getElementById("sendLinkBtn");
+            const closeBtn = document.getElementById("closeBtn");
 
-    // Hover effect
-    copyBtn.addEventListener("mouseenter", () => {
-      copyBtn.style.background = "#f5f5f5";
-      copyIcon.style.color = "#333";
-      copyText.style.color = "#333";
-    });
-    
-    copyBtn.addEventListener("mouseleave", () => {
-      copyBtn.style.background = "#fff";
-      copyIcon.style.color = "#666";
-      copyText.style.color = "#666";
-    });
+            // Hover effect
+            copyBtn.addEventListener("mouseenter", () => {
+              copyBtn.style.background = "#f5f5f5";
+              copyIcon.style.color = "#333";
+              copyText.style.color = "#333";
+            });
 
-    // Copy button
-    copyBtn.addEventListener("click", async () => {
-      input.select();
-      input.setSelectionRange(0, 99999);
-      
-      try {
-        await navigator.clipboard.writeText(input.value);
-        
-        // Success state
-        copyIcon.className = "fas fa-check";
-        copyIcon.style.color = "#28a745";
-        copyText.textContent = "Copied!";
-        copyText.style.color = "#28a745";
-        copyBtn.style.background = "#e8f5e9";
-        copyBtn.style.borderLeftColor = "#c3e6cb";
-        
-        // Revert after 2 seconds
-        setTimeout(() => {
-          copyIcon.className = "fas fa-copy";
-          copyIcon.style.color = "#666";
-          copyText.textContent = "Copy";
-          copyText.style.color = "#666";
-          copyBtn.style.background = "#fff";
-          copyBtn.style.borderLeftColor = "#ddd";
-        }, 2000);
-      } catch (err) {
-        console.error("Failed to copy: ", err);
-        
-        // Error state
-        copyIcon.className = "fas fa-times";
-        copyIcon.style.color = "#dc3545";
-        copyText.textContent = "Failed!";
-        copyText.style.color = "#dc3545";
-        copyBtn.style.background = "#f8d7da";
-        copyBtn.style.borderLeftColor = "#f5c6cb";
-        
-        setTimeout(() => {
-          copyIcon.className = "fas fa-copy";
-          copyIcon.style.color = "#666";
-          copyText.textContent = "Copy";
-          copyText.style.color = "#666";
-          copyBtn.style.background = "#fff";
-          copyBtn.style.borderLeftColor = "#ddd";
-        }, 2000);
-      }
-    });
+            copyBtn.addEventListener("mouseleave", () => {
+              copyBtn.style.background = "#fff";
+              copyIcon.style.color = "#666";
+              copyText.style.color = "#666";
+            });
 
-    // Send Link button
-    sendLinkBtn.addEventListener("click", () => {
-      handleCheckout(orderId, true, false);
-      Swal.close();
-    });
+            // Copy button
+            copyBtn.addEventListener("click", async () => {
+              input.select();
+              input.setSelectionRange(0, 99999);
 
-    // Close button
-    closeBtn.addEventListener("click", () => {
-      Swal.close();
-    });
-  },
-});
+              try {
+                await navigator.clipboard.writeText(input.value);
+
+                // Success state
+                copyIcon.className = "fas fa-check";
+                copyIcon.style.color = "#28a745";
+                copyText.textContent = "Copied!";
+                copyText.style.color = "#28a745";
+                copyBtn.style.background = "#e8f5e9";
+                copyBtn.style.borderLeftColor = "#c3e6cb";
+
+                // Revert after 2 seconds
+                setTimeout(() => {
+                  copyIcon.className = "fas fa-copy";
+                  copyIcon.style.color = "#666";
+                  copyText.textContent = "Copy";
+                  copyText.style.color = "#666";
+                  copyBtn.style.background = "#fff";
+                  copyBtn.style.borderLeftColor = "#ddd";
+                }, 2000);
+              } catch (err) {
+                console.error("Failed to copy: ", err);
+
+                // Error state
+                copyIcon.className = "fas fa-times";
+                copyIcon.style.color = "#dc3545";
+                copyText.textContent = "Failed!";
+                copyText.style.color = "#dc3545";
+                copyBtn.style.background = "#f8d7da";
+                copyBtn.style.borderLeftColor = "#f5c6cb";
+
+                setTimeout(() => {
+                  copyIcon.className = "fas fa-copy";
+                  copyIcon.style.color = "#666";
+                  copyText.textContent = "Copy";
+                  copyText.style.color = "#666";
+                  copyBtn.style.background = "#fff";
+                  copyBtn.style.borderLeftColor = "#ddd";
+                }, 2000);
+              }
+            });
+
+            // Send Link button
+            sendLinkBtn.addEventListener("click", () => {
+              handleCheckout(orderId, true, false);
+              Swal.close();
+            });
+
+            // Close button
+            closeBtn.addEventListener("click", () => {
+              Swal.close();
+            });
+          },
+        });
       } else if (!email && !copyUrl && data?.details?.url) {
         // window.open(data.details.url, "_blank");
         const extracted = data?.details?.url?.split('/payment-options')[1]
@@ -5083,17 +5119,17 @@ function OrderDetails() {
                                 <>
                                   <div key={item.id || idx} className="cart-item">
                                     {/* Product Image */}
-                                    <div className="item-image">
+                                    <div className="item-image" style={{ flexDirection: "row", justifyContent: "left" }}>
                                       <img
-                                        src={`https://vmcowebportalprod.blob.core.windows.net/vmco-products/${item.erpProdId}/default.jpg`}
+                                        src={`${APP_BLOB_URL}/vmco-products/${item.erpProdId}/default.jpg`}
                                         alt={item.name}
                                         onError={(e) => {
                                           e.target.onerror = null;
-                                          e.target.src = `https://vmcowebportalprod.blob.core.windows.net/vmco-products/${item.erpProdId}/default.jpg`;
+                                          e.target.src = `${APP_BLOB_URL}/vmco-products/${item.erpProdId}/default.jpg`;
                                         }}
                                         style={{
-                                          width: "100%",
-                                          height: "100%",
+                                          width: "100px",
+                                          height: "100px",
                                           objectFit: "contain",
                                           borderRadius: 8,
                                         }}
@@ -5102,7 +5138,7 @@ function OrderDetails() {
 
                                     {/* Product Details */}
                                     <div className="item-details" style={{ gap: 0, marginTop: 0 }}>
-                                      {/* <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4> */}
+                                      <h4 className="item-name">{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
                                       <p className="item-code">{item.productCode}</p>
                                       {item.description && (
                                         <p className="item-description">{item.description}</p>
@@ -5111,20 +5147,20 @@ function OrderDetails() {
                                       <div className="product-meta">
                                         <p>
                                           {t("Unit Price: ")}
-                                          <span style={{fontWeight:"460"}}>
+                                          <span style={{ fontWeight: "460" }}>
                                             {Number(item.unitPrice || item.price || 0).toFixed(2)}{" "}
                                             {t("SAR")}
                                           </span>
                                         </p>
-                                        <p style={{marginBottom:"12px"}}>
-                                          {t("Quantity")}: <span style={{fontWeight:"460"}}>{item.quantity || 0}</span>
+                                        <p style={{ marginBottom: "12px" }}>
+                                          {t("Quantity")}: <span style={{ fontWeight: "460" }}>{item.quantity || 0}</span>
                                         </p>
                                         <div
                                           className="quantity-controller"
                                           style={{
                                             display: "flex",
                                             alignItems: "center",
-                                            justifyContent: "center",
+                                            justifyContent: "flex-start",
                                           }}
                                         >
                                           <QuantityController
@@ -5202,21 +5238,21 @@ function OrderDetails() {
                                       </div>
                                     </div>
                                   </div>
-                                  <div style={{ marginBottom: 10 }}>
-                                    <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
-                                  </div>
+                                  {/* <div style={{ marginBottom: 10 }}>
+                                   <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
+                                  </div> */}
                                   {/* Price Summary */}
-                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px" }} >
+                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px", justifyContent: "space-between" }} >
                                     <div className="item-price-panel" >
                                       <span className="tax-row" style={{ fontSize: 13 }} >
                                         {t("VAT: ")}
                                         {Number(item.vatPercentage)}%
                                       </span>
-                                      {formData.entity.toLocaleLowerCase()===Constants.ENTITY.VMCO.toLocaleLowerCase() &&
-                                      <span className="line-discount-row" style={{ fontSize: 13 }} >
-                                        {t("Discount: ")}
-                                        {Number(item.lineDiscount)}%
-                                      </span>}
+                                      {formData.entity.toLocaleLowerCase() === Constants.ENTITY.VMCO.toLocaleLowerCase() &&
+                                        <span className="line-discount-row" style={{ fontSize: 13 }} >
+                                          {t("Discount: ")}
+                                          {Number(item.lineDiscount)}%
+                                        </span>}
 
                                       <span className="item-total-price" style={{ fontSize: 13 }}>
                                         {t("Net Amount:")}{" "}
@@ -5607,16 +5643,17 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV("btnCancel", fromApproval, false) && isE("btnCancel") && (
+                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
                   <button
-                    className="order-action-btn"
-                    onClick={() => handleCancelOrder("cancel order")}
-                    disabled={cancelling ||
-                      (formData.status && !["open"].includes(formData.status.toLowerCase())) ||
-                      (formData.paymentStatus && ["paid", "under review"].includes(formData.paymentStatus.toLowerCase()))
+                    className="order-action-btn reject"
+                    onClick={handleCancelOrderClick} // Changed from handleCancelOrder
+                    disabled={
+                      cancelling ||
+                      !['open'].includes(formData.status?.toLowerCase()) ||
+                      ['paid', 'under review'].includes(formData.paymentStatus?.toLowerCase())
                     }
                   >
-                    {cancelling ? t("Cancelling...") : t("Cancel Order")}
+                    {cancelling ? t('Cancelling...') : t('Cancel Order')}
                   </button>
                 )}
 
@@ -5756,6 +5793,17 @@ function OrderDetails() {
             showModal={showModal}
             onClose={() => handleClose()}
             t={t}
+          />
+          <ApprovalDialog
+            isOpen={isCancelDialogOpen}
+            onClose={() => setIsCancelDialogOpen(false)}
+            action="cancel"
+            onSubmit={handleCancelOrderSubmit}
+            customerName={formData.selectedCustomerName}
+            title="Cancel Order"
+            subtitle={`Are you sure you want to cancel this order? Please provide a reason for cancellation.`}
+            placeholder="Enter reason for cancellation..."
+            pageType="order" // Important: specifies this is for order page
           />
         </div>
       )

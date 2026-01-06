@@ -16,6 +16,8 @@ import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import api from "../utilities/api";
 import Constants from "../constants";
 import LoadingSpinner from "./LoadingSpinner";
+import SearchableDropdown from "./SearchableDropdown";
+import usePlatform from "../utilities/platform";
 const getCookie = (name) => {
   // const cookies = document.cookie
   //   .split(";")
@@ -73,6 +75,8 @@ const AddBankTransaction = () => {
   const [totalamount, setAmount] = useState(0);
   const [isSubmitting, setisSubmitting] = useState(null);
   const [isUploading,setIsUploading]=useState(null)
+   const [maxDate, setMaxDate] = useState('');
+  const isMobile=usePlatform()
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -485,7 +489,32 @@ setIsUploading(true)
   // };
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
+ const fetchSystemDate = useCallback(
+    async () => {
+     
+      try {
 
+        const { data } = await api.get(
+          `${API_BASE_URL}/server-date`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if(data?.status?.toLowerCase()==="success"){
+          console.log("data?.data",data?.data)
+ setMaxDate(data?.data);
+        }
+       
+      } catch (err) {
+        console.error("Error fetching date:", err);
+       
+      } 
+    },
+    []
+  );
+  useEffect(()=>{
+fetchSystemDate()
+  },[])
   const renderTemplate = () => {
     return (
       <div className="bank-add-container">
@@ -601,7 +630,7 @@ setIsUploading(true)
                 }
                 onChange={handleChange}
                 disabled={!!updateTransaction?.transactionDate}
-                max={new Date().toISOString().split("T")[0]}
+                max={maxDate}
               />
               {fieldErrors.transactionDate && (
                 <div className="error-message" style={{ color: "red" }}>
@@ -610,7 +639,8 @@ setIsUploading(true)
               )}
             </div>
 
-            {Object.keys(updateTransaction)?.length === 0 && (
+            { !isMobile ? 
+            Object.keys(updateTransaction)?.length === 0 && (
               <div className="form-group">
                 <label htmlFor="entity">
                   {t("Entity")} <span style={{ color: "red" }}> *</span>
@@ -635,7 +665,41 @@ setIsUploading(true)
                   </div>
                 )}
               </div>
-             )} 
+             ) :      Object.keys(updateTransaction)?.length === 0 && (
+  <div className="form-group">
+    <label htmlFor="entity">
+      {t("Entity")} <span style={{ color: "red" }}> *</span>
+    </label>
+    <SearchableDropdown
+      id="entity"
+      name="entity"
+      className="dropdown-mobile-bank "
+      value={formData.entity || updateTransaction?.entity || ""}
+      onChange={(e) => {
+        handleChange({
+          target: { 
+            name: "entity", 
+            value: e.target.value 
+          }
+        });
+      }}
+      disabled={orderId}
+      options={[
+        { value: "", name: t("Select Entity") },
+        { value: "VMCO", name: "VMCO" },
+        { value: "NAQI", name: "NAQI" },
+        { value: "SHC", name: "SHC" },
+        { value: "DAR", name: "DAR" },
+        { value: "GMTC", name: "GMTC" }
+      ]}
+    />
+    {fieldErrors.entity && (
+      <div className="error-message" style={{ color: "red" }}>
+        {t(fieldErrors.entity)}
+      </div>
+    )}
+  </div>
+)}
 
             {([Constants.ENTITY.NAQI?.toLowerCase(),Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
               Object.keys(updateTransaction).length > 0 ? (
@@ -1140,7 +1204,9 @@ setIsUploading(true)
   color: #fff;
 }
 
-
+.dropdown-mobile-bank{
+width:100% !important;
+}
 
 
 `}

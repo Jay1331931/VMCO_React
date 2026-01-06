@@ -38,8 +38,12 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import SyncIcon from "@mui/icons-material/Sync";
 import FileUploadProgress from "../components/FileUploadProgress";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import { getDateOnly, getTimeOnly } from "../utilities/convertUtcToTimeZone";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const userTimezone = dayjs.tz.guess();
 const getStatusClass = (status) => {
   switch (status?.toLowerCase()) {
     case "approved":
@@ -142,7 +146,7 @@ function Orders() {
   const pageName = isApprovalMode ? "ordersApproval" : "orders";
   const columnWidthsKey = `${pageName}_${role}_columnWidths`;
   const [columnDimensions, setColumnDimensions] = useState({});
-
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(
     initialCategories[0].value
@@ -169,6 +173,40 @@ function Orders() {
       ? match.descriptionLc || match.description
       : match.description;
   };
+
+  useEffect(() => {
+    console.log("Getting Filters from local Storage...");
+    const savedFilters = localStorage.getItem('ordersfilters');
+    if (savedFilters) {
+      console.log("Fliters from local storage:", savedFilters);
+      try {
+        const parsed = JSON.parse(savedFilters);
+        if (parsed.filters) setFilters(parsed.filters);
+        if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+        if (parsed.activeCategory) setActiveCategory(parsed.activeCategory);
+        if (parsed.categoryFilter) setCategoryFilter(parsed.categoryFilter);
+        if (parsed.subCategoryFilter) setSubCategoryFilter(parsed.subCategoryFilter);
+      } catch (error) {
+        console.error('Error parsing saved filters:', error);
+      }
+    }
+    setFiltersInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (!filtersInitialized) {
+    return;
+  }
+    const filtersToSave = {
+      filters,
+      searchQuery,
+      activeCategory,
+      categoryFilter,
+      subCategoryFilter
+    };
+    localStorage.setItem('ordersfilters', JSON.stringify(filtersToSave));
+  }, [filters, searchQuery, activeCategory, categoryFilter, subCategoryFilter]);
+
   const storageKey = `${pageName}_${role}_columns`;
   useEffect(() => {
     const savedModel = localStorage.getItem(storageKey);
@@ -176,10 +214,11 @@ function Orders() {
       setColumnVisibilityModel(JSON.parse(savedModel));
     }
   }, [storageKey]);
+
+
   const [isAtTop, setIsAtTop] = useState(true);
   const [showHeader, setShowHeader] = useState(true);
   const dragStartY = useRef(0);
-
   useEffect(() => {
     const handleTouchStart = (e) => {
       dragStartY.current = e.touches[0].clientY;
@@ -218,6 +257,7 @@ function Orders() {
     container?.addEventListener("scroll", handleScroll);
     return () => container?.removeEventListener("scroll", handleScroll);
   }, []);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -642,20 +682,21 @@ function Orders() {
   };
 
   useEffect(() => {
-    if (loading) {
+    if (!filtersInitialized || loading) {
       return;
     }
     if (user) {
       if (isApprovalMode) {
         fetchApprovals(page, searchQuery, filters);
       } else {
-        console.log("ddddd");
         if (user?.userType === "employee") {
-          setFilters({ entity: initialCategories[0].entity, ...filters });
-          fetchOrders(page, searchQuery, {
-            entity: initialCategories[0].entity,
-            ...filters,
-          });
+          if (!filters.entity && Object.keys(filters).length === 0) {
+            const updatedFilters = { entity: initialCategories[0].entity };
+            setFilters(updatedFilters);
+            fetchOrders(page, searchQuery, updatedFilters);
+          } else {
+            fetchOrders(page, searchQuery, filters);
+          }
         } else {
           fetchOrders(page, searchQuery, filters);
         }
@@ -667,8 +708,8 @@ function Orders() {
     user,
     fetchOrders,
     filters,
-    // isApprovalMode,
     activeCategory,
+    filtersInitialized,
   ]);
 
   const rbacMgr = new RbacManager(
@@ -1089,6 +1130,11 @@ function Orders() {
       },
     ],
   };
+// Test in your component or console
+const testDate = "2026-01-02 05:03:17.724959";
+const DATSSS=getTimeOnly(testDate)
+console.log("Test date:", DATSSS);
+
 
   const orderColumns = [
     {
@@ -1305,48 +1351,21 @@ function Orders() {
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
     },
-    {
-      field: "createdAt",
-      headerName: t("Order Placement Date"),
-      include: isV("createdAt"),
-      searchable: false,
-      width: columnDimensions["createdAt"]?.width || 150,
-      // flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => {
-        if (!params?.row?.createdAt) return <span> </span>;
+   {
+  field: "createdAt",
+  headerName: t("Order Placement Date"),
+  include: isV("createdAt"),
+  searchable: false,
+  width: columnDimensions["createdAt"]?.width || 150,
+  align: isArabic ? "right" : "left",
+  headerAlign: isArabic ? "right" : "left",
+renderCell: (params) => {
+  if (!params?.row?.createdAt) return <span> </span>;
 
-        const date = new Date(params.row.createdAt);
-        console.log(
-          "As UTC date:",
-          new Date(params.row.createdAt + "Z").toISOString()
-        );
-        console.log("Original Date:", params.row.createdAt);
-        console.log(date);
-        console.log("Timezone Offset (minutes):", date.getTimezoneOffset());
-        console.log("UTC Time:", date.toISOString());
-        // Convert to Riyadh timezone (UTC+3)
-        const riyadhDate = new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Riyadh",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(date);
+  // const dateObj = dayjs(, "MM/DD/YYYY, HH:mm:ss").utc();
+  // const riyadhTime = dateObj.tz('Asia/Riyadh');
 
-        console.log("Riyadh Date:", riyadhDate);
-
-        const riyadhTime = new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Riyadh",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }).format(date);
-
-        console.log("Riyadh Time:", riyadhTime);
-
-        return (
+    return (
           <div
             style={{
               display: "flex",
@@ -1358,15 +1377,14 @@ function Orders() {
             }}
           >
             <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
-              {riyadhDate}
+             {  getDateOnly(params.row.createdAt)} 
             </span>
             <span style={{ fontSize: "0.8rem", color: "#666" }}>
-              {riyadhTime}
+              {getTimeOnly(params.row.createdAt)}
             </span>
           </div>
         );
-      },
-    },
+},},
     {
       field: "totalAmount",
       headerName: t("Total Amount"),
@@ -1916,24 +1934,24 @@ function Orders() {
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         if (!params?.row?.createdAt) return <span> </span>;
+   
+        // const date = new Date(params.row.createdAt);
 
-        const date = new Date(params.row.createdAt);
+        // // Convert to Riyadh timezone (UTC+3)
+        // const riyadhDate = new Intl.DateTimeFormat("en-GB", {
+        //   timeZone: "Asia/Riyadh",
+        //   year: "numeric",
+        //   month: "2-digit",
+        //   day: "2-digit",
+        // }).format(date);
 
-        // Convert to Riyadh timezone (UTC+3)
-        const riyadhDate = new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Riyadh",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(date);
-
-        const riyadhTime = new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Riyadh",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }).format(date);
+        // const riyadhTime = new Intl.DateTimeFormat("en-GB", {
+        //   timeZone: "Asia/Riyadh",
+        //   hour: "2-digit",
+        //   minute: "2-digit",
+        //   second: "2-digit",
+        //   hour12: false,
+        // }).format(date);
 
         return (
           <div
@@ -1946,11 +1964,11 @@ function Orders() {
               lineHeight: "1.2",
             }}
           >
-            <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
-              {riyadhDate}
+           <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
+             {  getDateOnly(params.row.createdAt)} 
             </span>
             <span style={{ fontSize: "0.8rem", color: "#666" }}>
-              {riyadhTime}
+              {getTimeOnly(params.row.createdAt)}
             </span>
           </div>
         );
@@ -2495,42 +2513,7 @@ function Orders() {
       <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin") ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
       >
-        {user?.userType.toLowerCase() === "employee" && (
-          <div className="filter-section">
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                gap: 12,
-                overflowX: "auto",
-                scrollbarWidth: "none",
-              }}
-            >
-              <Tabs
-                tabs={filteredCategoryTabs}
-                activeTab={activeCategory}
-                onTabChange={(newCategory) => {
-                  console.log(
-                    "🔄 Tab changing from",
-                    activeCategory,
-                    "to",
-                    newCategory
-                  );
-                  setActiveCategory(newCategory);
-                  setFilters({ entity: newCategory });
-                  setApprovalMode(false);
-                  fetchOrders(1, searchQuery, { entity: newCategory });
-                  setSearchQuery("");
-                  setCategoryFilter("");
-                  setSubCategoryFilter("");
-                  setSubCategoryOptions([]);
-                }}
-                variant={isMobile ? 'mobile' : 'pc'}
-              />
-            </div>
-          </div>
-        )}
+
 
         {/* {isMobile ? (
           <div className="table-container">
@@ -2632,30 +2615,47 @@ function Orders() {
             <div className="error-message">{error}</div>
           ) : (
             <>
-              <div
-                className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}
-              // style={{
-              //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
-              //   position: "sticky",
-              //   zIndex: 20,
-              //   transition: "top 0.3s ease",
-              //   background: "#fff",
-              // }}
-              >
-                <TableMobile
-                  columns={visibleColumns}
-                  // columns={[]}
-                  allColumns={isApprovalMode ? approvalColumns : orderColumns}
-                  data={filteredOrders}
-                  showAllDetails={true}
-                  handleAllDetailsClick={handleShowAllDetailsClick}
-                  selectedRow={selectedRow}
-                  setSelectedRow={setSelectedRow}
-                  showRowPopup={showRowPopup}
-                  setShowRowPopup={setShowRowPopup}
-                  getPaymentStatusClass={getPaymentStatusClass}
-                  disableExtendRowFullWidth={true}
-                  dataGridComponent={
+              <div>
+                <div className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}>
+                  {user?.userType.toLowerCase() === "employee" && (
+                    <div className="filter-section">
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                          gap: 12,
+                          overflowX: "auto",
+                          scrollbarWidth: "none",
+                        }}
+                      >
+                        <Tabs
+                          tabs={filteredCategoryTabs}
+                          activeTab={activeCategory}
+                          onTabChange={(newCategory) => {
+                            console.log(
+                              "🔄 Tab changing from",
+                              activeCategory,
+                              "to",
+                              newCategory
+                            );
+                            setActiveCategory(newCategory);
+                            setFilters({ entity: newCategory });
+                            setApprovalMode(false);
+                            fetchOrders(1, searchQuery, { entity: newCategory });
+                            setSearchQuery("");
+                            setCategoryFilter("");
+                            setSubCategoryFilter("");
+                            setSubCategoryOptions([]);
+                          }}
+                          variant={isMobile ? 'mobile' : 'pc'}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* This DataGrid is only for the toolbar, not for displaying rows */}
+                  <div style={{ height: "auto", marginBottom: "16px" }}>
                     <DataGrid
                       apiRef={gridApiRef}
                       rows={[]}
@@ -2693,7 +2693,6 @@ function Orders() {
                             showColumnVisibility={false}
                             showFilters={false}
                             showExport={false}
-                            // showUpload={isV("uploadButton")}
                             showUpload={false}
                             showAdd={isV("addButton")}
                             buttonName={t("add")}
@@ -2710,48 +2709,26 @@ function Orders() {
                           />
                         ),
                       }}
-                      // sx={{
-                      // "& .MuiDataGrid-row": {
-                      //   cursor: "default",
-                      //   "&:hover": {
-                      //     backgroundColor: "rgba(0, 0, 0, 0.04)",
-                      //   },
-                      // },
-                      // ".MuiDataGrid-cell": {
-                      //   textAlign: "center",
-                      //   display: "flex",
-                      //   alignItems: "center",
-                      //   justifyContent: "center",
-                      // },
                       sx={{
                         border: "none !important",
                         "& .MuiDataGrid-overlay": {
-                          display: "none !important", // ✅ hides “No rows” message
+                          display: "none !important",
                         },
                         "& .MuiDataGrid-row": {
-                          // cursor: "default",
-                          // "&:hover": {
-                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
-                          // },
                           display: "none !important",
                         },
                         ".MuiDataGrid-cell": {
                           display: "none !important",
                         },
                         "& .MuiDataGrid-main": {
-                          display: "none", // ✅ hides the main grid body
+                          display: "none",
                         },
                         "& .MuiDataGrid-toolbar": {
-                          // position: "sticky",
-                          // top: 0,
-                          // zIndex: 10, // keeps it above rows
-                          // backgroundColor: "#fff", // ensures it doesn't become transparent
-                          // borderBottom: "1px solid #e0e0e0",
                           padding: "0px",
                           gap: "10px",
                           border: "none",
+                          marginBottom: "0",
                         },
-
                         "&.catalog-datagrid": {
                           border: "2px solid black",
                           borderRadius: "8px",
@@ -2761,204 +2738,227 @@ function Orders() {
                           width: "100% !important",
                           minWidth: "230px !important",
                         },
-
                       }}
-                    // }}
                     />
-                  }
-                />
-              </div>
+                  </div>
+                </div>
 
-              <OrderCard
-                orders={filteredOrders}
-                orderIds={filteredOrders.map((o) => o.id)}
-                setSelectedRow={handleOrderNumberClick}
-                handlePay={handlePay}
-              // toolbarProps={{
-              //   searchQuery,
-              //   setSearchQuery,
-              //   filterAnchor,
-              //   setFilterAnchor,
-              //   handleFilterChange,
-              //   onSearch: handleSearch,
-              //   visibleColumns,
-              //   columnVisibilityModel,
-              //   setColumnVisibilityModel,
-              //   isV,
-              //   handleAddOrder,
-              //   HandleBulkOrderUpload,
-              //   handleApproval,
-              //   isApprovalMode,
-              //   t,
-              // }}
-              />
+                {/* Order cards section - This should be separate from the fixed header */}
+                <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
+                  <OrderCard
+                    orders={filteredOrders}
+                    orderIds={filteredOrders.map((o) => o.id)}
+                    setSelectedRow={handleOrderNumberClick}
+                    handlePay={handlePay}
+                  />
+                </div>
+              </div>
             </>
           )
         ) : (
-          <div className="table-container">
-            {loading ? (
-              <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                <LoadingSpinner size="medium" />
-              </div>
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <>
-                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
-                <Grid
-                  item
-                  xs={12}
-                  sx={{
-                    // height: {
-                    //   xs: "250px !important", // extra small
-                    //   sm: "300px !important", // small
-                    //   md: "386px !important", // medium
-                    //   lg: "489px !important", // large
-                    //   xl: "800px !important", // extra large
-                    // },
-                    width: "100%",
+          <>
+            {user?.userType.toLowerCase() === "employee" && (
+              <div className="filter-section">
+                <div
+                  style={{
                     display: "flex",
-                    flexDirection: "column",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 12,
+                    overflowX: "auto",
+                    scrollbarWidth: "none",
                   }}
                 >
-                  <DataGrid
-                    apiRef={gridApiRef}
-                    rows={filteredOrders}
-                    columns={visibleColumns}
-                    pageSize={pageSize}
-                    rowCount={total}
-                    onRowClick={handleRowClick}
-                    columnVisibilityModel={columnVisibilityModel}
-                    onColumnVisibilityModelChange={handleColumnVisibilityChange}
-                    columnDimensions={columnDimensions}
-                    onColumnResize={handleColumnResize}
-                    sortModel={sortModel}
-                    onSortModelChange={handleSortModelChange}
-                    disableSelectionOnClick
-                    disableColumnMenu
-                    hideFooter={true}
-                    getRowId={(row) => row?.workflowInstanceId | row?.id}
-                    hideFooterPagination={true}
-                    pagination={false}
-                    rowHeight={55}
-                    showToolbar
-                    slots={{
-                      toolbar: () => (
-                        <CustomToolbar
-                          searchQuery={searchQuery}
-                          filterAnchor={filterAnchor}
-                          onSearch={handleSearch}
-                          setSearchQuery={setSearchQuery}
-                          setFilterAnchor={setFilterAnchor}
-                          handleFilterChange={handleFilterChange}
-                          onColumnVisibilityChange={setColumnVisibilityModel}
-                          columns={filteredData}
-                          filters={filters}
-                          columnVisibilityModel={columnVisibilityModel}
-                          searchPlaceholder="Search orders..."
-                          showColumnVisibility={true}
-                          showFilters={true}
-                          showExport={true}
-                          showUpload={isV("uploadButton")}
-                          showAdd={isV("addButton")}
-                          buttonName={t("add")}
-                          showApproval={
-                            isV("approvalButton") &&
-                            filters.entity?.toLowerCase() ===
-                            Constants.ENTITY.VMCO?.toLowerCase()
-                          }
-                          handleAddClick={handleAddOrder}
-                          handleUploadClick={HandleBulkOrderUpload}
-                          columnsToDisplay={columnsToDisplay}
-                          handleApproval={handleApproval}
-                          isApprovalMode={isApprovalMode}
-                          handleExportClick={
-                            isApprovalMode ? handleExportData : handleExportAll
-                          }
-                          showAssignfilters={isV("AssignmentFilters")}
-                        />
-                      ),
+                  <Tabs
+                    tabs={filteredCategoryTabs}
+                    activeTab={activeCategory}
+                    onTabChange={(newCategory) => {
+                      console.log(
+                        "🔄 Tab changing from",
+                        activeCategory,
+                        "to",
+                        newCategory
+                      );
+                      setActiveCategory(newCategory);
+                      setFilters({ entity: newCategory });
+                      setApprovalMode(false);
+                      fetchOrders(1, searchQuery, { entity: newCategory });
+                      setSearchQuery("");
+                      setCategoryFilter("");
+                      setSubCategoryFilter("");
+                      setSubCategoryOptions([]);
                     }}
+                    variant={isMobile ? 'mobile' : 'pc'}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="table-container">
+              {loading ? (
+                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                  <LoadingSpinner size="medium" />
+                </div>
+              ) : error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <>
+                  {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                  <Grid
+                    item
+                    xs={12}
                     sx={{
-                      // Flex grow to fill available space
-                      flex: 1,
+                      // height: {
+                      //   xs: "250px !important", // extra small
+                      //   sm: "300px !important", // small
+                      //   md: "386px !important", // medium
+                      //   lg: "489px !important", // large
+                      //   xl: "800px !important", // extra large
+                      // },
+                      width: "100%",
                       display: "flex",
                       flexDirection: "column",
-
-                      "& .MuiDataGrid-toolbar": {
-                        padding: "0px 8px  !important",
-                        minHeight: "56px !important",
-                        flexShrink: 0,
-                      },
-
-                      "& .MuiDataGrid-main": {
+                    }}
+                  >
+                    <DataGrid
+                      apiRef={gridApiRef}
+                      rows={filteredOrders}
+                      columns={visibleColumns}
+                      pageSize={pageSize}
+                      rowCount={total}
+                      onRowClick={handleRowClick}
+                      columnVisibilityModel={columnVisibilityModel}
+                      onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                      columnDimensions={columnDimensions}
+                      onColumnResize={handleColumnResize}
+                      sortModel={sortModel}
+                      onSortModelChange={handleSortModelChange}
+                      disableSelectionOnClick
+                      disableColumnMenu
+                      hideFooter={true}
+                      getRowId={(row) => row?.workflowInstanceId | row?.id}
+                      hideFooterPagination={true}
+                      pagination={false}
+                      rowHeight={55}
+                      showToolbar
+                      slots={{
+                        toolbar: () => (
+                          <CustomToolbar
+                            searchQuery={searchQuery}
+                            filterAnchor={filterAnchor}
+                            onSearch={handleSearch}
+                            setSearchQuery={setSearchQuery}
+                            setFilterAnchor={setFilterAnchor}
+                            handleFilterChange={handleFilterChange}
+                            onColumnVisibilityChange={setColumnVisibilityModel}
+                            columns={filteredData}
+                            filters={filters}
+                            columnVisibilityModel={columnVisibilityModel}
+                            searchPlaceholder="Search orders..."
+                            showColumnVisibility={true}
+                            showFilters={true}
+                            showExport={true}
+                            showUpload={isV("uploadButton")}
+                            showAdd={isV("addButton")}
+                            buttonName={t("add")}
+                            showApproval={
+                              isV("approvalButton") &&
+                              filters.entity?.toLowerCase() ===
+                              Constants.ENTITY.VMCO?.toLowerCase()
+                            }
+                            handleAddClick={handleAddOrder}
+                            handleUploadClick={HandleBulkOrderUpload}
+                            columnsToDisplay={columnsToDisplay}
+                            handleApproval={handleApproval}
+                            isApprovalMode={isApprovalMode}
+                            handleExportClick={
+                              isApprovalMode ? handleExportData : handleExportAll
+                            }
+                            showAssignfilters={isV("AssignmentFilters")}
+                          />
+                        ),
+                      }}
+                      sx={{
+                        // Flex grow to fill available space
                         flex: 1,
-                        overflow: "hidden",
                         display: "flex",
                         flexDirection: "column",
-                      },
 
-                      // Ensure only the virtual scroller (rows) is scrollable
-                      "& .MuiDataGrid-virtualScroller": {
-                        //overflow: 'auto !important',
-                        flex: 1,
-                      },
+                        "& .MuiDataGrid-toolbar": {
+                          padding: "0px 8px  !important",
+                          minHeight: "56px !important",
+                          flexShrink: 0,
+                        },
 
-                      // Keep headers sticky and non-scrollable
-                      "& .MuiDataGrid-columnHeaders": {
-                        //position: 'sticky',
-                        top: 0,
-                        zIndex: 1,
-                        backgroundColor: "white",
-                        borderBottom: "1px solid #e0e0e0",
-                        flexShrink: 0, // Prevent header from shrinking
-                      },
+                        "& .MuiDataGrid-main": {
+                          flex: 1,
+                          overflow: "hidden",
+                          display: "flex",
+                          flexDirection: "column",
+                        },
 
-                      "& .MuiDataGrid-row": {
-                        cursor: "default",
-                        "&:hover": {
-                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        // Ensure only the virtual scroller (rows) is scrollable
+                        "& .MuiDataGrid-virtualScroller": {
+                          //overflow: 'auto !important',
+                          flex: 1,
                         },
-                      },
 
-                      // Arabic RTL styling
-                      ...(i18n.language === "ar" && {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
+                        // Keep headers sticky and non-scrollable
+                        "& .MuiDataGrid-columnHeaders": {
+                          //position: 'sticky',
+                          top: 0,
+                          zIndex: 1,
+                          backgroundColor: "white",
+                          borderBottom: "1px solid #e0e0e0",
+                          flexShrink: 0, // Prevent header from shrinking
                         },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        },
-                      }),
 
-                      // Default LTR styling (left alignment)
-                      ...(!i18n.language === "ar" && {
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "left",
+                        "& .MuiDataGrid-row": {
+                          cursor: "default",
+                          "&:hover": {
+                            backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          },
                         },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "left",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "left",
-                        },
-                      }),
-                    }}
-                  />
-                </Grid>
-              </>
-            )}
-          </div>
+
+                        // Arabic RTL styling
+                        ...(i18n.language === "ar" && {
+                          direction: "rtl",
+                          "& .MuiDataGrid-cell": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-columnHeader": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-columnHeaderTitle": {
+                            textAlign: "right !important",
+                          },
+                          "& .MuiDataGrid-cellContent": {
+                            textAlign: "right !important",
+                          },
+                        }),
+
+                        // Default LTR styling (left alignment)
+                        ...(!i18n.language === "ar" && {
+                          "& .MuiDataGrid-cell": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-columnHeader": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-columnHeaderTitle": {
+                            textAlign: "left",
+                          },
+                          "& .MuiDataGrid-cellContent": {
+                            textAlign: "left",
+                          },
+                        }),
+                      }}
+                    />
+                  </Grid>
+                </>
+              )}
+            </div>
+
+          </>
         )}
         {bulkUploadPopUp && (
           <div>
@@ -3135,8 +3135,14 @@ function Orders() {
             onPageChange={setPage}
           />
         )}
+
+
+
       </div>
+
     </Sidebar>
+
+
   );
 }
 

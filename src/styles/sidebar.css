@@ -229,11 +229,11 @@
 
 .user-text-header {
   margin-left: auto;
-  margin-right: 10px;
+  margin-right: 0px;
   overflow: hidden;
   border-radius: 6px;
   display: flex;
-  gap: 10px;
+  gap: 7px;
 }
 
 .user-text-header .text {
@@ -621,7 +621,7 @@
   border-radius: 10px 10px 0 0;
   z-index: 2000;
   transition: transform 0.3s ease-in-out;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .mobile-bottom-menu.show {
@@ -641,7 +641,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-top: 1px solid gray;
+  /* border-top: 1px solid gray; */
 }
 
 .mobile-bottom-menu .bottom-menu-item.active {
@@ -701,7 +701,7 @@
 .orders-btn {
   background: #f1f4f9;
   border: 1px solid #ccd3df;
-  padding: 10px 16px;
+  padding: 10px ;
   font-size: 13px;
   border-radius: 12px;
   color: #333;
@@ -719,9 +719,58 @@
   border-color: #00205b;
 }
 /* ===== SAFE AREA FIXES ===== */
-
+.nav-btn{
+  display: none;
+}
 /* Mobile - adjust for safe areas */
 @media (max-width: 500px) {
+ .nav-btn {
+    display: flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 30px;
+    color: black;
+    
+    /* iOS optimizations */
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
+    user-select: none; /* Prevent text selection on tap */
+    cursor: pointer;
+    
+    /* Better touch target size (Apple recommends 44x44pt minimum) */
+    min-width: 44px;
+    min-height: 44px;
+    
+    /* Smooth transitions for interaction */
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    
+    /* Ensure proper display on iOS */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hover/Active states for iOS */
+.nav-btn:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+}
+
+/* Dark mode support for iOS */
+@media (prefers-color-scheme: dark) {
+    .nav-btn {
+        color: white;
+    }
+}
+
+/* For better accessibility */
+/* .nav-btn:focus-visible {
+    outline: 2px solid #007AFF; 
+    outline-offset: 2px;
+    border-radius: 8px;
+} */
+
+  
   /* Sidebar adjustments */
   .sidebar {
     padding-top: env(safe-area-inset-top, 0px);
@@ -757,7 +806,13 @@
     height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   } */
   
-  /* When orders submenu is visible */
+
+ .main-content {
+  margin-left: 0;
+  margin-right: 0;
+  padding-top: calc(var(--header-height) - var(--catalog-header-top, 10px));
+}
+  
   .main-content.has-orders-submenu .content {
     padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
   }
