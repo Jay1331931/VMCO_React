@@ -592,12 +592,50 @@ function Products({ customerId, customer, setTabsHeight }) {
 
       {/* --- Toggle and Apply All below filters --- */}
       <div className="products-page-header">
-        {/* Category Filter - use SearchableDropdown */}
+        {isMobile ? (<>
+<div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%" }}>
+                              <div className="category-dropdown-mobile" style={{ flex: 1 }}>
+                                  <SearchableDropdown
+                                  id="category-filter"
+            name="categoryFilter"
+            options={categoryOptions}
+            placeholder={t("All Categories")}
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setSubCategoryFilter(""); // Reset subcategory when category changes
+              setCurrentPage(1);
+            }}
+                                      
+                                      className="category-filter-mobile"
+                                      style={{ width: '100%', borderRadius: '16px' }}
+                                      
+                                  />
+                              </div>
+                              <div className="subcategory-dropdown" style={{ flex: 1 }}>
+                                  <SearchableDropdown
+                                  id="subcategory-filter"
+            name="subCategoryFilter"
+            options={subCategoryOptions}
+            placeholder={t("All Subcategories")}
+            value={subCategoryFilter}
+            onChange={(e) => {
+              setSubCategoryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            disabled={!categoryFilter}
+                                      className="subcategory-filter-mobile"
+                                      style={{ width: '100%', borderRadius: '16px' }}
+                                      
+                                  />
+                              </div>
+                          </div>
+        </>) : (<>{/* Category Filter - use SearchableDropdown */}
           <SearchableDropdown
             id="category-filter"
             name="categoryFilter"
             options={categoryOptions}
-            className={isMobile ? "mobile category-filter" : "category-filter"}
+            className={isMobile ? "category-filter-mobile" : "category-filter"}
             placeholder={t("All Categories")}
             value={categoryFilter}
             onChange={(e) => {
@@ -611,7 +649,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             id="subcategory-filter"
             name="subCategoryFilter"
             options={subCategoryOptions}
-            className={isMobile ? "mobile category-filter" : "category-filter"}
+            className={isMobile ? "subcategory-filter-mobile" : "category-filter"}
             placeholder={t("All Subcategories")}
             value={subCategoryFilter}
             onChange={(e) => {
@@ -619,9 +657,10 @@ function Products({ customerId, customer, setTabsHeight }) {
               setCurrentPage(1);
             }}
             disabled={!categoryFilter}
-          />
+          /></>)}
+        
       </div>
-
+      
 {loading && (
               <div style={{ padding: 24 }}>
                 <LoadingSpinner />
