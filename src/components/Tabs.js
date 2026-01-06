@@ -18,7 +18,7 @@ const tabsRef = useRef(null);
   const checkScroll = () => {
     const el = tabsRef.current;
     if (!el) return;
-    const threshold = 2;
+    const threshold = 5;
     setCanScrollLeft(el.scrollLeft > 0);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - threshold);
   };
@@ -46,6 +46,8 @@ const tabsRef = useRef(null);
   }, [tabs]);
   return (
     <div className={`tab-container ${className}`}>
+      {canScrollLeft && <div className="scroll-gradient left" />}
+  {canScrollRight && <div className="scroll-gradient right" />}
       {/* LEFT ARROW */}
       
       {
@@ -58,6 +60,7 @@ const tabsRef = useRef(null);
       <div
       ref={tabsRef}
         className={`tabs ${catalog && variant === 'pc' ? 'category-tabs' : 'category-tabs-mobile'} ${catalog ? 'with-catalog' : 'without-catalog'}`}
+
       >
         {tabs.map((tab) => (
           <button
@@ -105,6 +108,7 @@ const tabsRef = useRef(null);
           white-space: nowrap;
           box-sizing: border-box;
           scroll-behavior: smooth;
+          background: #ffffff
         }
 
         .tabs::-webkit-scrollbar {
@@ -384,7 +388,38 @@ const tabsRef = useRef(null);
             right: 4px;
           }
         }
+.scroll-gradient {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 36px;
+  z-index: 6;
+  pointer-events: none; /* IMPORTANT */
+}
 
+.scroll-gradient.left {
+  left: 0;
+  background: linear-gradient(
+    90deg, lightgray, transparent
+  );
+}
+
+.scroll-gradient.right {
+  right: 0;
+  background: linear-gradient(
+    -90deg, lightgray, transparent
+  );
+}
+  @media (max-width: 768px) {
+  .scroll-gradient {
+    display: block;
+  }
+}
+  .tab-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
       `}</style>
     </div>
   );
