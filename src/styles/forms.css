@@ -1384,6 +1384,7 @@ td.file-display-cell {
     border: 1px solid black;
     border-radius: 10px;
     padding: 6px 10px 2px 10px;
+    margin: 0px 3px;
   }
   [dir="rtl"] .customer-onboarding-tabs-vertical {
     border-left: none; /* Remove left border in RTL on smaller screens */

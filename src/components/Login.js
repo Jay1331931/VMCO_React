@@ -113,7 +113,8 @@ if (!isLogin){
         ) {
           navigate("/orders",{replace:true});
         } else {
-          navigate("/catalog",{replace:true});
+          // navigate("/catalog",{replace:true});
+          navigate("/home",{replace:true});
         }
 
         setMessage(data.message);
