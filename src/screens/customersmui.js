@@ -1860,6 +1860,15 @@ function Customers() {
                   <div
                     className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
                   >
+                    <Tabs
+          tabs={customerTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+
+        <div className="page-header">
+
+        </div>
                     <TableMobile
                       columns={customerColumnsToUse}
                       allColumns={isApprovalMode ? approvalColumns : customerColumns}
@@ -2122,6 +2131,15 @@ function Customers() {
                       background: "#fff",
                     }}
                   >
+                    <Tabs
+          tabs={customerTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+
+        <div className="page-header">
+
+        </div>
                     <TableMobile
                       columns={inviteColumns}
                       allColumns={inviteColumns}
@@ -2526,7 +2544,7 @@ function Customers() {
   return (
     <Sidebar title={t("Customers")}>
       <div className="customer-content">
-        <Tabs
+        {!isMobile && (<><Tabs
           tabs={customerTabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -2534,7 +2552,7 @@ function Customers() {
 
         <div className="page-header">
 
-        </div>
+        </div></>)}
         {renderContent()}
 
         {isInviteModalOpen && !isMobile && (
