@@ -1858,7 +1858,7 @@ function Customers() {
               ) : (
                 <>
                   <div
-                    className={`catalog-fixed-header ${showHeader ? "show" : "hide"}`}
+                    className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}
                   >
                     <Tabs
           tabs={customerTabs}
