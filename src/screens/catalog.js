@@ -190,7 +190,7 @@ function Catalog() {
   }, []);
 
   useEffect(() => {
-    if (products.length > 0 && !isLoading && !isLoadingMore && isPageLoading) {
+    if ( !isLoading && !isLoadingMore && isPageLoading) {
       setIsPageLoading(false);
     }
   }, [products, isLoading, isLoadingMore, isPageLoading]);
