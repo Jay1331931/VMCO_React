@@ -772,7 +772,7 @@ const CustomToolbar = ({
     </>
   ) : (
     <>
-      <Toolbar
+       <Toolbar
         sx={{
           gap: 2,
           padding: 2,
@@ -784,16 +784,25 @@ const CustomToolbar = ({
       >
         <Box
           sx={{
-            width: "500px",
+           
             gap: "20px",
             display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
+            flexDirection: { xs: "column", sm: "row" ,lg:"row",xl:"row"},
             alignItems: { xs: "stretch", sm: "center" },
             marginRight: i18n.language === "en" ? "auto" : "none",
             marginLeft: i18n.language === "en" ? "none" : "auto",
           }}
         >
-          <SearchAutocomplete
+          <div  sx={{
+    width: {
+      xs: "150px",  
+      sm: "150px",
+      md: "150px",  
+      lg: "250px",
+      xl: "300px"  
+    }
+  }}>
+             <SearchAutocomplete
             displayableFilters={displayableFilters}
             searchValue={searchValue}
             handleInputChange={handleInputChange}
@@ -808,7 +817,9 @@ const CustomToolbar = ({
             isMobile={isMobile}
             t={t}
           />
-          <TabToggles
+         
+            </div>
+            <TabToggles
             showTransactionTabs={showTransactionTabs}
             activeTransactionTab={activeTransactionTab}
             handleTransactionTabChange={handleTransactionTabChange}
@@ -821,7 +832,7 @@ const CustomToolbar = ({
             openTicketsCount={openTicketsCount}
           />
         </Box>
-
+ 
         <ToolbarActions
           showAssignfilters={showAssignfilters}
           handleClick={handleClick}
@@ -844,7 +855,6 @@ const CustomToolbar = ({
           t={t}
         />
       </Toolbar>
-
       <Menu
         anchorEl={filterAnchor}
         open={open}

@@ -748,6 +748,9 @@ function Maintenance() {
                   "& .MuiDataGrid-toolbar": {
                     padding: "0px 8px"
                   },
+                  "& .css-9uh15q-MuiDataGrid-toolbar":{
+ minHeight:"100px"
+                  },
                   ...(isArabic
                     ? {
                       direction: "rtl",
