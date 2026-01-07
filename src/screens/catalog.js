@@ -1170,7 +1170,7 @@ const fetchCart = async (userID) => {
 console.log("selectedLocation",selectedLocation)
 
   return (
-    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation}>
+    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")}  selectBranch={isV("selectBranch")} >
       {isPageLoading ? (
         <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
           <LoadingSpinner size="medium" />

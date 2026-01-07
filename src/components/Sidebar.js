@@ -41,7 +41,7 @@ import Swal from "sweetalert2";
 const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation}) {
+function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -1025,8 +1025,8 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                 alignItems:"center"
               }}
             >
-              <div className="location-selector">
-                <SearchableDropdown
+                {selectBranch && (<div className="location-selector">
+              <SearchableDropdown
                   id={`location-select-${catalogId}`}
                   name="locationSelect"
                   value={selectedLocation}
@@ -1050,9 +1050,9 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                     {t("No branches available")}
                   </div>
                 )}
-              </div>
+              </div>)}
               {(user?.userType?.toLowerCase() !== "employee" ||
-                user?.userType?.toLowerCase() !== "admin") && (
+                user?.userType?.toLowerCase() !== "admin") &&goToCart&& (
                 <button
                   className={`go-to-cart-btn ${
                     !selectedLocation ? "disabled" : ""
