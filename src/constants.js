@@ -38,14 +38,14 @@ const Constants = {
         FAVORITES: 'Favorites',
     },
     TAB_IMAGES: {
-        VMCO_MACHINES: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/VmcoMachinesTabImage.jpg`,
-        VMCO_CONSUMABLES: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/VmcoConsumablesTabImage.jpg`,
-        SHC: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/ShcTabImage.webp`,
-        GMTC: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/GmtcTabImage.jpg`,
-        NAQI: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/NaqiTabImage.jpg`,
-        DAR: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/DarTabImage.jpeg`,
-        SPECIAL_PRODUCTS: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/SpecialproductsTabImage.png`,
-        FAVORITES: `${BLOB_STORAGE_URL}${BLOB_CONTAINER_NAME}/FavoritesTabImage.png`
+        VMCO_MACHINES: `${BLOB_STORAGE_URL}/${BLOB_CONTAINER_NAME}/VmcoMachinesTabImage.jpg`,
+        VMCO_CONSUMABLES: `${BLOB_STORAGE_URL}/${BLOB_CONTAINER_NAME}/VmcoConsumablesTabImage.jpg`,
+        SHC: `${BLOB_STORAGE_URL}/${BLOB_CONTAINER_NAME}/ShcTabImage.webp`,
+        GMTC: `${BLOB_STORAGE_URL}/${BLOB_CONTAINER_NAME}/GmtcTabImage.jpg`,
+        NAQI: `${BLOB_STORAGE_URL}/${BLOB_CONTAINER_NAME}/NaqiTabImage.jpg`,
+        DAR: `${BLOB_STORAGE_URL}/${BLOB_CONTAINER_NAME}/DarTabImage.jpeg`,
+        SPECIAL_PRODUCTS: `${BLOB_STORAGE_URL}/${BLOB_CONTAINER_NAME}/SpecialproductsTabImage.png`,
+        FAVORITES: `${BLOB_STORAGE_URL}/${BLOB_CONTAINER_NAME}/FavoritesTabImage.png`
     },
 
     CATEGORY: {
