@@ -548,8 +548,8 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   ];
   const menuItems = isMobile
     ? [
-        baseMenuItems.find((item) => item.label === "Dashboard"),
-        baseMenuItems.find((item) => item.label === "Catalog"),
+        // baseMenuItems.find((item) => item.label === "Dashboard"),
+        baseMenuItems.find((item) => item.label === "Home"),
 
         // 🔥 3rd position
         baseMenuItems.find((item) => item.label === "Your Cart"),
@@ -559,7 +559,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
 
         ...baseMenuItems.filter(
           (item) =>
-            !["Dashboard", "Catalog", "Your Cart", "Orders"].includes(
+            !["Dashboard", "Home", "Your Cart", "Orders"].includes(
               item.label
             )
         ),
@@ -857,8 +857,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
         </div>
         <div className="sidebar-menu">
           <div className="main-menu-items">
-            {menuItems
-              .filter(({ label }) => label.toLowerCase() !== "company")
+            {menuItems?.filter(({ label }) => label?.toLowerCase() !== "company")
               .map(
                 ({ icon, label, permission, isVisible }) =>
                   isV(permission || label) &&
