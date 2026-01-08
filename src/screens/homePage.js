@@ -5,6 +5,9 @@ import Sidebar from "../components/Sidebar";
 import { useTranslation } from "react-i18next";
 import Constants from "../constants";
 import InfoIcon from '@mui/icons-material/Info';
+import StarIcon from '@mui/icons-material/Star';
+import WindowIcon from '@mui/icons-material/Window';
+import ThreeSixtyIcon from '@mui/icons-material/ThreeSixty';
 // import { RotateCcw, Star, Grid, Info } from "lucide-react"; // Optional icon library
 const initialCategories = [
   {
@@ -68,8 +71,9 @@ const HomePage = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
 
-  // ... (Keep your initialCategories array as is)
-
+  const handleCatalog=()=>{
+    navigate("/catalog")
+  }
   return (
     <Sidebar>
       <div className="home-page-container">
@@ -92,12 +96,12 @@ const HomePage = () => {
               </div>
             ))}
           </div>
-
-          {/* Action Buttons Row */}
+   </div>
           {/* <div className="action-buttons-row">
-            <button className="action-btn"><RotateCcw size={18} /> {t("Reorder Last Order")}</button>
-            <button className="action-btn"><Star size={18} color="#EF7C00" /> {t("My Frequent Items")}</button>
-            <button className="action-btn"><Grid size={18} /> {t("Browse Full Catalog")}</button>
+            <button className="action-btn"><ThreeSixtyIcon size={18} /> {t("Reorder Last Order")}</button>
+            <button className="action-btn"><StarIcon size={18} style={{ color: "#EF7C00" }} /> {t("My Frequent Items")}</button>
+            <button className="action-btn" onClick={()=>handleCatalog()}><WindowIcon size={18} style={{ color: "#0B4C45" }} /> {t("Browse Full Catalog")}</button>
+    
           </div> */}
 
           {/* Featured Section */}
@@ -115,7 +119,7 @@ const HomePage = () => {
               <InfoIcon size={16} />
               {t("Orders placed after 6:00 PM will be delivered next day")}
             </div>
-          </div>
+       
            
         </div>
       </div>

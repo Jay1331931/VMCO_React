@@ -374,9 +374,10 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
       case "Your Cart":
         handleGoToCart();
         break;
-      case "Catalog":
+      // case "Catalog":
+      //    navigate("/catalog");
       case "Home":
-        navigate("/catalog");
+        navigate("/home");
         break;
       case "Support":
         navigate("/support");
@@ -474,8 +475,8 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   const baseMenuItems = [
     { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
     {
-      icon: isMobile ? faHouse : faBookOpen,
-      label: "Catalog",
+      icon: faHouse,//isMobile ? faHouse : faBookOpen,
+      label: "Home", //Catalog
       isVisible: true,
     },
     {

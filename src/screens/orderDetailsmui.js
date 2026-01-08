@@ -2030,7 +2030,7 @@ function OrderDetails() {
       setCancelling(true);
 
       // First, update the order status to 'Cancelled'
-      const statusResponse = await fetch(`${API_BASE_URL}sales-order/id/${formData.id}`, {
+      const statusResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
