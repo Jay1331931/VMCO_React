@@ -160,6 +160,14 @@
   .action-buttons-row { flex-wrap: wrap; }
 }
 @media (max-width: 500px) {
+  .hero-content{
+   display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+    padding-top: 20px;
+  }
   .catalog_header {
     font-size: 18px;
     font-weight: 500;
