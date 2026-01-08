@@ -75,7 +75,7 @@ const HomePage = () => {
     navigate("/catalog")
   }
   return (
-    <Sidebar homePage={"home-page"}>
+    <Sidebar title={t("Home")}  homePage={"home-page"}>
       <div className="home-page-container">
         <div className="home-hero">
           <div className="hero-content">
