@@ -112,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("customersFilters");
     localStorage.removeItem("invitesFilters");
     localStorage.removeItem("deliveryScheduleFilters");
+    localStorage.removeItem('BankTransactionFilters');
     setButtonClicked(buttonClickedValue);
 
     // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";

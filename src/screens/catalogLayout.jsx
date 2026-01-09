@@ -47,6 +47,7 @@ const CatalogLayout = ({
     handleClosePopup,
     isRTL,
     dir,
+    setSearchQuery
     
 }) => {
     const { i18n } = useTranslation();
@@ -218,7 +219,7 @@ const CatalogLayout = ({
                             <div className="search-container">
                                 {isV("search") && (
                                     <SearchInput
-                                        onSearch={() => { }}
+                                        onSearch={setSearchQuery}
                                         debounceTime={500}
                                     />
                                 )}
@@ -273,7 +274,7 @@ const CatalogLayout = ({
                             ))
                         ) : (
                             !isLoading && !isLoadingMore && !hasMore && (
-                                <div className="no-products-message">
+                                <div className="no-products-message" style={{textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center"}}>
                                     {searchQuery ? (
                                         <p>{t("No products found matching your search term")}</p>
                                     ) : (
@@ -384,7 +385,7 @@ const CatalogLayout = ({
                         <div className="search-container">
                             {isV("search") && (
                                 <SearchInput
-                                    onSearch={() => { }}
+                                    onSearch={setSearchQuery}
                                     debounceTime={500}
                                 />
                             )}
@@ -462,7 +463,7 @@ const CatalogLayout = ({
                         ))
                     ) : (
                         !isLoading && !isLoadingMore && !hasMore && (
-                            <div className="no-products-message">
+                            <div className="no-products-message" style={{textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center"}}>
                                 {searchQuery ? (
                                     <p>{t("No products found matching your search term")}</p>
                                 ) : (

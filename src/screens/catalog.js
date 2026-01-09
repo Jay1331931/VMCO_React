@@ -25,49 +25,65 @@ const initialCategories = [
     value: Constants.ENTITY.SHC,
     entity: Constants.ENTITY.SHC,
     label: Constants.ENTITY.SHC,
-    imageUrl: Constants.TAB_IMAGES.SHC
+   imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/Sanswiches200EN.png",
+    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/Sanswiches200Ar.png"
+
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
-    imageUrl: Constants.TAB_IMAGES.VMCO_CONSUMABLES
+   imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/FoodIngredients200EN.png",
+    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/FoodIngredients200Ar.png"
+
   },
   {
     value: Constants.ENTITY.GMTC,
     entity: Constants.ENTITY.GMTC,
     label: Constants.ENTITY.GMTC,
-    imageUrl: Constants.TAB_IMAGES.GMTC
+    imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/FreshVegetables200EN.png",
+    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/FreshVegetables200Ar.png"
+
   },
   {
     value: Constants.ENTITY.NAQI,
     entity: Constants.ENTITY.NAQI,
     label: Constants.ENTITY.NAQI,
-    imageUrl: Constants.TAB_IMAGES.NAQI
+   imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/HygieneChemicals200EN.png",
+    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/HygieneChemicals200Ar.png"
+
   },
   {
     value: Constants.CATEGORY.VMCO_MACHINES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_MACHINES,
-    imageUrl: Constants.TAB_IMAGES.VMCO_MACHINES
+    imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/Machines200EN.png",
+    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/Machines200Ar.png"
+
   },
-  {
-    value: Constants.ENTITY.DAR,
-    entity: Constants.ENTITY.DAR,
-    label: Constants.ENTITY.DAR,
-    imageUrl: Constants.TAB_IMAGES.DAR
-  },
+  // {
+  //   value: Constants.ENTITY.DAR,
+  //   entity: Constants.ENTITY.DAR,
+  //   label: Constants.ENTITY.DAR,
+  //  imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/SandwichesEN.png",
+  //   imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/SandwichesAr.png"
+
+  // },
   {
     value: "SPECIAL_PRODUCTS",
     entity: "",
     label: "Special Products",
-    imageUrl: Constants.TAB_IMAGES.SPECIAL_PRODUCTS
+   imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/SpecialProucts200EN.png",
+    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/SpecialProucts200Ar.png"
+
   },
   {
     value: "FAVORITES",
     entity: "",
     label: "Favorites",
-    imageUrl: Constants.TAB_IMAGES.FAVORITES
+    imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/Favorites200EN.png",
+    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-tabimages/Favorites200Ar.png",
+
   },
 ];
 function Catalog() {
@@ -542,7 +558,8 @@ function Catalog() {
       return {
         value: category.value,
         label: response,
-        imageUrl: category.imageUrl
+        imageUrlAR: category.imageUrlAR,
+        imageUrlEN: category.imageUrlEN
       };
     });
 
@@ -1170,7 +1187,7 @@ const fetchCart = async (userID) => {
 console.log("selectedLocation",selectedLocation)
 
   return (
-    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")}  selectBranch={isV("selectBranch")} >
+    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")}  selectBranch={isV("selectBranch")} PaddingClass={true} >
       {isPageLoading ? (
         <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
           <LoadingSpinner size="medium" />
@@ -1241,6 +1258,7 @@ console.log("selectedLocation",selectedLocation)
           // Platform & RTL props
           isRTL={isRTL}
           dir={dir}
+          setSearchQuery={setSearchQuery}
         />
       )}
     </Sidebar>

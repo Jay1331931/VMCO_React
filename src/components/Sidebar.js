@@ -41,7 +41,7 @@ import Swal from "sweetalert2";
 const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage=""}) {
+function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -1154,7 +1154,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
             </div>
           </header>
           <div
-            className={`content ${homePage ? homePage : ""}`}
+            className={`content ${homePage ? homePage : ""}  ${PaddingClass ? "catalog-padding-removing":""}`}
             style={{
               padding: isMobile ? (activeMenu ? "0 0px 0px" : "0 20px") : "20px",
             }}
