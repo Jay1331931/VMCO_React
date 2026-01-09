@@ -47,6 +47,7 @@ const CatalogLayout = ({
     handleClosePopup,
     isRTL,
     dir,
+    setSearchQuery
     
 }) => {
     const { i18n } = useTranslation();
@@ -218,7 +219,7 @@ const CatalogLayout = ({
                             <div className="search-container">
                                 {isV("search") && (
                                     <SearchInput
-                                        onSearch={() => { }}
+                                        onSearch={setSearchQuery}
                                         debounceTime={500}
                                     />
                                 )}
@@ -384,7 +385,7 @@ const CatalogLayout = ({
                         <div className="search-container">
                             {isV("search") && (
                                 <SearchInput
-                                    onSearch={() => { }}
+                                    onSearch={setSearchQuery}
                                     debounceTime={500}
                                 />
                             )}

@@ -88,6 +88,7 @@ function SearchableDropdown({
     setDropdownPosition({
       position: "absolute",
       top: topPosition,
+      bottom:0,
       left: rect.left + window.scrollX,
       width: rect.width,
       zIndex: 9999,

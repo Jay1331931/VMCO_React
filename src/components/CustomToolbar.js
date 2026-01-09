@@ -108,7 +108,7 @@ const commonStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: isMobile ? "8px" : "20px",
       fontSize: "12px",
-      minWidth: isMobile ? "200px" : "250px",
+      maxWidth: isMobile ? "200px" : "250px",
       height: "40px",
       padding: "0 8px",
       "& .MuiOutlinedInput-notchedOutline": {

@@ -41,7 +41,7 @@ import Swal from "sweetalert2";
 const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false}) {
+function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage=""}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -374,9 +374,10 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
       case "Your Cart":
         handleGoToCart();
         break;
-      case "Catalog":
+      // case "Catalog":
+      //    navigate("/catalog");
       case "Home":
-        navigate("/catalog");
+        navigate("/home");
         break;
       case "Support":
         navigate("/support");
@@ -474,8 +475,8 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   const baseMenuItems = [
     { icon: faHouse, label: "Dashboard", default: true, isVisible: true },
     {
-      icon: isMobile ? faHouse : faBookOpen,
-      label: "Catalog",
+      icon: faHouse,//isMobile ? faHouse : faBookOpen,
+      label: "Home", //Catalog
       isVisible: true,
     },
     {
@@ -547,8 +548,8 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   ];
   const menuItems = isMobile
     ? [
-        baseMenuItems.find((item) => item.label === "Dashboard"),
-        baseMenuItems.find((item) => item.label === "Catalog"),
+        // baseMenuItems.find((item) => item.label === "Dashboard"),
+        baseMenuItems.find((item) => item.label === "Home"),
 
         // 🔥 3rd position
         baseMenuItems.find((item) => item.label === "Your Cart"),
@@ -558,7 +559,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
 
         ...baseMenuItems.filter(
           (item) =>
-            !["Dashboard", "Catalog", "Your Cart", "Orders"].includes(
+            !["Dashboard", "Home", "Your Cart", "Orders"].includes(
               item.label
             )
         ),
@@ -856,8 +857,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
         </div>
         <div className="sidebar-menu">
           <div className="main-menu-items">
-            {menuItems
-              .filter(({ label }) => label.toLowerCase() !== "company")
+            {menuItems?.filter(({ label }) => label?.toLowerCase() !== "company")
               .map(
                 ({ icon, label, permission, isVisible }) =>
                   isV(permission || label) &&
@@ -1154,7 +1154,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
             </div>
           </header>
           <div
-            className="content"
+            className={`content ${homePage ? homePage : ""}`}
             style={{
               padding: isMobile ? (activeMenu ? "0 0px 0px" : "0 20px") : "20px",
             }}

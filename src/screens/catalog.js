@@ -1241,6 +1241,7 @@ console.log("selectedLocation",selectedLocation)
           // Platform & RTL props
           isRTL={isRTL}
           dir={dir}
+          setSearchQuery={setSearchQuery}
         />
       )}
     </Sidebar>
