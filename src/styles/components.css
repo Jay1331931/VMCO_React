@@ -1086,6 +1086,11 @@ body.catalog-page {
   }
 }
 
+@media (max-width: 900px) {
+  .support-details-footer {
+    flex-direction: column;
+  }
+}
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -2612,6 +2617,12 @@ body.catalog-page {
   .support-details-container-right {
     flex-direction: column;
     padding-right: 0px;
+    width: 100%;
+  }
+
+  .support-details-actions {
+    flex-direction: column;
+    width: 100%;
   }
 
   .maintenance-details-container {
@@ -3664,5 +3675,9 @@ input:focus {
   align-items: center;
 }
 
+
+.support-details-footer {
+  flex-direction: column;
+}
 
 }

@@ -155,7 +155,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         (
                             <div className='' style={{display: 'flex', flexDirection: 'column' }}>
 {isV('quantityController') && (
-    <div className = "" style={{ display: 'flex', justifyContent: 'center'}}>
+    <div className = "" style={{ display: 'flex', justifyContent: 'center', marginTop: "10px"}}>
                             <QuantityController
                                 itemId={product.id}
                                 quantity={quantities[product.id] || 0}
