@@ -73,11 +73,11 @@ function SupportDetails() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   // State for entity dropdown
   const [entityOptions, setEntityOptions] = useState([
-    { value: Constants.ENTITY.VMCO, displayText: "VMCO" },
-    { value: Constants.ENTITY.SHC, displayText: "SHC" },
-    { value: Constants.ENTITY.NAQI, displayText: "NAQI" },
-    { value: Constants.ENTITY.GMTC, displayText: "GMTC" },
-    { value: Constants.ENTITY.DAR, displayText: "DAR" },
+    { value: Constants.ENTITY.VMCO, displayText: t("VMCO") },
+    { value: Constants.ENTITY.SHC, displayText: t("SHC") },
+    { value: Constants.ENTITY.NAQI, displayText: t("NAQI") },
+    { value: Constants.ENTITY.GMTC, displayText: t("GMTC") },
+    { value: Constants.ENTITY.DAR, displayText: t("DAR") },
   ]);
   // State for employees dropdown
   const [employees, setEmployees] = useState([]);
@@ -1181,7 +1181,7 @@ function SupportDetails() {
                 />
               </div>
             )}
-            {isV('entity') && (
+            {/* {isV('entity') && (
               <div className='support-details-field'>
                 <label>{t("Business Unit")} *</label>
                 <select
@@ -1230,7 +1230,46 @@ function SupportDetails() {
                   ))}
                 </select>
               </div>
-            )}
+            )} */}
+            {isV("entity") && (
+  <div className="support-details-field">
+    <label>{t("Business Unit")} *</label>
+
+    <SearchableDropdown
+      name="entity"
+      options={entityOptions.map((entity) =>
+        typeof entity === "object"
+          ? { name: entity.displayText, value: entity.value }
+          : { name: entity, value: entity }
+      )}
+      value={ticket.entity || null}
+      onChange={handleInputChange}
+      disabled={!isE("entity") || isReadOnly}
+      placeholder={t("Select Business Unit")}
+      className="entity-dropdown"
+    />
+  </div>
+)}
+{isV("issueType") && (
+  <div className="support-details-field">
+    <label>{t("Issue Type")} *</label>
+
+    <SearchableDropdown
+      name="grievanceType"
+      options={issueTypeOptions.map((issueType) =>
+        typeof issueType === "object"
+          ? { name: issueType.displayText, value: issueType.value }
+          : { name: issueType, value: issueType }
+      )}
+      value={ticket.grievanceType || null}
+      onChange={handleInputChange}
+      disabled={!isE("issueType") || isReadOnly}
+      placeholder={t("Select Issue Type")}
+      className="issue-type-dropdown"
+    />
+  </div>
+)}
+
             {isV('issueName') && (
               <div className='support-details-field'>
                 <label>{t("Issue Name")} *</label>
@@ -1430,7 +1469,7 @@ function SupportDetails() {
                     className="support-action-btn close"
                     onClick={handleCloseTicket}
                     disabled={closing || saving}
-                    style={{ backgroundColor: "#28a745" }}
+                    style={{ backgroundColor: "#28a745", padding: isMobile ? "10px 24px" : "0px 24px" }}
                   >
                     {closing ? t("Closing...") : t("Close Ticket")}
                   </button>

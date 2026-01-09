@@ -1305,7 +1305,7 @@ let warrantyEndDate =null
                 />
               </div>
             )}
-            {isV('issueType') && (
+            {/* {isV('issueType') && (
               <div className='maintenance-details-field'>
                 <label>{t("Issue Type")} *</label>
                 <select
@@ -1326,7 +1326,30 @@ let warrantyEndDate =null
                   ))}
                 </select>
               </div>
-            )}
+            )} */}
+            {isV("issueType") && (
+  <div className="maintenance-details-field">
+    <label>{t("Issue Type")} *</label>
+
+    <SearchableDropdown
+      name="issueType"
+      options={issueTypeOptions.map((issueType) =>
+        typeof issueType === "object"
+          ? { name: issueType.displayText, value: issueType.value }
+          : { name: issueType, value: issueType }
+      )}
+      value={ticket.issueType || null}
+      onChange={handleInputChange}
+      disabled={!isE("issueType") || isReadOnly}
+      placeholder={t("Select Issue Type")}
+      style={{
+        color: ticket.issueType ? "inherit" : "#999",
+      }}
+      className="issue-type-dropdown"
+    />
+  </div>
+)}
+
             {isV('machine') && (
               <div className='maintenance-details-field'>
                 <label>{t("Machine")} *</label>
@@ -1499,14 +1522,35 @@ let warrantyEndDate =null
               )}
             </div>
           )}
-          {selectedSpareParts && selectedSpareParts.length > 0 && (
+          {
+          // selectedSpareParts && selectedSpareParts.length > 0 && 
+          (
             <div style={{ marginTop: "16px" }}>
-              <h4 style={{ marginBottom: "8px" }}>
+              <div>
+              <h4 style={{ display: "flex", marginBottom: "8px", justifyContent: "space-between" }}>
                 {t("Spare Parts")}
+              {/* <div className='support-details-container-right'>
+                <div className="support-details-actions"> */}
+                  {isV('btnAddSpareParts') &&
+                    user.userType.toLowerCase() === "employee" &&
+                    ticket.status.toLowerCase() === "in progress" && (
+                      <button
+                        className="support-action-btn AddSpareParts"
+                        onClick={() => setShowSparePartsPopup(true)}
+                        disabled={saving || closing || isReadOnly}
+                      >
+                        {t('Add Spare Parts')}
+                      </button>
+                    )}
+                  {/* </div>
+                </div> */}
               </h4>
-              <table
+              
+              </div>
+              {
+          selectedSpareParts && selectedSpareParts.length > 0 &&(<table
                 style={{
-                  width: "48%",
+                  width: "100%",
                   borderCollapse: "separate",
                   borderSpacing: 0,
                   border: "1px solid #ddd",
@@ -1572,7 +1616,7 @@ let warrantyEndDate =null
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table>)}
             </div>
           )}
           {isV('feedback') && ticket.status?.toLowerCase() === 'closed' && (
@@ -1626,17 +1670,7 @@ let warrantyEndDate =null
             <div className="support-details-actions">
               {isEditing ? (
                 <>
-                  {isV('btnAddSpareParts') &&
-                    user.userType.toLowerCase() === "employee" &&
-                    ticket.status.toLowerCase() === "in progress" && (
-                      <button
-                        className="support-action-btn AddSpareParts"
-                        onClick={() => setShowSparePartsPopup(true)}
-                        disabled={saving || closing || isReadOnly}
-                      >
-                        {t('Add Spare Parts')}
-                      </button>
-                    )}
+                  
                   {isV('btnSave') &&
                     <button className="support-action-btn save" onClick={handleSave} disabled={saving || closing || isReadOnly}>
                       {saving ? t('Saving...') : t('Save')}
