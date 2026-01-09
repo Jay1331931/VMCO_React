@@ -1,17 +1,17 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
 const Tabs = ({
   tabs,
   activeTab,
   onTabChange,
-  className = '',
-  variant = 'pc',
-  catalog = false
+  className = "",
+  variant = "pc",
+  catalog = false,
 }) => {
-  const { t } = useTranslation();
-const tabsRef = useRef(null);
-
+  const { t, i18n } = useTranslation();
+  const tabsRef = useRef(null);
+  const currentLanguage = i18n.language;
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -20,7 +20,9 @@ const tabsRef = useRef(null);
     if (!el) return;
     const threshold = 5;
     setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - threshold);
+    setCanScrollRight(
+      el.scrollLeft + el.clientWidth < el.scrollWidth - threshold
+    );
   };
 
   const scrollTabs = (direction) => {
@@ -44,50 +46,60 @@ const tabsRef = useRef(null);
       window.removeEventListener("resize", checkScroll);
     };
   }, [tabs]);
+  console.log("tabs", tabs);
   return (
     <div className={`tab-container ${className}`}>
-      {canScrollLeft && <div className="scroll-gradient left" />}
-  {canScrollRight && <div className="scroll-gradient right" />}
+      {/* {canScrollLeft && <div className="scroll-gradient left" />}
+  {canScrollRight && <div className="scroll-gradient right" />} */}
       {/* LEFT ARROW */}
-      
-      {
+
+      {/* {
       variant === "mobile" && 
       canScrollLeft && (
         <button className="scroll-arrow left" onClick={() => scrollTabs("left")}>
           ‹
         </button>
-      )}
+      )} */}
       <div
-      ref={tabsRef}
-        className={`tabs ${catalog && variant === 'pc' ? 'category-tabs' : 'category-tabs-mobile'} ${catalog ? 'with-catalog' : 'without-catalog'}`}
-
+        ref={tabsRef}
+        className={`tabs ${
+          catalog && variant === "pc" ? "category-tabs" : "category-tabs-mobile"
+        } ${catalog ? "with-catalog" : "without-catalog"}`}
       >
         {tabs.map((tab) => (
           <button
             key={tab.value}
             className={`
-              ${variant === 'mobile' ? 'category-tab-mobile' : 'category-tab'}
-              ${catalog ? 'catalog' : ''}
-              ${activeTab === tab.value ? 'active' : ''}
-              ${tab.disabled ? 'disabled' : ''}
+              ${variant === "mobile" ? "category-tab-mobile" : "category-tab"}
+              ${catalog ? "catalog" : ""}
+              ${activeTab === tab.value ? "active" : ""}
+              ${tab.disabled ? "disabled" : ""}
             `}
             onClick={() => onTabChange(tab.value)}
-            title={tab.disabled ? 'This tab is currently disabled' : ''}
+            title={tab.disabled ? "This tab is currently disabled" : ""}
           >
             {catalog && (
               <div
-                className={`${variant === 'mobile' ? 'tab-image-mobile' : 'tab-image'
-                  }`}
+                className={`${
+                  variant === "mobile" ? "tab-image-mobile" : "tab-image"
+                }`}
               >
-                <img src={tab.imageUrl} alt={t(tab.label)} />
+                <img
+                  src={
+                    currentLanguage == "ar" ? tab.imageUrlAR : tab.imageUrlEN
+                  }
+                  alt={t(tab.label)}
+                />
               </div>
             )}
-            <span className="tab-text">{t(tab.label)}</span>
+            {variant === "mobile" && (
+              <span className="tab-text">{t(tab.label)}</span>
+            )}
           </button>
         ))}
       </div>
-{/* RIGHT ARROW */}
-      {
+      {/* RIGHT ARROW */}
+      {/* {
       variant === "mobile" && 
       canScrollRight && (
         <button
@@ -96,7 +108,7 @@ const tabsRef = useRef(null);
         >
           ›
         </button>
-      )}
+      )} */}
 
       <style>{`
         .tabs {
@@ -141,7 +153,7 @@ const tabsRef = useRef(null);
         /* PC catalog tabs - with images */
         .category-tabs.with-catalog {
           border-bottom: 1px solid #D9D9D6;
-          height: 80px;
+          height: 148px;
           display: flex;
           gap: 20px;
           white-space: nowrap;
@@ -150,7 +162,7 @@ const tabsRef = useRef(null);
         /* Mobile catalog tabs - with images */
         .category-tabs-mobile.with-catalog {
           border-bottom: 1px solid #D9D9D6;
-          height: 80px;
+          height: 158px;
           display: flex;
           gap: 16px;
           white-space: nowrap;
@@ -183,18 +195,18 @@ const tabsRef = useRef(null);
         }
 
         /* With catalog (has images) - fixed width and smaller font */
-        .category-tab.catalog,
-        .category-tab-mobile.catalog {
-          width: 80px;
-          min-width: 80px;
-          max-width: 80px;
-          min-height: 80px;
-          max-height: 80px;
-          padding: 4px;
-          font-size: 0.55rem;
-          font-weight: 600;
-          justify-content: flex-start;
-        }
+        // .category-tab.catalog,
+        // .category-tab-mobile.catalog {
+        //   // width: 80px;
+        //   // min-width: 80px;
+        //   // max-width: 80px;
+        //   // min-height: 80px;
+        //   // max-height: 80px;
+        //   padding: 4px;
+        //   font-size: 0.55rem;
+        //   font-weight: 600;
+        //   justify-content: flex-start;
+        // }
 
         /* Without catalog (no images) - auto width and larger font */
         .category-tab:not(.catalog) {
@@ -230,6 +242,7 @@ const tabsRef = useRef(null);
           color: #00205B;
           font-weight: 600;
           border-bottom: 2px solid #00205B;
+         
         }
 
         .category-tab-mobile.active {
@@ -247,12 +260,13 @@ const tabsRef = useRef(null);
         .category-tab-mobile:hover {
           color: #00205B;
         }
-
+.category-tab.active .tab-image,.category-tab-mobile.active.tab-image-mobile {
+margin-bottom:10px;}
         /* FIXED SQUARE IMAGE AREAS */
         .tab-image,
         .tab-image-mobile {
-          width: 48px;
-          height: 48px;
+          width: 140px;
+          height: 140px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -261,6 +275,11 @@ const tabsRef = useRef(null);
           transition: transform 0.2s ease;
         }
 
+.tab-image  .active{
+}
+        .tab-image:hover{
+        transform: scale(1.02);
+        }
         .tab-image img,
         .tab-image-mobile img {
           width: 100%;
@@ -271,7 +290,7 @@ const tabsRef = useRef(null);
         }
 
         .category-tab.active .tab-image {
-          border: 2px solid #00205B;
+          // border: 2px solid #00205B;
           border-radius: 8px;
         }
 
@@ -420,6 +439,25 @@ const tabsRef = useRef(null);
   width: 100%;
   overflow: hidden;
 }
+  @media (max-width:500px){
+
+    .tabs {
+        justify-content:flex-start;
+        max-height: 100px;
+    }
+
+  .category-tabs.with-catalog {
+          border-bottom: 1px solid #D9D9D6;
+          height: 80px !important;
+          display: flex;
+          gap: 20px;
+          white-space: nowrap;
+        }
+          .tab-image, .tab-image-mobile {
+    width: 80px;
+    height: 80px;
+        object-fit: fill;
+    object-position: center;;}}
       `}</style>
     </div>
   );

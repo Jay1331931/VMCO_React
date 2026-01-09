@@ -117,7 +117,7 @@ const HomePage = () => {
             
             <div className="delivery-note">
               <InfoIcon size={16} />
-              {t("Orders placed after 6:00 PM will be delivered next day")}
+              {t("Chilled & fresh items ordered before 12:00 PM qualify for next-day dispatch")}
             </div>
        
            

@@ -816,8 +816,17 @@
   .main-content.has-orders-submenu .content {
     padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
   }
+  .home-page{
+  padding-bottom: 20px !important;
+}
 }
 
  .home-page{
   background:#d3d3d345
 }
+
+
+.catalog-padding-removing{
+  padding: 0px 20px !important;
+}
+

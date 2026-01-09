@@ -41,7 +41,8 @@ const BankTransactions = () => {
   const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
   const [filterAnchor, setFilterAnchor] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const [shouldFetchData, setShouldFetchData] = useState(false); 
   const gridApiRef = useGridApiRef();
   const contentRef = useRef(null);
   const [isAtTop, setIsAtTop] = useState(true);
@@ -113,7 +114,7 @@ const BankTransactions = () => {
       window.removeEventListener("touchmove", handleTouchMove);
     };
   }, []);
-
+ 
   // Fetch API
   const fetchTransactions = useCallback(
     async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
@@ -166,10 +167,39 @@ const BankTransactions = () => {
   );
 
   useEffect(() => {
-    if (user) {
-      fetchTransactions(page, searchQuery, filters, sortModel);
+    const savedFilters = localStorage.getItem('BankTransactionFilters');
+    if (savedFilters) {
+      try {
+        const parsed = JSON.parse(savedFilters);
+        if (parsed.filters) setFilters(parsed.filters);
+        if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+      } catch (error) {
+        console.error('Error parsing saved filters:', error);
+      }
     }
-  }, [page, searchQuery, sortModel, filters, fetchTransactions, user]);
+    setFiltersInitialized(true);
+    setShouldFetchData(true); // Mark that we can now fetch data
+  }, []);
+
+  // Fetch data when user is available AND filters are initialized
+  useEffect(() => {
+    if (user && filtersInitialized && shouldFetchData) {
+      fetchTransactions(page, searchQuery, filters, sortModel);
+      setShouldFetchData(false); // Reset to prevent refetching
+    }
+  }, [user, filtersInitialized, shouldFetchData, page, searchQuery, filters, sortModel, fetchTransactions]);
+
+  // Save filters to localStorage when they change
+  useEffect(() => {
+    if (filtersInitialized) {
+      const filtersToSave = {
+        filters,
+        searchQuery
+      };
+      localStorage.setItem('BankTransactionFilters', JSON.stringify(filtersToSave));
+      console.log("Filters saved to localStorage:", filtersToSave);
+    }
+  }, [filters, searchQuery, filtersInitialized]);
 
   // Handle search
   const handleSearch = (searchTerm) => {
@@ -180,7 +210,8 @@ const BankTransactions = () => {
   // Handle sort
   const handleSortModelChange = (model) => {
     setSortModel(model);
-    fetchTransactions(1, searchQuery, filters, model);
+    setPage(1); // Reset to page 1 when sorting
+    // Don't fetch here, let the useEffect handle it
   };
 
   const handleFilterChange = (newFilters) => {
@@ -598,8 +629,6 @@ const BankTransactions = () => {
           )}
         </div>
       )}
-
-       
     </Sidebar>
   );
 };
