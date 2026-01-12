@@ -1243,7 +1243,7 @@ body.catalog-page {
 
 @media(min-width: 300px) and (max-width: 450px) {
   .filter-section {
-    flex-direction: column;
+    /* flex-direction: column; */
     align-items: flex-start;
     gap: 10px;
     padding: 10px;
@@ -3636,7 +3636,7 @@ input:focus {
   }
 
   .catalog-fixed-header.show {
-    padding: 20px 30px 10px;
+    padding: 20px 15px 10px;
     top:7%;
   }
 

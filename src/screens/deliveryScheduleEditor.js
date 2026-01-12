@@ -425,21 +425,10 @@ function DeliveryScheduleEditor() {
         });
     };
 
-    // Handle search functionality - UPDATED to handle both search and clear
+    // Handle search functionality
     const handleSearch = (searchTerm) => {
-        console.log("Search called with:", searchTerm);
-        const previousSearch = searchQuery;
         setSearchQuery(searchTerm);
         setPage(1);
-
-        // If clearing search (empty string) and previous had value, force immediate refresh
-        if (searchTerm === "" && previousSearch !== "") {
-            console.log("Clearing search, forcing immediate refresh");
-            // Use setTimeout to ensure state updates have completed
-            setTimeout(() => {
-                fetchDeliverySchedules(1, "", filters);
-            }, 0);
-        }
     };
 
     const handleAddSchedule = async () => {
@@ -826,34 +815,32 @@ function DeliveryScheduleEditor() {
                             columnVisibilityModel={columnVisibilityModel}
                             onColumnVisibilityModelChange={handleColumnVisibilityChange}
                             slots={{
-                                toolbar: CustomToolbar,
-                            }}
-                            slotProps={{
-                                toolbar: {
-                                    searchQuery: searchQuery,
-                                    filterAnchor: filterAnchor,
-                                    onSearch: handleSearch,
-                                    setSearchQuery: setSearchQuery,
-                                    setFilterAnchor: setFilterAnchor,
-                                    handleFilterChange: handleFilterChange,
-                                    onColumnVisibilityChange: handleColumnVisibilityChange,
-                                    columns: filteredData,
-                                    filters: filters,
-                                    columnVisibilityModel: columnVisibilityModel,
-                                    searchPlaceholder: "Search delivery schedules...",
-                                    showColumnVisibility: false,
-                                    showFilters: true,
-                                    showExport: false,
-                                    showUpload: false,
-                                    showCalendar: false,
-                                    showAdd: isV("addButton"),
-                                    buttonName: t("Add Schedule"),
-                                    showApproval: false,
-                                    handleAddClick: handleAddClick,
-                                    columnsToDisplay: columnsToDisplay,
-                                    showAddForm: showAddForm,
-                                    excludeFiltersFromChips: excludeFiltersFromChips,
-                                },
+                                toolbar: () => (
+                                    <CustomToolbar
+                                        searchQuery={searchQuery}
+                                        filterAnchor={filterAnchor}
+                                        onSearch={handleSearch}
+                                        setSearchQuery={setSearchQuery}
+                                        setFilterAnchor={setFilterAnchor}
+                                        handleFilterChange={handleFilterChange}
+                                        onColumnVisibilityChange={setColumnVisibilityModel}
+                                        columns={filteredData}
+                                        filters={filters}
+                                        columnVisibilityModel={columnVisibilityModel}
+                                        searchPlaceholder={"Search delivery schedules..."}
+                                        showColumnVisibility={false}
+                                        showFilters={false}
+                                        showExport={false}
+                                        showUpload={false}
+                                        showAdd={isV("addButton")}
+                                        buttonName={t("Add Schedule")}
+                                        showApproval={false}
+                                        handleAddClick={handleAddClick}
+                                        columnsToDisplay={columnsToDisplay}
+                                        showAddForm={showAddForm}
+                                        excludeFiltersFromChips={excludeFiltersFromChips}
+                                    />
+                                ),
                             }}
                             sx={{
                                 flex: 1,

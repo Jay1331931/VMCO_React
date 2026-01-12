@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import Table from "../components/Table";
-import CommentPopup from "../components/commentPanel";
+import OrderDetailsCommentPopup from '../components/OrderDetailsCommentPopup';
 import GetInventory from "../components/GetInventory";
 import Remarks from "../components/Remarks";
 import "../i18n";
@@ -2060,7 +2060,7 @@ function OrderDetails() {
         createdAt: new Date().toISOString()
       };
 
-      const commentResponse = await fetch(`${API_BASE_URL}sales-order/id/${formData.id}`, {
+      const commentResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -5303,178 +5303,63 @@ function OrderDetails() {
 
             {/* Comment Panel Popup */}
             <div>
-              <CommentPopup
+              <OrderDetailsCommentPopup
                 isOpen={isCommentPanelOpen}
                 setIsOpen={setIsCommentPanelOpen}
-                showCommentForm={!fromApproval}
-                externalComments={(() => {
-                  const comments = [...(approvalHistory || [])];
-                  if (formData.feedback) {
-                    try {
-                      const feedbackObj =
-                        typeof formData.feedback === "string"
-                          ? JSON.parse(formData.feedback)
-                          : formData.feedback;
-
-                      if (Array.isArray(feedbackObj)) {
-                        // Handle array of feedback comments
-                        feedbackObj.forEach((feedback) => {
-                          if (feedback.comment) {
-                            comments.unshift({
-                              action: "Feedback",
-                              date: formatDate(
-                                feedback.createdAt || new Date(),
-                                "YYYY-MM-DD HH:MM"
-                              ),
-                              message: feedback.comment,
-                              userName: feedback.createdBy || t("Feedback"),
-                              userId: feedback.userId || "system",
-                            });
-                          }
-                        });
-                      } else if (feedbackObj.comment) {
-                        // Handle single feedback object for backward compatibility
-                        comments.unshift({
-                          action: "Feedback",
-                          date: formatDate(
-                            feedbackObj.createdAt ||
-                            formData.updatedAt ||
-                            new Date(),
-                            "YYYY-MM-DD HH:MM"
-                          ),
-                          message: feedbackObj.comment,
-                          userName: feedbackObj.createdBy || t("Feedback"),
-                          userId: feedbackObj.userId || "system",
-                        });
-                      }
-                    } catch (e) {
-                      console.error("Error parsing feedback:", e);
-                    }
-                  }
-                  return comments;
-                })()}
-                currentUser={user}
-                isVisible={fromApproval || formData.sampleOrder}
-                onAddComment={async (comment) => {
-                  if (
-                    !comment ||
-                    !user ||
-                    !(fromApproval || formData.sampleOrder)
-                  )
-                    return;
-
-                  // Create new feedback object
-                  const newFeedback = {
-                    comment,
-                    createdBy: user.userName,
-                    userId: user.userId,
-                    createdAt: new Date().toISOString(),
-                  };
-
-                  // Update local state first
-                  const currentFeedback = formData.feedback
-                    ? typeof formData.feedback === "string"
-                      ? JSON.parse(formData.feedback)
-                      : formData.feedback
+                onAddComment={(commentText, newComment) => {
+                  const existingComments = formData.comments
+                    ? (typeof formData.comments === 'string'
+                      ? JSON.parse(formData.comments)
+                      : formData.comments)
                     : [];
 
-                  const updatedFeedback = Array.isArray(currentFeedback)
-                    ? [newFeedback, ...currentFeedback]
-                    : [newFeedback];
+                  const updatedComments = [newComment, ...existingComments];
 
-                  setFormData((prev) => ({
+                  setFormData(prev => ({
                     ...prev,
-                    feedback: updatedFeedback,
+                    comments: JSON.stringify(updatedComments)
                   }));
-
-                  try {
-                    // Save to backend
-                    const response = await fetch(
-                      `${process.env.REACT_APP_API_BASE_URL}/orders/id/${formData.id}`,
-                      {
-                        method: "PATCH",
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: `Bearer ${token}`,
-                        },
-
-                        body: JSON.stringify({
-                          feedback: updatedFeedback,
-                        }),
-                      }
-                    );
-
-                    if (!response.ok) {
-                      throw new Error("Failed to save feedback");
-                    }
-
-                    console.log("Feedback saved successfully");
-                  } catch (error) {
-                    console.error("Error saving feedback:", error);
-                    // Optionally show error notification
-                    Swal.fire({
-                      title: t("Error"),
-                      text: t("Failed to save feedback. Please try again."),
-                      icon: "warning",
-                      toast: true,
-                      position: "bottom-end",
-                      showConfirmButton: false,
-                      timer: 3000,
-                    });
-                  }
-                  if (formData.sampleOrder) {
-                    const feedbackObject = {
-                      comment: comment,
-                      createdBy: user.name,
-                    };
-
+                  const token = localStorage.getItem("token");
+                  const saveComment = async () => {
                     try {
-                      const response = await fetch(
-                        `${API_BASE_URL}/sales-order/id/${formData.id}`,
-                        {
-                          method: "PATCH",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                          },
-                          body: JSON.stringify({
-                            feedback: JSON.stringify(feedbackObject),
-                          }),
-                        }
-                      );
+                      const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                          comments: JSON.stringify(updatedComments)
+                        }),
+                      });
 
                       if (!response.ok) {
-                        throw new Error("Failed to update feedback");
+                        throw new Error('Failed to save comment');
                       }
-
-                      // Update local state
-                      setFormData((prev) => ({
+                    } catch (error) {
+                      setFormData(prev => ({
                         ...prev,
-                        feedback: JSON.stringify(feedbackObject),
+                        comments: formData.comments
                       }));
 
-                      // Show success message
                       Swal.fire({
-                        icon: "success",
-                        title: t("Comment Added"),
-                        text: t("Feedback updated successfully"),
-                        confirmButtonText: t("OK"),
-                      });
-                    } catch (error) {
-                      console.error("Error updating feedback:", error);
-                      Swal.fire({
-                        icon: "error",
-                        title: t("Error"),
-                        text: t("Failed to update feedback: ") + error.message,
-                        confirmButtonText: t("OK"),
+                        icon: 'error',
+                        title: t('Error'),
+                        text: t('Failed to save comment'),
+                        confirmButtonText: t('OK')
                       });
                     }
-                  }
+                  };
+
+                  saveComment();
                 }}
+                showCommentForm={true}
+                currentUser={user}
+                isVisible={true}
+                formData={formData}
+                approvalHistory={approvalHistory}
               />
             </div>
-            {/* Rest of the component with modals and popups */}
-
             <GetInventory
               open={showInventory}
               onClose={() => setShowInventory(false)}
