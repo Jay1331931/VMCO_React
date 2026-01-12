@@ -92,7 +92,7 @@ const Tabs = ({
                 />
               </div>
             )}
-            {variant === "mobile" && (
+            { !catalog  && (
               <span className="tab-text">{t(tab.label)}</span>
             )}
           </button>

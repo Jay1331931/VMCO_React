@@ -8,56 +8,57 @@ import InfoIcon from '@mui/icons-material/Info';
 import StarIcon from '@mui/icons-material/Star';
 import WindowIcon from '@mui/icons-material/Window';
 import ThreeSixtyIcon from '@mui/icons-material/ThreeSixty';
+const BLOB_STORAGE_URL=process.env.REACT_APP_BLOB_STORAGE_URL
 // import { RotateCcw, Star, Grid, Info } from "lucide-react"; // Optional icon library
 const initialCategories = [
   {
     value: Constants.ENTITY.SHC,
     entity: Constants.ENTITY.SHC,
     label: Constants.TAB_NAMES.SHC,
-    imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/SandwichesEN.png",
-    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/SandwichesAr.png"
+    imageUrlEN:`${BLOB_STORAGE_URL}/vmco-homeimages/SandwichesEN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-homeimages/SandwichesAr.png`
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
-    imageUrlEN: "https://vmcowebportal.blob.core.windows.net/vmco-homeimages/FoodingredientsEn.png",
-    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/FoodingredientsAr.png"
+    imageUrlEN: `${BLOB_STORAGE_URL}/vmco-homeimages/FoodingredientsEn.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-homeimages/FoodingredientsAr.png`
   },
   {
     value: Constants.ENTITY.GMTC,
     entity: Constants.ENTITY.GMTC,
     label: Constants.TAB_NAMES.GMTC,
-    imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/FreshVegetablesEN.png",
-    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/FreshVegetablesAr.png"
+    imageUrlEN:`${BLOB_STORAGE_URL}/vmco-homeimages/FreshVegetablesEN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-homeimages/FreshVegetablesAr.png`
  },
   {
     value: Constants.ENTITY.NAQI,
     entity: Constants.ENTITY.NAQI,
     label: Constants.TAB_NAMES.NAQI,
-     imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/HygieneChemicalsEN.png",
-    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/HygieneChemicalsAr.png"
+     imageUrlEN:`${BLOB_STORAGE_URL}/vmco-homeimages/HygieneChemicalsEN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-homeimages/HygieneChemicalsAr.png`
  },
   {
     value: Constants.CATEGORY.VMCO_MACHINES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_MACHINES,
-     imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/MachinesEN.png",
-    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/MachinesAr.png"
+     imageUrlEN:`${BLOB_STORAGE_URL}/vmco-homeimages/MachinesEN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-homeimages/MachinesAr.png`
 },
 //   {
 //     value: Constants.ENTITY.DAR,
 //     entity: Constants.ENTITY.DAR,
 //     label: Constants.TAB_NAMES.DAR,
-//     imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/SandwichesEN.png",
-//     imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/SandwichesAr.png"
+//     imageUrlEN:`${BLOB_STORAGE_URL}/vmco-homeimages/SandwichesEN.png`,
+//     imageUrlAR:`${BLOB_STORAGE_URL}/vmco-homeimages/SandwichesAr.png`
 //  },
   {
     value: "SPECIAL_PRODUCTS",
     entity: "",
     label: "Special Products",
-   imageUrlEN:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/SpeacialProductsEn.png",
-    imageUrlAR:"https://vmcowebportal.blob.core.windows.net/vmco-homeimages/SpeacialProductsAr.png"
+   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-homeimages/SpeacialProductsEn.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-homeimages/SpeacialProductsAr.png`
  },
   // {
   //   value: "FAVORITES",
