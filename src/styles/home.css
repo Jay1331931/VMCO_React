@@ -354,3 +354,15 @@
     max-height: 320px;
   }
 }
+
+.category-card.disabled-card {
+  filter: grayscale(100%);
+  opacity: 0.6;
+  cursor: not-allowed;
+  transition: none;
+}
+
+.category-card.disabled-card:hover {
+  transform: none; /* Prevent any zoom or lift effects on hover */
+  box-shadow: none;
+}
