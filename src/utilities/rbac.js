@@ -26945,10 +26945,10 @@ class RbacManager {
     //console.log(field)
     const access = this.getFieldAccess(field);
     return (
-      (access === null ? true : access.visible) &&
-      (approvalWF === true && fieldInWF === true
+      (access == null ? true : access.visible) &&
+      (approvalWF == true && fieldInWF == true
         ? true
-        : approvalWF === true && fieldInWF === false
+        : approvalWF == true && fieldInWF == false
           ? false
           : true)
     );
@@ -26971,10 +26971,10 @@ class RbacManager {
     //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);
     return (
       (access == null ? true : access.editable) &&
-      (this.itemInWF === null ? true : this.isUserOwner) &&
-      (approvalWF === true && fieldInWF === true
+      (this.itemInWF == null ? true : this.isUserOwner) &&
+      (approvalWF == true && fieldInWF == true
         ? true
-        : approvalWF === true && fieldInWF === false
+        : approvalWF == true && fieldInWF == false
           ? false
           : true)
     );
