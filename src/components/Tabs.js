@@ -87,18 +87,18 @@ const canScrollRight = activeIndex < tabs.length - 1;
   return (
     <div className={`tab-container ${className}`}>
       {variant === "mobile" 
-      && 
+      && catalog &&
       canScrollLeft && 
       <div className="scroll-gradient left" />}
   {variant === "mobile" 
-      && 
+      && catalog &&
   canScrollRight && 
   <div className="scroll-gradient right" />} 
       {/* LEFT ARROW */}
 
       {
       variant === "mobile" 
-      && 
+      && catalog &&
       canScrollLeft 
       && (
         <button className="scroll-arrow left" onClick={() => moveTab("left")}>
@@ -146,7 +146,7 @@ const canScrollRight = activeIndex < tabs.length - 1;
       {/* RIGHT ARROW */}
       {
       variant === "mobile" 
-      && 
+      && catalog &&
       canScrollRight 
       && (
         <button
