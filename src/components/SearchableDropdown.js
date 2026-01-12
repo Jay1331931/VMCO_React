@@ -15,9 +15,9 @@ function SearchableDropdown({
   placeholder = "Value",
   style = {},
   openUpwards = false,
-  branchName=null
+  branchName = null
 }) {
-  const allOption = { name:  "Select", value: null };
+  const allOption = { name: "Select", value: null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,192 +28,132 @@ function SearchableDropdown({
   const inputRef = useRef(null);
   const isBranchDropdown = className?.includes('branch-location-select');
 
+  // Handle Scroll to close dropdown
   useEffect(() => {
     if (!isOpen) return;
 
     const handleScroll = (e) => {
       const dropdownEl = document.querySelector(".dropdown-content");
-
-      // If scroll happens inside dropdown, do NOT close it
       if (dropdownEl && dropdownEl.contains(e.target)) return;
-
-      // Otherwise close the dropdown
       setIsOpen(false);
     };
 
-    // Use capture to detect scroll from all parents
     window.addEventListener("scroll", handleScroll, true);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll, true);
-    };
+    return () => window.removeEventListener("scroll", handleScroll, true);
   }, [isOpen]);
 
+  // Position Calculation Fix
+// Position Calculation Fix
   useEffect(() => {
-  if (isOpen && dropdownRef.current) {
-    const rect = dropdownRef.current.getBoundingClientRect();
-    const dropdownHeight = 200; // estimate dropdown height
-    
-    // Calculate available space
-    const spaceAbove = rect.top;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    
-    let topPosition;
-    let openUpward = false;
-    
-    // Check if we should open upwards
-    // If there's not enough space below AND there's more space above
-    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
-      // Open upwards - position above the trigger
-      topPosition = rect.top + window.scrollY - dropdownHeight;
-      openUpward = true;
-    } else {
-      // Open downwards - position below the trigger
-      topPosition = rect.bottom + window.scrollY;
-      openUpward = false;
-    }
-    
-    // Ensure dropdown doesn't go above the viewport
-    if (topPosition < window.scrollY) {
-      topPosition = window.scrollY;
-    }
-    
-    // Ensure dropdown doesn't go below the viewport
-    const maxBottom = window.scrollY + window.innerHeight;
-    const dropdownBottom = topPosition + dropdownHeight;
-    if (dropdownBottom > maxBottom) {
-      topPosition = maxBottom - dropdownHeight;
-    }
-    
-    setDropdownPosition({
-      position: "absolute",
-      top: topPosition,
-      bottom:0,
-      left: rect.left + window.scrollX,
-      width: rect.width,
-      zIndex: 9999,
-    });
-    
-    // Add class for upward opening if needed
-    const dropdownContent = document.querySelector('.dropdown-content');
-    if (dropdownContent) {
-      if (openUpward) {
-        dropdownContent.classList.add('open-upwards');
+    if (isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const dropdownHeight = 200; 
+      const isRTL = document.dir === 'rtl' || i18n.language === 'ar';
+      
+      const spaceAbove = rect.top;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      
+      let topPosition;
+      let actualOpenUpward = false;
+
+      // Vertical Logic
+      if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+        topPosition = rect.top + window.scrollY - dropdownHeight;
+        actualOpenUpward = true;
       } else {
-        dropdownContent.classList.remove('open-upwards');
+        topPosition = rect.bottom + window.scrollY;
+      }
+
+      topPosition = Math.max(window.scrollY, topPosition);
+
+      // Horizontal Positioning Logic
+      let horizontalStyles = {};
+      if (isRTL) {
+        // Aligns the right edge of the dropdown with the right edge of the input
+        const rightOffset = window.innerWidth - (rect.right + window.scrollX);
+        horizontalStyles = {
+          right: rightOffset,
+          left: 'auto', // Ensure left doesn't interfere
+          direction: 'rtl'
+        };
+      } else {
+        // Standard English/LTR alignment
+        horizontalStyles = {
+          left: rect.left + window.scrollX,
+          right: 'auto',
+          direction: 'ltr'
+        };
+      }
+
+      let  position={
+        position: "absolute",
+        top: topPosition,
+        width: rect.width,
+        maxHeight: `${dropdownHeight}px`,
+        zIndex: 9999,
+        ...horizontalStyles // Inject RTL or LTR styles
+      };
+      // if(actualOpenUpward){
+      //   position.bottom=0
+      // }
+      setDropdownPosition(position)
+      
+
+      const dropdownContent = document.querySelector('.dropdown-content');
+      if (dropdownContent) {
+        dropdownContent.classList.toggle('open-upwards', actualOpenUpward);
       }
     }
-  }
-}, [isOpen, openUpwards]);
+  }, [isOpen, i18n.language]);
 
-  useEffect(() => {
-    //  Only focus on desktop
-    if (!isMobile && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isMobile]);
-
+  // Click Outside logic
   useEffect(() => {
     const handleClickOutside = (event) => {
-      const triggerEl = dropdownRef.current;
-      const clickedInsideTrigger = triggerEl && triggerEl.contains(event.target);
-      const clickedInsidePortal = event.target.closest(".dropdown-content");
-
-      if (!clickedInsideTrigger && !clickedInsidePortal) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
+          !event.target.closest(".dropdown-content")) {
         setIsOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const filteredOptions = mergedOptions.filter((opt) => {
-    const optionText =
-      typeof opt === "object" ? opt.name || opt.label || "" : opt || "";
+    const optionText = typeof opt === "object" ? opt.name || "" : opt || "";
     return optionText.toLowerCase().includes((searchTerm || "").toLowerCase());
   });
 
-  // Handle option selection
   const handleOptionSelect = (opt) => {
-    let optValue;
-    if (typeof opt === "object") {
-      if (Object.prototype.hasOwnProperty.call(opt, "value")) {
-        optValue = opt.value;
-      } else {
-        optValue = opt.employeeId || opt.name;
-      }
-    } else {
-      optValue = opt;
-    }
+    const optValue = typeof opt === "object" ? (opt.value !== undefined ? opt.value : opt.employeeId || opt.name) : opt;
     setIsOpen(false);
     setSearchTerm("");
-    onChange({
-      target: {
-        name: name,
-        value: optValue,
-      },
-    });
+    onChange({ target: { name, value: optValue } });
   };
 
   const truncateText = (text, maxLength = 30) => {
-    if (!text) return text;
-    if (text.length <= maxLength) return text;
+    if (!text || text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
 
-  // Find display text for current value
-  let selectedOption;
-  if (value == null) {
-    selectedOption = allOption;
-  } else {
-    selectedOption = mergedOptions.find(
-      (opt) =>
-        (typeof opt === "object"
-          ? opt.employeeId || opt.value || opt.name
-          : opt) === value
-    );
-  }
-  const displayText = selectedOption
-    ? typeof selectedOption === "object"
-      ? t(selectedOption.name)
-      : t(selectedOption)
-    : placeholder;
+  const selectedOption = mergedOptions.find(opt => {
+    const optVal = typeof opt === "object" ? (opt.value !== undefined ? opt.value : opt.employeeId || opt.name) : opt;
+    return optVal === value;
+  }) || allOption;
+
+  const displayText = t(typeof selectedOption === "object" ? selectedOption.name : selectedOption) || placeholder;
 
   return (
-    <div className={`searchable-dropdown ${className || ''}`} ref={dropdownRef}>
+    <div className={`searchable-dropdown ${className || ''}`} ref={dropdownRef} style={{ position: 'relative' }}>
       <div
         className={`dropdown-header ${isBranchDropdown ? 'branch-dropdown-header' : ''}`}
-        onClick={() => {
-          if (disabled) return;
-
-          if (!isOpen && dropdownRef.current) {
-            const rect = dropdownRef.current.getBoundingClientRect();
-            setDropdownPosition({
-              position: "absolute",
-              top: rect.bottom + window.scrollY,
-              left: rect.left + window.scrollX,
-              width: rect.width,
-              zIndex: 9999,
-            });
-          }
-
-          setIsOpen(!isOpen);
-        }}
-        tabIndex={disabled ? -1 : 0}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
         style={{
-          ...(disabled
-            ? { backgroundColor: "#e9ecef", cursor: "not-allowed" }
-            : {}),
+          backgroundColor: disabled ? "#e9ecef" : "white",
+          cursor: disabled ? "not-allowed" : "pointer",
           ...style,
         }}
       >
-        {isBranchDropdown && (
-          <FontAwesomeIcon
-            icon={faMapMarkerAlt}
-            className="branch-location-icon"
-          />
-        )}
+        {isBranchDropdown && <FontAwesomeIcon icon={faMapMarkerAlt} className="branch-location-icon" />}
         <span className="selected-value">
           {truncateText(displayText.charAt(0).toUpperCase() + displayText.slice(1), 30)}
         </span>
@@ -222,8 +162,8 @@ function SearchableDropdown({
 
       {isOpen && !disabled && createPortal(
         <div
-          className={`dropdown-content ${className || isMobile ? "mobile" : ""}`}
-          style={dropdownPosition}
+          className={`dropdown-content ${className || ''} ${isMobile ? "mobile" : ""}`}
+          style={{ ...dropdownPosition, display: 'flex', flexDirection: 'column' }}
           onClick={(e) => e.stopPropagation()}
         >
           <input
@@ -233,63 +173,39 @@ function SearchableDropdown({
             placeholder={t("Search...")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-            autoFocus={window.innerWidth > 768}
+            autoFocus
           />
 
-          <div className="dropdown-options">
+          <div className="dropdown-options" style={{ overflowY: 'auto', flex: 1 }}>
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt, idx) => {
                 const isOptDisabled = typeof opt === "object" && opt.disabled;
+                const optValue = typeof opt === "object" ? (opt.value !== undefined ? opt.value : opt.employeeId || opt.name) : opt;
+                const isChecked = optValue === (typeof selectedOption === 'object' ? selectedOption.value : selectedOption);
 
-  const optValue =
-    typeof opt === "object"
-      ? opt.employeeId || opt.value || opt.name
-      : opt;
-
-  const selectedValue =
-    typeof selectedOption === "object"
-      ? selectedOption.employeeId || selectedOption.value || selectedOption.name
-      : selectedOption;
-
-  const isChecked = optValue === selectedValue;
                 return (
                   <div
                     key={idx}
-                    className={`dropdown-option${isOptDisabled ? " disabled" : ""}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!isOptDisabled) handleOptionSelect(opt);
+                    className={`dropdown-option ${isOptDisabled ? "disabled" : ""}`}
+                    onClick={() => !isOptDisabled && handleOptionSelect(opt)}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: isOptDisabled ? "#eae9e9ff" : "transparent"
                     }}
-                    style={
-                      isOptDisabled
-                        ? {
-                          color: "#aaa",
-                          cursor: "not-allowed",
-                          background: "#eae9e9ff",
-                        }
-                        : {}
-                    }
-                    aria-disabled={isOptDisabled}
                   >
-                    {i18n.language === "en"
-                      ? typeof opt === "object"
-                        ? truncateText(opt?.name.charAt(0).toUpperCase() + opt?.name.slice(1),40)
-                        : truncateText(opt?.charAt(0).toUpperCase() + opt?.slice(1),30)
-                      : typeof opt === "object"
-                        ? truncateText(opt?.name,30)
-                        : truncateText(opt,30)}
-                         {/* ✅ Radio Button */}
-                         { isMobile &&  <div style={{ float: "right" , color: isChecked ? '#007bff' : '#ccc'}}>
-          <input
-            type="radio"
-            checked={isChecked}
-            disabled={isOptDisabled}
-            onChange={() => !isOptDisabled && handleOptionSelect(opt)}
-            onClick={(e) => e.stopPropagation()}
-          />  
-          </div>}
-                        
+                    <span>
+                      {t(typeof opt === "object" ? opt.name : opt)}
+                    </span>
+                    {isMobile && (
+                      <input
+                        type="radio"
+                        checked={isChecked}
+                        readOnly
+                        style={{ accentColor: '#007bff' }}
+                      />
+                    )}
                   </div>
                 );
               })
@@ -301,7 +217,39 @@ function SearchableDropdown({
         document.body
       )}
 
-  
+      <style>
+        {`/* Apply this to your dropdown-content class */
+.dropdown-content {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 4px;
+  padding:10px;
+}
+
+/* Ensure internal text follows the direction */
+.dropdown-content[style*="direction: rtl"] {
+  text-align: right;
+}
+
+.dropdown-content[style*="direction: ltr"] {
+  text-align: left;
+}
+
+.dropdown-search {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  border: none;
+  border-bottom: 1px solid #eee;
+}
+
+/* Fix for the scrollbar appearing on the wrong side in RTL */
+.dropdown-options {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}`}
+      </style>
     </div>
   );
 }

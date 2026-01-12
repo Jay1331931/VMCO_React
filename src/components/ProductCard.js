@@ -139,7 +139,7 @@ const ProductCard = ({
             <style>{`
                 /* Desktop Layout - Vertical Card */
                 .product-name-mobile {
-                padding:0px 30px;
+                padding:0px 30px 0px 0px;
                 }
                 .product-card.desktop-layout {
                     border: 1px solid #D9D9D6;

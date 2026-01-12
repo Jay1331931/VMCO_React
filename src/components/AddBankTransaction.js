@@ -197,6 +197,15 @@ setIsUploading(true)
 
       setFieldErrors(errors);
       if (Object.keys(errors).length > 0) {
+        if(isMobile){
+            Swal.fire({
+              title: t("Validation Error"),
+              text: t("Please fill all required fields"),
+              icon: "error",
+              confirmButtonText: t("OK"),
+            });
+        }
+       
         setError(t("Please fill all required fields"));
         return;
       }

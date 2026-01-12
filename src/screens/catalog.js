@@ -20,54 +20,71 @@ import SearchableDropdown from "../components/SearchableDropdown";
 import ProductsGrid from "./ProductsGrid";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // Initial categories with their corresponding entity values
+const BLOB_STORAGE_URL=process.env.REACT_APP_BLOB_STORAGE_URL
 const initialCategories = [
   {
     value: Constants.ENTITY.SHC,
     entity: Constants.ENTITY.SHC,
     label: Constants.ENTITY.SHC,
-    imageUrl: Constants.TAB_IMAGES.SHC
+   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/Sanswiches200EN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/Sanswiches200Ar.png`
+
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
-    imageUrl: Constants.TAB_IMAGES.VMCO_CONSUMABLES
+   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/FoodIngredients200EN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/FoodIngredients200Ar.png`
+
   },
   {
     value: Constants.ENTITY.GMTC,
     entity: Constants.ENTITY.GMTC,
     label: Constants.ENTITY.GMTC,
-    imageUrl: Constants.TAB_IMAGES.GMTC
+    imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/FreshVegetables200EN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/FreshVegetables200Ar.png`
+
   },
   {
     value: Constants.ENTITY.NAQI,
     entity: Constants.ENTITY.NAQI,
     label: Constants.ENTITY.NAQI,
-    imageUrl: Constants.TAB_IMAGES.NAQI
+   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/HygieneChemicals200EN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/HygieneChemicals200Ar.png`
+
   },
   {
     value: Constants.CATEGORY.VMCO_MACHINES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_MACHINES,
-    imageUrl: Constants.TAB_IMAGES.VMCO_MACHINES
+    imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/Machines200EN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/Machines200Ar.png`
+
   },
-  {
-    value: Constants.ENTITY.DAR,
-    entity: Constants.ENTITY.DAR,
-    label: Constants.ENTITY.DAR,
-    imageUrl: Constants.TAB_IMAGES.DAR
-  },
+  // {
+  //   value: Constants.ENTITY.DAR,
+  //   entity: Constants.ENTITY.DAR,
+  //   label: Constants.ENTITY.DAR,
+  //  imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/SandwichesEN.png`,
+  //   imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/SandwichesAr.png`
+
+  // },
   {
     value: "SPECIAL_PRODUCTS",
     entity: "",
     label: "Special Products",
-    imageUrl: Constants.TAB_IMAGES.SPECIAL_PRODUCTS
+   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/SpecialProucts200EN.png`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/SpecialProucts200Ar.png`
+
   },
   {
     value: "FAVORITES",
     entity: "",
     label: "Favorites",
-    imageUrl: Constants.TAB_IMAGES.FAVORITES
+    imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/Favorites200EN.jpg`,
+    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/Favorites200Ar.jpg`,
+
   },
 ];
 function Catalog() {
@@ -542,7 +559,8 @@ function Catalog() {
       return {
         value: category.value,
         label: response,
-        imageUrl: category.imageUrl
+        imageUrlAR: category.imageUrlAR,
+        imageUrlEN: category.imageUrlEN
       };
     });
 
@@ -1170,7 +1188,7 @@ const fetchCart = async (userID) => {
 console.log("selectedLocation",selectedLocation)
 
   return (
-    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")}  selectBranch={isV("selectBranch")} >
+    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")}  selectBranch={isV("selectBranch")} PaddingClass={true} >
       {isPageLoading ? (
         <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
           <LoadingSpinner size="medium" />
