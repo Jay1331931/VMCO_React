@@ -12,18 +12,26 @@ const Tabs = ({
   const { t, i18n } = useTranslation();
   const tabsRef = useRef(null);
   const currentLanguage = i18n.language;
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const activeIndex = tabs.findIndex(t => t.value === activeTab);
+const canScrollLeft = activeIndex > 0;
+const canScrollRight = activeIndex < tabs.length - 1;
+  // const [canScrollLeft, setCanScrollLeft] = useState(false);
+  // const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const checkScroll = () => {
-    const el = tabsRef.current;
-    if (!el) return;
-    const threshold = 5;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(
-      el.scrollLeft + el.clientWidth < el.scrollWidth - threshold
-    );
-  };
+  // const checkScroll = () => {
+  //   const el = tabsRef.current;
+  //   if (!el) return;
+  //   const threshold = 5;
+  //   console.log("el.scrollLeft", el.scrollLeft)
+  //   console.log("el.clientWidth", el.clientWidth)
+  //   console.log("el.scrollWidth", el.scrollWidth)
+  //   console.log("scrollLeft", el.scrollLeft > 0)
+  //   console.log("scrollRight", el.scrollLeft + el.clientWidth < el.scrollWidth - threshold)
+  //   setCanScrollLeft(el.scrollLeft > 0);
+  //   setCanScrollRight(
+  //     el.scrollLeft + el.clientWidth < el.scrollWidth - threshold
+  //   );
+  // };
 
   const scrollTabs = (direction) => {
     tabsRef.current?.scrollBy({
@@ -32,34 +40,71 @@ const Tabs = ({
     });
   };
 
+  // useEffect(() => {
+  //   const el = tabsRef.current;
+  //   if (!el) return;
+
+  //   requestAnimationFrame(checkScroll);
+
+  //   el.addEventListener("scroll", checkScroll);
+  //   window.addEventListener("resize", checkScroll);
+
+  //   return () => {
+  //     el.removeEventListener("scroll", checkScroll);
+  //     window.removeEventListener("resize", checkScroll);
+  //   };
+  // }, [tabs]);
+  const moveTab = (direction) => {
+  let nextIndex = activeIndex;
+
+  if (direction === "left") {
+    nextIndex = Math.max(0, activeIndex - 1);
+  } else {
+    nextIndex = Math.min(tabs.length - 1, activeIndex + 1);
+  }
+
+  const nextTab = tabs[nextIndex];
+  if (!nextTab || nextTab.disabled) return;
+
+  onTabChange(nextTab.value);
+};
+
   useEffect(() => {
-    const el = tabsRef.current;
-    if (!el) return;
+  const container = tabsRef.current;
+  if (!container) return;
 
-    requestAnimationFrame(checkScroll);
+  const activeButton = container.querySelector(".active");
+  if (!activeButton) return;
 
-    el.addEventListener("scroll", checkScroll);
-    window.addEventListener("resize", checkScroll);
+  activeButton.scrollIntoView({
+    behavior: "smooth",
+    inline: "center",
+    block: "nearest",
+  });
+}, [activeTab]);
 
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, [tabs]);
   console.log("tabs", tabs);
   return (
     <div className={`tab-container ${className}`}>
-      {/* {canScrollLeft && <div className="scroll-gradient left" />}
-  {canScrollRight && <div className="scroll-gradient right" />} */}
+      {variant === "mobile" 
+      && 
+      canScrollLeft && 
+      <div className="scroll-gradient left" />}
+  {variant === "mobile" 
+      && 
+  canScrollRight && 
+  <div className="scroll-gradient right" />} 
       {/* LEFT ARROW */}
 
-      {/* {
-      variant === "mobile" && 
-      canScrollLeft && (
-        <button className="scroll-arrow left" onClick={() => scrollTabs("left")}>
+      {
+      variant === "mobile" 
+      && 
+      canScrollLeft 
+      && (
+        <button className="scroll-arrow left" onClick={() => moveTab("left")}>
           ‹
         </button>
-      )} */}
+      )}
       <div
         ref={tabsRef}
         className={`tabs ${
@@ -99,16 +144,18 @@ const Tabs = ({
         ))}
       </div>
       {/* RIGHT ARROW */}
-      {/* {
-      variant === "mobile" && 
-      canScrollRight && (
+      {
+      variant === "mobile" 
+      && 
+      canScrollRight 
+      && (
         <button
           className="scroll-arrow right"
-          onClick={() => scrollTabs("right")}
+          onClick={() => moveTab("right")}
         >
           ›
         </button>
-      )} */}
+      )}
 
       <style>{`
         .tabs {
@@ -340,7 +387,7 @@ margin-bottom:10px;}
         @media (max-width: 768px) {
           .tabs {
             width: 100%;
-            justify-content: center;
+            justify-content: flex-start;
             display: flex;
             gap: 10px;
           }
@@ -400,11 +447,11 @@ margin-bottom:10px;}
           }
 
           .scroll-arrow.left {
-            left: 4px;
+            left: 0px;
           }
 
           .scroll-arrow.right {
-            right: 4px;
+            right: 0px;
           }
         }
 .scroll-gradient {
@@ -419,15 +466,17 @@ margin-bottom:10px;}
 .scroll-gradient.left {
   left: 0;
   background: linear-gradient(
-    90deg, lightgray, transparent
+    90deg, #b9dcee, transparent
   );
+  border-radius: 5px;
 }
 
 .scroll-gradient.right {
   right: 0;
   background: linear-gradient(
-    -90deg, lightgray, transparent
+    -90deg, #b9dcee, transparent
   );
+  border-radius: 5px;
 }
   @media (max-width: 768px) {
   .scroll-gradient {
