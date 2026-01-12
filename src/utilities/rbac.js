@@ -1,6 +1,3 @@
-import { faL } from "@fortawesome/free-solid-svg-icons";
-import constants from "../constants";
-
 // RBAC Manager class
 class RbacManager {
   constructor(role, form, inWF = null, isOwner = false) {
