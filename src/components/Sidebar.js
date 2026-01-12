@@ -309,6 +309,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
 
   const handleGoToCart = async () => {
     const cartData = await fetchCart();
+    console.log("cartData",cartData)
     if (cartData?.id) {
       navigate("/Cart", {
         state: {
@@ -322,7 +323,8 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
           selectedBranchNameLc: cartData?.branchNameLc || "",
           selectedBranchNameEn: cartData?.branchNameEn || "",
           selectedBranchErpId: cartData?.erpBranchId || "",
-          selectedBranchRegion: cartData?.branchRegion || "",
+          selectedBranchRegion: cartData?.branchRegion || cartData?.region
+ || "",
           selectedBranchCity: cartData?.city || "",
           selectedBranchStatus: cartData?.branchStatus || "",
           selectedCustSequenceId: user?.sequenceId || "",
