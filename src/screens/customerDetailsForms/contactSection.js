@@ -324,16 +324,17 @@ const validateEmail = (email) => {
     {
       type: "secondary",
       label: "Secondary Contact",
-      isRequired: originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-                  ?.isAllowed ? true : false,
+      // isRequired: originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+      //             ?.isAllowed || 
+      //           originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+      //             ?.isAllowed ||
+      //           originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+      //             ?.isAllowed ||
+      //           originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+      //             ?.isAllowed ||
+      //           originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+      //             ?.isAllowed ? true : false,
+      isRequired: false,
       fields: [
         { name: "Name", field: "secondaryContactName" },
         { name: "Designation", field: "secondaryContactDesignation" },

@@ -1608,15 +1608,15 @@ const initializeMap = () => {
       <div className="form-group">
         <label htmlFor="financeHeadName">
           {t("Finance Head Name")}
-          {(originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
+          {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
                   ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
                   ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
@@ -1692,15 +1692,15 @@ const initializeMap = () => {
       <div className="form-group">
         <label htmlFor="financeHeadDesignation">
           {t("Designation")}
-          {(originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
+          {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
                   ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
                   ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
@@ -1779,15 +1779,15 @@ const initializeMap = () => {
       <div className="form-group">
         <label htmlFor="financeHeadEmail">
           {t("Email")}
-          {(originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
+          {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
                   ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
                   ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
@@ -1916,15 +1916,15 @@ const initializeMap = () => {
       <div className="form-group">
         <label htmlFor="financeHeadMobile">
           {t("Mobile")}
-          {(originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
+          {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
                   ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
                   ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
@@ -2011,15 +2011,15 @@ const initializeMap = () => {
       <div className="form-group">
         <label htmlFor="purchasingHeadName">
           {t("Purchasing Head Name")}
-          {(originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
+          {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
                   ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
                   ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
@@ -2095,15 +2095,15 @@ const initializeMap = () => {
       <div className="form-group">
         <label htmlFor="purchasingHeadDesignation">
           {t("Designation")}
-          {(originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
+          {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
                   ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
                   ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
@@ -2184,15 +2184,15 @@ const initializeMap = () => {
       <div className="form-group">
         <label htmlFor="purchasingHeadEmail">
           {t("Email")}
-          {(originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
+          {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
                   ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
                   ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
@@ -2321,15 +2321,15 @@ const initializeMap = () => {
       <div className="form-group">
         <label htmlFor="purchasingHeadMobile">
           {t("Mobile")}
-          {(originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
+          {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
                   ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
                   ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
                   ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
