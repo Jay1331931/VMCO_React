@@ -3534,7 +3534,9 @@ input:focus {
 .branch-location-select.mobile .dropdown-header:hover {
   background-color: #ebebeb;
 }
-
+.branch-location-select.mobile  {
+   background-color: #ebebeb;
+}
 .branch-location-select.mobile .branch-dropdown-header {
   border: none !important;
 }
@@ -3636,7 +3638,7 @@ input:focus {
   }
 
   .catalog-fixed-header.show {
-    padding: 20px 15px 10px;
+    padding: 20px 8px 10px;
     top:7%;
   }
 
