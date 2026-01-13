@@ -20,46 +20,46 @@ import SearchableDropdown from "../components/SearchableDropdown";
 import ProductsGrid from "./ProductsGrid";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // Initial categories with their corresponding entity values
-const BLOB_STORAGE_URL=process.env.REACT_APP_BLOB_STORAGE_URL
+const BLOB_STORAGE_URL = process.env.REACT_APP_BLOB_STORAGE_URL
 const initialCategories = [
   {
     value: Constants.ENTITY.SHC,
     entity: Constants.ENTITY.SHC,
     label: Constants.ENTITY.SHC,
-   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/Sanswiches200EN.png`,
-    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/Sanswiches200Ar.png`
+    imageUrlEN: `${BLOB_STORAGE_URL}/vmco-tabimages/Sanswiches200EN.png`,
+    imageUrlAR: `${BLOB_STORAGE_URL}/vmco-tabimages/Sanswiches200Ar.png`
 
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
-   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/FoodIngredients200EN.png`,
-    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/FoodIngredients200Ar.png`
+    imageUrlEN: `${BLOB_STORAGE_URL}/vmco-tabimages/FoodIngredients200EN.png`,
+    imageUrlAR: `${BLOB_STORAGE_URL}/vmco-tabimages/FoodIngredients200Ar.png`
 
   },
   {
     value: Constants.ENTITY.GMTC,
     entity: Constants.ENTITY.GMTC,
     label: Constants.ENTITY.GMTC,
-    imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/FreshVegetables200EN.png`,
-    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/FreshVegetables200Ar.png`
+    imageUrlEN: `${BLOB_STORAGE_URL}/vmco-tabimages/FreshVegetables200EN.png`,
+    imageUrlAR: `${BLOB_STORAGE_URL}/vmco-tabimages/FreshVegetables200Ar.png`
 
   },
   {
     value: Constants.ENTITY.NAQI,
     entity: Constants.ENTITY.NAQI,
     label: Constants.ENTITY.NAQI,
-   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/HygieneChemicals200EN.png`,
-    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/HygieneChemicals200Ar.png`
+    imageUrlEN: `${BLOB_STORAGE_URL}/vmco-tabimages/HygieneChemicals200EN.png`,
+    imageUrlAR: `${BLOB_STORAGE_URL}/vmco-tabimages/HygieneChemicals200Ar.png`
 
   },
   {
     value: Constants.CATEGORY.VMCO_MACHINES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_MACHINES,
-    imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/Machines200EN.png`,
-    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/Machines200Ar.png`
+    imageUrlEN: `${BLOB_STORAGE_URL}/vmco-tabimages/Machines200EN.png`,
+    imageUrlAR: `${BLOB_STORAGE_URL}/vmco-tabimages/Machines200Ar.png`
 
   },
   // {
@@ -74,16 +74,16 @@ const initialCategories = [
     value: "SPECIAL_PRODUCTS",
     entity: "",
     label: "Special Products",
-   imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/SpecialProucts200EN.png`,
-    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/SpecialProucts200Ar.png`
+    imageUrlEN: `${BLOB_STORAGE_URL}/vmco-tabimages/SpecialProucts200EN.png`,
+    imageUrlAR: `${BLOB_STORAGE_URL}/vmco-tabimages/SpecialProucts200Ar.png`
 
   },
   {
     value: "FAVORITES",
     entity: "",
     label: "Favorites",
-    imageUrlEN:`${BLOB_STORAGE_URL}/vmco-tabimages/Favorites200EN.jpg`,
-    imageUrlAR:`${BLOB_STORAGE_URL}/vmco-tabimages/Favorites200Ar.jpg`,
+    imageUrlEN: `${BLOB_STORAGE_URL}/vmco-tabimages/Favorites200EN.jpg`,
+    imageUrlAR: `${BLOB_STORAGE_URL}/vmco-tabimages/Favorites200Ar.jpg`,
 
   },
 ];
@@ -91,9 +91,9 @@ function Catalog() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const {entityname}=useParams()
+  const { entityname } = useParams()
   const [categories] = useState(initialCategories);
-  const [activeCategory, setActiveCategory] = useState( entityname || initialCategories[0].value);
+  const [activeCategory, setActiveCategory] = useState(entityname || initialCategories[0].value);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCustSequenceId, setSelectedCustSequenceId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
@@ -207,7 +207,7 @@ function Catalog() {
   }, []);
 
   useEffect(() => {
-    if ( !isLoading && !isLoadingMore && isPageLoading) {
+    if (!isLoading && !isLoadingMore && isPageLoading) {
       setIsPageLoading(false);
     }
   }, [products, isLoading, isLoadingMore, isPageLoading]);
@@ -790,7 +790,7 @@ function Catalog() {
       const result = await response.json();
       const cartItems = result?.data?.data || [];
       const cartBranchIds = [...new Set(cartItems.map((item) => String(item.branch_id || item.branchId)))];
-    
+
       if (cartBranchIds.length === 0 || (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId)) {
         setSelectedLocation(newBranchId);
         if (selectedBranch) {
@@ -982,7 +982,7 @@ function Catalog() {
           body: JSON.stringify(cartItem),
         });
         if (!response.ok) {
-          throw new Error("Failed to add item to cart",response);
+          throw new Error("Failed to add item to cart", response);
         }
         Swal.fire({
           icon: "success",
@@ -1152,8 +1152,57 @@ function Catalog() {
       setSubCategoryOptions([]);
     }
   }, [categoryFilter]);
-const fetchCart = async (userID) => {
-  console.log("userID",userID)
+
+  const handleTabChange = (newCategory) => {
+    // Find the tab that was clicked
+    const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
+
+    // Check if the tab is disabled
+    if (targetTab && targetTab.disabled) {
+      // Find the cooling period info for this entity
+      const category = categoriesTabImages.find(cat => cat.value === newCategory);
+      const entity = category?.entity;
+
+      if (entity && disabledEntities.includes(entity)) {
+        const coolingInfo = coolingPeriodData.find(cp => cp.entity === entity);
+
+        if (coolingInfo && coolingInfo.toTime) {
+          // Format the time
+          const todayUTC = new Date().toISOString().split('T')[0];
+          const utcDateTime = `${todayUTC}T${coolingInfo.toTime}Z`;
+          const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          const localTime = new Date(utcDateTime).toLocaleTimeString('en-IN', {
+            timeZone: timezone,
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          });
+
+          // Show the alert
+          Swal.fire({
+            icon: 'warning',
+            title: t("Ordering Window Closed"),
+            text: `${t("Ordering window is closed.")} ${t("You may place an order after")} ${localTime}`,
+            confirmButtonText: t("OK"),
+          });
+        } else {
+          // Fallback message if time info is not available
+          Swal.fire({
+            icon: 'warning',
+            title: t("Ordering Window Closed"),
+            text: t("Ordering window is closed for this category."),
+            confirmButtonText: t("OK"),
+          });
+        }
+      }
+      return; // Don't switch the tab
+    }
+
+    // Normal tab change logic
+    setActiveCategory(newCategory);
+  };
+  const fetchCart = async (userID) => {
+    console.log("userID", userID)
     try {
       const response = await fetch(
         `${API_BASE_URL}/cart/get-cart-by-userId?id=${userID}`,
@@ -1184,11 +1233,11 @@ const fetchCart = async (userID) => {
       return null;
     }
   };
- 
-console.log("selectedLocation",selectedLocation)
+
+  console.log("selectedLocation", selectedLocation)
 
   return (
-    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")}  selectBranch={isV("selectBranch")} PaddingClass={true} >
+    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")} selectBranch={isV("selectBranch")} PaddingClass={true} >
       {isPageLoading ? (
         <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
           <LoadingSpinner size="medium" />
@@ -1209,21 +1258,59 @@ console.log("selectedLocation",selectedLocation)
           // Filter section props
           filteredCategoryTabs={filteredCategoryTabs}
           activeCategory={activeCategory}
+
           handleTabChange={(newCategory) => {
-            // Move the entire tab change logic here
+            // Move the tab change logic here
             const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
+
             if (targetTab && targetTab.disabled) {
-              // ... cooling period logic ...
+              // Find entity for this category
+              const category = categories.find(cat => cat.value === newCategory);
+              const entity = category?.entity;
+
+              if (entity && disabledEntities.includes(entity)) {
+                const coolingInfo = coolingPeriodData.find(cp => cp.entity === entity);
+
+                if (coolingInfo && coolingInfo.toTime) {
+                  const todayUTC = new Date().toISOString().split('T')[0];
+                  const utcDateTime = `${todayUTC}T${coolingInfo.toTime}Z`;
+                  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                  const localTime = new Date(utcDateTime).toLocaleTimeString('en-IN', {
+                    timeZone: timezone,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                  });
+
+                  Swal.fire({
+                    icon: 'warning',
+                    title: t("Ordering Window Closed"),
+                    text: `${t("Ordering window is closed.")} ${t("You may place an order after")} ${localTime}`,
+                    confirmButtonText: t("OK"),
+                  });
+                } else {
+                  Swal.fire({
+                    icon: 'warning',
+                    title: t("Ordering Window Closed"),
+                    text: t("Ordering window is closed for this category."),
+                    confirmButtonText: t("OK"),
+                  });
+                }
+              }
               return;
             }
-            setIsLoading(false);
-            console.log("Tab changing from", activeCategory, "to", newCategory);
+
+            // Normal tab change
+            console.log('Tab changing from', activeCategory, 'to', newCategory);
             setActiveCategory(newCategory);
-            setSearchQuery("");
-            setCategoryFilter("");
-            setSubCategoryFilter("");
+            setSearchQuery('');
+            setCategoryFilter('');
+            setSubCategoryFilter('');
             setSubCategoryOptions([]);
           }}
+          coolingPeriodData={coolingPeriodData}
+          disabledEntities={disabledEntities}
+          categoriesTabImages={categories}
 
           // Search section props
           categoryFilter={categoryFilter}
