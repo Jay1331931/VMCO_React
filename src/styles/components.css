@@ -2491,6 +2491,7 @@ body.catalog-page {
 
 .support-action-btn {
   padding: 10px 24px;
+  max-width: 160px;
   margin-top: 8px;
   margin-bottom: 8px;
   border-radius: var(--border-radius);
