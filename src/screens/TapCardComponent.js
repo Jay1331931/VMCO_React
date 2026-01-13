@@ -260,6 +260,7 @@ const TapCardPayment = () => {
         if (isMobile) {
           // For iOS: use window.open with _blank to open Safari
           // For Android: InAppBrowser if available, otherwise window.open
+          navigate("/catalog")
           if (window.cordova && window.cordova.InAppBrowser) {
             // Try InAppBrowser for Android
             const width = 400;
@@ -277,7 +278,7 @@ const TapCardPayment = () => {
               'left=' + centeredPosition.left + ',' +
               'top=' + centeredPosition.top;
             window.cordova.InAppBrowser.open(paymentUrl, '_blank', options);
-            console.log('[Tap Debug] Opened with InAppBrowser');
+          
           } else {
             // iOS fallback: use window.open with _blank to open Safari
             window.open(paymentUrl, '_blank');
