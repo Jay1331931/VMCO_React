@@ -173,6 +173,7 @@ const BankTransactions = () => {
         const parsed = JSON.parse(savedFilters);
         if (parsed.filters) setFilters(parsed.filters);
         if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+        if(parsed.page) setPage(parsed.page);
       } catch (error) {
         console.error('Error parsing saved filters:', error);
       }
@@ -183,7 +184,7 @@ const BankTransactions = () => {
 
   // Fetch data when user is available AND filters are initialized
   useEffect(() => {
-    if (user && filtersInitialized && shouldFetchData) {
+    if (user && filtersInitialized ) {
       fetchTransactions(page, searchQuery, filters, sortModel);
       setShouldFetchData(false); // Reset to prevent refetching
     }
@@ -194,12 +195,13 @@ const BankTransactions = () => {
     if (filtersInitialized) {
       const filtersToSave = {
         filters,
-        searchQuery
+        searchQuery,
+        page
       };
       localStorage.setItem('BankTransactionFilters', JSON.stringify(filtersToSave));
       console.log("Filters saved to localStorage:", filtersToSave);
     }
-  }, [filters, searchQuery, filtersInitialized]);
+  }, [filters, searchQuery, filtersInitialized,page]);
 
   // Handle search
   const handleSearch = (searchTerm) => {
