@@ -15,6 +15,7 @@ import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 import EditCalendarIcon from '@mui/icons-material/EditCalendar';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Switch from '@mui/material/Switch';
+import usePlatform from "../utilities/platform";
 
 function DeliveryScheduleEditor() {
     const [deliverySchedules, setDeliverySchedules] = useState([]);
@@ -54,6 +55,7 @@ function DeliveryScheduleEditor() {
 
     const { t, i18n } = useTranslation();
     const { user, token } = useAuth();
+    const isMobile = usePlatform();
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     const gridApiRef = useGridApiRef();
 
@@ -654,7 +656,7 @@ function DeliveryScheduleEditor() {
                             tabs={categoryTabs}
                             activeTab={activeCategory}
                             onTabChange={handleTabChange}
-                            variant='mobile'
+                            variant= {isMobile ? 'mobile' : 'pc'}
                         />
                     </div>
                 </div>
@@ -830,6 +832,7 @@ function DeliveryScheduleEditor() {
                                         searchPlaceholder={"Search delivery schedules..."}
                                         showColumnVisibility={false}
                                         showFilters={false}
+                                        showCalendar={false}
                                         showExport={false}
                                         showUpload={false}
                                         showAdd={isV("addButton")}

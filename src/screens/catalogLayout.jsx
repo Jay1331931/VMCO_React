@@ -47,7 +47,10 @@ const CatalogLayout = ({
     handleClosePopup,
     isRTL,
     dir,
-    setSearchQuery
+    setSearchQuery,
+    coolingPeriodData,
+    disabledEntities,
+    categoriesTabImages,
     
 }) => {
     const { i18n } = useTranslation();
@@ -405,7 +408,7 @@ const CatalogLayout = ({
                         </div>
                     </div>
 
-                    <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%" }}>
+                    <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%", padding: "0 10px" }}>
                         <div className="category-dropdown-mobile" style={{ flex: 1 }}>
                             <SearchableDropdown
                                 options={categoryOptions}

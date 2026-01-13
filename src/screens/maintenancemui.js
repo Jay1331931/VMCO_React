@@ -662,7 +662,7 @@ function Maintenance() {
                     }
                   />
                 </div>
-                <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
+                <div style={{  position: "relative", zIndex: 1 }}>
                   <MaintenanceCard
                     tickets={initialTickets}
                     setSelectedRow={handleShowAllDetailsClick}

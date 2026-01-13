@@ -9,6 +9,14 @@ import StarIcon from "@mui/icons-material/Star";
 import WindowIcon from "@mui/icons-material/Window";
 import ThreeSixtyIcon from "@mui/icons-material/ThreeSixty";
 import { useAuth } from "../context/AuthContext";
+import Swal from "sweetalert2";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import { getTimeOnly } from "../utilities/convertUtcToTimeZone";
+import timezone from "dayjs/plugin/timezone";
+dayjs.extend(utc);
+dayjs.extend(timezone);
+const userTimezone = dayjs.tz.guess();
 const BLOB_STORAGE_URL = process.env.REACT_APP_BLOB_STORAGE_URL;
 // import { RotateCcw, Star, Grid, Info } from "lucide-react"; // Optional icon library
 const initialCategories = [
@@ -69,6 +77,46 @@ const initialCategories = [
   // },
 ];
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const getEntityFromCategory = (categoryName) => {
+  // Check if categoryName is null or undefined
+  if (!categoryName) {
+    return null;
+  }
+
+  // Just use the fallback logic which doesn't require cartItems
+  const category = categoryName.toLowerCase();
+
+  // Direct mapping from section to entity
+  if (
+    category.includes(Constants.ENTITY.VMCO.toLowerCase()) ||
+    category.includes("vending machine company")
+  ) {
+    return Constants.ENTITY.VMCO;
+  } else if (
+    category.includes(Constants.ENTITY.SHC.toLowerCase()) ||
+    category.includes("saudi hospitality company")
+  ) {
+    return Constants.ENTITY.SHC;
+  } else if (
+    category.includes(Constants.ENTITY.GMTC.toLowerCase()) ||
+    category.includes("green mast factory ltd")
+  ) {
+    return Constants.ENTITY.GMTC;
+  } else if (
+    category.includes(Constants.ENTITY.NAQI.toLowerCase()) ||
+    category.includes("naqi company")
+  ) {
+    return Constants.ENTITY.NAQI;
+  } else if (
+    category.includes(Constants.ENTITY.DAR.toLowerCase()) ||
+    category.includes("dar company")
+  ) {
+    return Constants.ENTITY.DAR;
+  }
+
+  // If no match is found, return null or a default entity
+  return null;
+};
 const HomePage = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -134,6 +182,11 @@ const HomePage = () => {
                 (entity) => entity?.toLowerCase() === cat?.entity?.toLowerCase()
               );
               // const isDisabled = disabledEntities.includes(cat.value);
+             const categoryEntity= getEntityFromCategory(cat?.entity?.toLowerCase())
+                const coolingInfo = isDisabled
+                ? coolingPeriodData.find((cp) => cp.entity === categoryEntity)
+                : null;
+
               return (
                 <div
                   key={idx}
@@ -141,11 +194,33 @@ const HomePage = () => {
                     isDisabled ? "disabled-card" : ""
                   }`}
                   onClick={() => {
-                    // Only navigate if NOT disabled
-                    if (!isDisabled) {
-                      navigate(`/catalog/${cat.value}`);
-                    }
-                  }}
+                                          if (isDisabled) {
+                                            
+                                            const todayUTC = new Date().toISOString().split("T")[0];
+                                            const utcDateTime = `${todayUTC}T${coolingInfo?.toTime}Z`;
+                    
+                                            const timezone = userTimezone;
+                                                const localTime =getTimeOnly(utcDateTime,userTimezone,"HH:mm:ss")
+                                            // const localTime = new Date(utcDateTime).toLocaleTimeString("en-IN", {
+                                            //   timeZone: timezone,
+                                            //   hour: "2-digit",
+                                            //   minute: "2-digit",
+                                            //   hour12: true,
+                                            // });
+                                            Swal.fire({
+                                              icon: "warning",
+                                              title: t("Ordering Window Closed"),
+                                              text: `${t("Ordering window is closed.")} ${t(
+                                                "You may place an order after"
+                                              )} ${localTime}`,
+                                              confirmButtonText: t("OK"),
+                                            });
+                                          } else {
+                                            navigate(`/catalog/${cat.value}`)
+                                          }
+                                        }}
+                   
+                  
                 >
                   <img
                     src={isRTL ? cat.imageUrlAR : cat.imageUrlEN}

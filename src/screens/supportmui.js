@@ -641,7 +641,7 @@ function Support() {
                                 </div>
 
                                 {/* Order cards section - This should be separate from the fixed header */}
-                                <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
+                                <div style={{  position: "relative", zIndex: 1 }}>
                                     <SupportCard
                                         tickets={initialTickets}
                                         setSelectedRow={handleShowAllDetailsClick}
