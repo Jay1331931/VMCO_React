@@ -47,7 +47,10 @@ const CatalogLayout = ({
     handleClosePopup,
     isRTL,
     dir,
-    setSearchQuery
+    setSearchQuery,
+    coolingPeriodData,
+    disabledEntities,
+    categoriesTabImages,
     
 }) => {
     const { i18n } = useTranslation();
