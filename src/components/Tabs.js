@@ -29,9 +29,11 @@ const Tabs = ({
     console.log("el.scrollWidth", el.scrollWidth)
     console.log("scrollLeft", el.scrollLeft > 0)
     console.log("scrollRight", el.scrollLeft + el.clientWidth < el.scrollWidth - threshold)
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(
+    i18n.language === "en" ? setCanScrollLeft(el.scrollLeft > 0) : setCanScrollRight(el.scrollLeft < 0);
+    i18n.language === "en" ? setCanScrollRight(
       el.scrollLeft + el.clientWidth < el.scrollWidth - threshold
+    ) : setCanScrollLeft(
+      (-el.scrollLeft) + el.clientWidth < el.scrollWidth - threshold
     );
   };
 
