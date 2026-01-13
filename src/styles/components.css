@@ -1065,6 +1065,7 @@ body.catalog-page {
   .search-container {
     display: flex;
     flex-direction: column !important;
+    padding: 0 13px;
   }
 
   .search-container .form-control {
@@ -3639,7 +3640,7 @@ input:focus {
   }
 
   .catalog-fixed-header.show {
-    padding: 20px 8px 10px;
+    padding: 20px 0px 10px;
     top:7%;
   }
 

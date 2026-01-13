@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft, faChevronRight, faArrowLeftLong, faArrowRightLong } from "@fortawesome/free-solid-svg-icons";
 
 const Tabs = ({
   tabs,
@@ -13,25 +15,27 @@ const Tabs = ({
   const tabsRef = useRef(null);
   const currentLanguage = i18n.language;
   const activeIndex = tabs.findIndex(t => t.value === activeTab);
-const canScrollLeft = activeIndex > 0;
-const canScrollRight = activeIndex < tabs.length - 1;
-  // const [canScrollLeft, setCanScrollLeft] = useState(false);
-  // const [canScrollRight, setCanScrollRight] = useState(false);
+// const canScrollLeft = activeIndex > 0;
+// const canScrollRight = activeIndex < tabs.length - 1;
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // const checkScroll = () => {
-  //   const el = tabsRef.current;
-  //   if (!el) return;
-  //   const threshold = 5;
-  //   console.log("el.scrollLeft", el.scrollLeft)
-  //   console.log("el.clientWidth", el.clientWidth)
-  //   console.log("el.scrollWidth", el.scrollWidth)
-  //   console.log("scrollLeft", el.scrollLeft > 0)
-  //   console.log("scrollRight", el.scrollLeft + el.clientWidth < el.scrollWidth - threshold)
-  //   setCanScrollLeft(el.scrollLeft > 0);
-  //   setCanScrollRight(
-  //     el.scrollLeft + el.clientWidth < el.scrollWidth - threshold
-  //   );
-  // };
+  const checkScroll = () => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const threshold = 5;
+    console.log("el.scrollLeft", el.scrollLeft)
+    console.log("el.clientWidth", el.clientWidth)
+    console.log("el.scrollWidth", el.scrollWidth)
+    console.log("scrollLeft", el.scrollLeft > 0)
+    console.log("scrollRight", el.scrollLeft + el.clientWidth < el.scrollWidth - threshold)
+    i18n.language === "en" ? setCanScrollLeft(el.scrollLeft > 0) : setCanScrollRight(el.scrollLeft < 0);
+    i18n.language === "en" ? setCanScrollRight(
+      el.scrollLeft + el.clientWidth < el.scrollWidth - threshold
+    ) : setCanScrollLeft(
+      (-el.scrollLeft) + el.clientWidth < el.scrollWidth - threshold
+    );
+  };
 
   const scrollTabs = (direction) => {
     tabsRef.current?.scrollBy({
@@ -40,20 +44,20 @@ const canScrollRight = activeIndex < tabs.length - 1;
     });
   };
 
-  // useEffect(() => {
-  //   const el = tabsRef.current;
-  //   if (!el) return;
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
 
-  //   requestAnimationFrame(checkScroll);
+    requestAnimationFrame(checkScroll);
 
-  //   el.addEventListener("scroll", checkScroll);
-  //   window.addEventListener("resize", checkScroll);
+    el.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
 
-  //   return () => {
-  //     el.removeEventListener("scroll", checkScroll);
-  //     window.removeEventListener("resize", checkScroll);
-  //   };
-  // }, [tabs]);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [tabs]);
   const moveTab = (direction) => {
   let nextIndex = activeIndex;
 
@@ -69,31 +73,31 @@ const canScrollRight = activeIndex < tabs.length - 1;
   onTabChange(nextTab.value);
 };
 
-  useEffect(() => {
-  const container = tabsRef.current;
-  if (!container) return;
+//   useEffect(() => {
+//   const container = tabsRef.current;
+//   if (!container) return;
 
-  const activeButton = container.querySelector(".active");
-  if (!activeButton) return;
+//   const activeButton = container.querySelector(".active");
+//   if (!activeButton) return;
 
-  activeButton.scrollIntoView({
-    behavior: "smooth",
-    inline: "center",
-    block: "nearest",
-  });
-}, [activeTab]);
+//   activeButton.scrollIntoView({
+//     behavior: "smooth",
+//     inline: "center",
+//     block: "nearest",
+//   });
+// }, [activeTab]);
 
   console.log("tabs", tabs);
   return (
     <div className={`tab-container ${className}`}>
-      {variant === "mobile" 
+      {/* {variant === "mobile" 
       && catalog &&
       canScrollLeft && 
       <div className="scroll-gradient left" />}
   {variant === "mobile" 
       && catalog &&
   canScrollRight && 
-  <div className="scroll-gradient right" />} 
+  <div className="scroll-gradient right" />}  */}
       {/* LEFT ARROW */}
 
       {
@@ -101,8 +105,8 @@ const canScrollRight = activeIndex < tabs.length - 1;
       && catalog &&
       canScrollLeft 
       && (
-        <button className="scroll-arrow left" onClick={() => moveTab("left")}>
-          ‹
+        <button className="scroll-arrow left" onClick={() => scrollTabs("left")}>
+         <FontAwesomeIcon icon={faChevronLeft} />
         </button>
       )}
       <div
@@ -151,9 +155,9 @@ const canScrollRight = activeIndex < tabs.length - 1;
       && (
         <button
           className="scroll-arrow right"
-          onClick={() => moveTab("right")}
+          onClick={() => scrollTabs("right")}
         >
-          ›
+          <FontAwesomeIcon icon={faChevronRight} />
         </button>
       )}
 
@@ -211,7 +215,7 @@ const canScrollRight = activeIndex < tabs.length - 1;
           border-bottom: 1px solid #D9D9D6;
           height: 158px;
           display: flex;
-          gap: 16px;
+          gap: 10px;
           white-space: nowrap;
         }
 
@@ -431,27 +435,27 @@ margin-bottom:10px;}
           @media (max-width: 768px) {
           .scroll-arrow {
             position: absolute;
-            top: 25%;
+            top: 30%;
             // transform: translateY(-50%);
             z-index: 10;
-            background: transparent;
-            border: 0px solid #ccc;
-            width: 32px;
-            height: 32px;
+            background: #99aaaab8;
+            border: 1px solid #ccc;
+            width: 25px;
+            height: 25px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 12px;
             cursor: pointer;
           }
 
           .scroll-arrow.left {
-            left: 0px;
+            left: 1px;
           }
 
           .scroll-arrow.right {
-            right: 0px;
+            right: 2px;
           }
         }
 .scroll-gradient {

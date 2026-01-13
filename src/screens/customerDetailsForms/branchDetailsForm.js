@@ -493,58 +493,58 @@ const BranchDetailsForm = ({
     "primaryContactDesignation",
     "primaryContactEmail",
     "primaryContactMobile",
-    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-          ?.isAllowed || 
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-          ?.isAllowed ||
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-          ?.isAllowed ||
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-          ?.isAllowed ||
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-          ?.isAllowed
-          ?
-        "secondaryContactName"
-        : null,
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-              ?.isAllowed || 
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-              ?.isAllowed ||
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-              ?.isAllowed ||
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-              ?.isAllowed ||
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-              ?.isAllowed
-              ?
-            "secondaryContactDesignation"
-            : null,
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-                  ?.isAllowed
-                  ?
-                "secondaryContactEmail"
-                : null,
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-                      ?.isAllowed || 
-                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-                      ?.isAllowed ||
-                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-                      ?.isAllowed ||
-                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-                      ?.isAllowed ||
-                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-                      ?.isAllowed
-                      ?
-                    "secondaryContactMobile"
-                    : null,
+    // originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    //       ?.isAllowed || 
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    //       ?.isAllowed ||
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    //       ?.isAllowed ||
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    //       ?.isAllowed ||
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    //       ?.isAllowed
+    //       ?
+    //     "secondaryContactName"
+    //     : null,
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    //           ?.isAllowed || 
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    //           ?.isAllowed ||
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    //           ?.isAllowed ||
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    //           ?.isAllowed ||
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    //           ?.isAllowed
+    //           ?
+    //         "secondaryContactDesignation"
+    //         : null,
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    //               ?.isAllowed || 
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    //               ?.isAllowed ||
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    //               ?.isAllowed ||
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    //               ?.isAllowed ||
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    //               ?.isAllowed
+    //               ?
+    //             "secondaryContactEmail"
+    //             : null,
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    //                   ?.isAllowed || 
+    //                 originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    //                   ?.isAllowed ||
+    //                 originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    //                   ?.isAllowed ||
+    //                 originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    //                   ?.isAllowed ||
+    //                 originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    //                   ?.isAllowed
+    //                   ?
+    //                 "secondaryContactMobile"
+    //                 : null,
     // "supervisorContactName",
     // "supervisorContactDesignation",
     // "supervisorContactEmail",
@@ -567,58 +567,58 @@ const BranchDetailsForm = ({
     "primaryContactDesignation",
     "primaryContactEmail",
     "primaryContactMobile",
-    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-          ?.isAllowed || 
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-          ?.isAllowed ||
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-          ?.isAllowed ||
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-          ?.isAllowed ||
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-          ?.isAllowed
-          ?
-        "secondaryContactName"
-        : null,
-        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-              ?.isAllowed || 
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-              ?.isAllowed ||
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-              ?.isAllowed ||
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-              ?.isAllowed ||
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-              ?.isAllowed
-              ?
-            "secondaryContactDesignation"
-            : null,
-            originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-                  ?.isAllowed
-                  ?
-                "secondaryContactEmail"
-                : null,
-                originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
-                      ?.isAllowed || 
-                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
-                      ?.isAllowed ||
-                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
-                      ?.isAllowed ||
-                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
-                      ?.isAllowed ||
-                    originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
-                      ?.isAllowed
-                      ?
-                    "secondaryContactMobile"
-                    : null,
+    // originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    //       ?.isAllowed || 
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    //       ?.isAllowed ||
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    //       ?.isAllowed ||
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    //       ?.isAllowed ||
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    //       ?.isAllowed
+    //       ?
+    //     "secondaryContactName"
+    //     : null,
+    //     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    //           ?.isAllowed || 
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    //           ?.isAllowed ||
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    //           ?.isAllowed ||
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    //           ?.isAllowed ||
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    //           ?.isAllowed
+    //           ?
+    //         "secondaryContactDesignation"
+    //         : null,
+    //         originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    //               ?.isAllowed || 
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    //               ?.isAllowed ||
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    //               ?.isAllowed ||
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    //               ?.isAllowed ||
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    //               ?.isAllowed
+    //               ?
+    //             "secondaryContactEmail"
+    //             : null,
+    //             originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]
+    //                   ?.isAllowed || 
+    //                 originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]
+    //                   ?.isAllowed ||
+    //                 originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]
+    //                   ?.isAllowed ||
+    //                 originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]
+    //                   ?.isAllowed ||
+    //                 originalCustomerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]
+    //                   ?.isAllowed
+    //                   ?
+    //                 "secondaryContactMobile"
+    //                 : null,
     "branch",
     "zone",
     // "supervisorContactName",
