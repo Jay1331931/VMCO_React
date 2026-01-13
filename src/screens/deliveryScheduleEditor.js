@@ -832,6 +832,7 @@ function DeliveryScheduleEditor() {
                                         searchPlaceholder={"Search delivery schedules..."}
                                         showColumnVisibility={false}
                                         showFilters={false}
+                                        showCalendar={false}
                                         showExport={false}
                                         showUpload={false}
                                         showAdd={isV("addButton")}
