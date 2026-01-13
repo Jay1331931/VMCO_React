@@ -1078,6 +1078,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                 alt="Talab Point Logo"
                 className="logo-collapsed"
                 style={{ maxWidth: "100%", maxHeight: "100%" }}
+                onClick={()=>handleLogoClick()}
               />
             )}
 
