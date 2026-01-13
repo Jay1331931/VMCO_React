@@ -377,7 +377,7 @@ function Cart() {
     if (loading) return;
     if (!user) {
       logout();
-      navigate("/login",{replace:true});
+      navigate("/login", { replace: true });
       return;
     }
     // Only fetch cart items if we have user data and required IDs
@@ -812,6 +812,7 @@ function Cart() {
 
   // Updated handleSelectPaymentMethod function for SHC/GMTC with proper logic
   const handleSelectPaymentMethod = async (method) => {
+    setIsPlacingOrder(true);
     setShowPaymentPopup(false);
 
     try {
@@ -890,6 +891,8 @@ function Cart() {
         text: `Failed to process order: ${error.message}`,
         confirmButtonText: t("OK"),
       });
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 

@@ -5,7 +5,7 @@ import CommentPopup from "../components/commentPanel";
 import GetCustomers from "../components/GetCustomers";
 import GetBranches from "../components/GetBranches";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { useLocation } from "react-router-dom";
+import { redirect, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utilities/dateFormatter";
 import { useAuth } from "../context/AuthContext";
@@ -1037,7 +1037,30 @@ function MaintenanceDetails() {
     setIsApprovalDialogOpen(true);
   };
 
-  const handleReassignTicket = () => {
+  const handleReassignTicket = async () => {
+    // Check if there are spare parts
+    if (selectedSpareParts.length > 0) {
+      const result = await Swal.fire({
+        title: t('Warning'),
+        text: t('The spare parts added will be removed. Do you want to continue?'),
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonText: t('Cancel'),
+        confirmButtonText: t('Remove spare parts'),
+        confirmButtonColor: 'var(--logo-red)',
+        cancelButtonColor: 'var(--logo-orange)'
+      });
+
+      if (result.isConfirmed) {
+        // Remove all spare parts
+        setSelectedSpareParts([]);
+      } else {
+        // User cancelled, do nothing
+        return;
+      }
+    }
+
+    // Continue with reassign process
     setDialogTitle(t('Request to Reassign'));
     setDialogSubTitle(t('Add reason for reassignment.'));
     setApprovalAction(t('reassign'));
@@ -1527,7 +1550,7 @@ let warrantyEndDate =null
           (
             <div style={{ marginTop: "16px" }}>
               <div>
-              <h4 style={{ display: "flex", marginBottom: "8px", justifyContent: "space-between" }}>
+              <h4 style={{ display: "flex", flexDirection: "column", marginBottom: "8px" }}>
                 {t("Spare Parts")}
               {/* <div className='support-details-container-right'>
                 <div className="support-details-actions"> */}
