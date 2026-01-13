@@ -622,7 +622,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
         setActiveMenu("Customers");
         break;
       case "/catalog":
-        setActiveMenu("Home");
+        setActiveMenu("catalog");
         break;
       case "/admin/upload":
         setActiveMenu("General");
@@ -878,20 +878,23 @@ const handleLogoClick=()=>{
           navigate("/home",{replace:true});
         }
 }
-console.log("CatalogactiveMenu",activeMenu)
 
-if(activeMenu?.toLowerCase()==="catalog"){
-  setActiveMenu("Home")
-}
-const isMenuLabelActive =(label)=>{
-  return [
-                      "support",
-                      "maintenance",
-                      "bank transfer",
-                      "bank",
-                    ].includes(activeMenu.toLowerCase())
-}
 
+
+const isMenuLabelActive = (label) => {
+  const currentActive = activeMenu?.toLowerCase();
+  const currentLabel = label?.toLowerCase();
+
+  if (currentLabel === "home" && currentActive === "catalog") {
+    return true;
+  }
+  if(isMobile && currentLabel === "others" &&  ["support", "maintenance",   "bank transfer","bank"].includes(currentActive)){
+       return true;
+  }
+
+  // Otherwise, use standard direct match
+  return currentLabel === currentActive;
+};
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
@@ -933,7 +936,7 @@ const isMenuLabelActive =(label)=>{
                     <div
                       key={label}
                       className={`menu-item ${
-                        activeMenu === label ? "active" : ""
+                        isMenuLabelActive(label) ? "active" : ""
                       }`}
                       onClick={() => handleMenuClick(label)}
                       style={{
@@ -954,7 +957,7 @@ const isMenuLabelActive =(label)=>{
                 <div
                   key={label}
                   className={`menu-item ${
-                    activeMenu === label ?  "active" : ""
+                  isMenuLabelActive(label) ? "active" : ""
                   }`}
                   onClick={() => handleMenuClick(label)}
                   style={{
