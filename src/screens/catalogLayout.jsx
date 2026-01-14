@@ -160,7 +160,7 @@ const CatalogLayout = ({
 
                  {activeCategory && (
                     <div className="catalog-fixed-header">
-                        {/* {isV("selectBranch") && (
+                        {isV("selectBranch") && isMobile && (
                             <div className="catalog-header">
                                 <div className="location-selector">
                                     <SearchableDropdown
@@ -203,7 +203,7 @@ const CatalogLayout = ({
                                     </button>
                                 )}
                             </div>
-                        )} */}
+                        )}
 
                         <div className="filter-section">
                             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none" }}>

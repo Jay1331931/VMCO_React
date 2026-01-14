@@ -15,8 +15,8 @@ const Tabs = ({
   const tabsRef = useRef(null);
   const currentLanguage = i18n.language;
   const activeIndex = tabs.findIndex(t => t.value === activeTab);
-// const canScrollLeft = activeIndex > 0;
-// const canScrollRight = activeIndex < tabs.length - 1;
+  // const canScrollLeft = activeIndex > 0;
+  // const canScrollRight = activeIndex < tabs.length - 1;
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -59,33 +59,33 @@ const Tabs = ({
     };
   }, [tabs]);
   const moveTab = (direction) => {
-  let nextIndex = activeIndex;
+    let nextIndex = activeIndex;
 
-  if (direction === "left") {
-    nextIndex = Math.max(0, activeIndex - 1);
-  } else {
-    nextIndex = Math.min(tabs.length - 1, activeIndex + 1);
-  }
+    if (direction === "left") {
+      nextIndex = Math.max(0, activeIndex - 1);
+    } else {
+      nextIndex = Math.min(tabs.length - 1, activeIndex + 1);
+    }
 
-  const nextTab = tabs[nextIndex];
-  if (!nextTab || nextTab.disabled) return;
+    const nextTab = tabs[nextIndex];
+    if (!nextTab || nextTab.disabled) return;
 
-  onTabChange(nextTab.value);
-};
+    onTabChange(nextTab.value);
+  };
 
-//   useEffect(() => {
-//   const container = tabsRef.current;
-//   if (!container) return;
+  //   useEffect(() => {
+  //   const container = tabsRef.current;
+  //   if (!container) return;
 
-//   const activeButton = container.querySelector(".active");
-//   if (!activeButton) return;
+  //   const activeButton = container.querySelector(".active");
+  //   if (!activeButton) return;
 
-//   activeButton.scrollIntoView({
-//     behavior: "smooth",
-//     inline: "center",
-//     block: "nearest",
-//   });
-// }, [activeTab]);
+  //   activeButton.scrollIntoView({
+  //     behavior: "smooth",
+  //     inline: "center",
+  //     block: "nearest",
+  //   });
+  // }, [activeTab]);
 
   console.log("tabs", tabs);
   return (
@@ -101,19 +101,18 @@ const Tabs = ({
       {/* LEFT ARROW */}
 
       {
-      variant === "mobile" 
-      && catalog &&
-      canScrollLeft 
-      && (
-        <button className="scroll-arrow left" onClick={() => scrollTabs("left")}>
-         <FontAwesomeIcon icon={faChevronLeft} />
-        </button>
-      )}
+        variant === "mobile"
+        && catalog &&
+        canScrollLeft
+        && (
+          <button className="scroll-arrow left" onClick={() => scrollTabs("left")}>
+            <FontAwesomeIcon icon={faChevronLeft} />
+          </button>
+        )}
       <div
         ref={tabsRef}
-        className={`tabs ${
-          catalog && variant === "pc" ? "category-tabs" : "category-tabs-mobile"
-        } ${catalog ? "with-catalog" : "without-catalog"}`}
+        className={`tabs ${catalog && variant === "pc" ? "category-tabs" : "category-tabs-mobile"
+          } ${catalog ? "with-catalog" : "without-catalog"}`}
       >
         {tabs.map((tab) => (
           <button
@@ -129,9 +128,8 @@ const Tabs = ({
           >
             {catalog && (
               <div
-                className={`${
-                  variant === "mobile" ? "tab-image-mobile" : "tab-image"
-                }`}
+                className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"
+                  }`}
               >
                 <img
                   src={
@@ -141,7 +139,7 @@ const Tabs = ({
                 />
               </div>
             )}
-            { !catalog  && (
+            {!catalog && (
               <span className="tab-text">{t(tab.label)}</span>
             )}
           </button>
@@ -149,17 +147,17 @@ const Tabs = ({
       </div>
       {/* RIGHT ARROW */}
       {
-      variant === "mobile" 
-      && catalog &&
-      canScrollRight 
-      && (
-        <button
-          className="scroll-arrow right"
-          onClick={() => scrollTabs("right")}
-        >
-          <FontAwesomeIcon icon={faChevronRight} />
-        </button>
-      )}
+        variant === "mobile"
+        && catalog &&
+        canScrollRight
+        && (
+          <button
+            className="scroll-arrow right"
+            onClick={() => scrollTabs("right")}
+          >
+            <FontAwesomeIcon icon={faChevronRight} />
+          </button>
+        )}
 
       <style>{`
         .tabs {
@@ -507,10 +505,24 @@ margin-bottom:10px;}
           white-space: nowrap;
         }
           .tab-image, .tab-image-mobile {
-    width: 80px;
-    height: 80px;
-        object-fit: fill;
-    object-position: center;;}}
+          width: 80px;
+          height: 80px;
+          object-fit: fill;
+          object-position: center;
+        }
+        .category-tab-mobile.disabled {
+            filter: grayscale(100%);
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+
+        .category-tab-mobile.disabled:hover {
+          filter: grayscale(100%);
+          opacity: 0.6;
+            cursor: not-allowed;
+          }
+        }
+      }
       `}</style>
     </div>
   );

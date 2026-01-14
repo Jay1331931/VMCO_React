@@ -352,9 +352,9 @@ function MaintenanceDetails() {
         ticket.branchId &&
         branches.length > 0
       ) {
-          const selectBranch= branches.filter((res)=>res.id== ticket.branchId);
-        const city=selectBranch?.city?.toLowerCase()
-          calculateMaintenanceCharges(city, ticket.warrantyEndDate);
+        const selectBranch = branches.filter((res) => res.id == ticket.branchId);
+        const city = selectBranch?.city?.toLowerCase()
+        calculateMaintenanceCharges(city, ticket.warrantyEndDate);
       }
     };
 
@@ -451,7 +451,7 @@ function MaintenanceDetails() {
   if (!user) {
     console.log("$$$$$$$$$$$ logging out");
     logout();
-    navigate("/login",{replace:true});
+    navigate("/login", { replace: true });
     return null;
   }
 
@@ -1179,9 +1179,9 @@ function MaintenanceDetails() {
       console.warn('Branch city not found');
       return;
     }
-let warrantyEndDate =null
+    let warrantyEndDate = null
     try {
-      
+
       const { data } = await axios.get(
         `${API_BASE_URL}/warranty-end-date/${ticket?.erpCustId}/${SNo}`,
         {
@@ -1193,16 +1193,16 @@ let warrantyEndDate =null
         }
       );
       const rawDate = data?.details?.warrantdate || "";
-  
+
       if (data?.success) {
-            warrantyEndDate=rawDate
+        warrantyEndDate = rawDate
         setTicket((prev) => ({
           ...prev,
           warrantyEndDate: formatDateInput(rawDate, "date") || "",
         }));
-      
 
-      } 
+
+      }
       // else {
       //   Swal.fire({
       //     title: t("Error"),
@@ -1217,7 +1217,7 @@ let warrantyEndDate =null
     }
     const city = selectedBranch.city.toLowerCase();
 
-    await calculateMaintenanceCharges(city,warrantyEndDate);
+    await calculateMaintenanceCharges(city, warrantyEndDate);
   };
 
   const handleAddFeedback = async () => {
@@ -1290,8 +1290,8 @@ let warrantyEndDate =null
 
   return (
     // <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
-     <Sidebar title={`Maintenance`}>
-     
+    <Sidebar title={`Maintenance`}>
+
       <div className='maintenance-details-container'>
         <h2 className='maintenance-details-title'>{formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}</h2>
         <div className='maintenance-details-section'>
@@ -1351,27 +1351,27 @@ let warrantyEndDate =null
               </div>
             )} */}
             {isV("issueType") && (
-  <div className="maintenance-details-field">
-    <label>{t("Issue Type")} *</label>
+              <div className="maintenance-details-field">
+                <label>{t("Issue Type")} *</label>
 
-    <SearchableDropdown
-      name="issueType"
-      options={issueTypeOptions.map((issueType) =>
-        typeof issueType === "object"
-          ? { name: issueType.displayText, value: issueType.value }
-          : { name: issueType, value: issueType }
-      )}
-      value={ticket.issueType || null}
-      onChange={handleInputChange}
-      disabled={!isE("issueType") || isReadOnly}
-      placeholder={t("Select Issue Type")}
-      style={{
-        color: ticket.issueType ? "inherit" : "#999",
-      }}
-      className="issue-type-dropdown"
-    />
-  </div>
-)}
+                <SearchableDropdown
+                  name="issueType"
+                  options={issueTypeOptions.map((issueType) =>
+                    typeof issueType === "object"
+                      ? { name: issueType.displayText, value: issueType.value }
+                      : { name: issueType, value: issueType }
+                  )}
+                  value={ticket.issueType || null}
+                  onChange={handleInputChange}
+                  disabled={!isE("issueType") || isReadOnly}
+                  placeholder={t("Select Issue Type")}
+                  style={{
+                    color: ticket.issueType ? "inherit" : "#999",
+                  }}
+                  className="issue-type-dropdown"
+                />
+              </div>
+            )}
 
             {isV('machine') && (
               <div className='maintenance-details-field'>
@@ -1546,102 +1546,102 @@ let warrantyEndDate =null
             </div>
           )}
           {
-          // selectedSpareParts && selectedSpareParts.length > 0 && 
-          (
-            <div style={{ marginTop: "16px" }}>
-              <div>
-              <h4 style={{ display: "flex", flexDirection: "column", marginBottom: "8px" }}>
-                {t("Spare Parts")}
-              {/* <div className='support-details-container-right'>
+            // selectedSpareParts && selectedSpareParts.length > 0 && 
+            (
+              <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+                <div>
+                  <h4 style={{ display: "flex", flexDirection: "column", marginBottom: "8px" }}>
+                    {t("Spare Parts")}
+                    {/* <div className='support-details-container-right'>
                 <div className="support-details-actions"> */}
-                  {isV('btnAddSpareParts') &&
-                    user.userType.toLowerCase() === "employee" &&
-                    ticket.status.toLowerCase() === "in progress" && (
-                      <button
-                        className="support-action-btn AddSpareParts"
-                        onClick={() => setShowSparePartsPopup(true)}
-                        disabled={saving || closing || isReadOnly}
-                      >
-                        {t('Add Spare Parts')}
-                      </button>
-                    )}
-                  {/* </div>
-                </div> */}
-              </h4>
-              
-              </div>
-              {
-          selectedSpareParts && selectedSpareParts.length > 0 &&(<table
-                style={{
-                  width: "100%",
-                  borderCollapse: "separate",
-                  borderSpacing: 0,
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  backgroundColor: "#fff",
-                  boxShadow: "inset 0 1px 3px rgb(0 0 0 / 0.1)",
-                }}
-              >
-                <thead>
-                  <tr>
-                    <th
-                      style={{
-                        borderBottom: "1px solid #ddd",
-                        padding: "8px 12px",
-                        textAlign: currentLanguage === "ar" ? "right" : "left",
-                        backgroundColor: "#f9f9f9",
-                        borderTopLeftRadius: "6px",
-                      }}
-                    >
-                      {t("Item ID")}
-                    </th>
-                    <th
-                      style={{
-                        borderBottom: "1px solid #ddd",
-                        padding: "8px 12px",
-                        textAlign: currentLanguage === "ar" ? "right" : "left",
-                        backgroundColor: "#f9f9f9",
-                        borderTopRightRadius: "6px",
-                      }}
-                    >
-                      {t("Item Name")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedSpareParts.map(({ itemId, nameEn, nameAr }) => (
-                    <tr key={itemId} style={{ borderBottom: "1px solid #ddd" }}>
-                      <td style={{ padding: "8px 12px" }}>{itemId}</td>
-                      <td style={{ padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span>
-                          {currentLanguage === "ar" ? nameAr || nameEn : nameEn}
-                        </span>
-                        {ticket.status.toLowerCase() !=="closed" &&
-                          <button
-                          onClick={() => handleRemoveSparepart(itemId)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#c00",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            fontSize: "1.4rem",
-                            lineHeight: "1",
-                            padding: 0,
-                          }}
-                          aria-label="Remove spare part"
-                          title="Remove"
+                    {isV('btnAddSpareParts') &&
+                      user.userType.toLowerCase() === "employee" &&
+                      ticket.status.toLowerCase() === "in progress" && (
+                        <button
+                          className="support-action-btn AddSpareParts"
+                          onClick={() => setShowSparePartsPopup(true)}
                           disabled={saving || closing || isReadOnly}
                         >
-                          ×
-                        </button>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>)}
-            </div>
-          )}
+                          {t('Add Spare Parts')}
+                        </button>
+                      )}
+                    {/* </div>
+                </div> */}
+                  </h4>
+
+                </div>
+                {
+                  selectedSpareParts && selectedSpareParts.length > 0 && (<table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "separate",
+                      borderSpacing: 0,
+                      border: "1px solid #ddd",
+                      borderRadius: "6px",
+                      backgroundColor: "#fff",
+                      boxShadow: "inset 0 1px 3px rgb(0 0 0 / 0.1)",
+                    }}
+                  >
+                    <thead>
+                      <tr>
+                        <th
+                          style={{
+                            borderBottom: "1px solid #ddd",
+                            padding: "8px 12px",
+                            textAlign: currentLanguage === "ar" ? "right" : "left",
+                            backgroundColor: "#f9f9f9",
+                            borderTopLeftRadius: "6px",
+                          }}
+                        >
+                          {t("Item ID")}
+                        </th>
+                        <th
+                          style={{
+                            borderBottom: "1px solid #ddd",
+                            padding: "8px 12px",
+                            textAlign: currentLanguage === "ar" ? "right" : "left",
+                            backgroundColor: "#f9f9f9",
+                            borderTopRightRadius: "6px",
+                          }}
+                        >
+                          {t("Item Name")}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedSpareParts.map(({ itemId, nameEn, nameAr }) => (
+                        <tr key={itemId} style={{ borderBottom: "1px solid #ddd" }}>
+                          <td style={{ padding: "8px 12px" }}>{itemId}</td>
+                          <td style={{ padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span>
+                              {currentLanguage === "ar" ? nameAr || nameEn : nameEn}
+                            </span>
+                            {ticket.status.toLowerCase() !== "closed" &&
+                              <button
+                                onClick={() => handleRemoveSparepart(itemId)}
+                                style={{
+                                  background: "transparent",
+                                  border: "none",
+                                  color: "#c00",
+                                  cursor: "pointer",
+                                  fontWeight: "bold",
+                                  fontSize: "1.4rem",
+                                  lineHeight: "1",
+                                  padding: 0,
+                                }}
+                                aria-label="Remove spare part"
+                                title="Remove"
+                                disabled={saving || closing || isReadOnly}
+                              >
+                                ×
+                              </button>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>)}
+              </div>
+            )}
           {isV('feedback') && ticket.status?.toLowerCase() === 'closed' && (
             <div className='maintenance-details-field maintenance-details-textarea'>
               <label>{t("Customer Feedback")}</label>
@@ -1653,7 +1653,20 @@ let warrantyEndDate =null
                 disabled={!isE("feedback") || ticket?.feedbackComment}
               />
               {isV('feedbackButton') && !ticket.feedbackComment && (
-                <button className='feedback-btn' onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment}>
+                <button className='feedback-btn' style={{
+                  backgroundColor: "var(--logo-deep-green)",
+                  color: "var(--bg-white)",
+                  border: "none",
+                  width: isMobile ? "100%" : "140px",
+                  padding: "10px 16px",
+                  borderRadius: "var(--border-radius)",
+                  cursor: "pointer",
+                  marginTop: "10px",
+                  marginLeft: "auto",
+                  /* Default for LTR */
+                  marginRight: "10px"
+                }}
+                  onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment}>
                   {t("Submit Feedback")}
                 </button>
               )}
@@ -1690,17 +1703,17 @@ let warrantyEndDate =null
             </div>
           )}
           <div className='support-details-container-right'>
-            <div className="support-details-actions">
+            <div className="support-details-actions" style={isMobile ? { display: "flex", flexDirection: "row", justifyContent: "center" } : {}}>
               {isEditing ? (
                 <>
-                  
+
                   {isV('btnSave') &&
-                    <button className="support-action-btn save" onClick={handleSave} disabled={saving || closing || isReadOnly}>
+                    <button className="support-action-btn save" style={isMobile ? { width: "100%" } : {}} onClick={handleSave} disabled={saving || closing || isReadOnly}>
                       {saving ? t('Saving...') : t('Save')}
                     </button>}
 
                   {isV('btnCancel') &&
-                    <button className="support-action-btn cancel" onClick={handleCancel} disabled={isReadOnly || saving || closing}>
+                    <button className="support-action-btn cancel" style={isMobile ? { width: "100%" } : {}} onClick={handleCancel} disabled={isReadOnly || saving || closing}>
                       {t('Cancel')}
                     </button>}
 
