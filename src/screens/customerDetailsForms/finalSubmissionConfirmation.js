@@ -6,7 +6,8 @@ import { useAuth } from "../../context/AuthContext";
 import RbacManager from "../../utilities/rbac";
 import SignatureCanvas from "react-signature-canvas";
 import Swal from "sweetalert2";
-import { isMobile } from "../../utilities/isMobile";
+import usePlatform from "../../utilities/platform";
+
 
 const FinalSubmissionConfirmation = ({
   customerData = {},
@@ -21,6 +22,7 @@ const FinalSubmissionConfirmation = ({
 }) => {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
+  const isMobile = usePlatform();
 
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
@@ -40,8 +42,8 @@ const FinalSubmissionConfirmation = ({
   });
 
   useEffect(() => {
-      setTabsHeight("auto");
-    }, []);
+    setTabsHeight("auto");
+  }, []);
 
   // Add this useEffect to track mouse movement
   useEffect(() => {
@@ -228,12 +230,12 @@ const FinalSubmissionConfirmation = ({
     <>
       <div className="customer-onboarding-form-grid">
         {user?.userType.toLowerCase() === "employee" && (
-        <div className="form-main-header">
-          {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
+          <div className="form-main-header">
+            {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
           </div>
-      )}
-        <h3>{t("Final Submission")}</h3>
-        <div className="form-header full-width">
+        )}
+        <h3 style={isMobile ? { textAlign: "center" } : {}}>{t("Final Submission")}</h3>
+        <div className="form-header full-width" style={isMobile ? { textAlign: "justify" } : {}}>
           {t(
             "I hereby confirm that all the information provided is accurate and up-to-date. I understand that any discrepancies may result in the rejection of this onboarding application."
           )}
@@ -248,6 +250,7 @@ const FinalSubmissionConfirmation = ({
               type="text"
               id="declarationName"
               name="declarationName"
+              style={{ width: "100%" }}
               value={customerData.declarationName || ""}
               onChange={onChangeCustomerData}
               required
@@ -269,7 +272,7 @@ const FinalSubmissionConfirmation = ({
                     name="declarationNameVerified"
                     checked={verifiedData?.declarationNameVerified || false}
                     onChange={onChangeVerifiedData}
-                    // className="verified-checkbox"
+                  // className="verified-checkbox"
                   />
                   <label htmlFor="declarationNameVerified">Verified</label>
                 </div>
@@ -287,11 +290,12 @@ const FinalSubmissionConfirmation = ({
               type="date"
               id="confirmationDate"
               name="date"
+              style={{ width: "100%" }}
               value={
                 customerData?.declarationDate
                   ? new Date(customerData.declarationDate).toLocaleDateString(
-                      "en-CA"
-                    )
+                    "en-CA"
+                  )
                   : new Date().toLocaleDateString("en-CA")
               }
               className={isMobile ? "text-field small" : ""}
@@ -313,7 +317,7 @@ const FinalSubmissionConfirmation = ({
                     name="confirmationDateVerified"
                     checked={verifiedData?.confirmationDateVerified || false}
                     onChange={onChangeVerifiedData}
-                    // className="verified-checkbox"
+                  // className="verified-checkbox"
                   />
                   <label htmlFor="confirmationDateVerified">Verified</label>
                 </div>
@@ -406,6 +410,7 @@ const FinalSubmissionConfirmation = ({
                     customerData?.customerStatus === "pending") ||
                   isE("declarationName")
                 }
+                style={isMobile ? { width: "100%" } : {}}
                 className="custom-file-button"
               >
                 {t("Confirm Signature")}
@@ -418,7 +423,7 @@ const FinalSubmissionConfirmation = ({
                     customerData?.customerStatus === "pending") ||
                   isE("declarationName")
                 }
-                style={{ marginLeft: "10px" }}
+                style={isMobile ? { width: "100%" } : {}}
                 className="custom-file-button"
               >
                 {t("Clear")}
@@ -477,15 +482,15 @@ const FinalSubmissionConfirmation = ({
                 >
                   {typeof customerData.declarationSignature === "string"
                     ? (() => {
-                        const name = customerData.declarationSignature
-                          .split("_")
-                          .slice(0, 2)
-                          .join(" ");
-                        const maxLen = 20;
-                        return name.length > maxLen
-                          ? name.substring(0, maxLen) + "..."
-                          : name;
-                      })()
+                      const name = customerData.declarationSignature
+                        .split("_")
+                        .slice(0, 2)
+                        .join(" ");
+                      const maxLen = 20;
+                      return name.length > maxLen
+                        ? name.substring(0, maxLen) + "..."
+                        : name;
+                    })()
                     : "View Signature"}
                 </a>
                 <button
@@ -514,7 +519,7 @@ const FinalSubmissionConfirmation = ({
                             verifiedData?.declarationSignatureVerified || false
                           }
                           onChange={onChangeVerifiedData}
-                          // className="verified-checkbox"
+                        // className="verified-checkbox"
                         />
                         <label htmlFor="declarationSignatureVerified">
                           Verified
@@ -585,8 +590,8 @@ const FinalSubmissionConfirmation = ({
                   value={
                     customerData?.verified
                       ? new Date(customerData.verified).toLocaleDateString(
-                          "en-CA"
-                        )
+                        "en-CA"
+                      )
                       : new Date().toLocaleDateString("en-CA")
                   }
                   className={isMobile ? "text-field small" : ""}
