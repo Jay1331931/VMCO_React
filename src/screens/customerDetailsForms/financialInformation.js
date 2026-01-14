@@ -78,7 +78,7 @@ function FinancialInformation({
   );
   const [partialPayment, setPartialPayment] = useState(
     customerPaymentMethodsData?.methodDetails?.partialPayment?.isAllowed ||
-      false
+    false
   );
   const [COD, setCOD] = useState(
     customerPaymentMethodsData?.methodDetails?.COD?.isAllowed || false
@@ -104,34 +104,34 @@ function FinancialInformation({
   const [ccError, setCcError] = useState("");
   const [isSubmited, setIsSubmited] = useState(false);
   const PAYMENT_GROUPS = {
-  PREPAY: ["prePayment?.isAllowed"],
-  COD: ["COD?.isAllowed", "COD?.limit"],
-  CREDIT_DAR: [
-    "credit?.DAR?.isAllowed",
-    "credit?.DAR?.limit",
-    "credit?.DAR?.period"
-  ],
-  CREDIT_VMCO: [
-    "credit?.VMCO?.isAllowed",
-    "credit?.VMCO?.limit",
-    "credit?.VMCO?.period"
-  ],
-  CREDIT_SHC: [
-    "credit?.SHC?.isAllowed",
-    "credit?.SHC?.limit",
-    "credit?.SHC?.period"
-  ],
-  CREDIT_NAQI: [
-    "credit?.NAQI?.isAllowed",
-    "credit?.NAQI?.limit",
-    "credit?.NAQI?.period"
-  ],
-  CREDIT_GMTC: [
-    "credit?.GMTC?.isAllowed",
-    "credit?.GMTC?.limit",
-    "credit?.GMTC?.period"
-  ]
-};
+    PREPAY: ["prePayment?.isAllowed"],
+    COD: ["COD?.isAllowed", "COD?.limit"],
+    CREDIT_DAR: [
+      "credit?.DAR?.isAllowed",
+      "credit?.DAR?.limit",
+      "credit?.DAR?.period"
+    ],
+    CREDIT_VMCO: [
+      "credit?.VMCO?.isAllowed",
+      "credit?.VMCO?.limit",
+      "credit?.VMCO?.period"
+    ],
+    CREDIT_SHC: [
+      "credit?.SHC?.isAllowed",
+      "credit?.SHC?.limit",
+      "credit?.SHC?.period"
+    ],
+    CREDIT_NAQI: [
+      "credit?.NAQI?.isAllowed",
+      "credit?.NAQI?.limit",
+      "credit?.NAQI?.period"
+    ],
+    CREDIT_GMTC: [
+      "credit?.GMTC?.isAllowed",
+      "credit?.GMTC?.limit",
+      "credit?.GMTC?.period"
+    ]
+  };
 
   useEffect(() => {
     setBankName(customerData?.bankName || "");
@@ -338,24 +338,24 @@ function FinancialInformation({
       });
     }
   };
-const getChangedPaymentGroup = () => {
-  const original = originalCustomerPaymentMethodsData?.methodDetails || {};
-  const current = paymentMethods;
+  const getChangedPaymentGroup = () => {
+    const original = originalCustomerPaymentMethodsData?.methodDetails || {};
+    const current = paymentMethods;
 
-  for (const [groupName, fields] of Object.entries(PAYMENT_GROUPS)) {
-    for (const field of fields) {
-      const parts = field.split("?.");
-      const originalValue = parts.reduce((o, k) => o?.[k], original);
-      const currentValue = parts.reduce((o, k) => o?.[k], current);
+    for (const [groupName, fields] of Object.entries(PAYMENT_GROUPS)) {
+      for (const field of fields) {
+        const parts = field.split("?.");
+        const originalValue = parts.reduce((o, k) => o?.[k], original);
+        const currentValue = parts.reduce((o, k) => o?.[k], current);
 
-      if (originalValue !== currentValue) {
-        return groupName; // the changed group
+        if (originalValue !== currentValue) {
+          return groupName; // the changed group
+        }
       }
     }
-  }
 
-  return null; // no changes yet
-};
+    return null; // no changes yet
+  };
 
   const checkDisabledStatus = (fieldPath) => {
     // Split the field path by dots to handle nested properties
@@ -426,40 +426,40 @@ const getChangedPaymentGroup = () => {
       fieldParts
     );
     const currentValue = getNestedValue(paymentMethods, fieldParts);
-const hasChanges =
-  JSON.stringify(paymentMethods) !==
-  JSON.stringify(originalCustomerPaymentMethodsData?.methodDetails);
-  if (mode === "add" && hasChanges) {
-    const changedGroup = getChangedPaymentGroup();
+    const hasChanges =
+      JSON.stringify(paymentMethods) !==
+      JSON.stringify(originalCustomerPaymentMethodsData?.methodDetails);
+    if (mode === "add" && hasChanges) {
+      const changedGroup = getChangedPaymentGroup();
 
-    if (!changedGroup) {
-      // Nothing changed yet → allow all
-      return false;
+      if (!changedGroup) {
+        // Nothing changed yet → allow all
+        return false;
+      }
+
+      // Find group of THIS field
+      const currentFieldGroup = Object.entries(PAYMENT_GROUPS).find(([_, fields]) =>
+        fields.includes(fieldPath)
+      )?.[0];
+
+      // Disable if this field does NOT belong to the changed group
+      return currentFieldGroup !== changedGroup;
     }
-
-    // Find group of THIS field
-    const currentFieldGroup = Object.entries(PAYMENT_GROUPS).find(([_, fields]) =>
-      fields.includes(fieldPath)
-    )?.[0];
-
-    // Disable if this field does NOT belong to the changed group
-    return currentFieldGroup !== changedGroup;
-  }
     const commonConditions =
       (originalCustomerPaymentMethodsData &&
-      paymentMethods &&
-      originalValue === currentValue &&
-      mode === "edit") 
-      // || (mode === "add" && hasChanges && originalValue === currentValue);
+        paymentMethods &&
+        originalValue === currentValue &&
+        mode === "edit")
+    // || (mode === "add" && hasChanges && originalValue === currentValue);
 
-    if (mode === "edit" && 
+    if (mode === "edit" &&
       (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR ||
-      user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
-      user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE ||
-      user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
-      user?.roles[0] === Constants.ROLES.SUPER_ADMIN)
+        user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+        user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE ||
+        user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+        user?.roles[0] === Constants.ROLES.SUPER_ADMIN)
     ) {
-      return commonConditions 
+      return commonConditions
       // && !paymentFieldsForUpdate?.[fieldPath];
     }
 
@@ -467,54 +467,54 @@ const hasChanges =
   };
 
 
-// const checkDisabledStatusPayment = (fieldPath) => {
-//   const fieldParts = fieldPath?.split("?.");
+  // const checkDisabledStatusPayment = (fieldPath) => {
+  //   const fieldParts = fieldPath?.split("?.");
 
-//   // In ADD MODE — disable unrelated payment fields
-//   if (mode === "add") {
-//     const changedGroup = getChangedPaymentGroup();
+  //   // In ADD MODE — disable unrelated payment fields
+  //   if (mode === "add") {
+  //     const changedGroup = getChangedPaymentGroup();
 
-//     if (!changedGroup) {
-//       // Nothing changed yet → allow all
-//       return false;
-//     }
+  //     if (!changedGroup) {
+  //       // Nothing changed yet → allow all
+  //       return false;
+  //     }
 
-//     // Find group of THIS field
-//     const currentFieldGroup = Object.entries(PAYMENT_GROUPS).find(([_, fields]) =>
-//       fields.includes(fieldPath)
-//     )?.[0];
+  //     // Find group of THIS field
+  //     const currentFieldGroup = Object.entries(PAYMENT_GROUPS).find(([_, fields]) =>
+  //       fields.includes(fieldPath)
+  //     )?.[0];
 
-//     // Disable if this field does NOT belong to the changed group
-//     return currentFieldGroup !== changedGroup;
-//   }
+  //     // Disable if this field does NOT belong to the changed group
+  //     return currentFieldGroup !== changedGroup;
+  //   }
 
-//   // EDIT MODE logic remains unchanged
-//   const originalValue = fieldParts.reduce(
-//     (acc, key) => acc?.[key],
-//     originalCustomerPaymentMethodsData?.methodDetails
-//   );
+  //   // EDIT MODE logic remains unchanged
+  //   const originalValue = fieldParts.reduce(
+  //     (acc, key) => acc?.[key],
+  //     originalCustomerPaymentMethodsData?.methodDetails
+  //   );
 
-//   const currentValue = fieldParts.reduce(
-//     (acc, key) => acc?.[key],
-//     paymentMethods
-//   );
+  //   const currentValue = fieldParts.reduce(
+  //     (acc, key) => acc?.[key],
+  //     paymentMethods
+  //   );
 
-//   const commonConditions =
-//     originalValue === currentValue &&
-//     mode === "edit";
+  //   const commonConditions =
+  //     originalValue === currentValue &&
+  //     mode === "edit";
 
-//   if (
-//     user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR ||
-//     user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
-//     user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE ||
-//     user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
-//     user?.roles[0] === Constants.ROLES.SUPER_ADMIN
-//   ) {
-//     return commonConditions && !paymentFieldsForUpdate?.[fieldPath];
-//   }
+  //   if (
+  //     user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR ||
+  //     user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+  //     user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE ||
+  //     user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+  //     user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+  //   ) {
+  //     return commonConditions && !paymentFieldsForUpdate?.[fieldPath];
+  //   }
 
-//   return commonConditions;
-// };
+  //   return commonConditions;
+  // };
 
   const handleEntityChange = (key) => {
     setSelectedEntities((prev) =>
@@ -582,7 +582,7 @@ const hasChanges =
       fromDate: formatDate(fromDate),
       toDate: formatDate(toDate),
       email:
-         user?.userType?.toLowerCase() == "employee" || user?.userType?.toLowerCase() == "admin"
+        user?.userType?.toLowerCase() == "employee" || user?.userType?.toLowerCase() == "admin"
           ? user.email
           : originalCustomerContactsData?.primaryContactEmail || "",
       cc: ccEmail.replace(",", ";"),
@@ -699,7 +699,7 @@ const hasChanges =
       {user?.userType.toLowerCase() === "employee" && (
         <div className="form-main-header">
           {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
-          </div>
+        </div>
       )}
       {/* Bank Details Header */}
       <h3 className="form-header full-width">{t("Bank Details")}</h3>
@@ -779,9 +779,9 @@ const hasChanges =
             disabled={checkDisabledStatus("bankName")}
             className={
               originalCustomerData &&
-              customerData &&
-              originalCustomerData?.bankName != bankName &&
-              mode === "edit"
+                customerData &&
+                originalCustomerData?.bankName != bankName &&
+                mode === "edit"
                 ? "update-field"
                 : ""
             }
@@ -802,7 +802,7 @@ const hasChanges =
                   name="bankNameVerified"
                   checked={verifiedData?.bankNameVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="bankNameVerified">Verified</label>
               </div>
@@ -830,7 +830,7 @@ const hasChanges =
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.bankNameOther !=
-                customerData?.bankNameOther &&
+              customerData?.bankNameOther &&
               mode === "edit" && (
                 <span className="update-badge">{t("Updated")}</span>
               )}
@@ -840,15 +840,14 @@ const hasChanges =
               type="text"
               id="bankNameOther"
               name="bankNameOther"
-              className={`text-field small ${
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.bankNameOther !=
+              className={`text-field small ${originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.bankNameOther !=
                   customerData?.bankNameOther &&
-                mode === "edit"
+                  mode === "edit"
                   ? "update-field"
                   : ""
-              }`}
+                }`}
               placeholder={t("Enter other bank name")}
               value={customerData?.bankNameOther || ""}
               onChange={onChangeCustomerData}
@@ -869,7 +868,7 @@ const hasChanges =
                     name="bankNameOtherVerified"
                     checked={verifiedData?.bankNameOtherVerified || false}
                     onChange={onChangeVerifiedData}
-                    // className="verified-checkbox"
+                  // className="verified-checkbox"
                   />
                   <label htmlFor="bankNameOtherVerified">Verified</label>
                 </div>
@@ -878,7 +877,7 @@ const hasChanges =
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.bankNameOther !=
-              customerData?.bankNameOther &&
+            customerData?.bankNameOther &&
             mode === "edit" && (
               <div className="current-value">
                 Previous: {originalCustomerData?.bankNameOther || "(empty)"}
@@ -899,7 +898,7 @@ const hasChanges =
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.bankAccountNumber !=
-              customerData?.bankAccountNumber &&
+            customerData?.bankAccountNumber &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -909,15 +908,14 @@ const hasChanges =
             type="text"
             id="bankAccountNumber"
             name="bankAccountNumber"
-            className={`text-field small ${
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.bankAccountNumber !=
+            className={`text-field small ${originalCustomerData &&
+                customerData &&
+                originalCustomerData?.bankAccountNumber !=
                 customerData?.bankAccountNumber &&
-              mode === "edit"
+                mode === "edit"
                 ? "update-field"
                 : ""
-            }`}
+              }`}
             placeholder={t("Enter account number")}
             value={customerData?.bankAccountNumber || ""}
             onChange={onChangeCustomerData}
@@ -939,7 +937,7 @@ const hasChanges =
                   name="bankAccountNumberVerified"
                   checked={verifiedData?.bankAccountNumberVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="bankAccountNumberVerified">Verified</label>
               </div>
@@ -948,7 +946,7 @@ const hasChanges =
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.bankAccountNumber !=
-            customerData?.bankAccountNumber &&
+          customerData?.bankAccountNumber &&
           mode === "edit" && (
             <div className="current-value">
               Previous: {originalCustomerData?.bankAccountNumber || "(empty)"}
@@ -975,14 +973,13 @@ const hasChanges =
             type="text"
             id="iban"
             name="iban"
-            className={`text-field small ${
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.iban != customerData?.iban &&
-              mode === "edit"
+            className={`text-field small ${originalCustomerData &&
+                customerData &&
+                originalCustomerData?.iban != customerData?.iban &&
+                mode === "edit"
                 ? "update-field"
                 : ""
-            }`}
+              }`}
             placeholder={t("Enter IBAN")}
             value={customerData?.iban || ""}
             onChange={onChangeCustomerData}
@@ -1004,7 +1001,7 @@ const hasChanges =
                   name="ibanVerified"
                   checked={verifiedData?.ibanVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="ibanVerified">Verified</label>
               </div>
@@ -1033,7 +1030,7 @@ const hasChanges =
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -1041,15 +1038,14 @@ const hasChanges =
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.DAR]}
-              className={`dropdown ${
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
+              className={`dropdown ${originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
                   customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
-                mode === "edit"
+                  mode === "edit"
                   ? "update-field"
                   : ""
-              }`}
+                }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.DAR] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
@@ -1074,7 +1070,7 @@ const hasChanges =
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
+              customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -1091,7 +1087,7 @@ const hasChanges =
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -1099,15 +1095,14 @@ const hasChanges =
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.VMCO]}
-              className={`dropdown ${
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
+              className={`dropdown ${originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
                   customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
-                mode === "edit"
+                  mode === "edit"
                   ? "update-field"
                   : ""
-              }`}
+                }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
@@ -1132,7 +1127,7 @@ const hasChanges =
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
+              customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -1149,7 +1144,7 @@ const hasChanges =
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -1157,15 +1152,14 @@ const hasChanges =
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.SHC]}
-              className={`dropdown ${
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
+              className={`dropdown ${originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
                   customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
-                mode === "edit"
+                  mode === "edit"
                   ? "update-field"
                   : ""
-              }`}
+                }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.SHC] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
@@ -1190,7 +1184,7 @@ const hasChanges =
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
+              customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -1208,7 +1202,7 @@ const hasChanges =
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -1216,15 +1210,14 @@ const hasChanges =
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.NAQI]}
-              className={`dropdown ${
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
+              className={`dropdown ${originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
                   customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
-                mode === "edit"
+                  mode === "edit"
                   ? "update-field"
                   : ""
-              }`}
+                }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
@@ -1249,7 +1242,7 @@ const hasChanges =
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
+              customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -1267,7 +1260,7 @@ const hasChanges =
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
+                customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
                 mode === "edit" && (
                   <span className="update-badge">{t("Updated")}</span>
                 )}
@@ -1275,15 +1268,14 @@ const hasChanges =
             <select
               id="pricingPolicy"
               name={[Constants.ENTITY.GMTC]}
-              className={`dropdown ${
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
+              className={`dropdown ${originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
                   customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
-                mode === "edit"
+                  mode === "edit"
                   ? "update-field"
                   : ""
-              }`}
+                }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
@@ -1308,7 +1300,7 @@ const hasChanges =
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
-                customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
+              customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
               mode === "edit" && (
                 <div className="current-value">
                   Previous:{" "}
@@ -1425,15 +1417,14 @@ const hasChanges =
                   type="number"
                   id="CODLimit"
                   name="CODLimit"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
-                    originalCustomerPaymentMethodsData &&
-                    originalCustomerPaymentMethodsData?.methodDetails?.COD
-                      ?.limit != paymentMethods?.COD?.limit &&
-                    mode === "edit"
+                  className={`text-field small ${customerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.COD
+                        ?.limit != paymentMethods?.COD?.limit &&
+                      mode === "edit"
                       ? "update-field"
                       : ""
-                  }`}
+                    }`}
                   placeholder={t("Enter COD limit")}
                   value={
                     customerPaymentMethodsData?.methodDetails?.COD?.limit || ""
@@ -1484,56 +1475,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.DAR
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                <input
-                  type="text"
-                  id="DARCreditLimit"
-                  name="DARCreditLimit"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                  <input
+                    type="text"
+                    id="DARCreditLimit"
+                    name="DARCreditLimit"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.DAR
+                        ]?.limit !=
+                        paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit limit")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.DAR
+                      ]?.limit || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.DAR] + "?.limit"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.DAR
                     ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit limit")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.DAR
-                    ]?.limit || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.DAR] + "?.limit"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.DAR
-                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.DAR]?.limit || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.DAR]?.limit || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.DARCreditLimit && (
+                    <div className="error">{formErrors.DARCreditLimit}</div>
                   )}
-                {formErrors.DARCreditLimit && (
-                  <div className="error">{formErrors.DARCreditLimit}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           <div className="form-group" />
 
@@ -1541,56 +1531,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.DAR
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                <input
-                  type="text"
-                  id="DARCreditPeriod"
-                  name="DARCreditPeriod"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                  <input
+                    type="text"
+                    id="DARCreditPeriod"
+                    name="DARCreditPeriod"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.DAR
+                        ]?.period !=
+                        paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit period")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.DAR
+                      ]?.period || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.DAR] + "?.period"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.DAR
                     ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit period")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.DAR
-                    ]?.period || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.DAR] + "?.period"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.DAR
-                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.DAR]?.period || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.DAR]?.period || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.DARCreditPeriod && (
+                    <div className="error">{formErrors.DARCreditPeriod}</div>
                   )}
-                {formErrors.DARCreditPeriod && (
-                  <div className="error">{formErrors.DARCreditPeriod}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           {/* VMCO Credit */}
           <div className="form-group">
@@ -1625,56 +1614,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.VMCO
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                <input
-                  type="text"
-                  id="VMCOCreditLimit"
-                  name="VMCOCreditLimit"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                  <input
+                    type="text"
+                    id="VMCOCreditLimit"
+                    name="VMCOCreditLimit"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.VMCO
+                        ]?.limit !=
+                        paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit limit")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.VMCO
+                      ]?.limit || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.VMCO] + "?.limit"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.VMCO
                     ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit limit")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.VMCO
-                    ]?.limit || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.VMCO] + "?.limit"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.VMCO
-                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.VMCO]?.limit || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.VMCO]?.limit || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.VMCOCreditLimit && (
+                    <div className="error">{formErrors.VMCOCreditLimit}</div>
                   )}
-                {formErrors.VMCOCreditLimit && (
-                  <div className="error">{formErrors.VMCOCreditLimit}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           <div className="form-group" />
 
@@ -1682,56 +1670,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.VMCO
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                <input
-                  type="text"
-                  id="VMCOCreditPeriod"
-                  name="VMCOCreditPeriod"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                  <input
+                    type="text"
+                    id="VMCOCreditPeriod"
+                    name="VMCOCreditPeriod"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.VMCO
+                        ]?.period !=
+                        paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit period")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.VMCO
+                      ]?.period || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.VMCO] + "?.period"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.VMCO
                     ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit period")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.VMCO
-                    ]?.period || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.VMCO] + "?.period"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.VMCO
-                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.VMCO]?.period || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.VMCO]?.period || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.VMCOCreditPeriod && (
+                    <div className="error">{formErrors.VMCOCreditPeriod}</div>
                   )}
-                {formErrors.VMCOCreditPeriod && (
-                  <div className="error">{formErrors.VMCOCreditPeriod}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           {/* SHC Credit */}
           <div className="form-group">
@@ -1766,56 +1753,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.SHC
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                <input
-                  type="text"
-                  id="SHCCreditLimit"
-                  name="SHCCreditLimit"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                  <input
+                    type="text"
+                    id="SHCCreditLimit"
+                    name="SHCCreditLimit"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.SHC
+                        ]?.limit !=
+                        paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit limit")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.SHC
+                      ]?.limit || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.SHC] + "?.limit"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.SHC
                     ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit limit")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.SHC
-                    ]?.limit || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.SHC] + "?.limit"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.SHC
-                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.SHC]?.limit || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.SHC]?.limit || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.SHCCreditLimit && (
+                    <div className="error">{formErrors.SHCCreditLimit}</div>
                   )}
-                {formErrors.SHCCreditLimit && (
-                  <div className="error">{formErrors.SHCCreditLimit}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           <div className="form-group" />
 
@@ -1823,56 +1809,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.SHC
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                <input
-                  type="text"
-                  id="SHCCreditPeriod"
-                  name="SHCCreditPeriod"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                  <input
+                    type="text"
+                    id="SHCCreditPeriod"
+                    name="SHCCreditPeriod"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.SHC
+                        ]?.period !=
+                        paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit period")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.SHC
+                      ]?.period || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.SHC] + "?.period"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.SHC
                     ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit period")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.SHC
-                    ]?.period || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.SHC] + "?.period"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.SHC
-                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.SHC]?.period || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.SHC]?.period || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.SHCCreditPeriod && (
+                    <div className="error">{formErrors.SHCCreditPeriod}</div>
                   )}
-                {formErrors.SHCCreditPeriod && (
-                  <div className="error">{formErrors.SHCCreditPeriod}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           {/* NAQI Credit */}
           <div className="form-group">
@@ -1907,56 +1892,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.NAQI
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                <input
-                  type="text"
-                  id="NAQICreditLimit"
-                  name="NAQICreditLimit"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                  <input
+                    type="text"
+                    id="NAQICreditLimit"
+                    name="NAQICreditLimit"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.NAQI
+                        ]?.limit !=
+                        paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit limit")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.NAQI
+                      ]?.limit || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.NAQI] + "?.limit"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.NAQI
                     ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit limit")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.NAQI
-                    ]?.limit || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.NAQI] + "?.limit"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.NAQI
-                  ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.NAQI]?.limit || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.NAQI]?.limit || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.NAQICreditLimit && (
+                    <div className="error">{formErrors.NAQICreditLimit}</div>
                   )}
-                {formErrors.NAQICreditLimit && (
-                  <div className="error">{formErrors.NAQICreditLimit}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           <div className="form-group" />
 
@@ -1964,56 +1948,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.NAQI
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                <input
-                  type="text"
-                  id="NAQICreditPeriod"
-                  name="NAQICreditPeriod"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                  <input
+                    type="text"
+                    id="NAQICreditPeriod"
+                    name="NAQICreditPeriod"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.NAQI
+                        ]?.period !=
+                        paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit period")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.NAQI
+                      ]?.period || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.NAQI] + "?.period"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.NAQI
                     ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit period")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.NAQI
-                    ]?.period || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.NAQI] + "?.period"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.NAQI
-                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.NAQI]?.period || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.NAQI]?.period || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.NAQICreditPeriod && (
+                    <div className="error">{formErrors.NAQICreditPeriod}</div>
                   )}
-                {formErrors.NAQICreditPeriod && (
-                  <div className="error">{formErrors.NAQICreditPeriod}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           {/* GMTC Credit */}
           <div className="form-group">
@@ -2048,56 +2031,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.GMTC
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-                <input
-                  type="text"
-                  id="GMTCCreditLimit"
-                  name="GMTCCreditLimit"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+                  <input
+                    type="text"
+                    id="GMTCCreditLimit"
+                    name="GMTCCreditLimit"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.NAQI
+                        ]?.limit !=
+                        paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit limit")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.GMTC
+                      ]?.limit || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.GMTC] + "?.limit"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.NAQI
-                    ]?.limit !=
-                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit limit")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.GMTC
-                    ]?.limit || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.GMTC] + "?.limit"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.GMTC
-                  ]?.limit !=
+                    ]?.limit !=
                     paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.limit &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.GMTC]?.limit || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.GMTC]?.limit || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors.GMTCCreditLimit && (
+                    <div className="error">{formErrors.GMTCCreditLimit}</div>
                   )}
-                {formErrors.GMTCCreditLimit && (
-                  <div className="error">{formErrors.GMTCCreditLimit}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
           <div className="form-group" />
 
@@ -2105,56 +2087,55 @@ const hasChanges =
             {customerPaymentMethodsData?.methodDetails?.credit?.[
               Constants.ENTITY.GMTC
             ]?.isAllowed && (
-              <>
-                <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-                <input
-                  type="text"
-                  id="GMTCCreditPeriod"
-                  name="GMTCCreditPeriod"
-                  className={`text-field small ${
-                    customerPaymentMethodsData &&
+                <>
+                  <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+                  <input
+                    type="text"
+                    id="GMTCCreditPeriod"
+                    name="GMTCCreditPeriod"
+                    className={`text-field small ${customerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData &&
+                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                          Constants.ENTITY.GMTC
+                        ]?.period !=
+                        paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
+                        mode === "edit"
+                        ? "update-field"
+                        : ""
+                      }`}
+                    placeholder={t("Enter credit period")}
+                    value={
+                      customerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.GMTC
+                      ]?.period || ""
+                    }
+                    onChange={setCustomerCreditChange}
+                    disabled={
+                      checkDisabledStatusPayment(
+                        "credit?." + [Constants.ENTITY.GMTC] + "?.period"
+                      ) ||
+                      customerData?.customerStatus?.toLowerCase() === "new" ||
+                      customerData?.customerStatus?.toLowerCase() === "pending"
+                    }
+                  />
+                  {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
                       Constants.ENTITY.GMTC
                     ]?.period !=
-                      paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
-                    mode === "edit"
-                      ? "update-field"
-                      : ""
-                  }`}
-                  placeholder={t("Enter credit period")}
-                  value={
-                    customerPaymentMethodsData?.methodDetails?.credit?.[
-                      Constants.ENTITY.GMTC
-                    ]?.period || ""
-                  }
-                  onChange={setCustomerCreditChange}
-                  disabled={
-                    checkDisabledStatusPayment(
-                      "credit?." + [Constants.ENTITY.GMTC] + "?.period"
-                    ) ||
-                    customerData?.customerStatus?.toLowerCase() === "new" ||
-                    customerData?.customerStatus?.toLowerCase() === "pending"
-                  }
-                />
-                {customerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.GMTC
-                  ]?.period !=
                     paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
-                  mode === "edit" && (
-                    <div className="current-value">
-                      Previous:{" "}
-                      {originalCustomerPaymentMethodsData?.methodDetails
-                        ?.credit?.[Constants.ENTITY.GMTC]?.period || "(empty)"}
-                    </div>
+                    mode === "edit" && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalCustomerPaymentMethodsData?.methodDetails
+                          ?.credit?.[Constants.ENTITY.GMTC]?.period || "(empty)"}
+                      </div>
+                    )}
+                  {formErrors?.GMTCCreditPeriod && (
+                    <div className="error">{formErrors?.GMTCCreditPeriod}</div>
                   )}
-                {formErrors?.GMTCCreditPeriod && (
-                  <div className="error">{formErrors?.GMTCCreditPeriod}</div>
-                )}
-              </>
-            )}
+                </>
+              )}
           </div>
         </>
       )}
@@ -2162,11 +2143,12 @@ const hasChanges =
       {/* Credit Balance Header */}
       {customerData?.customerStatus?.toLowerCase() === "approved" && (
         <>
-          <h3 className="form-header full-width">{t("Credit Balance")}</h3>
+          <h3 className="form-header full-width" style={isMobile ? { textAlign: "center" } : { textAlign: "left" }}>{t("Credit Balance")}</h3>
           <div>
             <button
               onClick={handleGetCreditBalance}
               className="action-button save"
+              style={isMobile ? { width: "100%" } : {}}
               disabled={isLoading}
             >
               {isLoading ? t("Loading...") : t("Get Credit Balance")}
@@ -2174,13 +2156,14 @@ const hasChanges =
           </div>
           {isV("isStatementofAccount") && customerData?.erpCustId && (
             <>
-              <h3 className="form-header full-width">
+              <h3 className="form-header full-width" style={isMobile ? { textAlign: "center" } : { textAlign: "left" }}>
                 {t("Account Statement")}
               </h3>
               <div>
                 <button
                   onClick={() => setOpen(true)}
                   className="action-button save"
+                  style={isMobile ? { width: "100%" } : {}}
                 >
                   {t("Statement of Account")}
                 </button>
@@ -2512,8 +2495,8 @@ const hasChanges =
                             params.value === 0
                               ? "#6c757d"
                               : params.value > 0
-                              ? "#dc3545"
-                              : "#dc3545",
+                                ? "#dc3545"
+                                : "#dc3545",
                         }}
                       >
                         {params.value.toLocaleString("en-US", {
@@ -2535,8 +2518,8 @@ const hasChanges =
                             params.value === 0
                               ? "#6c757d"
                               : params.value > 0
-                              ? "#6c757d"
-                              : "#6c757d",
+                                ? "#6c757d"
+                                : "#6c757d",
                         }}
                       >
                         {params.value.toLocaleString("en-US", {
@@ -2610,13 +2593,12 @@ const hasChanges =
                           <tr key={row.id}>
                             <td>{row.entity}</td>
                             <td
-                              className={`due-to-pay ${
-                                row.dueToPay === 0
+                              className={`due-to-pay ${row.dueToPay === 0
                                   ? "zero"
                                   : row.dueToPay > 0
-                                  ? "positive"
-                                  : "negative"
-                              }`}
+                                    ? "positive"
+                                    : "negative"
+                                }`}
                             >
                               {row.dueToPay.toLocaleString("en-US", {
                                 style: "currency",
@@ -2648,10 +2630,10 @@ const hasChanges =
 
               {(!creditBalanceData ||
                 Object.keys(creditBalanceData)?.length === 0) && (
-                <p className="no-data">
-                  {t("No credit balance data available")}
-                </p>
-              )}
+                  <p className="no-data">
+                    {t("No credit balance data available")}
+                  </p>
+                )}
             </div>
 
             <div className="gi-footer">
@@ -2903,9 +2885,9 @@ const hasChanges =
                         borderRadius: "12px",
                       },
                       "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
-                        {
-                          width: "200px",
-                        },
+                      {
+                        width: "200px",
+                      },
                     }}
                     InputLabelProps={{ shrink: true }}
                   />
@@ -2929,9 +2911,9 @@ const hasChanges =
                         borderRadius: "12px",
                       },
                       "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
-                        {
-                          width: "200px",
-                        },
+                      {
+                        width: "200px",
+                      },
                     }}
                     InputLabelProps={{ shrink: true }}
                   />
@@ -2942,9 +2924,9 @@ const hasChanges =
                   <FormLabel>{t("Email")}</FormLabel>
                   <TextField
                     value={
-                        user?.userType?.toLowerCase() == "employee" || user?.userType?.toLowerCase() == "admin"
-          ? user.email
-          : originalCustomerContactsData?.primaryContactEmail || ""
+                      user?.userType?.toLowerCase() == "employee" || user?.userType?.toLowerCase() == "admin"
+                        ? user.email
+                        : originalCustomerContactsData?.primaryContactEmail || ""
                     }
                     InputProps={{ readOnly: true }}
                     disabled={true}
@@ -2954,9 +2936,9 @@ const hasChanges =
                         borderRadius: "12px !important",
                       },
                       "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
-                        {
-                          width: "200px",
-                        },
+                      {
+                        width: "200px",
+                      },
                     }}
                   />
                 </FormControl>
@@ -2991,9 +2973,9 @@ const hasChanges =
                         borderRadius: "12px !important",
                       },
                       "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
-                        {
-                          width: "200px",
-                        },
+                      {
+                        width: "200px",
+                      },
                     }}
                   />
                   {ccError && (
