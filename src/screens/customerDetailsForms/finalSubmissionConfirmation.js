@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import RbacManager from "../../utilities/rbac";
 import SignatureCanvas from "react-signature-canvas";
 import Swal from "sweetalert2";
+import { isMobile } from "../../utilities/isMobile";
 
 const FinalSubmissionConfirmation = ({
   customerData = {},
@@ -251,6 +252,7 @@ const FinalSubmissionConfirmation = ({
               onChange={onChangeCustomerData}
               required
               disabled={mode === "edit" || isE("declarationName")}
+              className={isMobile ? "text-field small" : ""}
             />
             {isV("declarationNameVerified") &&
               // (originalCustomerData &&
@@ -292,6 +294,7 @@ const FinalSubmissionConfirmation = ({
                     )
                   : new Date().toLocaleDateString("en-CA")
               }
+              className={isMobile ? "text-field small" : ""}
               readOnly
               disabled
             />
@@ -547,6 +550,7 @@ const FinalSubmissionConfirmation = ({
                   onChange={onChangeCustomerData}
                   required
                   disabled={isE("declarationName")}
+                  className={isMobile ? "text-field small" : ""}
                 />
                 {/* {isV("declarationNameVerified") && (
     // (originalCustomerData &&
@@ -585,6 +589,7 @@ const FinalSubmissionConfirmation = ({
                         )
                       : new Date().toLocaleDateString("en-CA")
                   }
+                  className={isMobile ? "text-field small" : ""}
                   readOnly
                   disabled
                 />

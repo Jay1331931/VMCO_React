@@ -2166,7 +2166,7 @@ const hasChanges =
           <div>
             <button
               onClick={handleGetCreditBalance}
-              className="action-button save"
+              className="action-button  action-button-credit save"
               disabled={isLoading}
             >
               {isLoading ? t("Loading...") : t("Get Credit Balance")}
@@ -2174,7 +2174,7 @@ const hasChanges =
           </div>
           {isV("isStatementofAccount") && customerData?.erpCustId && (
             <>
-              <h3 className="form-header full-width">
+              <h3 className="form-header action-button-credit full-width">
                 {t("Account Statement")}
               </h3>
               <div>
@@ -2834,256 +2834,232 @@ const hasChanges =
           </style>
         </div>
       )}
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "90%",
-            maxWidth: 565,
-            maxHeight: "90vh", // 🔥 IMPORTANT
-            overflowY: "auto",
-            bgcolor: "background.paper",
-            borderRadius: 3,
-            boxShadow: 5,
-            p: 3,
-          }}
-        >
-          <Typography variant="h6" textAlign="center" mb={2}>
-            {t("Account Statement")}
-          </Typography>
+   {open && <div className="modal-overlay">
+      <div className="modal-container">
+        <h2 className="modal-title">{t("Account Statement")}</h2>
 
-          <Grid container spacing={2}>
-            {/* SELECT ENTITY */}
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <FormLabel sx={{ fontWeight: 600 }}>
-                  {t("Select Entity")}
-                </FormLabel>
-
-                <Grid container spacing={1} sx={{ mt: 1 }}>
-                  {ORDERED_KEYS?.map((key) => (
-                    <Grid item xs={12} sm={6} md={4} key={key}>
-                      <FormControlLabel
-                        sx={{
-                          "& .MuiFormControlLabel-label": {
-                            fontSize: "15px",
-                          },
-                        }}
-                        control={
-                          <Checkbox
-                            checked={selectedEntities.includes(key)}
-                            onChange={() => handleEntityChange(key)}
-                          />
-                        }
-                        label={getDisplayName(key)}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </FormControl>
-            </Grid>
-            <Grid container spacing={2}>
-              {/* FROM DATE */}
-              <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl width={"200px"}>
-                  <FormLabel>{t("From Date")}</FormLabel>
-                  <TextField
-                    type="date"
-                    value={fromDate}
-                    inputProps={{
-                      max: dayjs().format("YYYY-MM-DD"),
-                    }}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    sx={{
-                      borderRadius: "12px",
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                      },
-                      "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
-                        {
-                          width: "200px",
-                        },
-                    }}
-                    InputLabelProps={{ shrink: true }}
+        <div className="modal-body">
+          <div className="form-group">
+            <label className="section-label">{t("Select Entity")}</label>
+            <div className="entity-grid">
+              {ORDERED_KEYS?.map((key) => (
+                <div key={key} className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id={key}
+                    checked={selectedEntities.includes(key)}
+                    onChange={() => handleEntityChange(key)}
                   />
-                </FormControl>
-              </Grid>
+                  <label htmlFor={key}>{t(getDisplayName(key))}</label>
+                </div>
+              ))}
+            </div>
+          </div>
 
-              {/* TO DATE */}
-              <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl width={"200px"}>
-                  <FormLabel>{t("To Date")}</FormLabel>
-                  <TextField
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    inputProps={{
-                      max: dayjs().format("YYYY-MM-DD"), // restrict future dates
-                    }}
-                    sx={{
-                      borderRadius: "12px",
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                      },
-                      "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
-                        {
-                          width: "200px",
-                        },
-                    }}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={5} lg={6} xl={6}>
-                <FormControl width={"200px"}>
-                  <FormLabel>{t("Email")}</FormLabel>
-                  <TextField
-                    value={
-                        user?.userType?.toLowerCase() == "employee" || user?.userType?.toLowerCase() == "admin"
-          ? user.email
-          : originalCustomerContactsData?.primaryContactEmail || ""
-                    }
-                    InputProps={{ readOnly: true }}
-                    disabled={true}
-                    sx={{
-                      m: 0,
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px !important",
-                      },
-                      "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
-                        {
-                          width: "200px",
-                        },
-                    }}
-                  />
-                </FormControl>
-              </Grid>
+          {/* Section: Date Selection */}
+          <div className="input-row">
+            <div className="input-field">
+              <label>{t("From Date")}</label>
+              <input
+                type="date"
+                value={fromDate}
+                max={dayjs().format("YYYY-MM-DD")}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+            </div>
+            <div className="input-field">
+              <label>{t("To Date")}</label>
+              <input
+                type="date"
+                value={toDate}
+                max={dayjs().format("YYYY-MM-DD")}
+                onChange={(e) => setToDate(e.target.value)}
+              />
+            </div>
+          </div>
 
-              <Grid item xs={12} sm={6} md={6} lg={5} xl={6}>
-                <FormControl width={"200px"}>
-                  <FormLabel>{t("CC")}</FormLabel>
+          {/* Section: Contact Info */}
+          <div className="input-row">
+            <div className="input-field">
+              <label>{t("Email")}</label>
+              <input
+                type="email"
+                disabled
+                className="disabled-input"
+                value={
+                  user?.userType?.toLowerCase() === "employee" || user?.userType?.toLowerCase() === "admin"
+                    ? user.email
+                    : originalCustomerContactsData?.primaryContactEmail || ""
+                }
+              />
+            </div>
+            <div className="input-field">
+              <label>{t("CC")}</label>
+              <input
+                type="text"
+                placeholder={t("comma separated emails.")}
+                value={ccEmail || ""}
+                className={ccError ? "error-border" : ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setCcEmail(value);
+                  if (value && !validateEmails(value)) {
+                    setCcError("Invalid email format. Use commas.");
+                  } else {
+                    setCcError("");
+                  }
+                }}
+              />
+              {ccError && <span className="error-text">{ccError}</span>}
+            </div>
+          </div>
 
-                  <TextField
-                    placeholder={t("comma separated emails.")}
-                    value={ccEmail}
-                    onChange={(e) => {
-                      const value = e.target.value;
+          <p className="note-text">
+            <strong>{t("Note: ")}</strong>
+            {t("If you have already submitted, please wait 15 minutes to receive the email.")}
+          </p>
+        </div>
 
-                      setCcEmail(value);
+        {/* Footer Buttons */}
+        <div className="modal-footer">
+          <button 
+            className="btn-submit" 
+            onClick={handleSubmit} 
+            disabled={isSubmited}
+          >
+            {isSubmited ? t("Submitting...") : t("Submit")}
+          </button>
+          <button 
+            className="btn-close" 
+            onClick={() => {
+              setOpen(false);
+              setCcEmail("");
+              setCcError("");
+            }}
+          >
+            {t("Close")}
+          </button>
+        </div>
+      </div>
+    </div>}
 
-                      // validate
-                      if (value && !validateEmails(value)) {
-                        setCcError(
-                          "Invalid email format. Use comma-separated values."
-                        );
-                      } else {
-                        setCcError("");
-                      }
-                    }}
-                    error={Boolean(ccError)}
-                    // helperText={t(ccError)}
-                    sx={{
-                      m: 0,
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px !important",
-                      },
-                      "& .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input":
-                        {
-                          width: "200px",
-                        },
-                    }}
-                  />
-                  {ccError && (
-                    <span
-                      style={{
-                        wordBreak: "break-all",
-                        width: "200px",
-                        color: "#C01823",
-                      }}
-                    >
-                      {ccError}{" "}
-                    </span>
-                  )}
-                </FormControl>
-              </Grid>
+    <style>{`/* Backdrop Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 15px;
+}
 
-              <Grid item xs={12}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    width: "200px",
-                    wordWrap: "break-word",
-                    overflowWrap: "break-word",
-                    whiteSpace: "normal",
-                  }}
-                >
-                  {t("Note: ") +
-                    t(
-                      "If you have already submitted, please wait 15 minutes to receive the email."
-                    )}
-                </Typography>
-              </Grid>
-            </Grid>
+/* Modal Box */
+.modal-container {
+  background: white;
+  width: 100%;
+  max-width: 565px;
+  max-height: 85vh;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-            {/* BUTTONS */}
-            <Grid item xs={12}>
-              <Grid container justifyContent="flex-end" spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      py: 1.3,
-                      borderRadius: 2,
-                      fontSize: "16px",
-                      backgroundColor: "#009345",
-                      color: "#fff",
-                      "&:hover": {
-                        background: "#004d43",
-                        color: "#fff",
-                      },
-                    }}
-                    onClick={handleSubmit}
-                    disabled={isSubmited}
-                  >
-                    {isSubmited ? t("Submitting") : t("Submit")}
-                  </Button>
-                </Grid>
+.modal-title {
+  padding: 20px;
+  margin: 0;
+  font-size: 1.25rem;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
 
-                <Grid item xs={12} sm={6}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    sx={{
-                      py: 1.3,
-                      borderRadius: 2,
-                      fontSize: "16px",
-                      background: "#fff",
-                      color: "#222",
-                      "&:hover": {
-                        background: "#f7f8fa",
-                        color: "#00594c",
-                      },
-                    }}
-                    onClick={() => {
-                      setOpen(false);
-                      setCcEmail(null);
-                      setToDate(dayjs());
-                      setFromDate(dayjs());
-                      setSelectedEntities([]);
-                    }}
-                  >
-                    {t("Close")}
-                  </Button>
-                </Grid>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Box>
-      </Modal>
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Grids and Inputs */
+.form-group { margin-bottom: 20px; }
+.section-label { font-weight: 600; display: block; margin-bottom: 10px; }
+
+.entity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .input-row { grid-template-columns: 1fr; }
+}
+
+.input-field label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.input-field input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.disabled-input { background: #f5f5f5; cursor: not-allowed; }
+.error-border { border-color: #C01823 !important; }
+.error-text { color: #C01823; font-size: 11px; margin-top: 4px; display: block; }
+
+.note-text { font-size: 12px; color: #555; line-height: 1.4; margin-top: 10px; }
+
+/* Buttons */
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-submit, .btn-close {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-submit { background: #009345; color: white; }
+.btn-submit:hover:not(:disabled) { background: #007a3a; }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-close { background: #fff; border: 1px solid #ccc; color: #333; }
+.btn-close:hover { background: #f9f9f9; }
+@media (max-width:500px){
+.modal-overlay {
+  
+  align-items: end;}}`}</style>
     </div>
   );
 }
