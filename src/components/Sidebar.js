@@ -613,7 +613,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   };
   useEffect(() => {
     const path = location.pathname;
-    console.log("title",path,title,MenuName)
     switch (MenuName || path) {
       case "/orders":
         setActiveMenu("Orders");
@@ -884,12 +883,14 @@ const handleLogoClick=()=>{
 const isMenuLabelActive = (label) => {
   const currentActive = activeMenu?.toLowerCase();
   const currentLabel = label?.toLowerCase();
-
-  if (currentLabel === "home" && currentActive === "catalog") {
+console.log("currentActive",currentActive)
+console.log("currentLabel",currentLabel)
+  if (currentLabel === "home" && t(currentActive) === t("catalog")) {
     return true;
   }
-  if(isMobile && currentLabel === "others" &&  ["support", "maintenance",   "bank transfer","bank"].includes(currentActive)){
-       return true;
+ const otherSubItems = ["support", "maintenance", "bank transfer", "bank"];
+  if (isMobile && currentLabel === "others" && otherSubItems.includes(currentActive)) {
+    return true;
   }
 
   // Otherwise, use standard direct match
@@ -957,7 +958,7 @@ const isMenuLabelActive = (label) => {
                 <div
                   key={label}
                   className={`menu-item ${
-                  isMenuLabelActive(label) ? "active" : ""
+                      activeMenu ==label ? "active" : ""
                   }`}
                   onClick={() => handleMenuClick(label)}
                   style={{
@@ -965,7 +966,8 @@ const isMenuLabelActive = (label) => {
                   }}
                 >
                   <FontAwesomeIcon icon={icon} />
-                  <span>{t(label)}</span>
+                  {/* <span>{t(label)}</span> */}
+                   <span>{ activeMenu +" "+ label}</span>
                 </div>
               ))}
           </div>
@@ -1260,8 +1262,8 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                     <div
                       key={label}
                       className={`bottom-menu-item ${
-                        isMenuItemActive() ? "active" : ""
-                      }`}
+                        isMenuItemActive() ? "active" : ""  
+                      }   ${isMenuLabelActive(label) ? "active" : ""}`}
                       onClick={() => handleMenuClick(label)}
                     >
                       <FontAwesomeIcon icon={icon} />
