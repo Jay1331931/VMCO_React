@@ -2586,6 +2586,11 @@ body.catalog-page {
     margin-top: 10px;
   }
 
+  .support-action-btn {
+    max-width: none;
+    width: 100%;
+  }
+
   .support-details-grid {
     grid-template-columns: 1fr;
     gap: 10px;
@@ -2595,6 +2600,7 @@ body.catalog-page {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
+    padding: 0 20px;
   }
 
   .support-details-title {
@@ -2605,6 +2611,12 @@ body.catalog-page {
     flex-direction: column;
     padding-right: 0px;
     width: 100%;
+  }
+
+  .support-details-actions {
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
   }
 
   .maintenance-details-container {
