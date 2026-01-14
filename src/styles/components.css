@@ -364,20 +364,6 @@
   margin-right: 10px;
 }
 
-.feedback-btn {
-  background-color: var(--logo-deep-green);
-  color: var(--bg-white);
-  border: none;
-  width: 140px;
-  padding: 10px 16px;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  margin-top: 10px;
-  margin-left: auto;
-  /* Default for LTR */
-  margin-right: 10px;
-}
-
 /* RTL Support */
 [dir="rtl"] .add-button {
   margin-left: 10px;
@@ -2324,7 +2310,6 @@ body.catalog-page {
 }
 
 .support-details-field {
-  margin-top: 16px;
   margin-bottom: 16px;
 }
 
@@ -2601,6 +2586,11 @@ body.catalog-page {
     margin-top: 10px;
   }
 
+  .support-action-btn {
+    max-width: none;
+    width: 100%;
+  }
+
   .support-details-grid {
     grid-template-columns: 1fr;
     gap: 10px;
@@ -2610,6 +2600,7 @@ body.catalog-page {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
+    padding: 0 20px;
   }
 
   .support-details-title {
@@ -2625,6 +2616,7 @@ body.catalog-page {
   .support-details-actions {
     flex-direction: column;
     width: 100%;
+    align-items: center;
   }
 
   .maintenance-details-container {
@@ -2692,7 +2684,6 @@ body.catalog-page {
 
 .maintenance-details-textarea {
   grid-column: 1 / -1;
-  margin-top: 18px;
 }
 
 .maintenance-details-textarea textarea {
@@ -2710,11 +2701,10 @@ body.catalog-page {
 .attachments {
   display: flex;
   flex-direction: row;
-  gap: 40px;
+  gap: 20px;
 }
 
 .maintenance-details-images {
-  margin-top: 18px;
   width: 50%;
 }
 
@@ -2755,7 +2745,6 @@ body.catalog-page {
 }
 
 .maintenance-details-videos {
-  margin-top: 18px;
   width: 50%;
 }
 
@@ -2815,7 +2804,6 @@ body.catalog-page {
 }
 
 .maintenance-details-field {
-  margin-top: 16px;
   margin-bottom: 16px;
 }
 
