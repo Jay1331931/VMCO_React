@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import SaudiTime from "../components/Time";
 import RbacManager from "../utilities/rbac";
 import usePlatform from "../utilities/platform";
+import Constants from "../../src/constants"
 import {
   faChevronLeft,
   faChevronRight,
@@ -620,7 +621,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
         setActiveMenu("Customers");
         break;
       case "/catalog":
-        setActiveMenu("Catalog");
+        setActiveMenu("catalog");
         break;
       case "/admin/upload":
         setActiveMenu("General");
@@ -828,7 +829,73 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   const handleback =()=>{
     navigate(-1)
   }
-  console.log("isIOSsMobile",isIOSsMobile)
+ 
+const handleLogoClick=()=>{
+  console.log("user",user)
+  if (user?.customerStatus === "new") {
+          navigate("/customerDetails", {
+            state: { customerId:user?.customerId, mode: "add" },
+          });
+        } else if (
+         user?.userType?.toLowerCase() === "employee" &&
+          (user?.designation?.toLowerCase() ===
+            Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase() ||
+           user?.designation?.toLowerCase() ===
+              Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() ||
+           user?.designation?.toLowerCase() ===
+              Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() ||
+           user?.designation?.toLowerCase() ===
+              Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() ||
+           user?.roles[0].toLowerCase() ===
+              Constants.ROLES.SUPER_ADMIN.toLowerCase())
+        ) {
+          navigate("/customers",{replace:true});
+        } else if (
+         user?.userType?.toLowerCase() === "employee" &&
+          (user?.designation?.toLowerCase() ===
+            Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase() ||
+           user?.designation?.toLowerCase() ===
+              Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() ||
+           user?.designation?.toLowerCase() ===
+              Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())
+        ) {
+          navigate("/maintenance",{replace:true});
+        } else if (
+         user?.userType?.toLowerCase() === "employee" &&
+         user?.designation?.toLowerCase() ===
+            Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase()
+        ) {
+          navigate("/bankTransactions",{replace:true});
+        }
+        else if (user?.userType?.toLowerCase() === "employee" &&
+         user?.designation?.toLowerCase() ===
+            Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
+        ) {
+          navigate("/orders",{replace:true});
+        } else {
+          // navigate("/catalog",{replace:true});
+          navigate("/home",{replace:true});
+        }
+}
+
+
+
+const isMenuLabelActive = (label) => {
+  const currentActive = activeMenu?.toLowerCase();
+  const currentLabel = label?.toLowerCase();
+console.log("currentActive",currentActive)
+console.log("currentLabel",currentLabel)
+  if (currentLabel === "home" && t(currentActive) === t("catalog")) {
+    return true;
+  }
+ const otherSubItems = ["support", "maintenance", "bank transfer", "bank"];
+  if (isMobile && currentLabel === "others" && otherSubItems.includes(currentActive)) {
+    return true;
+  }
+
+  // Otherwise, use standard direct match
+  return currentLabel === currentActive;
+};
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
@@ -843,6 +910,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
               alt="Talab Point Logo"
               className="logo-collapsed"
               style={{ maxWidth: "100%", maxHeight: "100%" }}
+              onClick={()=>handleLogoClick()}
             />
           ) : (
             <img
@@ -854,6 +922,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
               alt="Talab Point Logo Expanded"
               className="logo-expanded"
               style={{ maxWidth: "100%", maxHeight: "100%", padding: "10px" }}
+               onClick={()=>handleLogoClick()}
             />
           )}
         </div>
@@ -868,7 +937,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
                     <div
                       key={label}
                       className={`menu-item ${
-                        activeMenu === label ? "active" : ""
+                        isMenuLabelActive(label) ? "active" : ""
                       }`}
                       onClick={() => handleMenuClick(label)}
                       style={{
@@ -889,7 +958,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
                 <div
                   key={label}
                   className={`menu-item ${
-                    activeMenu === label ? "active" : ""
+                      activeMenu ==label ? "active" : ""
                   }`}
                   onClick={() => handleMenuClick(label)}
                   style={{
@@ -897,7 +966,8 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
                   }}
                 >
                   <FontAwesomeIcon icon={icon} />
-                  <span>{t(label)}</span>
+                  {/* <span>{t(label)}</span> */}
+                   <span>{ activeMenu +" "+ label}</span>
                 </div>
               ))}
           </div>
@@ -1013,6 +1083,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                 alt="Talab Point Logo"
                 className="logo-collapsed"
                 style={{ maxWidth: "100%", maxHeight: "100%" }}
+                onClick={()=>handleLogoClick()}
               />
             )}
 
@@ -1191,8 +1262,8 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                     <div
                       key={label}
                       className={`bottom-menu-item ${
-                        isMenuItemActive() ? "active" : ""
-                      }`}
+                        isMenuItemActive() ? "active" : ""  
+                      }   ${isMenuLabelActive(label) ? "active" : ""}`}
                       onClick={() => handleMenuClick(label)}
                     >
                       <FontAwesomeIcon icon={icon} />
