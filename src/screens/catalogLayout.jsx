@@ -160,7 +160,7 @@ const CatalogLayout = ({
 
                  {activeCategory && (
                     <div className="catalog-fixed-header">
-                        {/* {isV("selectBranch") && (
+                        {isV("selectBranch") && (
                             <div className="catalog-header">
                                 <div className="location-selector">
                                     <SearchableDropdown
@@ -203,7 +203,7 @@ const CatalogLayout = ({
                                     </button>
                                 )}
                             </div>
-                        )} */}
+                        )}
 
                         <div className="filter-section">
                             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none" }}>
@@ -327,7 +327,7 @@ const CatalogLayout = ({
     );
 
     const renderMobileLayout = () => (
-       
+ 
         <div>
             {activeCategory && (
                 <div
@@ -383,7 +383,7 @@ const CatalogLayout = ({
                             )}
                         </div>
                     )}
-
+ 
                     <div className="search-section">
                         <div className="search-container">
                             {isV("search") && (
@@ -394,7 +394,7 @@ const CatalogLayout = ({
                             )}
                         </div>
                     </div>
-
+ 
                     <div className="filter-section">
                         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", marginBottom: "10px", scrollbarWidth: "none" }}>
                             <Tabs
@@ -407,10 +407,12 @@ const CatalogLayout = ({
                             />
                         </div>
                     </div>
-
+ 
                     <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%", padding: "0 10px" }}>
                         <div className="category-dropdown-mobile" style={{ flex: 1 }}>
                             <SearchableDropdown
+                            id={`category-filter-${catalogId}`}
+                                        name="categoryFilter"
                                 options={categoryOptions}
                                 className="category-filter-mobile"
                                 style={{ width: '100%', borderRadius: '16px' }}
@@ -421,6 +423,8 @@ const CatalogLayout = ({
                         </div>
                         <div className="subcategory-dropdown" style={{ flex: 1 }}>
                             <SearchableDropdown
+                            id={`subcategory-filter-${catalogId}`}
+                                        name="subCategoryFilter"
                                 options={subCategoryOptions}
                                 className="subcategory-filter-mobile"
                                 style={{ width: '100%', borderRadius: '16px' }}
@@ -433,11 +437,11 @@ const CatalogLayout = ({
                     </div>
                 </div>
             )}
-
+ 
             {/* Mobile Scrollable Products Container with dynamic padding */}
             <div
                 className="catalog-scrollable-content"
-                // style={{ paddingTop: headerHeight > 0 ? `${headerHeight}px` : '320px' }}
+            // style={{ paddingTop: headerHeight > 0 ? `${headerHeight}px` : '320px' }}
             >
                 <div
                     className="products-grid"
@@ -466,7 +470,7 @@ const CatalogLayout = ({
                         ))
                     ) : (
                         !isLoading && !isLoadingMore && !hasMore && (
-                            <div className="no-products-message" style={{textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center"}}>
+                            <div className="no-products-message" style={{ textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center" }}>
                                 {searchQuery ? (
                                     <p>{t("No products found matching your search term")}</p>
                                 ) : (
@@ -476,7 +480,7 @@ const CatalogLayout = ({
                         )
                     )}
                 </div>
-
+ 
                 {isLoading && (
                     <div
                         className="loading-container"
@@ -485,21 +489,21 @@ const CatalogLayout = ({
                         <LoadingSpinner size="medium" />
                     </div>
                 )}
-
+ 
                 {isLoadingMore && (
                     <div className="loading-more-container">
                         <LoadingSpinner size="medium" />
                         <span className="loading-more-text">{t("Loading more products...")}</span>
                     </div>
                 )}
-
+ 
                 {!hasMore && displayedProducts?.length > 0 && !isLoading && !isLoadingMore && (
                     <div className="end-of-catalog-message">
                         <p>{t("End of product catalog")}</p>
                     </div>
                 )}
             </div>
-
+ 
             {selectedProduct && (
                 <ProductPopup
                     product={mapProductToCardProps(selectedProduct)}
@@ -513,8 +517,7 @@ const CatalogLayout = ({
             )}
         </div>
     );
-
+ 
     return isMobile ? renderMobileLayout() : renderWebLayout();
 };
-
 export default CatalogLayout;
