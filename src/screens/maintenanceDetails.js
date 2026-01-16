@@ -1732,6 +1732,7 @@ function MaintenanceDetails() {
                       className="support-action-btn reassign"
                       onClick={handleReassignTicket}
                       disabled={closing || saving || isReadOnly}
+                      style={{padding: i18n.language === "ar" && isMobile ? "10px" : "10px 24px", width: i18n.language === "ar" && isMobile ? "150%": "100%"}}
                     >
                       {isMobile ? t('Reassign') : t('Request to Reassign')}
                     </button>}
