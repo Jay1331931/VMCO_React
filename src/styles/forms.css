@@ -263,7 +263,7 @@
   border-bottom: 1px solid #eee;
   outline: none;
   height: 30px;
-  margin: 10px;
+  /* margin: 10px; */
 }
 .dropdown-options {
   max-height: 315px;
