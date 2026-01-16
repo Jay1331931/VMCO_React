@@ -2309,9 +2309,9 @@ body.catalog-page {
   margin-bottom: 12px;
 }
 
-.support-details-field {
+/* .support-details-field {
   margin-bottom: 16px;
-}
+} */
 
 .support-details-field label {
   font-size: 0.95rem;
@@ -2614,7 +2614,7 @@ body.catalog-page {
   }
 
   .support-details-actions {
-    flex-direction: column;
+    /* flex-direction: column; */
     width: 100%;
     align-items: center;
   }
