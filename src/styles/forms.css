@@ -1523,7 +1523,7 @@ td.file-display-cell {
   .dropdown-header {
     position: relative;
     z-index: 0;
-    width: 275px;
+    width: 100%;
   }
   .dropdown-header.mobile {
     display: flex;

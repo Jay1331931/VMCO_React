@@ -14,7 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import Swal from "sweetalert2";
 import Constants from "../constants";
-import usePlatform from "../utilities/platform";
+import { isMobile } from "../utilities/isMobile";
 import CatalogLayout from "./catalogLayout";
 import SearchableDropdown from "../components/SearchableDropdown";
 import ProductsGrid from "./ProductsGrid";
@@ -139,7 +139,6 @@ function Catalog() {
   const categoryFilterRef = useRef(categoryFilter);
   const subCategoryFilterRef = useRef(subCategoryFilter);
   const searchQueryRef = useRef(searchQuery);
-  const isMobile = usePlatform();
 
   useEffect(() => {
     document.body.classList.add('catalog-page');

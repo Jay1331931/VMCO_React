@@ -160,7 +160,7 @@ const CatalogLayout = ({
 
                  {activeCategory && (
                     <div className="catalog-fixed-header">
-                        {isV("selectBranch") && (
+                        {isV("selectBranch") && isMobile && (
                             <div className="catalog-header">
                                 <div className="location-selector">
                                     <SearchableDropdown

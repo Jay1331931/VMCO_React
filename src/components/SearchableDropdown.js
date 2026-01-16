@@ -12,11 +12,11 @@ function SearchableDropdown({
   onChange,
   disabled,
   className,
-  placeholder = "Value",
+  placeholder,
   style = {},
   branchName = null
 }) {
-  const allOption = { name: "Select", value: null };
+  const allOption = { name: placeholder || "Select", value: null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
