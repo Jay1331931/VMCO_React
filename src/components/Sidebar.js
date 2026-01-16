@@ -966,8 +966,7 @@ console.log("currentLabel",currentLabel)
                   }}
                 >
                   <FontAwesomeIcon icon={icon} />
-                  {/* <span>{t(label)}</span> */}
-                   <span>{ activeMenu +" "+ label}</span>
+                  <span>{t(label)}</span>
                 </div>
               ))}
           </div>
