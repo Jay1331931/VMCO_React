@@ -1733,7 +1733,7 @@ function MaintenanceDetails() {
                       onClick={handleReassignTicket}
                       disabled={closing || saving || isReadOnly}
                     >
-                      {t('Request to Reassign')}
+                      {isMobile ? t('Reassign') : t('Request to Reassign')}
                     </button>}
                 </>
               ) : null}
