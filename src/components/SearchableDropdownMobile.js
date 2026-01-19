@@ -137,7 +137,7 @@ function SearchableDropdown({
   return (
     <div className={`searchable-dropdown ${className || ''}`} ref={dropdownRef} style={{ position: 'relative' }}>
       <div
-        className={`dropdown-header ${isBranchDropdown ? 'branch-dropdown-header' : ''}`}
+        className={`dropdown-header mobile ${isBranchDropdown ? 'branch-dropdown-header' : ''}`}
         onClick={handleToggle}
         style={{
           backgroundColor: disabled ? "#e9ecef" : "white",

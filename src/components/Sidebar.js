@@ -1219,7 +1219,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                 </div>
               )}
 
-              <button className="lang-switch-btn" onClick={toggleLanguage}>
+              <button className="lang-switch-btn" onClick={toggleLanguage} style={{marginRight: t(activeMenu?.toLowerCase()) === t("catalog") ? "60px" : "20px"}}>
                 <FontAwesomeIcon icon={faLanguage} />
                 <span>{isRTL ? "EN" : "عربى"}</span>
               </button>
