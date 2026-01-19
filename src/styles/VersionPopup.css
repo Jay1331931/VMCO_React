@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(11, 76, 69, 0.95); /* --logo-deep-green */
+  background:rgb(11 76 69 / 44%); /* --logo-deep-green */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,7 +265,7 @@
 @media (max-width: 480px) {
   .update-popup-overlay {
     padding: 10px;
-    align-items: flex-start;
+    /* align-items: flex-start; */
   }
   
   .update-popup {
@@ -311,7 +311,7 @@
   }
   
   .update-popup {
-    max-height: calc(100vh - 16px);
+    max-height:500px;
   }
   
   .update-popup-header h2 {
