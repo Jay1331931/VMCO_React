@@ -186,7 +186,7 @@ function SearchableDropdown({
                 ref={inputRef}
                 type="text"
                 className="dropdown-search"
-                autoFocus
+                // autoFocus
                 placeholder={t("Search...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
