@@ -719,11 +719,9 @@
   border-color: #00205b;
 }
 /* ===== SAFE AREA FIXES ===== */
-.nav-btn{
-  display: none;
-}
+
 /* Mobile - adjust for safe areas */
-@media (max-width: 500px) {
+@media (max-width: 700px) {
  .nav-btn {
     display: flex;
     width: 30px;
@@ -757,11 +755,11 @@
 }
 
 /* Dark mode support for iOS */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
     .nav-btn {
         color: white;
     }
-}
+} */
 
 /* For better accessibility */
 /* .nav-btn:focus-visible {

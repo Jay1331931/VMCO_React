@@ -333,7 +333,11 @@ function AppRoutes() {
       />
       <Route path="/payments/:orderId" element={<PaymentLines />} />
       <Route path="/apple-pay/testing" element={<ApplePaymentReact />} />
-      <Route path="/home" element={<HomePage />} />
+     <Route path="/home"  element={
+          <ProtectedRoute page="home">
+            <HomePage />
+          </ProtectedRoute>
+        }/>
     </Routes>
   );
 }
