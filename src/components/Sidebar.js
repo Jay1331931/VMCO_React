@@ -42,6 +42,7 @@ import Swal from "sweetalert2";
 const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
+ const isAndroidMobile = /Android/i.test(navigator.userAgent);
 function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false}) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1072,7 +1073,7 @@ console.log("currentLabel",currentLabel)
                 <FontAwesomeIcon icon={faBars} />
               </button>
             )}
-                  {isIOSsMobile &&isMobile&& (
+                  {!isAndroidMobile &&isMobile&& (
 i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><ArrowForwardIcon/></span>
 :<span className="nav-btn " onClick={()=>handleback()}><ArrowBackIcon/> </span>
                   )}
