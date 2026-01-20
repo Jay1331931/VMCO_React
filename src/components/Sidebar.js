@@ -63,7 +63,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [branches, setBranches] = useState([]);
-  const [SelectedBranch,setSelectedBranch]=useState({})
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -310,8 +309,9 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
     }
   };
 
-   const handleGoToCart = async () => {
+  const handleGoToCart = async () => {
     const cartData = await fetchCart();
+    console.log("cartData",cartData)
     if (cartData?.id) {
       navigate("/Cart", {
         state: {
@@ -334,24 +334,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
         },
       });
     } else {
-      navigate("/Cart",{
-        state:{
-            selectedCustomerId: user?.customerId,
-          selectedCustomerStatus: user?.customerStatus,
-          selectedBranchId:selectedLocation,
-          selectedBranchRegion:SelectedBranch.region,
-          selectedBranchCity:SelectedBranch.city,
-           selectedCustSequenceId: user?.sequenceId || "",
-                  selectedBranchSequenceId: SelectedBranch?.sequenceId || "",
-                       selectedBranchName:
-            i18n.language === "en"
-              ? SelectedBranch?.branch_name_en
-              : SelectedBranch?.branch_name_lc,
-          selectedBranchNameLc: SelectedBranch?.branchNameLc || SelectedBranch?.branch_name_lc || "",
-          selectedBranchNameEn: SelectedBranch?.branchNameEn || SelectedBranch?.branch_name_en || "",
-          selectedBranchErpId: SelectedBranch?.erpBranchId || "",
-        }
-      });
+      navigate("/Cart");
     }
   };
 
@@ -666,7 +649,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
     const selectedBranch = branches.find(
       (b) => String(b.value) === String(newBranchId)
     );
-    setSelectedBranch(selectedBranch)
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
@@ -755,7 +737,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
               setSelectedBranchCity(selectedBranch.branchCity || "");
             }
-            setSelectedBranch(selectedBranch)
             await Swal.fire({
               icon: "success",
               title: t("Success"),
@@ -903,6 +884,8 @@ const handleLogoClick=()=>{
 const isMenuLabelActive = (label) => {
   const currentActive = activeMenu?.toLowerCase();
   const currentLabel = label?.toLowerCase();
+console.log("currentActive",currentActive)
+console.log("currentLabel",currentLabel)
   if (currentLabel === "home" && t(currentActive) === t("catalog")) {
     return true;
   }
