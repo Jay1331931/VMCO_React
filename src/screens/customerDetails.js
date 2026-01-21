@@ -1704,7 +1704,7 @@ function CustomerDetails() {
     const uniqueFieldsList = [
       "crNumber",
       "vatNumber",
-      "baladeahLicenseNumber",
+      // "baladeahLicenseNumber",
       "governmentRegistrationNumber",
       "bankAccountNumber",
     ];

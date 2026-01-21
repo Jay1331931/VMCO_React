@@ -1213,9 +1213,9 @@ fetchSystemDate()
   color: #fff;
 }
 
-.dropdown-mobile-bank{
-width:100% !important;
-}
+// .dropdown-mobile-bank{
+// width:100% !important;
+// }
 
 
 `}
