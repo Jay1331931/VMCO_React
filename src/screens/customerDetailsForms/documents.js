@@ -335,8 +335,8 @@ const openUrlSmart = (url) => {
       // const blobUrl = URL.createObjectURL(blob);
 
       // // Open the file in a new tab
-      window.open(fileURL, "_blank", "noopener,noreferrer");
-
+      // window.open(fileURL, "_blank", "noopener,noreferrer");
+        openUrlSmart(fileURL);
       // if (fileType === "nonTradingDocuments" || fileName.endsWith(".pdf")) {
       //   window.open(blobUrl, "_blank");
       // } else {
