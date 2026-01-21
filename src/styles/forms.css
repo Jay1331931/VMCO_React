@@ -1415,10 +1415,10 @@ td.file-display-cell {
     flex-direction: column;
     gap: 2px;
     align-items: center;
-    padding: 20px;
+    padding: 10px 20px;
   }
   .customers .customer-onboarding-form-actions button {
-    /* margin: 10px 0; Adjust margin for buttons on smaller screens */
+    margin: 10px 0; 
     min-width: 120px;
     flex: 1 1 auto; /* Allows buttons to shrink/grow */
     white-space: nowrap;

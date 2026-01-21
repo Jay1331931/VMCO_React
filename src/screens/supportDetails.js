@@ -1301,7 +1301,7 @@ function SupportDetails() {
                         +
                       </button>
                     )}
-                    {images.length <= 6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
+                    {images.length <= 6 && <input type='file' accept='image/png,image/jpg,image/jpeg' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
                     <div className="scrollable-image-row">
                       {/* Loading spinner for image upload */}
                       {uploadingImage && (
