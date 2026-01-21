@@ -2143,7 +2143,7 @@ function FinancialInformation({
       {/* Credit Balance Header */}
       {customerData?.customerStatus?.toLowerCase() === "approved" && (
         <>
-          <h3 className="form-header full-width" style={isMobile ? { textAlign: "center" } : { textAlign: "left" }}>{t("Credit Balance")}</h3>
+          <h3 className="form-header full-width" >{t("Credit Balance")}</h3>
           <div>
             <button
               onClick={handleGetCreditBalance}
@@ -2156,7 +2156,7 @@ function FinancialInformation({
           </div>
           {isV("isStatementofAccount") && customerData?.erpCustId && (
             <>
-              <h3 className="form-header action-button-credit full-width" style={isMobile ? { textAlign: "center" } : { textAlign: "left" }}>
+              <h3 className="form-header action-button-credit full-width" >
                 {t("Account Statement")}
               </h3>
               <div>
