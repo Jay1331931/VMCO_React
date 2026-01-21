@@ -86,6 +86,50 @@ const [customDocName, setCustomDocName] = useState("");
     setTabsHeight("auto");
   }, []);
   const ALLOWED_FILE_TYPES = ['.pdf'];
+  function getCenteredOptions(width, height) {
+  const screenWidth = window.screen.width;
+  const screenHeight = window.screen.height;
+  
+  // Calculate centered position
+  const left = Math.max(0, (screenWidth - width) / 2);
+  const top = Math.max(0, (screenHeight - height) / 2);
+  
+  return {
+    left: Math.round(left),
+    top: Math.round(top)
+  };
+}
+const openUrlSmart = (url) => {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    if (window.cordova && window.cordova.InAppBrowser) {
+      const width = 400;
+      const height = 500;
+      const centeredPosition = getCenteredOptions(width, height);
+
+      const options =
+        'toolbar=yes,' +
+        'hideurlbar=yes,' +
+        'zoom=no,' +
+        'hardwareback=yes,' +
+        'clearsessioncache=yes,' +
+        'clearcache=yes,' +
+        `width=${width},` +
+        `height=${height},` +
+        `left=${centeredPosition.left},` +
+        `top=${centeredPosition.top}`;
+
+      window.cordova.InAppBrowser.open(url, '_blank', options);
+    } else {
+      // iOS Safari fallback
+      window.open(url, '_blank');
+    }
+  } else {
+    // Desktop
+    window.open(url, '_blank');
+  }
+};
 
   // Handle file upload for specific document types
   const handleTradingDocumentChange = (e, documentType) => {
@@ -566,11 +610,15 @@ const [customDocName, setCustomDocName] = useState("");
             >
               {tradingFilePreviews?.acknowledgementSignature && (
                 <a
-                  href={tradingFilePreviews.acknowledgementSignature}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#"
+                  // target="_blank"
+                  // rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
+                  onClick={(e) => {
+    e.preventDefault();
+    openUrlSmart(tradingFilePreviews.acknowledgementSignature);
+  }}
                 >
                   {tradingFilesToUpload.acknowledgementSignature.name}
                 </a>
