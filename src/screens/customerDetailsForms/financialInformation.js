@@ -2156,7 +2156,7 @@ function FinancialInformation({
           </div>
           {isV("isStatementofAccount") && customerData?.erpCustId && (
             <>
-              <h3 className="form-header action-button-credit full-width" >
+              <h3 className="form-header full-width" >
                 {t("Account Statement")}
               </h3>
               <div>
