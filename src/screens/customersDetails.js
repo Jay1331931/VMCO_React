@@ -1532,6 +1532,39 @@ function CustomersDetails() {
       return [];
     }
   };
+
+  const getOptionsFromPricingPolicy = async (entity) => {
+    const filters = encodeURIComponent(JSON.stringify({ entity }));
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/pricing-policy/pagination?filters=${filters}`,
+        {
+          method: "GET",
+          headers: { 
+            "Content-Type": "application/json",
+            ...(token && { "Authorization": `Bearer ${token}` })
+          },
+        }
+      );
+      if (!response.ok) {
+        console.error(
+          `~~~~~~~~~~~~~~Failed to fetch options for :`,
+          response.statusText
+        );
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      const options = result.data.map((item) => ({
+        name: item.name,
+        id: item.id,
+      }));
+      return options;
+    } catch (err) {
+      console.error("Error fetching pricing policy options:", err);
+      return [];
+    }
+  };
+
   const fetchDropdownOptions = async () => {
     const options = {};
     const dropdownFields = formsByTab[activeTab].filter(
@@ -1582,7 +1615,7 @@ function CustomersDetails() {
           field.name === "pricingPolicyDAR" ||
           field.name === "pricingPolicyVMCO"
         ) {
-          data = await getOptionsFromBasicsMaster("pricingPolicy");
+          data = await getOptionsFromPricingPolicy(field.name.slice(13).toUpperCase());
           console.log("Data for field pricingPolicySHC", data);
 
           options[field.name] = data.map((item) => {
