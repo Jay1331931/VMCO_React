@@ -40,6 +40,10 @@ const rbacMgr = new RbacManager(
     // Navigate to the Delivery Schedule page
     navigate("/coolingPeriodEditor");
   }
+  const handlePricingPolicyClick = () => {
+    // Navigate to the Pricing Policy Editor page
+    navigate("/pricingPolicyEditor");
+  }
 
   return (
     <div>
@@ -68,6 +72,9 @@ const rbacMgr = new RbacManager(
         <a onClick={handleCoolingPeriodClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Order Staging Report")}</a>
         </div>)}
         <break />
+        {isV("PricingPolicyReport") && (<div style={{ marginBottom: "40px" }}><h3> {t("Pricing Policy Table")}</h3>
+        <a onClick={handlePricingPolicyClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("Pricing Policy Report")}</a>
+        </div>)}
       </Sidebar>
     </div>
   );

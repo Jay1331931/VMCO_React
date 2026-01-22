@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   fetchDropdownFromBasicsMaster,
   checkFieldForUpdate,
+  getOptionsFromPricingPolicy,
 } from "../../utilities/commonServices";
 import "../../styles/forms.css";
 import Constants from "../../constants";
@@ -144,8 +145,9 @@ function FinancialInformation({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   // Dropdown state for pricingPolicy
-  const dropdownFields = ["pricingPolicy", "bankName", "entity"];
+  const dropdownFields = ["bankName", "entity"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
+  const [pricingPolicyLists, setPricingPolicyLists] = useState({});
   const [fieldsForUpdate, setFieldsForUpdate] = useState({});
   const [paymentFieldsForUpdate, setPaymentFieldsForUpdate] = useState({});
   const fieldList = [
@@ -263,6 +265,11 @@ function FinancialInformation({
         token
       );
       setBasicMasterLists(listOfBasicsMaster);
+      const listOfPricingPolicy = await getOptionsFromPricingPolicy(
+        token
+      );
+      console.log("####Pricing Policy Lists:", listOfPricingPolicy);
+      setPricingPolicyLists(listOfPricingPolicy);
     };
     fetchData();
     setTabsHeight("auto");
@@ -1059,11 +1066,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.DAR]?.map((type) => (
+                <option key={type?.id} value={type?.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type?.nameLc
+                    : type?.name?.charAt(0).toUpperCase() + type?.name?.slice(1)}
                 </option>
               ))}
             </select>
@@ -1116,11 +1123,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.VMCO]?.map((type) => (
+                <option key={type.id} value={type.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type.nameLc
+                    : type.name.charAt(0).toUpperCase() + type.name.slice(1)}
                 </option>
               ))}
             </select>
@@ -1173,11 +1180,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.SHC]?.map((type) => (
+                <option key={type.id} value={type.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type.nameLc
+                    : type.name.charAt(0).toUpperCase() + type.name.slice(1)}
                 </option>
               ))}
             </select>
@@ -1231,11 +1238,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.NAQI]?.map((type) => (
+                <option key={type.id} value={type.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type.nameLc
+                    : type.name.charAt(0).toUpperCase() + type.name.slice(1)}
                 </option>
               ))}
             </select>
@@ -1289,11 +1296,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.GMTC]?.map((type) => (
+                <option key={type.id} value={type.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type.nameLc
+                    : type.name.charAt(0).toUpperCase() + type.name.slice(1)}
                 </option>
               ))}
             </select>
