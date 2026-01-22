@@ -2508,7 +2508,7 @@ renderCell: (params) => {
   };
 
   return (
-    <Sidebar title={t("Orders")}>
+    <Sidebar title={t("Orders")} CardPaddingClass={isMobile}>
 
       <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin") ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
@@ -2521,7 +2521,7 @@ renderCell: (params) => {
           ) : (
             <>
               <div>
-                <div className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}>
+                <div className={`card-fixed-header ${showHeader ? "show" : "show"}`}>
                   {(user?.userType.toLowerCase() === "employee" || (user?.userType.toLowerCase() === "customer" && isMobile)) && (
                     <div className="filter-section">
                       <div
@@ -2560,7 +2560,7 @@ renderCell: (params) => {
                   )}
 
                   {/* This DataGrid is only for the toolbar, not for displaying rows */}
-                  <div style={{ height: "auto", marginBottom: "16px" }}>
+                  <div>
                     <DataGrid
                       apiRef={gridApiRef}
                       rows={[]}
@@ -2629,7 +2629,7 @@ renderCell: (params) => {
                           display: "none",
                         },
                         "& .MuiDataGrid-toolbar": {
-                          padding: "0px",
+                          padding: "10px 0 0 10px",
                           gap: "10px",
                           border: "none",
                           marginBottom: "0",

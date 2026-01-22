@@ -1858,7 +1858,7 @@ function Customers() {
               ) : (
                 <>
                   <div
-                    className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}
+                    className={`card-fixed-header ${showHeader ? "show" : "show"}`}
                   >
                     <Tabs
           tabs={customerTabs}
@@ -2543,7 +2543,7 @@ function Customers() {
     });
   };
   return (
-    <Sidebar title={t("Customers")}>
+    <Sidebar title={t("Customers")} CardPaddingClass={isMobile}>
       <div className="customer-content">
         {!isMobile && (<><Tabs
           tabs={customerTabs}

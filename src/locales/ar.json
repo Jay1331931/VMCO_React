@@ -261,6 +261,7 @@
     "Customer ERP ID": "معرف تخطيط موارد المؤسسات (ERP) للعميل",
     "Registration ID": "معرف التسجيل",
     "Workflow Name": "اسم سير العمل",
+    "Workflow": "سير العمل",
     "Government Registration #": "رقم التسجيل الحكومي",
     "Customer Source": "مصدر العميل",
     "Green Mast": "جرين مارت",
@@ -925,6 +926,7 @@
 "Sandwiches, Bakery & Pastry":"المعجنات والمخبوزات",
 "Fresh Vegetables & Fruits":"الخضروات والفواكه الطازجة",
 "Hygiene Chemicals":"شركة نقي",
+"Business Unit":"وحدة الأعمال",
 "Loading more products...":"جارٍ تحميل المزيد من المنتجات...",
 "End of product catalog":"نهاية كتالوج المنتجات"
 

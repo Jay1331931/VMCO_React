@@ -515,6 +515,15 @@ body.catalog-page {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.card-fixed-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  border-bottom: 1px solid var(--cool-grey);
+  transition: top 0.3s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 .catalog-scrollable-content {
   flex: 1;
   overflow-y: auto;
@@ -1303,6 +1312,27 @@ body.catalog-page {
   }
 
   .catalog-fixed-header.hide {
+    transform: translateY(-100%);
+  }
+
+  .card-fixed-header {
+    position: fixed;
+    top: 60px;
+    /* Adjust based on your app header height */
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: white;
+    border-bottom: 1px solid var(--cool-grey);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .card-fixed-header.show {
+    transform: translateY(0);
+  }
+
+  .card-fixed-header.hide {
     transform: translateY(-100%);
   }
 
@@ -3652,7 +3682,20 @@ input:focus {
 
   }
 
+  .card-fixed-header.show {
+    padding: 0px 0px 10px;
+    top: 12%;
+  }
+
   .catalog-fixed-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-fixed-header {
     position: sticky;
     top: 0;
     z-index: 100;
