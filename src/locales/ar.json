@@ -261,6 +261,7 @@
     "Customer ERP ID": "معرف تخطيط موارد المؤسسات (ERP) للعميل",
     "Registration ID": "معرف التسجيل",
     "Workflow Name": "اسم سير العمل",
+    "Workflow": "سير العمل",
     "Government Registration #": "رقم التسجيل الحكومي",
     "Customer Source": "مصدر العميل",
     "Green Mast": "جرين مارت",
@@ -779,6 +780,7 @@
     "Sales Executive Id": "رقم مدير المبيعات",
     "Sales Executive Name": "اسم مدير المبيعات",
     "Current Approver": "المعتمد الحالي",
+    "Approver": "موافق",
     "Card Payment": "الدفع بالبطاقة", 
     "Remaining Credit": "الرصيد الباقي",
     "Enter Coordinates Manually": "أدخل الإحداثيات يدويًا",
@@ -923,7 +925,8 @@
 "Ordering window is closed.":"نافذة الطلبات مغلقة.",
 "Sandwiches, Bakery & Pastry":"المعجنات والمخبوزات",
 "Fresh Vegetables & Fruits":"الخضروات والفواكه الطازجة",
-"Hygiene Chemicals":"شركة نقي"
+"Hygiene Chemicals":"شركة نقي",
+"Business Unit":"وحدة الأعمال"
 
 
 
