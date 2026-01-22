@@ -59,3 +59,9 @@
 .cancel-btn {
   background: #ccc;
 }
+
+@media (max-width: 768px) {
+  .action-buttons {
+    margin-top: 0px;
+  }
+}

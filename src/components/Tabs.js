@@ -211,7 +211,6 @@ const Tabs = ({
         /* Mobile catalog tabs - with images */
         .category-tabs-mobile.with-catalog {
           border-bottom: 1px solid #D9D9D6;
-          height: 158px;
           display: flex;
           gap: 10px;
           white-space: nowrap;

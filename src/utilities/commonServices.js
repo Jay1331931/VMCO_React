@@ -217,4 +217,49 @@ export const checkFieldForUpdate = async (fieldType, workflowName) => {
   }
 }
 
+export const getOptionsFromPricingPolicy = async (token) => {
+  try {
+  const response = await fetch(
+    `${API_BASE_URL}/pricing-policy/pagination`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    }
+  );
 
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  // Initialize entity-wise object
+  const entityWiseOptions = {
+    [Constants.ENTITY.VMCO]: [],
+    [Constants.ENTITY.DAR]: [],
+    [Constants.ENTITY.NAQI]: [],
+    [Constants.ENTITY.SHC]: [],
+    [Constants.ENTITY.GMTC]: [],
+  };
+
+  result?.data?.data?.forEach((item) => {
+    const entityKey = item.entity?.toUpperCase();
+
+    if (entityWiseOptions[entityKey]) {
+      entityWiseOptions[entityKey].push({
+        id: item.id,
+        name: item.name,
+        nameLc: item.nameLc,
+      });
+    }
+  });
+
+  return entityWiseOptions;
+  } catch (err) {
+    console.error("Error fetching pricing policy options:", err);
+    return [];
+  }
+};

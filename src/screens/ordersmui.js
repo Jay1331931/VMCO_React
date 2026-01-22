@@ -93,11 +93,11 @@ const initialCategories = [
     entity: Constants.ENTITY.NAQI,
     label: Constants.ENTITY.NAQI,
   },
-  {
-    value: Constants.ENTITY.DAR,
-    entity: Constants.ENTITY.DAR,
-    label: Constants.ENTITY.DAR,
-  },
+  // {
+  //   value: Constants.ENTITY.DAR,
+  //   entity: Constants.ENTITY.DAR,
+  //   label: Constants.ENTITY.DAR,
+  // },
 ];
 function Orders() {
   const [isApprovalMode, setApprovalMode] = useState(false);
@@ -2522,7 +2522,7 @@ renderCell: (params) => {
             <>
               <div>
                 <div className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}>
-                  {user?.userType.toLowerCase() === "employee" && (
+                  {(user?.userType.toLowerCase() === "employee" || (user?.userType.toLowerCase() === "customer" && isMobile)) && (
                     <div className="filter-section">
                       <div
                         style={{
@@ -2639,7 +2639,7 @@ renderCell: (params) => {
                           borderRadius: "8px",
                           backgroundColor: "#f8f9fa",
                         },
-                        "& .MuiOutlinedInput-root": {
+                        "& .MuiOutlinedfilteredOrdersInput-root": {
                           width: "100% !important",
                           minWidth: "230px !important",
                         },
@@ -2652,6 +2652,7 @@ renderCell: (params) => {
                 <div style={{  position: "relative", zIndex: 1 }}>
                   <OrderCard
                     orders={filteredOrders}
+                    isApprovalMode={isApprovalMode}
                     orderIds={filteredOrders.map((o) => o.id)}
                     setSelectedRow={handleOrderNumberClick}
                     handlePay={handlePay}

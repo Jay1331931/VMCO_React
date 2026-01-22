@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   fetchDropdownFromBasicsMaster,
   checkFieldForUpdate,
+  getOptionsFromPricingPolicy,
 } from "../../utilities/commonServices";
 import "../../styles/forms.css";
 import Constants from "../../constants";
@@ -144,8 +145,9 @@ function FinancialInformation({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   // Dropdown state for pricingPolicy
-  const dropdownFields = ["pricingPolicy", "bankName", "entity"];
+  const dropdownFields = ["bankName", "entity"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
+  const [pricingPolicyLists, setPricingPolicyLists] = useState({});
   const [fieldsForUpdate, setFieldsForUpdate] = useState({});
   const [paymentFieldsForUpdate, setPaymentFieldsForUpdate] = useState({});
   const fieldList = [
@@ -263,6 +265,11 @@ function FinancialInformation({
         token
       );
       setBasicMasterLists(listOfBasicsMaster);
+      const listOfPricingPolicy = await getOptionsFromPricingPolicy(
+        token
+      );
+      console.log("####Pricing Policy Lists:", listOfPricingPolicy);
+      setPricingPolicyLists(listOfPricingPolicy);
     };
     fetchData();
     setTabsHeight("auto");
@@ -1059,11 +1066,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.DAR]?.map((type) => (
+                <option key={type?.id} value={type?.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type?.nameLc
+                    : type?.name?.charAt(0).toUpperCase() + type?.name?.slice(1)}
                 </option>
               ))}
             </select>
@@ -1116,11 +1123,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.VMCO]?.map((type) => (
+                <option key={type.id} value={type.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type.nameLc
+                    : type.name.charAt(0).toUpperCase() + type.name.slice(1)}
                 </option>
               ))}
             </select>
@@ -1173,11 +1180,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.SHC]?.map((type) => (
+                <option key={type.id} value={type.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type.nameLc
+                    : type.name.charAt(0).toUpperCase() + type.name.slice(1)}
                 </option>
               ))}
             </select>
@@ -1231,11 +1238,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.NAQI]?.map((type) => (
+                <option key={type.id} value={type.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type.nameLc
+                    : type.name.charAt(0).toUpperCase() + type.name.slice(1)}
                 </option>
               ))}
             </select>
@@ -1289,11 +1296,11 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type.value} value={type.value}>
+              {pricingPolicyLists?.[Constants.ENTITY.GMTC]?.map((type) => (
+                <option key={type.id} value={type.name}>
                   {i18n.language === "ar"
-                    ? type.valueLc
-                    : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
+                    ? type.nameLc
+                    : type.name.charAt(0).toUpperCase() + type.name.slice(1)}
                 </option>
               ))}
             </select>
@@ -2143,7 +2150,7 @@ function FinancialInformation({
       {/* Credit Balance Header */}
       {customerData?.customerStatus?.toLowerCase() === "approved" && (
         <>
-          <h3 className="form-header full-width" style={isMobile ? { textAlign: "center" } : { textAlign: "left" }}>{t("Credit Balance")}</h3>
+          <h3 className="form-header full-width" >{t("Credit Balance")}</h3>
           <div>
             <button
               onClick={handleGetCreditBalance}
@@ -2156,7 +2163,7 @@ function FinancialInformation({
           </div>
           {isV("isStatementofAccount") && customerData?.erpCustId && (
             <>
-              <h3 className="form-header action-button-credit full-width" style={isMobile ? { textAlign: "center" } : { textAlign: "left" }}>
+              <h3 className="form-header full-width" >
                 {t("Account Statement")}
               </h3>
               <div>
@@ -2483,11 +2490,12 @@ function FinancialInformation({
 
                 // Define columns for DataGrid
                 const columns = [
-                  { field: "entity", headerName: t("Entity"), flex: 1 },
+                  { field: "entity", headerName: t("Entity"), minWidth: 250, flex: 2 },
                   {
                     field: "dueToPay",
                     headerName: t("Due to Pay"),
                     flex: 1,
+                    minWidth: 150,
                     renderCell: (params) => (
                       <span
                         style={{
@@ -2511,6 +2519,7 @@ function FinancialInformation({
                     field: "remainingCredit",
                     headerName: t("Remaining Credit"),
                     flex: 1,
+                    minWidth: 180,
                     renderCell: (params) => (
                       <span
                         style={{
@@ -2533,6 +2542,8 @@ function FinancialInformation({
                   {
                     field: "creditLimit",
                     headerName: t("Credit Limit"),
+                    minWidth: 150,
+                    maxWidth: 200,
                     flex: 1,
                     renderCell: (params) => (
                       <span style={{ color: "#6c757d" }}>
@@ -2546,33 +2557,36 @@ function FinancialInformation({
                   },
                 ];
 
-                if (isMobile) {
-                  // 📱 Render MUI DataGrid for Mobile
-                  return (
-                    <div style={{ height: "auto", width: "100%" }}>
-                      <DataGrid
-                        rows={rows}
-                        columns={columns}
-                        pageSize={5}
-                        rowsPerPageOptions={[5]}
-                        disableSelectionOnClick
-                        disableColumnFilter
-                        hideFooter
-                        sx={{
-                          border: "1.5px solid #eee",
-                          borderRadius: "10px",
-                          "& .MuiDataGrid-cell": {
-                            fontSize: "0.9rem",
-                          },
-                          "& .MuiDataGrid-columnHeaders": {
-                            backgroundColor: "#fafafa",
-                            fontWeight: 600,
-                          },
-                        }}
-                      />
-                    </div>
-                  );
-                }
+                // if (isMobile) {
+                //   // 📱 Render MUI DataGrid for Mobile
+                //   return (
+                //     <div style={{ height: "auto", width: "100%" }}>
+                //       <DataGrid
+                //         rows={rows}
+                //         columns={columns}
+                //         pageSize={5}
+                //         rowsPerPageOptions={[5]}
+                //         disableSelectionOnClick
+                //         disableExtendRowFullWidth={true}
+                //         disableColumnFilter
+                //         disableColumnMenu
+                //         hideFooter
+                //         sx={{
+                //           border: "1.5px solid #eee",
+                //           borderRadius: "10px",
+                //           "& .MuiDataGrid-cell": {
+                //             fontSize: "0.9rem",
+                //             textAlign: i18n.language === "ar" ? "right" : "left",
+                //           },
+                //           "& .MuiDataGrid-columnHeaders": {
+                //             backgroundColor: "#fafafa",
+                //             fontWeight: 600,
+                //           },
+                //         }}
+                //       />
+                //     </div>
+                //   );
+                // }
 
                 // 💻 Render classic table for desktop
                 return (
@@ -2661,7 +2675,6 @@ function FinancialInformation({
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 100vw;
           max-width: 900px;
           border: 1px solid #ccc;
           background: #fff;
@@ -2734,6 +2747,7 @@ function FinancialInformation({
           padding: 6px;
           border: 1.9px solid #eee;
           border-radius: 10px;
+          width: max-content;
         }
         .balance-table {
           width: 100%;
@@ -2804,6 +2818,9 @@ function FinancialInformation({
           .credit-balance-dialog {
             width: 95vw;
             max-width: none;
+          }
+            [dir="rtl"] .credit-balance-dialog {
+            transform: translate(-3%, -50%);
           }
           .dialog-content {
             padding: 15px;
@@ -2900,8 +2917,8 @@ function FinancialInformation({
             <strong>{t("Note: ")}</strong>
             {t("If you have already submitted, please wait 15 minutes to receive the email.")}
           </p>
+          
         </div>
-
         {/* Footer Buttons */}
         <div className="modal-footer">
           <button 
@@ -2933,7 +2950,7 @@ function FinancialInformation({
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2500;
   padding: 15px;
 }
 
@@ -2988,8 +3005,12 @@ function FinancialInformation({
   margin-bottom: 20px;
 }
 
-@media (max-width: 480px) {
-  .input-row { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+  .input-row { grid-template-columns: 1fr; 
+  // gap: 4px; margin-bottom: 10px; 
+  }
+  // .modal-body { padding: 0px 24px 24px; }
+  // .modal-footer { padding: 0px 24px 36px 24px !important; }
 }
 
 .input-field label {
@@ -3006,6 +3027,7 @@ function FinancialInformation({
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
+  background-color: white;
 }
 
 .disabled-input { background: #f5f5f5; cursor: not-allowed; }
@@ -3016,7 +3038,7 @@ function FinancialInformation({
 
 /* Buttons */
 .modal-footer {
-  padding: 16px 24px;
+  padding: 24px 24px;
   border-top: 1px solid #eee;
   display: flex;
   gap: 12px;
@@ -3038,10 +3060,7 @@ function FinancialInformation({
 
 .btn-close { background: #fff; border: 1px solid #ccc; color: #333; }
 .btn-close:hover { background: #f9f9f9; }
-@media (max-width:500px){
-.modal-overlay {
-  
-  align-items: end;}}`}</style>
+`}</style>
     </div>
   );
 }
