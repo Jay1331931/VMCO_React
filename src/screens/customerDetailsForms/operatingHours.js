@@ -590,7 +590,7 @@ const TimeInputGroup = ({
           <div className="time-slot-mobile">
             <FontAwesomeIcon icon={faClock} className="time-icon" />
             <span className="time-value">{time?.from || "--:--"}</span>
-            <span className="time-label">From</span>
+            <span className="time-label">{t("From")}</span>
           </div>
           <div className="time-separator-mobile">
             <FontAwesomeIcon icon={faArrowRight} />
@@ -598,7 +598,7 @@ const TimeInputGroup = ({
           <div className="time-slot-mobile">
             <FontAwesomeIcon icon={faClock} className="time-icon" />
             <span className="time-value">{time?.to || "--:--"}</span>
-            <span className="time-label">To</span>
+            <span className="time-label">{t("To")}</span>
           </div>
         </div>
         <FontAwesomeIcon 

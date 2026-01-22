@@ -4,7 +4,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import BusinessIcon from "@mui/icons-material/Business";
 import SyncIcon from "@mui/icons-material/Sync";
 import { useTranslation } from "react-i18next";
-function CustomerCard({ customers, handleViewDetails, handleSync }) {
+function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync }) {
   const { t, i18n } = useTranslation();
   // Status colors (matching your OrderCard style)
   const getStatusColor = (status) => {
@@ -171,6 +171,7 @@ function CustomerCard({ customers, handleViewDetails, handleSync }) {
                     marginRight: "8px",
                   }}
                 >
+                  {!isApprovalMode &&(<>
                   <Typography fontSize={13} fontWeight={600} color="#333">
                     {/* <BusinessIcon
                       fontSize="small"
@@ -184,6 +185,17 @@ function CustomerCard({ customers, handleViewDetails, handleSync }) {
                   <Typography fontSize={12} color="#666">
                     {`${t("Branches")}: ${customer?.branchCount ?? 0}`}
                   </Typography>
+                  </>)}
+                  {isApprovalMode && (<>
+                  <Typography fontSize={12} color="#666">
+                    {`${t("Workflow Name")}: ${customer?.workflowName}`}
+                  </Typography>
+                    <Typography fontSize={12} color="#666">
+{`${t("Sales Executive")}: ${customer?.salesExecutiveName}`}
+                  </Typography>
+                  </>
+                    )}
+                  
                 </div>
 
                 {/* Right — Action */}
@@ -196,6 +208,22 @@ function CustomerCard({ customers, handleViewDetails, handleSync }) {
                     minWidth: "90px",
                   }}
                 >
+
+                  {isApprovalMode && (<>
+                  <Typography fontSize={13} fontWeight={600} color="#333">
+                    {/* <BusinessIcon
+                      fontSize="small"
+                      sx={{ mr: 0.5, verticalAlign: "middle" }}
+                    />{" "} */}
+                    {t(customer?.companyType) || "—"}
+                  </Typography>
+                  <Typography fontSize={12} color="#666">
+                    {t(customer?.typeOfBusiness) || t("Type N/A")}
+                  </Typography>
+                  <Typography fontSize={12} color="#666">
+                    {`${t("Branches")}: ${customer?.branchCount ?? 0}`}
+                  </Typography>
+                  </>)}
                   {customer?.erpCustId ? (
                     <Tooltip title="View Customer Details" arrow>
                       {/* <Button
