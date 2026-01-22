@@ -211,7 +211,6 @@ const Tabs = ({
         /* Mobile catalog tabs - with images */
         .category-tabs-mobile.with-catalog {
           border-bottom: 1px solid #D9D9D6;
-          height: 158px;
           display: flex;
           gap: 10px;
           white-space: nowrap;
@@ -296,7 +295,8 @@ const Tabs = ({
 
         .category-tab-mobile.active {
           color: #0b4c45;
-          font-weight: 600;
+          font-weight: 800;
+          border-bottom: solid 2px var(--logo-deep-green);
         }
 
         /* Non-catalog active state */
@@ -411,7 +411,6 @@ margin-bottom:10px;}
           .category-tab-mobile.catalog {
             padding: 4px;
             font-size: 0.7rem;
-            border-radius: 4px;
           }
 
           .category-tabs-mobile.with-catalog {

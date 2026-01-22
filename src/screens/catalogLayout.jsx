@@ -6,6 +6,7 @@ import SearchableDropdown from "../components/SearchableDropdown";
 import Tabs from "../components/Tabs";
 import ProductPopup from "../components/ProductPopup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
 import Constants from "../constants";
 import { useTranslation } from "react-i18next";
@@ -51,11 +52,14 @@ const CatalogLayout = ({
     coolingPeriodData,
     disabledEntities,
     categoriesTabImages,
-    
+
 }) => {
     const { i18n } = useTranslation();
     const headerRef = useRef(null);
     const [headerHeight, setHeaderHeight] = useState(0);
+    const [showSearch, setShowSearch] = useState(false);
+    const dragStartY = useRef(0);
+
     // Calculate header height dynamically
     useEffect(() => {
         if (!isMobile) return; // Only run for mobile
@@ -158,7 +162,7 @@ const CatalogLayout = ({
                 dir={dir}
             >
 
-                 {activeCategory && (
+                {activeCategory && (
                     <div className="catalog-fixed-header">
                         {isV("selectBranch") && isMobile && (
                             <div className="catalog-header">
@@ -277,7 +281,7 @@ const CatalogLayout = ({
                             ))
                         ) : (
                             !isLoading && !isLoadingMore && !hasMore && (
-                                <div className="no-products-message" style={{textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center"}}>
+                                <div className="no-products-message" style={{ textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center" }}>
                                     {searchQuery ? (
                                         <p>{t("No products found matching your search term")}</p>
                                     ) : (
@@ -327,7 +331,6 @@ const CatalogLayout = ({
     );
 
     const renderMobileLayout = () => (
- 
         <div>
             {activeCategory && (
                 <div
@@ -361,6 +364,33 @@ const CatalogLayout = ({
                                     disabled={isBranchesLoading || branches.length === 0}
                                 />
                             </div>
+                            {isV("search") && (
+                                <button
+                                    className="search-toggle-btn"
+                                    style={{
+                                        flexShrink: 0,
+                                        width: '40px',
+                                        height: '40px',
+                                        padding: '0',
+                                        borderRadius: 'var(--border-radius)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        background: !showSearch ? 'var(--logo-orange)' : 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                    onClick={() => setShowSearch(!showSearch)}
+                                >
+                                    <FontAwesomeIcon
+                                        icon={showSearch ? faTimes : faSearch}
+                                        style={{ fontSize: '22px' }}
+                                        className="search-icon"
+                                    />
+                                </button>
+                            )}
+
                             {isV("goToCart") && (
                                 <button
                                     className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
@@ -383,20 +413,24 @@ const CatalogLayout = ({
                             )}
                         </div>
                     )}
- 
-                    <div className="search-section">
-                        <div className="search-container">
-                            {isV("search") && (
+
+                    {/* Search bar - conditionally shown */}
+                    {isV("search") && (
+                        <div
+                            className={`search-section ${showSearch ? 'search-open' : 'search-closed'}`}
+                        >
+                            <div className="search-container">
                                 <SearchInput
                                     onSearch={setSearchQuery}
                                     debounceTime={500}
                                 />
-                            )}
+                            </div>
                         </div>
-                    </div>
- 
+                    )}
+
+
                     <div className="filter-section">
-                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", marginBottom: "10px", scrollbarWidth: "none" }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none" }}>
                             <Tabs
                                 tabs={filteredCategoryTabs}
                                 activeTab={activeCategory}
@@ -407,12 +441,12 @@ const CatalogLayout = ({
                             />
                         </div>
                     </div>
- 
-                    <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%", padding: "0 10px" }}>
+
+                    <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%", padding: "10px" }}>
                         <div className="category-dropdown-mobile" style={{ flex: 1 }}>
                             <SearchableDropdown
-                            id={`category-filter-${catalogId}`}
-                                        name="categoryFilter"
+                                id={`category-filter-${catalogId}`}
+                                name="categoryFilter"
                                 options={categoryOptions}
                                 className="category-filter-mobile"
                                 style={{ width: '100%', borderRadius: '16px' }}
@@ -423,8 +457,8 @@ const CatalogLayout = ({
                         </div>
                         <div className="subcategory-dropdown" style={{ flex: 1 }}>
                             <SearchableDropdown
-                            id={`subcategory-filter-${catalogId}`}
-                                        name="subCategoryFilter"
+                                id={`subcategory-filter-${catalogId}`}
+                                name="subCategoryFilter"
                                 options={subCategoryOptions}
                                 className="subcategory-filter-mobile"
                                 style={{ width: '100%', borderRadius: '16px' }}
@@ -437,12 +471,9 @@ const CatalogLayout = ({
                     </div>
                 </div>
             )}
- 
-            {/* Mobile Scrollable Products Container with dynamic padding */}
-            <div
-                className="catalog-scrollable-content"
-            // style={{ paddingTop: headerHeight > 0 ? `${headerHeight}px` : '320px' }}
-            >
+
+            {/* Rest of your component remains exactly the same */}
+            <div className="catalog-scrollable-content">
                 <div
                     className="products-grid"
                     style={{
@@ -480,7 +511,7 @@ const CatalogLayout = ({
                         )
                     )}
                 </div>
- 
+
                 {isLoading && (
                     <div
                         className="loading-container"
@@ -489,21 +520,21 @@ const CatalogLayout = ({
                         <LoadingSpinner size="medium" />
                     </div>
                 )}
- 
+
                 {isLoadingMore && (
                     <div className="loading-more-container">
                         <LoadingSpinner size="medium" />
                         <span className="loading-more-text">{t("Loading more products...")}</span>
                     </div>
                 )}
- 
+
                 {!hasMore && displayedProducts?.length > 0 && !isLoading && !isLoadingMore && (
                     <div className="end-of-catalog-message">
                         <p>{t("End of product catalog")}</p>
                     </div>
                 )}
             </div>
- 
+
             {selectedProduct && (
                 <ProductPopup
                     product={mapProductToCardProps(selectedProduct)}
@@ -517,7 +548,9 @@ const CatalogLayout = ({
             )}
         </div>
     );
- 
+
+
     return isMobile ? renderMobileLayout() : renderWebLayout();
 };
+
 export default CatalogLayout;

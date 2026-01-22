@@ -230,7 +230,7 @@ setIsUploading(true)
           icon: "success",
           confirmButtonText: t("OK"),
         });
-        const URL = `${window.location.protocol}//${window.location.host}/orders`;
+        const URL = `${window.location.protocol}//${window.location.host}/bankTransactions`;
         window.location.replace(URL);
       }
     } catch (error) {
