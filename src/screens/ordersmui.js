@@ -2560,7 +2560,7 @@ renderCell: (params) => {
                   )}
 
                   {/* This DataGrid is only for the toolbar, not for displaying rows */}
-                  <div style={{ height: "auto", marginBottom: "16px" }}>
+                  <div>
                     <DataGrid
                       apiRef={gridApiRef}
                       rows={[]}
@@ -2629,7 +2629,7 @@ renderCell: (params) => {
                           display: "none",
                         },
                         "& .MuiDataGrid-toolbar": {
-                          padding: "0px",
+                          padding: "10px 0 0 0",
                           gap: "10px",
                           border: "none",
                           marginBottom: "0",
