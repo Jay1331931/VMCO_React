@@ -318,7 +318,7 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                       // paddingLeft: "10px",
                     }}
                   >
-                    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingLeft: "10px" }}>
+                    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingLeft: "10px", paddingRight: "6px", width: "81%" }}>
                       <Typography fontSize={14} fontWeight={600} color="textSecondary" >
                         {`${t("Order #")}${order?.id}`}
                       </Typography>
@@ -339,11 +339,14 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                       </Typography>
 
                       {isApprovalMode && (<Typography
-                        fontSize={11}
+                        fontSize={12}
                         color="textSecondary"
                         sx={{ mt: 0.3 }}
                       >
-                        {`${t("Approver")}: ${t(order?.currentApproverType) || t("N/A")}`}
+                        <Typography component="span" fontWeight={600} fontSize={12}>
+    {t("Approver")}
+  </Typography>
+                        {`: ${t(order?.currentApproverType) || t("N/A")}`}
                       </Typography>)}
                     </Grid>
                   </div>
@@ -359,7 +362,7 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                       // paddingRight: "10px",
                     }}
                   >
-                    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingRight: "10px" }}>
+                    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingRight: "10px", paddingLeft: "6px", left: i18n.language === 'en' ? "52%" : "none", right: i18n.language === 'ar' ? "55%" : "none",  position: "absolute" }}>
                       {/* Footer / Action */}
                       <Typography
                         fontSize={14}
@@ -439,14 +442,20 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                           color="textSecondary"
                           sx={{ mt: 0.3 }}
                         >
-                          {`${t("Payments")}: ${t(order?.paymentStatus) || t("N/A")}`}
+                          <Typography component="span" fontWeight={600} fontSize={12}>
+    {t("Payments")}
+  </Typography>
+                          {`: ${t(order?.paymentStatus) || t("N/A")}`}
                         </Typography>
                         <Typography
-                          fontSize={10}
+                          fontSize={12}
                           color="textSecondary"
                           sx={{ mt: 0.3 }}
                         >
-                          {`${t("Mode")}: ${t(order?.paymentMethod) || t("N/A")}`}
+                          <Typography component="span" fontWeight={600} fontSize={12}>
+    {t("Mode")}
+  </Typography>
+                          {`: ${t(order?.paymentMethod) || t("N/A")}`}
                         </Typography>
                         </>
                       )}

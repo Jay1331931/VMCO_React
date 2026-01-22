@@ -116,6 +116,15 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                   >
                     {customer?.erpCustId || "ERP ID — N/A"}
                   </Typography>
+                  {isApprovalMode && (
+                  <Typography fontSize={12}
+                    color="white"
+                    sx={{ opacity: 0.9 }}>
+                      <Typography component="span" fontWeight={600} fontSize={12}>
+                        {t("Workflow")}
+                      </Typography>
+                    {`: ${customer?.workflowName}`}
+                  </Typography>)}
                 </div>
 
                 <div
@@ -140,6 +149,13 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                     }}
                   >
                     {t(customer?.customerStatus) || t("Unknown")}
+                  </Typography>
+                  <Typography fontSize={13} fontWeight={600} color="white">
+                    {/* <BusinessIcon
+                      fontSize="small"
+                      sx={{ mr: 0.5, verticalAlign: "middle" }}
+                    />{" "} */}
+                    {t(customer?.companyType) || "—"}
                   </Typography>
                 </div>
               </Grid>
@@ -171,27 +187,21 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                     marginRight: "8px",
                   }}
                 >
-                  {!isApprovalMode &&(<>
-                  <Typography fontSize={13} fontWeight={600} color="#333">
-                    {/* <BusinessIcon
-                      fontSize="small"
-                      sx={{ mr: 0.5, verticalAlign: "middle" }}
-                    />{" "} */}
-                    {t(customer?.companyType) || "—"}
-                  </Typography>
                   <Typography fontSize={12} color="#666">
                     {t(customer?.typeOfBusiness) || t("Type N/A")}
                   </Typography>
                   <Typography fontSize={12} color="#666">
-                    {`${t("Branches")}: ${customer?.branchCount ?? 0}`}
+                    <Typography component="span" fontWeight={600} fontSize={12}>
+                        {t("Branches")}
+                      </Typography>
+                    {`: ${customer?.branchCount ?? 0}`}
                   </Typography>
-                  </>)}
                   {isApprovalMode && (<>
-                  <Typography fontSize={12} color="#666">
-                    {`${t("Workflow Name")}: ${customer?.workflowName}`}
-                  </Typography>
                     <Typography fontSize={12} color="#666">
-{`${t("Sales Executive")}: ${customer?.salesExecutiveName}`}
+                      <Typography component="span" fontWeight={600} fontSize={12}>
+                          {t("Sales Executive")}
+                        </Typography>
+{`: ${customer?.salesExecutiveName}`}
                   </Typography>
                   </>
                     )}
@@ -208,22 +218,6 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                     minWidth: "90px",
                   }}
                 >
-
-                  {isApprovalMode && (<>
-                  <Typography fontSize={13} fontWeight={600} color="#333">
-                    {/* <BusinessIcon
-                      fontSize="small"
-                      sx={{ mr: 0.5, verticalAlign: "middle" }}
-                    />{" "} */}
-                    {t(customer?.companyType) || "—"}
-                  </Typography>
-                  <Typography fontSize={12} color="#666">
-                    {t(customer?.typeOfBusiness) || t("Type N/A")}
-                  </Typography>
-                  <Typography fontSize={12} color="#666">
-                    {`${t("Branches")}: ${customer?.branchCount ?? 0}`}
-                  </Typography>
-                  </>)}
                   {customer?.erpCustId ? (
                     <Tooltip title="View Customer Details" arrow>
                       {/* <Button
