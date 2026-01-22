@@ -1958,6 +1958,7 @@ function Customers() {
                   </div>
                   <CustomerCard
                     customers={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                    isApprovalMode={isApprovalMode}
                     handleViewDetails={handleShowAllDetailsClick}
                     handleSync={HandleFandOFailCustomer}
                   />

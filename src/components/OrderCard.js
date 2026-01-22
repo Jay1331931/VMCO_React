@@ -8,7 +8,7 @@ import Constants from "../constants";
 import { useAuth } from "../context/AuthContext";
 
 
-function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }) {
+function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarProps }) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user, token, logout } = useAuth();
@@ -218,6 +218,20 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                         whiteSpace: "nowrap",
                         width: "100%", // ✅ ensures consistent full stretch
                       }}
+                      title={order?.companyNameEn}
+                    >
+                      {i18n.language === "ar" ? order?.companyNameAr || "Unknown Customer" : order?.companyNameEn || "Unknown Customer"}
+                    </Typography>
+                    <Typography
+                      fontSize={12}
+                      color="white"
+                      sx={{
+                        opacity: 0.9,
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        width: "100%", // ✅ ensures consistent full stretch
+                      }}
                       title={order?.erpBranchId || order?.erpCustId}
                     >
                       {order?.erpBranchId || order?.erpCustId || "-"}
@@ -323,6 +337,14 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                       >
                         {order?.erpOrderId}
                       </Typography>
+
+                      {isApprovalMode && (<Typography
+                        fontSize={11}
+                        color="textSecondary"
+                        sx={{ mt: 0.3 }}
+                      >
+                        {`${t("Approver")}: ${t(order?.currentApproverType) || t("N/A")}`}
+                      </Typography>)}
                     </Grid>
                   </div>
                   {/* Right Side */}
@@ -411,6 +433,7 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                           </Button>
                         </Grid>
                       ) : (
+                        <>
                         <Typography
                           fontSize={12}
                           color="textSecondary"
@@ -418,6 +441,14 @@ function OrderCard({ orders, orderIds, setSelectedRow, handlePay, toolbarProps }
                         >
                           {`${t("Payments")}: ${t(order?.paymentStatus) || t("N/A")}`}
                         </Typography>
+                        <Typography
+                          fontSize={10}
+                          color="textSecondary"
+                          sx={{ mt: 0.3 }}
+                        >
+                          {`${t("Mode")}: ${t(order?.paymentMethod) || t("N/A")}`}
+                        </Typography>
+                        </>
                       )}
                     </Grid>
                   </div>

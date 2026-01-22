@@ -210,8 +210,9 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
           justify-content: center;
         }
         .close-btn {
-          background: none;
-          border: none;
+          background-color: #f8f9fa;
+            color: #495057;
+          border: 1px solid #ced4da; 
           font-size: 20px;
           cursor: pointer;
         }
@@ -335,6 +336,11 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
             left: 0;
             transform: translateX(-100%);
           }
+            .close-btn {
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #ced4da; 
+      }
         }
       `}</style>
     </>
