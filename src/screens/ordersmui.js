@@ -2629,7 +2629,7 @@ renderCell: (params) => {
                           display: "none",
                         },
                         "& .MuiDataGrid-toolbar": {
-                          padding: "10px 0 0 0",
+                          padding: "10px 0 0 10px",
                           gap: "10px",
                           border: "none",
                           marginBottom: "0",
