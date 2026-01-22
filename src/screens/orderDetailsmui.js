@@ -4129,8 +4129,8 @@ function OrderDetails() {
           icon: "success",
           title: t(
             approvalAction === "approve"
-              ? "Approved Successfully"
-              : "Rejected Successfully"
+              ? t("Approved Successfully")
+              : t("Rejected Successfully")
           ),
           confirmButtonText: t("OK"),
         });

@@ -3134,7 +3134,7 @@ if (field === "methodDetails" &&
                           className="update-badge"
                           style={{
                             marginLeft: 8,
-                            background: "blue",
+                            background: isMobile ? "#0b4c45" : "blue",
                             color: "white",
                           }}
                         >
