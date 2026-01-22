@@ -1301,7 +1301,7 @@ function SupportDetails() {
                         +
                       </button>
                     )}
-                    {images.length <= 6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
+                    {images.length <= 6 && <input type='file' accept='image/png,image/jpg,image/jpeg' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
                     <div className="scrollable-image-row">
                       {/* Loading spinner for image upload */}
                       {uploadingImage && (
@@ -1394,7 +1394,19 @@ function SupportDetails() {
                 disabled={!isE("feedback") || ticket?.feedbackComment}
               />
               {isV('feedbackButton') && !ticket.feedbackComment && (
-                <button className='feedback-btn' onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment}>
+                <button className='feedback-btn' style={{
+                  backgroundColor: "var(--logo-deep-green)",
+                  color: "var(--bg-white)",
+                  border: "none",
+                  width: isMobile ? "100%" : "140px",
+                  padding: "10px 16px",
+                  borderRadius: "var(--border-radius)",
+                  cursor: "pointer",
+                  marginTop: "10px",
+                  marginLeft: "auto",
+                  /* Default for LTR */
+                  marginRight: "10px"
+                }} onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment}>
                   {t("Submit Feedback")}
                 </button>
               )}
