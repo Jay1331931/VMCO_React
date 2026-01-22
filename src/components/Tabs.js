@@ -295,7 +295,7 @@ const Tabs = ({
 
         .category-tab-mobile.active {
           color: #0b4c45;
-          font-weight: 800;
+          font-weight: 600;
           border-bottom: solid 2px var(--logo-deep-green);
         }
 

@@ -376,7 +376,7 @@ const CatalogLayout = ({
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        background: !showSearch ? 'var(--logo-orange)' : 'transparent',
+                                        background: 'transparent',
                                         border: 'none',
                                         cursor: 'pointer',
                                         transition: 'all 0.3s ease'
@@ -385,6 +385,7 @@ const CatalogLayout = ({
                                 >
                                     <FontAwesomeIcon
                                         icon={showSearch ? faTimes : faSearch}
+                                        color="black"
                                         style={{ fontSize: '22px' }}
                                         className="search-icon"
                                     />
@@ -480,7 +481,7 @@ const CatalogLayout = ({
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '12px',
-                        marginTop: '20px',
+                        marginTop: '10px',
                         width: '100%'
                     }}
                 >
