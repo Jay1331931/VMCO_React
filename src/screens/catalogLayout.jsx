@@ -377,7 +377,6 @@ const CatalogLayout = ({
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         background: 'transparent',
-                                        color: 'black',
                                         border: 'none',
                                         cursor: 'pointer',
                                         transition: 'all 0.3s ease'
@@ -386,6 +385,7 @@ const CatalogLayout = ({
                                 >
                                     <FontAwesomeIcon
                                         icon={showSearch ? faTimes : faSearch}
+                                        color="black"
                                         style={{ fontSize: '22px' }}
                                         className="search-icon"
                                     />
