@@ -196,7 +196,78 @@ function OrderDetails() {
     { label: "100%", value: "100%" },
     { label: "30%", value: "30%" },
   ];
-  const pricingPolicyOptions = ["Price A", "Price B", "Price C", "Price D"];
+
+  const [pricingPolicyOptions, setPricingPolicyOptions] = useState([]);
+  const [pricingPolicyOptionsAr, setPricingPolicyOptionsAr] = useState([]);
+  const [loadingPricingPolicies, setLoadingPricingPolicies] = useState(false);
+
+  useEffect(() => {
+    const fetchPricingPolicies = async () => {
+      if (!formData.entity) {
+        setPricingPolicyOptions([]);
+        setPricingPolicyOptionsAr([]);
+        return;
+      }
+
+      setLoadingPricingPolicies(true);
+      try {
+        const filters = JSON.stringify({ entity: formData.entity });
+        const response = await fetch(`${API_BASE_URL}/pricing-policy/pagination?filters=${filters}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch pricing policies");
+        }
+
+        const result = await response.json();
+        console.log("Pricing policy API response:", result);
+
+        if (result.status === "Ok" && result.data && result.data.data) {
+          const policies = result.data.data;
+
+          // Extract English names for pricingPolicyOptions
+          const englishNames = policies.map((policy) => policy.name);
+          setPricingPolicyOptions(englishNames);
+
+          // Extract Arabic names for pricingPolicyOptionsAr
+          const arabicNames = policies.map((policy) => policy.nameLc);
+          setPricingPolicyOptionsAr(arabicNames);
+
+          console.log("Pricing policies loaded:", {
+            english: englishNames,
+            arabic: arabicNames,
+          });
+        } else {
+          console.warn("No pricing policies found for entity:", formData.entity);
+          setPricingPolicyOptions([]);
+          setPricingPolicyOptionsAr([]);
+        }
+      } catch (error) {
+        console.error("Error fetching pricing policies:", error);
+        setPricingPolicyOptions([]);
+        setPricingPolicyOptionsAr([]);
+
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Failed to load pricing policies. Please try again."),
+          confirmButtonText: t("OK"),
+        });
+      } finally {
+        setLoadingPricingPolicies(false);
+      }
+    };
+
+    fetchPricingPolicies();
+  }, [formData.entity, token, API_BASE_URL, t]);
+
 
   useEffect(() => {
     const fetchWarehouseOptions = async () => {
@@ -4752,27 +4823,81 @@ function OrderDetails() {
                         )}
                       </div>
                     )}
-                    {isV("pricingPolicy", fromApproval, true) &&
-                      fromApproval && (
-                        <div className="order-details-field">
-                          <label>{t("Pricing Policy")}</label>
-                          <select
-                            name="pricingPolicy"
-                            value={formData.pricingPolicy || ""}
-                            onChange={handleInputChange}
-                            className="entity-dropdown"
-                            disabled={!isE("pricingPolicy") || !formData?.isMachine}
-                          >
-                            {pricingPolicyOptions.map(
-                              (pricingPolicy, index) => (
-                                <option key={index} value={pricingPolicy}>
-                                  {pricingPolicy}
-                                </option>
-                              )
-                            )}
-                          </select>
-                        </div>
-                      )}
+                    {isV("pricingPolicy", fromApproval, true) && fromApproval && (
+                      <div className="order-details-field">
+                        <label>{t("Pricing Policy")}</label>
+                        <select
+                          name="pricingPolicy"
+                          value={
+                            i18n.language === "ar"
+                              ? pricingPolicyOptionsAr[pricingPolicyOptions.indexOf(formData.pricingPolicy)] || formData.pricingPolicy || ""
+                              : formData.pricingPolicy || ""
+                          }
+                          onChange={(e) => {
+                            const selectedValue = e.target.value;
+
+                            // If Arabic is selected, find the corresponding English name
+                            let englishValue = selectedValue;
+                            if (i18n.language === "ar") {
+                              const index = pricingPolicyOptionsAr.indexOf(selectedValue);
+                              if (index !== -1) {
+                                englishValue = pricingPolicyOptions[index];
+                              }
+                            }
+
+                            // Create a synthetic event with the English name for handleInputChange
+                            const syntheticEvent = {
+                              target: {
+                                name: "pricingPolicy",
+                                value: englishValue, // Always store the English name
+                              },
+                            };
+
+                            handleInputChange(syntheticEvent);
+                          }}
+                          className="entity-dropdown"
+                          disabled={
+                            !isE("pricingPolicy") ||
+                            !formData?.isMachine ||
+                            loadingPricingPolicies ||
+                            pricingPolicyOptions.length === 0
+                          }
+                        >
+                          {/* Loading state */}
+                          {loadingPricingPolicies && (
+                            <option value="">{t("Loading...")}</option>
+                          )}
+
+                          {/* No policies available */}
+                          {!loadingPricingPolicies && pricingPolicyOptions.length === 0 && (
+                            <option value="">{t("No policies available")}</option>
+                          )}
+
+                          {/* Show options when available */}
+                          {!loadingPricingPolicies && pricingPolicyOptions.length > 0 && (
+                            <>
+                              {/* Show "Select Pricing Policy" only if no value is set */}
+                              {!formData.pricingPolicy && (
+                                <option value="">{t("Select Pricing Policy")}</option>
+                              )}
+
+                              {/* Map through options based on language */}
+                              {i18n.language === "ar"
+                                ? pricingPolicyOptionsAr.map((policyAr, index) => (
+                                  <option key={index} value={policyAr}>
+                                    {policyAr}
+                                  </option>
+                                ))
+                                : pricingPolicyOptions.map((policy, index) => (
+                                  <option key={index} value={policy}>
+                                    {policy}
+                                  </option>
+                                ))}
+                            </>
+                          )}
+                        </select>
+                      </div>
+                    )}
                     {isV("warehouse") &&
                       formMode === "edit" && (
                         <div className="order-details-field">
