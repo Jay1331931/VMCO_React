@@ -3678,8 +3678,7 @@ input:focus {
   }
 
   .catalog-fixed-header.show {
-    padding: 0px 0px 10px;
-    /* top: 7%; */
+    top: 7%;
   }
 
   .card-fixed-header.show {
