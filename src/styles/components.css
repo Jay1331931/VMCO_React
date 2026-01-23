@@ -3687,21 +3687,16 @@ input:focus {
     top: 7%;
   }
 
-  .catalog-fixed-header {
+  .catalog-fixed-header ,.card-fixed-header {
     position: sticky;
     top: 0;
     z-index: 100;
     background: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding-top: 13px !important;
   }
 
-  .card-fixed-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
+  
 
   .order-cards-container {
     margin-top: 120px;

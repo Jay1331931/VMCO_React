@@ -400,7 +400,7 @@ const BankTransactions = () => {
               ) : (
                 <>
                   <div
-                    className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}
+                    className={`catalog-fixed-header ${showHeader ? "show" : "show"} maintenance-bottom-padding`}
                   // style={{
                   //   top: isAtTop ? "60px" : "0px",
                   //   position: "sticky",

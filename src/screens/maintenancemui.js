@@ -537,7 +537,7 @@ function Maintenance() {
             ) : (
               <>
                 <div
-                  className={`card-fixed-header ${showHeader ? "show" : "show"}`}
+                  className={`card-fixed-header ${showHeader ? "show" : "show"} maintenance-bottom-padding`}
                 // style={{
                 //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
                 //   position: "sticky",
