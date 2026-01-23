@@ -247,7 +247,7 @@ function SupportCard({
                       color="textSecondary"
                       sx={{ lineHeight: 1.2 }}
                     >
-                      {`${t("ErpCustId")}:${ticket?.erpCustId || "-"}`}
+                      {`${t("ERP ID")}:${ticket?.erpCustId || "-"}`}
                     </Typography>
                     <Typography
                       fontSize={12}
@@ -303,7 +303,7 @@ function SupportCard({
                       color="textSecondary"
                       sx={{ lineHeight: 1.2 }}
                     >
-                      {`${t("entity")}: ${ticket?.entity || "-"}`}
+                      {`${t("Business Unit")}: ${ticket?.entity || "-"}`}
                     </Typography>
 
                     <Typography

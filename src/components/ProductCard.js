@@ -139,7 +139,7 @@ const ProductCard = ({
             <style>{`
                 /* Desktop Layout - Vertical Card */
                 .product-name-mobile {
-                    padding:0px 30px 0px 0px;
+                    padding:0px 40px 0px 0px;
                 }
                 .product-card.desktop-layout {
                     border: 1px solid #D9D9D6;
@@ -318,11 +318,12 @@ const ProductCard = ({
                 .product-card.rtl .product-name {
                     text-align: right !important;
                     direction: rtl !important;
+                    padding: 0px 0px 0px 40px !important;
                     unicode-bidi: embed !important;
                 }
 
                 .product-card.rtl.mobile-layout .product-name-row {
-                    flex-direction: row-reverse;
+                    flex-direction: row;
                     justify-content: space-between;
                     gap: 8px;
                 }

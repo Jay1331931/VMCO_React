@@ -62,6 +62,7 @@ function MaintenanceCard({
   };
 
   return (
+    
     <div
       style={{
         fontSize: "12px",
