@@ -2478,7 +2478,7 @@ renderCell: (params) => {
   );
 
   const handleApproval = (mode) => {
-    // setFilters({});
+    setFilters({entity: "VMCO" });
     console.log("modemodssssssse", mode);
     setApprovalMode(mode === "approval");
     if (mode === "approval") {
@@ -2552,6 +2552,7 @@ renderCell: (params) => {
                             setCategoryFilter("");
                             setSubCategoryFilter("");
                             setSubCategoryOptions([]);
+                            
                           }}
                           variant={isMobile ? 'mobile' : 'pc'}
                         />

@@ -12,6 +12,7 @@ import Constants from "../constants";
 import { useTranslation } from "react-i18next";
 
 const CatalogLayout = ({
+    user,
     isMobile,
     showHeader,
     selectedLocation,
@@ -124,60 +125,6 @@ const CatalogLayout = ({
 
     const renderWebLayout = () => (
         <div className="content" style={{ padding: "0px !important" }}>
-            {/* <div className="home-page-desktop">
-                <img src={"https://file.aiquickdraw.com/imgcompressed/img/compressed_824b7d7047e5ac0bf976723c2781c98e.webp"} className="left_image_desktop image_cover" alt="left_image"/>
-                <div className="catalog_title">
-                 
-                </div>
-                <div className="catalog_filters">
-                    <div className="search-section">
-                        <div className="search-div location-selector">
-  <SearchableDropdown
-                                        id={`location-select-${catalogId}`}
-                                        name="locationSelect"
-                                        value={selectedLocation}
-                                        onChange={handleBranchSelect}
-                                        options={branches.map((b) => ({
-                                            ...b,
-                                            name: b.label || b.name || b.value,
-                                            disabled: b.disabled,
-                                        }))}
-                                        className="location-select"
-                                        placeholder={t("Select Branch")}
-                                        disabled={isBranchesLoading || branches.length === 0}
-                                    />
-                        </div>
-                    </div>
-                </div> 
-                <img src={"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/portal/testing/seo-home/Sushi_replace.png"} className="right_image_desktop image_cover" alt="right_image"/>
-            </div>
-            <div className="entity-section">
-                <div className="entity-cards">
-                    <div className="entity-card">
-                        <img src={"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/MERCHANDISING_BANNERS/IMAGES/MERCH/2024/7/23/ec86a309-9b06-48e2-9adc-35753f06bc0a_Food3BU.png"} className="entity-image" alt="SHC Image" />
-                    </div>
-                    <div className="entity-card">
-                        <img src={"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/MERCHANDISING_BANNERS/IMAGES/MERCH/2024/7/23/ec86a309-9b06-48e2-9adc-35753f06bc0a_Food3BU.png"} className="entity-image" alt="SHC Image" />
-                    </div>
-                    <div className="entity-card">
-                        <img src={"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/MERCHANDISING_BANNERS/IMAGES/MERCH/2024/7/23/ec86a309-9b06-48e2-9adc-35753f06bc0a_Food3BU.png"} className="entity-image" alt="SHC Image" />
-                    </div>
-                    <div className="entity-card">
-                        <img src={"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/MERCHANDISING_BANNERS/IMAGES/MERCH/2024/7/23/ec86a309-9b06-48e2-9adc-35753f06bc0a_Food3BU.png"} className="entity-image" alt="SHC Image" />
-                    </div>
-                    <div className="entity-card">
-                        <img src={"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/MERCHANDISING_BANNERS/IMAGES/MERCH/2024/7/23/ec86a309-9b06-48e2-9adc-35753f06bc0a_Food3BU.png"} className="entity-image" alt="SHC Image" />
-                    </div>
-                    <div className="entity-card">
-                        <img src={"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/MERCHANDISING_BANNERS/IMAGES/MERCH/2024/7/23/ec86a309-9b06-48e2-9adc-35753f06bc0a_Food3BU.png"} className="entity-image" alt="SHC Image" />
-                    </div>
-                    <div className="entity-card">
-                        <img src={"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/MERCHANDISING_BANNERS/IMAGES/MERCH/2024/7/23/ec86a309-9b06-48e2-9adc-35753f06bc0a_Food3BU.png"} className="entity-image" alt="SHC Image" />
-                    </div>
-
-                </div>
-
-            </div>  */}
             <div
                 className={`catalog-wrapper${isRTL ? " rtl" : ""}`}
                 style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
@@ -452,7 +399,18 @@ const CatalogLayout = ({
                             </div>
                         </div>
                     )}
-
+                    {isV("search") && (user?.userType.toLowerCase() === "employee" || user?.userType.toLowerCase() === "admin") && (
+                        <div
+                            className={`search-section 'search-closed'`}
+                        >
+                            <div className="search-container">
+                                <SearchInput
+                                    onSearch={setSearchQuery}
+                                    debounceTime={500}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <div className="filter-section">
                         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none" }}>
