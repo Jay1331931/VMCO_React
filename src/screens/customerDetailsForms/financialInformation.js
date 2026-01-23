@@ -2863,6 +2863,7 @@ function FinancialInformation({
                 type="date"
                 value={fromDate}
                 max={dayjs().format("YYYY-MM-DD")}
+                  style={{backgroundColor:"white"}}
                 onChange={(e) => setFromDate(e.target.value)}
               />
             </div>
@@ -2871,6 +2872,7 @@ function FinancialInformation({
               <input
                 type="date"
                 value={toDate}
+                style={{backgroundColor:"white"}}
                 max={dayjs().format("YYYY-MM-DD")}
                 onChange={(e) => setToDate(e.target.value)}
               />

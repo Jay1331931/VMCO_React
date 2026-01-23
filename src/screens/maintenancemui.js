@@ -526,7 +526,7 @@ function Maintenance() {
   };
 
   return (
-    <Sidebar title={t("Maintenance")} isV={isV("maintenanceContent")}>
+    <Sidebar title={t("Maintenance")} isV={isV("maintenanceContent")} CardPaddingClass={isMobile}>
       <div className="maintenance-content">
         {isMobile ? (
           <div className="orders-content">
@@ -537,7 +537,7 @@ function Maintenance() {
             ) : (
               <>
                 <div
-                  className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}
+                  className={`card-fixed-header ${showHeader ? "show" : "show"}`}
                 // style={{
                 //   top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
                 //   position: "sticky",
@@ -597,7 +597,7 @@ function Maintenance() {
                               showColumnVisibility={false}
                               showFilters={false}
                               showExport={
-                                user.userType === "employee" ? true : false
+                                user?.userType === "employee" ? true : false
                               }
                               handleExportClick={handleExportToExcel}
                               exportLoading={exportLoading}
