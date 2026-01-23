@@ -324,11 +324,11 @@ margin-bottom:10px;}
           justify-content: center;
           margin-bottom: 4px;
           overflow: hidden;
-          transition: width 0.5s ease-in-out, height 0.5s ease-in-out, transform 0.2s ease;
+          transition: width 0.8s ease-in-out, height 0.8s ease-in-out, transform 0.5s ease;
         }
 
-.tab-image  .active{
-}
+        .tab-image.active{
+        }
         .tab-image:hover{
         transform: scale(1.02);
         }

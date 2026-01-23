@@ -1244,6 +1244,7 @@ function Catalog() {
       ) : (
         <CatalogLayout
           // Header section props
+          user={user}
           isMobile={isMobile}
           showHeader={showHeader}
           selectedLocation={selectedLocation}
