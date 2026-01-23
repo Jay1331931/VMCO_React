@@ -347,6 +347,12 @@ function Cart() {
       // Initialize quantities from fetched data
       setQuantities(initialQuantities);
 
+      // Update localStorage with total cart count
+      const totalCount = vmco.length + shc.length + gmtc.length + naqi.length + dar.length;
+      localStorage.setItem("cartItems", JSON.stringify(totalCount));
+      // Dispatch custom event to update cart badge
+      window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: totalCount }));
+
       console.log("Cart items successfully loaded:", {
         vmco: vmco.length,
         shc: shc.length,
@@ -512,6 +518,14 @@ function Cart() {
         delete newQuantities[item.id];
         return newQuantities;
       });
+
+      // Update localStorage cart count
+      const currentCount = parseInt(localStorage.getItem("cartItems") || "0", 10);
+      const newCount = Math.max(0, currentCount - 1);
+      localStorage.setItem("cartItems", JSON.stringify(newCount));
+      // Dispatch custom event to update cart badge
+      window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: newCount }));
+
       Swal.fire({
         icon: "success",
         title: t("Item Removed"),
@@ -3750,6 +3764,13 @@ function Cart() {
 
       await Promise.all(deletePromises);
       console.log(`Successfully deleted ${products.length} cart items`);
+
+      // Update localStorage cart count
+      const currentCount = parseInt(localStorage.getItem("cartItems") || "0", 10);
+      const newCount = Math.max(0, currentCount - products.length);
+      localStorage.setItem("cartItems", JSON.stringify(newCount));
+      // Dispatch custom event to update cart badge
+      window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: newCount }));
     } catch (err) {
       console.error("Error during cart cleanup:", err);
       throw err;
