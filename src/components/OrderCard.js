@@ -417,12 +417,13 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                               borderRadius: "20px",
                               px: 2,
                               py: 0.6,
+                              zIndex: 2500,
                               "&:hover": {
                                 //   backgroundColor: "#2f4341",
                               },
                             }}
                             onClick={(e) => {
-                              // e.stopPropagation();
+                              e.stopPropagation();
                               // navigate(`/orders/${order?.id}/pay`, {
                               //   state: { order },
                               // });
