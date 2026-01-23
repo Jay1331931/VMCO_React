@@ -377,6 +377,10 @@
 .customers .checkbox-group-label {
   margin-top: 10px;
 }
+
+.checkbox-group-label input[type="checkbox"]:checked {
+  accent-color: blue;
+}
 .customers .checkbox-option {
   padding-left: 16px;
 }

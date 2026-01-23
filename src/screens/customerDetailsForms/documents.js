@@ -43,7 +43,7 @@ function Documents({
   const isE = rbacMgr.isE.bind(rbacMgr);
   const [nonTradingFiles, setNonTradingFiles] = useState([]);
   const [tradingDocuments, setTradingDocuments] = useState({
-    acknowledgementSignature: null,
+    // acknowledgementSignature: null,
     crCertificate: null,
     vatCertificate: null,
     nationalId: null,
@@ -60,7 +60,7 @@ function Documents({
   const [tradingFilePreviews, setTradingFilePreviews] = useState({});
   const [nonTradingFilePreviews, setNonTradingFilePreviews] = useState({});
   const fileInputRefs = {
-    acknowledgementSignature: useRef(),
+    // acknowledgementSignature: useRef(),
     crCertificate: useRef(),
     vatCertificate: useRef(),
     nationalId: useRef(),
@@ -415,7 +415,7 @@ const openUrlSmart = (url) => {
       {/* Documents Header */}
       <h3 className="form-header full-width">{t("Documents")}</h3>
       <div className="form-group" />
-      <div className="form-header full-width">
+      {/* <div className="form-header full-width">
         {t("Download ")}
         {(
           <a
@@ -468,12 +468,12 @@ const openUrlSmart = (url) => {
         
       )}
       {t(" and upload duly signed document.")}
-      </div>
+      </div> */}
 
       {/* Common Fields */}
       {/* Acknowledgement Signature (already present) */}
-      <tr className="document-upload full-width" key="acknowledgementSignature">
-        <td
+      {/* <tr className="document-upload full-width" key="acknowledgementSignature"> */}
+        {/* <td
           className="label-cell"
           style={{
             whiteSpace: "nowrap",
@@ -490,7 +490,6 @@ const openUrlSmart = (url) => {
             )}
           </label>
 
-          {/* Download Icon */}
       <button
         type="button"
         className="download-icon-button"
@@ -545,22 +544,11 @@ const openUrlSmart = (url) => {
           {formErrors?.acknowledgementSignature && (
             <div className="error">{t(formErrors.acknowledgementSignature)}</div>
           )}
-        </td>
-        <div className="input-with-verification">
-          {/* <td
-          className="upload-cell"
-          style={{
-            whiteSpace: "nowrap",
-            paddingRight: "16px",
-            verticalAlign: "top",
-          }}
-        > */}
+        </td> */}
+        {/* <div className="input-with-verification">
+          
           { isV("acknowledgementSignatureVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
+    
         (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
       <input
         type="checkbox"
@@ -572,9 +560,8 @@ const openUrlSmart = (url) => {
       />
       <label htmlFor="acknowledgementSignatureVerified">Verified</label>
       </div>)}
-        {/* </td> */}
-        </div>
-        <td
+        </div> */}
+        {/* <td
           className="upload-cell"
           style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }}
           hidden={mode === "edit"}
@@ -605,8 +592,8 @@ const openUrlSmart = (url) => {
           >
             {t("Upload")}
           </label>
-        </td>
-        <td className="file-display-cell">
+        </td> */}
+        {/* <td className="file-display-cell">
           {tradingFilesToUpload?.acknowledgementSignature && (
             <li
               key={tradingFilesToUpload.acknowledgementSignature.name}
@@ -686,8 +673,8 @@ const openUrlSmart = (url) => {
                 )}
             </div>
           )}
-        </td>
-      </tr>
+        </td> */}
+      {/* </tr> */}
 
           {/* Bank details on company letterhead */}
           <tr className="document-upload full-width" key="bankLetter">

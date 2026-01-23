@@ -1872,10 +1872,9 @@ function Cart() {
                 if (entityCreditData?.Block) {
                   const reason = entityCreditData?.Reason || "Credit is not available";
                   Swal.fire({
-                    icon: "warning",
-                    title: t("Credit Not Available"),
-                    text: t(reason),
-                  });
+                  icon: "warning",
+                  title: t(reason)
+                });
                   return;
                 } else {
                   await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit")
@@ -2044,8 +2043,7 @@ function Cart() {
                 const reason = entityCreditData?.Reason || "Credit is not available";
                 Swal.fire({
                   icon: "warning",
-                  title: t("Credit Not Available"),
-                  text: t(reason),
+                  title: t(reason)
                 });
                 return;
               } else {
@@ -2154,8 +2152,7 @@ function Cart() {
                   const reason = entityCreditData?.Reason || "Credit is not available";
                   Swal.fire({
                     icon: "warning",
-                    title: t("Credit Not Available"),
-                    text: t(reason),
+                    title: t(reason)
                   });
                   return;
                 } else {
@@ -2252,8 +2249,7 @@ function Cart() {
                 const reason = entityCreditData?.Reason || "Credit is not available";
                 Swal.fire({
                   icon: "warning",
-                  title: t("Credit Not Available"),
-                  text: t(reason),
+                  title: t(reason)
                 });
                 return;
               } else {
