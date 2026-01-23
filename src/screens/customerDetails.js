@@ -388,7 +388,7 @@ function countAssignedToEntityWiseUpdates(
 
 // Document fields to track for updates
 const documentFields = [
-  "acknowledgementSignature",
+  // "acknowledgementSignature",
   "crCertificate",
   "vatCertificate",
   "nationalId",
@@ -465,6 +465,8 @@ function CustomerDetails() {
     {}
   );
   const [verifiedData, setVerifiedData] = useState({});
+  const [consentCheckbox, setConsentCheckbox] = useState(false);
+  const [consent, setConsent] = useState(false);
   const [tradingFilesToUpload, setTradingFilesToUpload] = useState([]);
   const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
   // Add this state for logo uploads (similar to tradingFilesToUpload)
@@ -812,6 +814,58 @@ function CustomerDetails() {
     updatedVerifiedData.current[name] = e.target.checked;
     setVerifiedData((prev) => ({ ...prev, [name]: e.target.checked }));
   };
+  const getDeviceType = () => {
+  const ua = navigator.userAgent.toLowerCase();
+
+  if (/tablet|ipad/.test(ua)) return "tablet";
+  if (/mobi|android/.test(ua)) return "mobile";
+  return "desktop";
+};
+const getDeviceFingerprint = async () => {
+  const raw = [
+    navigator.userAgent,
+    navigator.language,
+    window.screen?.width,
+    window.screen?.height,
+    window.screen?.colorDepth,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  ].join("|");
+
+  const encoder = new TextEncoder();
+  const data = encoder.encode(raw);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+const getClientIp = async () => {
+  const res = await fetch("https://api.ipify.org?format=json");
+  const data = await res.json();
+  return data.ip;
+};
+
+  const handleConsentCheckboxChange = async (e) => {
+  const checked = e.target.checked;
+
+  if (!checked) {
+    setConsentCheckbox(false);
+    setConsent(null);
+    return;
+  }
+
+  const consentData = {
+    agreed_at: new Date().toISOString(),
+    ip_address: await getClientIp(), // backend recommended
+    user_agent: navigator.userAgent,
+    device_fingerprint: await getDeviceFingerprint(),
+    device_type: getDeviceType(),
+  };
+
+  setConsentCheckbox(true);
+  setConsent(consentData); // 👈 store JSON in form state
+};
+
   const setGeoLocation = (location) => {
     updatedCustomerData.current.geolocation = location;
     setCustomerData((prev) => ({ ...prev, geolocation: location }));
@@ -909,7 +963,7 @@ function CustomerDetails() {
     "bankLetter",
     "nationalAddress",
     "customerSource",
-    "acknowledgementSignature",
+    // "acknowledgementSignature",
     // "contractAgreement",
     // "customerContract",
     // "creditApplication",
@@ -1091,7 +1145,7 @@ function CustomerDetails() {
     "bankLetter",
     "nationalAddress",
     "customerSource",
-    "acknowledgementSignature",
+    // "acknowledgementSignature",
     // "contractAgreement",
     // "customerContract",
     // "creditApplication",
@@ -1369,7 +1423,7 @@ function CustomerDetails() {
     "bankLetter",
     "nationalAddress",
     "customerSource",
-    "acknowledgementSignature",
+    // "acknowledgementSignature",
     // "contractAgreement",
     // "customerContract",
     // "creditApplication",
@@ -1639,7 +1693,7 @@ function CustomerDetails() {
     const arabicList = ["companyNameAr", "brandNameAr"];
     const englishList = ["companyNameEn", "brandNameEn"];
     const tradingDocumentList = [
-      "acknowledgementSignature",
+      // "acknowledgementSignature",
       "crCertificate",
       "vatCertificate",
       "nationalId",
@@ -1669,7 +1723,7 @@ function CustomerDetails() {
         : null,
     ].filter(Boolean);
     const nonTradingDocumentList = [
-      "acknowledgementSignature",
+      // "acknowledgementSignature",
       "nationalId",
       "bankLetter",
       "nationalAddress",
@@ -2282,9 +2336,20 @@ if (field === "methodDetails" &&
     setIsSaving(true);
     console.log("^^^^^Saving customer data:", updatedCustomerData.current);
     console.log(nonTradingFilesToUpload);
-    // if(action === "submit") {
-    //   customerData["declarationDate"] = new Date().toISOString();
-    // }
+    if(action === "submit" && !consentCheckbox) {
+      setIsSaving(false);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t("Please provide your consent to proceed using checkbox."),
+        confirmButtonText: t("OK"),
+      });
+      return false;
+    }
+    if(action === "submit") {
+      customerData.consent = consent;
+      updatedCustomerData.current.consent = consent;
+    }
     try {
       const { uploadedFiles, failedUploads, errorMessages } =
         await uploadDocuments(
@@ -2832,6 +2897,12 @@ if (field === "methodDetails" &&
         declarationDate: customerData.declarationDate,
       };
       const saved = await handleSave("submit");
+      if(!saved) {
+        setIsSubmitting(false);
+        setIsLoading(false);
+        setIsSaving(false);
+        return;
+      }
       const errors = await validateData(
         {
           ...customerData,
@@ -3270,6 +3341,8 @@ if (field === "methodDetails" &&
                   formErrors={formErrors}
                   setTabsHeight={setTabsHeight}
                   mode={mode}
+                  consentCheckbox={consentCheckbox}
+                  onChangeConsentCheckbox={handleConsentCheckboxChange}
                   signatureToUpload={signatureToUpload}
                 />
               )}

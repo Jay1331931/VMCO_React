@@ -325,6 +325,12 @@ const isArabicText = (text) => {
       headerClassName: "super-app-theme--header",
     },
     {
+      field: i18n.language === "en" ? "nameLc" : "nameLc",
+      headerName: t("Name (Arabic)"),
+      flex: 1,
+      headerClassName: "super-app-theme--header",
+    },
+    {
       field: "entity",
       headerName: t("Entity"),
       flex: 1,
