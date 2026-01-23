@@ -59,6 +59,8 @@ const CatalogLayout = ({
     const [headerHeight, setHeaderHeight] = useState(0);
     const [showSearch, setShowSearch] = useState(false);
     const dragStartY = useRef(0);
+    const scrollableContentRef = useRef(null);
+    const [isContentScrolled, setIsContentScrolled] = useState(false);
 
     // Calculate header height dynamically
     useEffect(() => {
@@ -99,6 +101,26 @@ const CatalogLayout = ({
             window.removeEventListener('resize', updateHeight);
         };
     }, [isMobile, activeCategory, categoryFilter, subCategoryFilter]);
+
+    // Handle scroll detection for tab size adjustment on mobile
+    useEffect(() => {
+        if (!isMobile) return;
+
+        const scrollElement = scrollableContentRef.current;
+        if (!scrollElement) return;
+
+        const handleScroll = () => {
+            const currentScrollY = scrollElement.scrollTop;
+            // Check if scrolled down more than 50px threshold
+            const isScrolledDown = currentScrollY > 50;
+            setIsContentScrolled(isScrolledDown);
+        };
+
+        scrollElement.addEventListener('scroll', handleScroll);
+        return () => {
+            scrollElement.removeEventListener('scroll', handleScroll);
+        };
+    }, [isMobile]);
 
     const renderWebLayout = () => (
         <div className="content" style={{ padding: "0px !important" }}>
@@ -217,7 +239,9 @@ const CatalogLayout = ({
                                     onTabChange={handleTabChange}
                                     className=""
                                     variant="pc"
-                                    catalog="true"
+                                    catalog={true}
+                                    isContentScrolled={isContentScrolled}
+                                    isMobile={isMobile}
                                 />
                             </div>
                         </div>
@@ -262,7 +286,7 @@ const CatalogLayout = ({
                     </div>
                 )}
 
-                <div className="catalog-scrollable-content">
+                <div className="catalog-scrollable-content" ref={scrollableContentRef}>
                     <div className="products-grid">
                         {displayedProducts?.length > 0 ? (
                             displayedProducts.map((product) => (
@@ -438,7 +462,9 @@ const CatalogLayout = ({
                                 onTabChange={handleTabChange}
                                 className="catalog"
                                 variant="mobile"
-                                catalog="true"
+                                catalog={true}
+                                isContentScrolled={isContentScrolled}
+                                isMobile={isMobile}
                             />
                         </div>
                     </div>
@@ -474,7 +500,7 @@ const CatalogLayout = ({
             )}
 
             {/* Rest of your component remains exactly the same */}
-            <div className="catalog-scrollable-content">
+            <div className="catalog-scrollable-content" ref={scrollableContentRef} style={{ height: 'calc(100vh - ' + headerHeight + 'px)' }}>
                 <div
                     className="products-grid"
                     style={{
