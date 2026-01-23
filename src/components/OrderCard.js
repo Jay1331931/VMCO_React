@@ -362,7 +362,7 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                       // paddingRight: "10px",
                     }}
                   >
-                    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingRight: "10px", paddingLeft: "6px", left: i18n.language === 'en' ? "52%" : "none", right: i18n.language === 'ar' ? "55%" : "none",  position: "absolute" }}>
+                    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingRight: "10px", paddingLeft: "6px", left: i18n.language === 'en' ? "52%" : "none", right: i18n.language === 'ar' ? "55%" : "0",  position: "absolute" }}>
                       {/* Footer / Action */}
                       <Typography
                         fontSize={14}

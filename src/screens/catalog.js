@@ -828,6 +828,11 @@ function Catalog() {
                 },
               }
             );
+            // Reset cart count to 0 when items are discarded
+            localStorage.setItem("cartItems", JSON.stringify(0));
+            // Dispatch custom event to update cart badge
+            window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: 0 }));
+            
             setSelectedLocation(newBranchId);
             if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
@@ -942,6 +947,12 @@ function Catalog() {
             if (!updateResponse.ok) {
               throw new Error("Failed to update cart item");
             }
+            // Update localStorage cart count
+            const currentCount = parseInt(localStorage.getItem("cartItems") || "0", 10);
+            const newCount = currentCount + parseInt(quantity);
+            localStorage.setItem("cartItems", JSON.stringify(newCount));
+            // Dispatch custom event to update cart badge
+            window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: newCount }));
             Swal.fire({
               icon: "success",
               title: t("Product quantity updated successfully"),
@@ -983,6 +994,12 @@ function Catalog() {
         if (!response.ok) {
           throw new Error("Failed to add item to cart", response);
         }
+        // Update localStorage cart count
+        const currentCount = parseInt(localStorage.getItem("cartItems") || "0", 10);
+        const newCount = currentCount + 1;
+        localStorage.setItem("cartItems", JSON.stringify(newCount));
+        // Dispatch custom event to update cart badge
+        window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: newCount }));
         Swal.fire({
           icon: "success",
           title: t("Product added to cart successfully"),
