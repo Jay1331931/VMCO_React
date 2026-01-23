@@ -4,6 +4,6 @@
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "build",
-
+"server":{"url":"https://webportaluat-gwdxgggqdpgveuad.centralindia-01.azurewebsites.net"},
   "cordova": {}
 }
