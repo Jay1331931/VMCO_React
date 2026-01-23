@@ -3,7 +3,12 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) {
+function SupportCard({
+  tickets,
+  setSelectedRow,
+  handleView,
+  handleAddComment,
+}) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const handleTicketClick = (ticket) => setSelectedRow(ticket);
@@ -53,7 +58,7 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
         color: "#545454",
         height: "92%",
         position: "relative",
-        padding:"10px"
+        padding: "10px",
       }}
     >
       <Grid
@@ -110,65 +115,57 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
                     py: 1.2,
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
-                    minHeight: 80,
-                    maxHeight: 80,
+                    alignItems: "flex-start", // Changed from "center" to "flex-start"
+                    minHeight: 61,
+                    maxHeight: 61,
                     width: "100%",
                     boxSizing: "border-box",
                   }}
                 >
-                  {/* Left Side */}
+                  {/* Left Side - Company Info */}
                   <div
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      overflow: "hidden",
+                      // justifyContent: "space-between", // Distribute space evenly
+                      height: "100%", // Take full height
                       flex: 1,
                       marginRight: "8px",
-                      width: "100%",
+                      minWidth: 0, // Important for text overflow
+                      gap: "10px",
                     }}
                   >
                     <Typography
+                      title={ticket?.companyNameEn || ticket?.companyNameAr}
                       fontSize={14}
                       fontWeight={600}
-                      noWrap
-                      title={ticket?.companyNameEn || ticket?.companyNameAr}
                       sx={{
-                        textOverflow: "ellipsis",
+                        lineHeight: 1.2,
+                        mb: 0.5,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
                         overflow: "hidden",
-                        whiteSpace: "nowrap",
-                        width: "100%",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       {i18n.language === "ar"
                         ? ticket?.companyNameAr || "Unknown Customer"
                         : ticket?.companyNameEn || "Unknown Customer"}
                     </Typography>
-                    {/* <Typography
-                      fontSize={12}
-                      color="white"
-                      sx={{
-                        opacity: 0.9,
-                        textOverflow: "ellipsis",
-                        overflow: "hidden",
-                        whiteSpace: "nowrap",
-                        width: "100%",
-                      }}
-                      title={ticket?.erpCustId}
-                    >
-                      ERP ID: {ticket?.erpCustId || "-"}
-                    </Typography> */}
                   </div>
 
-                  {/* Right Side */}
+                  {/* Right Side - Status & Date */}
                   <div
                     style={{
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "flex-end",
-                      justifyContent: "center",
+                      // justifyContent: "space-between",
+                      height: "100%", // Take full height
                       minWidth: "90px",
                       flexShrink: 0,
+                      gap: "10px",
                     }}
                   >
                     <Typography
@@ -181,11 +178,21 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
                         fontSize: 10,
                         fontWeight: 600,
                         whiteSpace: "nowrap",
+                        textAlign: "center",
+                        width: "fit-content",
                       }}
                     >
                       {t(ticket?.status) || t("N/A")}
                     </Typography>
-                    <Typography fontSize={11} fontWeight={500} color="white">
+                    <Typography
+                      fontSize={11}
+                      fontWeight={500}
+                      color="white"
+                      sx={{
+                        lineHeight: 1.2,
+                        textAlign: "right",
+                      }}
+                    >
                       {formatDate(ticket?.createdAt)}
                     </Typography>
                   </div>
@@ -200,91 +207,127 @@ function SupportCard({ tickets, setSelectedRow, handleView, handleAddComment }) 
                     color: "#333",
                     borderBottomLeftRadius: "16px",
                     borderBottomRightRadius: "16px",
-                    px: 2,
-                    py: 1.5,
+                    px: "8px",
+                    py: "8px",
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
+                    alignItems: "flex-start",
+                    minHeight: 80,
                     width: "100%",
                     boxSizing: "border-box",
+                    // "& ..css-6v2goq-MuiGrid-root":{
+                    //   paddingLeft:"8px !important",
+                    //   paddingRight:"8px !important"
+                    // }
                   }}
                 >
-                  {/* Left Side */}
+                  {/* Left Side - Ticket Info */}
                   <div
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      overflow: "hidden",
                       flex: 1,
                       marginRight: "8px",
+                      minWidth: 0,
+                      gap:"6px"
+                      
                     }}
                   >
-                    <Typography fontSize={14} fontWeight={600} color="textSecondary">
+                    <Typography
+                      fontSize={14}
+                      fontWeight={500}
+                      color="textSecondary"
+                      sx={{ lineHeight: 1.2 }}
+                    >
                       {`${t("Ticket #")} ${ticket?.ticketId}`}
                     </Typography>
-                    <Typography fontSize={12} color="textSecondary" sx={{ mt: 0.3 }}>
-                      {`${t("Issue Name")}: ${ticket?.grievanceName || "-"}`}
+                    <Typography
+                      fontSize={12}
+                      fontWeight={500}
+                      color="textSecondary"
+                      sx={{ lineHeight: 1.2 }}
+                    >
+                      {`${t("ErpCustId")}:${ticket?.erpCustId || "-"}`}
                     </Typography>
-                    <Typography fontSize={12} color="textSecondary" sx={{ mt: 0.3 }}>
-                      {`${t("Issue Type")}: ${ticket?.grievanceType || "-"}`}
+                    <Typography
+                      fontSize={12}
+                      fontWeight={500}
+                      color="textSecondary"
+                      sx={{
+                        lineHeight: 1.2,
+                        mb: 1,
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "flex-start",
+                         flex: 1,
+                          wordBreak: "break-word",
+                      }}
+                    >
+                      
+                        {t("Issue Name")}:{ticket?.grievanceName || "-"}
+                    
                     </Typography>
                   </div>
 
-                  {/* Right Side */}
+                  {/* Right Side - Additional Info */}
                   <div
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      alignItems: "flex-end",
-                      justifyContent: "center",
-                      minWidth: "90px",
+                      width: "50%", // Fixed width instead of minWidth
                       flexShrink: 0,
+                       gap:"6px"
                     }}
                   >
-                    {ticket?.status?.toLowerCase() !== "closed" ? (
-                    //   <Button
-                    //     variant="contained"
-                    //     size="small"
-                    //     sx={{
-                    //       backgroundColor: "#0288d1",
-                    //       textTransform: "none",
-                    //       fontSize: "12px",
-                    //       borderRadius: "20px",
-                    //       px: 2,
-                    //       py: 0.6,
-                    //       "&:hover": {
-                    //         backgroundColor: "#0277bd",
-                    //       },
-                    //     }}
-                    //     onClick={(e) => {
-                    //       e.stopPropagation();
-                    //       handleView(ticket);
-                    //     }}
-                    //   >
-                    //     View
-                    //   </Button>
-                    <></>
-                    ) : (
-                    //   <Button
-                    //     variant="outlined"
-                    //     size="small"
-                    //     sx={{
-                    //       textTransform: "none",
-                    //       fontSize: "12px",
-                    //       borderRadius: "20px",
-                    //       px: 2,
-                    //       py: 0.6,
-                    //     }}
-                    //     onClick={(e) => {
-                    //       e.stopPropagation();
-                    //       handleAddComment(ticket);
-                    //     }}
-                    //     startIcon={<ChatBubbleOutlineIcon />}
-                    //   >
-                    //     Comment
-                    //   </Button>
-                    <></>
-                    )}
+                    <Typography
+                      fontSize={12}
+                      fontWeight={500}
+                      color="textSecondary"
+                      sx={{
+                        lineHeight: 1.2,
+                        // mb: 1,
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        flex: 1,
+                          // wordBreak: "break-word",
+                      }}
+                    >
+                     
+                        {t("assignedTo")}: {ticket?.assignedTo || "-"}
+                   
+                    </Typography>
+                    <Typography
+                      fontSize={12}
+                         fontWeight={500}
+                      color="textSecondary"
+                      sx={{ lineHeight: 1.2 }}
+                    >
+                      {`${t("entity")}: ${ticket?.entity || "-"}`}
+                    </Typography>
+
+                    <Typography
+                      fontSize={12}
+                         fontWeight={500}
+                      color="textSecondary"
+                      sx={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        flex: 1,
+                          lineHeight: 1.2,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          // wordBreak: "break-word",
+                      }}
+                    >
+                     
+                        {t("Issue Type")}:{ticket?.grievanceType || "-"}
+                    
+                    </Typography>
                   </div>
                 </Grid>
               </Grid>

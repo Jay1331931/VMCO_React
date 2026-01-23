@@ -1146,7 +1146,7 @@ function SupportDetails() {
 
     <Sidebar title={t("Support")} >
       <div className='support-details-container'>
-        <h2 className='support-details-title'>{formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}</h2>
+        <h2 className='support-details-title'>{formMode === "add" ? t("New Ticket") : `${t("Ticket#")}${ticket.ticketId}`}</h2>
         <div className='support-details-section'>
           <h3 className='support-details-subtitle'>{t("Ticket Details")}</h3>
           <div className='support-details-grid'>
@@ -1418,7 +1418,7 @@ function SupportDetails() {
       <div className='support-details-footer' style={{ alignItems: 'center' }}>
         {isV('ticketStatus') && (
           <div className='support-status'>
-            <span>{t("Ticket Status:")}</span>
+            <span>{t("Ticket Status :")}</span>
             <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
           </div>
         )}
