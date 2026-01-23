@@ -139,7 +139,7 @@ const ProductCard = ({
             <style>{`
                 /* Desktop Layout - Vertical Card */
                 .product-name-mobile {
-                padding:0px 30px 0px 0px;
+                    padding:0px 30px 0px 0px;
                 }
                 .product-card.desktop-layout {
                     border: 1px solid #D9D9D6;
@@ -298,8 +298,6 @@ const ProductCard = ({
                     align-items: center;
                     margin-top: -2px;
                 }
-                    top:0px !important;
-                    }
 
                 .product-card.mobile-layout .product-name {
                     font-size: 0.9rem;
@@ -314,6 +312,27 @@ const ProductCard = ({
                     line-height: 1.3;
                     word-break: break-word;
                     flex: 1;
+                }
+
+                /* ✅ RTL FIXES */
+                .product-card.rtl .product-name {
+                    text-align: right !important;
+                    direction: rtl !important;
+                    unicode-bidi: embed !important;
+                }
+
+                .product-card.rtl.mobile-layout .product-name-row {
+                    flex-direction: row-reverse;
+                    justify-content: space-between;
+                    gap: 8px;
+                }
+
+                .product-card.rtl.mobile-layout .product-details {
+                    direction: rtl;
+                }
+
+                .product-card.rtl.mobile-layout .product-info-section {
+                    text-align: right;
                 }
 
                 .product-card.mobile-layout .product-code {
@@ -432,11 +451,6 @@ const ProductCard = ({
                     text-align: right;
                 }
 
-                /* RTL support for mobile favorite button */
-                .product-card.rtl .product-name-row {
-                    flex-direction: row-reverse;
-                }
-
                 /* Responsive adjustments for different mobile sizes */
                 @media (max-width: 425px) {
                     .product-card.mobile-layout {
@@ -470,8 +484,8 @@ const ProductCard = ({
                     }
 
                     .product-card.mobile-layout .add-to-cart-btn {
-                        height: 30px;
-                        font-size: 0.65rem;
+                        height: 40px;
+                        font-size: 0.8rem;
                         padding: 0 8px;
                         min-width: 75px;
                     }

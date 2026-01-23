@@ -18,13 +18,13 @@ function ProductPopup({
 }) {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
-const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
- useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        console.log("isMobile", isMobile);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
         user?.userType === 'employee' && user?.roles[0] !== 'admin'
@@ -58,7 +58,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                 <div className="popup-content">
                     <div className="popup-image-section">
                         <div className="popup-image-container">
-                           {isV('favoriteButton') && <FavButton 
+                            {isV('favoriteButton') && <FavButton
                                 initialState={product.favorite || false}
                                 onToggle={handleFavoriteToggle}
                                 isPopup={true}
@@ -96,117 +96,74 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                             ))}
                         </div>
                     </div>
-                    {/* <div className="popup-image-section">
-  <div className="popup-image-container">
-    <div 
-      className="auto-scroll-carousel"
-      style={{ '--total-slides': images.length }}
-      onMouseEnter={() => document.querySelector('.auto-scroll-carousel')?.classList.add('paused')}
-      onMouseLeave={() => document.querySelector('.auto-scroll-carousel')?.classList.remove('paused')}
-    >
-      {images.map((img, idx) => (
-        <div key={idx} className="carousel-slide">
-          {isV('favoriteButton') && (
-            <FavButton 
-              initialState={product.favorite || false}
-              onToggle={handleFavoriteToggle}
-            />
-          )}
-          {img ? (
-            <img
-              src={img}
-              alt={`${product.name} - View ${idx + 1}`}
-              className="popup-image"
-            />
-          ) : (
-            <div className="popup-image placeholder"></div>
-          )}
-        </div>
-      ))}
-      
-     
-      {images.map((img, idx) => (
-        <div key={`dup-${idx}`} className="carousel-slide">
-          {img ? (
-            <img
-              src={img}
-              alt={`${product.name} - View ${idx + 1}`}
-              className="popup-image"
-            />
-          ) : (
-            <div className="popup-image placeholder"></div>
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-</div> */}
                     <div className="popup-details">
                         <h2 className="popup-product-name">{product.name}</h2>
                         {!isMobile && product.entity && <div className="popup-product-entity">{t(product.entity)}</div>
                         }
-                        
+
                         <p className="popup-product-description">
                             {(i18n.language === 'en' ? product.description : product.descriptionLc)}
                         </p>
 
                         <h4 className="unit-price">{(t('Unit Price: '))}{(product.unitPrice).toFixed(2)} {t('SAR')}</h4>
-                        {isMobile ? 
-                        (
-                            <div className='' style={{display: 'flex', flexDirection: 'column' }}>
-{isV('quantityController') && (
-    <div className = "" style={{ display: 'flex', justifyContent: 'center', marginTop: "10px"}}>
-                            <QuantityController
-                                itemId={product.id}
-                                quantity={quantities[product.id] || 0}
-                                onQuantityChange={onQuantityChange}
-                                onInputChange={onInputChange}
-                                stopPropagation={true}
-                                minQuantity={Number(product.moq) || 0}
-                                moq={Number(product.moq) || 0}
-                            />
-                            </div>
-                        )}
-                        {isV('addToCart') && (
-                            <div className='addtocartbutton'>
-                                <button
-                                    // className="add-to-cart-btn"
-                                    onClick={handleAddToCart}
-                                    style={{ backgroundColor: '#0a5640', color: '#ffffff', width: '100%', height: '30px',
-                        padding: '10px 10px', borderRadius: '4px', alignItems: 'center',
-                        border: 'none', cursor: 'pointer',
-                        fontSize: '0.7rem',
-                        fontWeight: 600, height: '30px', marginTop: '10px' }}     disabled={isAdding}    >
-                                    {isAdding === product?.id ? t('ADDING...'):t('Add to Cart')}
-                                </button>
-                            </div>
-                        )}
-                            </div>
-                        ): 
-                        <>
-                        {isV('quantityController') && (
-                            <QuantityController
-                                itemId={product.id}
-                                quantity={quantities[product.id] || 0}
-                                onQuantityChange={onQuantityChange}
-                                onInputChange={onInputChange}
-                                stopPropagation={true}
-                                minQuantity={Number(product.moq) || 0}
-                                moq={Number(product.moq) || 0}
-                            />
-                        )}
-                        {isV('addToCart') && (
-                            <div className='addtocartbutton'>
-                                <button
-                                    className="add-to-cart-btn"
-                                    onClick={handleAddToCart}
-                                    style={{ backgroundColor: '#0a5640', color: '#ffffff', width: '100%' }} disabled={isAdding}    >
-                                    {isAdding === product?.id ? t('ADDING...'):t('Add to Cart')}
-                                </button>
-                            </div>
-                        )}
-                        </>
-                    }
+                        {isMobile ?
+                            (
+                                <div className='' style={{ display: 'flex', flexDirection: 'column' }}>
+                                    {isV('quantityController') && (
+                                        <div className="" style={{ display: 'flex', justifyContent: 'center', marginTop: "10px" }}>
+                                            <QuantityController
+                                                itemId={product.id}
+                                                quantity={quantities[product.id] || 0}
+                                                onQuantityChange={onQuantityChange}
+                                                onInputChange={onInputChange}
+                                                stopPropagation={true}
+                                                minQuantity={Number(product.moq) || 0}
+                                                moq={Number(product.moq) || 0}
+                                            />
+                                        </div>
+                                    )}
+                                    {isV('addToCart') && (
+                                        <div className='addtocartbutton'>
+                                            <button
+                                                // className="add-to-cart-btn"
+                                                onClick={handleAddToCart}
+                                                style={{
+                                                    backgroundColor: '#0a5640', color: '#ffffff', width: '100%', height: '30px',
+                                                    padding: '10px 10px', borderRadius: '4px', alignItems: 'center',
+                                                    border: 'none', cursor: 'pointer',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 600, height: '30px', marginTop: '10px'
+                                                }} disabled={isAdding}    >
+                                                {isAdding === product?.id ? t('ADDING...') : t('Add to Cart')}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) :
+                            <>
+                                {isV('quantityController') && (
+                                    <QuantityController
+                                        itemId={product.id}
+                                        quantity={quantities[product.id] || 0}
+                                        onQuantityChange={onQuantityChange}
+                                        onInputChange={onInputChange}
+                                        stopPropagation={true}
+                                        minQuantity={Number(product.moq) || 0}
+                                        moq={Number(product.moq) || 0}
+                                    />
+                                )}
+                                {isV('addToCart') && (
+                                    <div className='addtocartbutton'>
+                                        <button
+                                            className="add-to-cart-btn"
+                                            onClick={handleAddToCart}
+                                            style={{ backgroundColor: '#0a5640', color: '#ffffff', width: '100%' }} disabled={isAdding}    >
+                                            {isAdding === product?.id ? t('ADDING...') : t('Add to Cart')}
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        }
 
                     </div>
                 </div>
@@ -240,8 +197,8 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                     }
                     .popup-close {
                         position: absolute;
-                        top: 18px;
-                        right: 18px;
+                        top: 2px;
+                        right: 20px;
                         background: none;
                         border: none;
                         font-size: 2rem;
@@ -363,6 +320,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                     }
                     .unit-price {
                         font-size: 1.1rem;
+                        padding-bottom: 10px;
                     }
                     [dir="rtl"].unit-price {
                         text-align: right;
@@ -383,17 +341,18 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         justify-content: flex-end;
                     }
                     .add-to-cart-btn {
-                        width: 100%;
-                        height: 30px;
-                        padding: 10px 10px;
-                        background-color: #00205B;
-                        color: white;
-                        align-items: center;
+                        background-color: var(--logo-deep-green);
+                        color: rgb(255, 255, 255);
+                        width: 90%;
+                        height: 40px;
+                        padding: 10px;
+                        border-radius: 5px;
+                        align-items: flex-end;
                         border: none;
-                        border-radius: 4px;
                         cursor: pointer;
-                        font-size: 0.7rem;
+                        font-size: 0.9rem;
                         font-weight: 600;
+                        margin-top: 10px;
                     }
 
                     .add-to-cart-btn:hover {
@@ -446,70 +405,3 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 }
 
 export default ProductPopup;
-
-{/*
-    .popup-image-section {
-  position: relative;
-  width: 100%;
-}
-
-.popup-image-container {
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-}
-
-.auto-scroll-carousel {
-  display: flex;
-  animation: autoScroll 120s linear infinite;
-  width: max-content;
-}
-
-.auto-scroll-carousel.paused {
-  animation-play-state: paused;
-}
-
-.carousel-slide {
-  position: relative;
-  flex-shrink: 0;
-  width: 100vw;
-}
-
-.popup-image {
-  width: 100%;
-  height: 300px;
-  object-fit: contain;
-  display: block;
-}
-
-.popup-image.placeholder {
-  background: #f0f0f0;
-  height: 300px;
-}
-
-
-@keyframes autoScroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(calc(-100% * var(--total-slides)));
-  }
-}
-
-
-@media (min-width: 769px) {
-  .auto-scroll-carousel:hover {
-    animation-play-state: paused;
-  }
-}
-
-
-@media (max-width: 768px) {
-  .popup-image-container {
-    margin: 0 -16px; 
-    width: calc(100% + 32px);
-  }
-}
-
-    */}
