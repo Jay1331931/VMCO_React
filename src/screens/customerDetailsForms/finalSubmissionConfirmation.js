@@ -7,7 +7,8 @@ import RbacManager from "../../utilities/rbac";
 import SignatureCanvas from "react-signature-canvas";
 import Swal from "sweetalert2";
 import usePlatform from "../../utilities/platform";
-
+import i18n from "../../i18n";
+import Constants from "../../constants";
 
 const FinalSubmissionConfirmation = ({
   customerData = {},
@@ -18,12 +19,14 @@ const FinalSubmissionConfirmation = ({
   formErrors = {},
   setTabsHeight,
   mode,
+  consentCheckbox = false,
+  onChangeConsentCheckbox,
   signatureToUpload = {},
 }) => {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
   const isMobile = usePlatform();
-
+  const TERMS_AND_CONDITIONS = i18n.language === "en" ? Constants.DOCUMENTS_NAME.TERMS_AND_CONDITIONS_EN : Constants.DOCUMENTS_NAME.TERMS_AND_CONDITIONS_AR;
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -81,7 +84,50 @@ const FinalSubmissionConfirmation = ({
       canvas.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, []);
+function getCenteredOptions(width, height) {
+  const screenWidth = window.screen.width;
+  const screenHeight = window.screen.height;
+  
+  // Calculate centered position
+  const left = Math.max(0, (screenWidth - width) / 2);
+  const top = Math.max(0, (screenHeight - height) / 2);
+  
+  return {
+    left: Math.round(left),
+    top: Math.round(top)
+  };
+}
+  const openUrlSmart = (url) => {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+  if (isMobile) {
+    if (window.cordova && window.cordova.InAppBrowser) {
+      const width = 400;
+      const height = 500;
+      const centeredPosition = getCenteredOptions(width, height);
+
+      const options =
+        'toolbar=yes,' +
+        'hideurlbar=yes,' +
+        'zoom=no,' +
+        'hardwareback=yes,' +
+        'clearsessioncache=yes,' +
+        'clearcache=yes,' +
+        `width=${width},` +
+        `height=${height},` +
+        `left=${centeredPosition.left},` +
+        `top=${centeredPosition.top}`;
+
+      window.cordova.InAppBrowser.open(url, '_blank', options);
+    } else {
+      // iOS Safari fallback
+      window.open(url, '_blank');
+    }
+  } else {
+    // Desktop
+    window.open(url, '_blank');
+  }
+};
   // Handle signature save
   // const handleSaveSignature = () => {
   //   if (sigCanvasRef.current.isEmpty()) {
@@ -532,8 +578,123 @@ const FinalSubmissionConfirmation = ({
           {formErrors?.declarationSignature && (
             <div className="error">{t(formErrors.declarationSignature)}</div>
           )}
-        </div>
 
+          
+        </div>
+{!isV("assignedToEntityWise") && (<div className="form-header full-width">
+  <label className="checkbox-group-label">
+                <input
+                  type="checkbox"
+                  id="consentCheckbox"
+                  name="consentCheckbox"
+                  checked={consentCheckbox || customerData?.customerStatus?.toLowerCase() === "pending" || customerData?.customerStatus?.toLowerCase() === "approved"}
+                  onChange={onChangeConsentCheckbox}
+                  disabled={customerData?.customerStatus?.toLowerCase() === "approved"}
+                />
+                </label>
+        {t(" I confirm my acceptance of the ")}
+        {(
+          <a
+            href="#"
+            onClick={async (e) => {
+              e.preventDefault();
+              if (!TERMS_AND_CONDITIONS) {
+                alert(t("No checklist URL configured."));
+                return;
+              }
+
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/get-files`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      fileName: TERMS_AND_CONDITIONS,
+                      containerType: "documents",
+                    }),
+                    
+                  }
+                );
+                const res = await response.json();
+                if (res.status === "Ok") {
+                  // window.open(res.data.url, "_blank", "noopener,noreferrer");
+                  openUrlSmart(res.data.url);
+                } else {
+                  throw new Error("Failed to fetch file URL");
+                }
+              } catch (error) {
+                console.error("Error viewing checklist:", error);
+
+                // window.open(
+                //   TERMS_AND_CONDITIONS,
+                //   "_blank",
+                //   "noopener,noreferrer"
+                // );
+                openUrlSmart(TERMS_AND_CONDITIONS);
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            {t("Terms & Conditions")}
+          </a>
+        
+      )}
+      {t(" and consent to the use and processing of my provided business and contact information.")}
+      <button
+        type="button"
+        className="download-icon-button"
+        onClick={async (e) => {
+          e.preventDefault();
+          if (!TERMS_AND_CONDITIONS) {
+            alert(t("No checklist URL configured."));
+            return;
+          }
+
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/get-files`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  fileName: TERMS_AND_CONDITIONS,
+                  containerType: "documents",
+                }),
+              }
+            );
+            const res = await response.json();
+            if (res.status === "Ok") {
+              // window.open(res.data.url, "_blank", "noopener,noreferrer");
+              openUrlSmart(res.data.url);
+            } else {
+              throw new Error("Failed to fetch file URL");
+            }
+          } catch (error) {
+            console.error("Error downloading terms:", error);
+            // window.open(
+            //   TERMS_AND_CONDITIONS,
+            //   "_blank",
+            //   "noopener,noreferrer"
+            // );
+            openUrlSmart(TERMS_AND_CONDITIONS);
+          }
+        }}
+        title={t("Download Terms & Conditions")}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      </div>)}
         {isV("assignedToEntityWise") && (
           <>
             <div className="form-header full-width">

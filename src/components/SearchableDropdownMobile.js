@@ -181,7 +181,7 @@ function SearchableDropdown({
             }}
             ref={dropdownContentRef}
           >
-            <div style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
+            {/* <div style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
               <input
                 ref={inputRef}
                 type="text"
@@ -199,7 +199,53 @@ function SearchableDropdown({
                   WebkitAppearance: 'none'
                 }}
               />
-            </div>
+            </div> */}
+<div
+  style={{
+    padding: "8px",
+    borderBottom: "1px solid #eee",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  }}
+>
+  <input
+    ref={inputRef}
+    type="text"
+    className="dropdown-search"
+    placeholder={t("Search...")}
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    style={{
+      flex: 1,
+      padding: "10px",
+      fontSize: "16px",
+      border: "1px solid #ddd",
+      borderRadius: "4px",
+      WebkitAppearance: "none",
+    }}
+  />
+
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      setIsOpen(false); // close dropdown
+    }}
+    style={{
+      padding: "8px 8px",
+      fontSize: "14px",
+      borderRadius: "4px",
+      border: "1px solid #ccc",
+      backgroundColor: "#f8f9fa",
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+    }}
+  >
+    {t("Close")}
+  </button>
+</div>
+
 
             <div 
               className="dropdown-options" 

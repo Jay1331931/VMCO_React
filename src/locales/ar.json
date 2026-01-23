@@ -135,7 +135,7 @@
     "Quantity": "الكمية",
     "Unit": "الوحدة",
     "Paid Amount": "المبلغ المدفوع",
-    "Open": "فتح",
+    "Open": "فتحطلب مفتوح",
     "VAT: ": ": ضريبة القيمة المضافة:",
     "Actions": "الإجراءات",
     "Payment Status": "حالة الدفع",
@@ -186,7 +186,7 @@
     "DAR Company": "شركة دار",
     "Special Products": "منتجات خاصة",
     "Total for this category": "الإجمالي لهذه الفئة",
-    "Place Order": "إجراء الطلب",
+    "Place Order": "تأكيد الطلب",
     "Place all orders": "إجراء جميع الطلبات",
     "No items in this category": "لا توجد عناصر في هذه الفئة للطلب.",
     "Order By": "تم الطلب بواسطة",
@@ -265,6 +265,8 @@
     "Government Registration #": "رقم التسجيل الحكومي",
     "Customer Source": "مصدر العميل",
     "Green Mast": "جرين مارت",
+    " I confirm my acceptance of the ": "أؤكد موافقتي على",
+    " and consent to the use and processing of my provided business and contact information.": "وأوافق على استخدام ومعالجة بياناتي التجارية وبيانات التواصل المقدمة ",
     "Naqi": "نقي",
     "DAR": "شركة دار المحدودة",
     "Inter-Company": "بين الشركات",
@@ -361,7 +363,7 @@
     "Reset Password": "إعادة تعيين كلمة المرور",
     "Add to Cart": "إضافة إلى السلة",
     "Net Amount:": ": المبلغ الصافي:",
-    "Items": "العناصر",
+    "Items": "منتجات",
     "Remove item": "إزالة العنصر",
     "Delivery By": "التوصيل بواسطة",
     "Select Payment Method": "اختر طريقة الدفع",
@@ -933,8 +935,8 @@
 "Are you sure you want to close this ticket? Please provide closing comments.":"هل أنت متأكد من رغبتك في إغلاق هذه التذكرة؟ يرجى تقديم تعليقات ختامية.",
 "Assigned To:":"مُسند إلى:",
 "assignedTo":"معين إلى",
-"Mode":"وضع"
-
+"Mode":"وضع",
+"Payable days overdue": "تم تجاوز عدد أيام السداد المسموح بها"
 
 
 
