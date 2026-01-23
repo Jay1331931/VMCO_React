@@ -10,6 +10,8 @@ const Tabs = ({
   className = "",
   variant = "pc",
   catalog = false,
+  isContentScrolled = false,
+  isMobile = false,
 }) => {
   const { t, i18n } = useTranslation();
   const tabsRef = useRef(null);
@@ -88,6 +90,7 @@ const Tabs = ({
   // }, [activeTab]);
 
   console.log("tabs", tabs);
+  console.log("Tabs component props:", { isContentScrolled, isMobile, catalog });
   return (
     <div className={`tab-container ${className}`}>
       {/* {variant === "mobile" 
@@ -112,7 +115,7 @@ const Tabs = ({
       <div
         ref={tabsRef}
         className={`tabs ${catalog && variant === "pc" ? "category-tabs" : "category-tabs-mobile"
-          } ${catalog ? "with-catalog" : "without-catalog"}`}
+          } ${catalog ? "with-catalog" : "without-catalog"} ${isMobile && catalog && isContentScrolled ? "scrolled" : ""}`}
       >
         {tabs.map((tab) => (
           <button
@@ -129,7 +132,7 @@ const Tabs = ({
             {catalog && (
               <div
                 className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"
-                  }`}
+                  } ${isMobile && isContentScrolled ? "scrolled" : ""}`}
               >
                 <img
                   src={
@@ -238,7 +241,7 @@ const Tabs = ({
           border: none;
           cursor: pointer;
           color: rgb(99, 107, 110);
-          transition: all 0.3s ease;
+          transition: all 0.5s ease-in-out;
           flex-shrink: 0;
         }
 
@@ -321,7 +324,7 @@ margin-bottom:10px;}
           justify-content: center;
           margin-bottom: 4px;
           overflow: hidden;
-          transition: transform 0.2s ease;
+          transition: width 0.5s ease-in-out, height 0.5s ease-in-out, transform 0.2s ease;
         }
 
 .tab-image  .active{
@@ -384,6 +387,17 @@ margin-bottom:10px;}
         .tab-button.disabled:hover,
         .category-tab.disabled:hover {
           color: #999;
+        }
+
+        /* Scroll animations for mobile */
+        .category-tabs.scrolled {
+          transition: height 0.5s ease-in-out;
+        }
+
+        .tab-image.scrolled,
+        .tab-image-mobile.scrolled {
+          width: 40px !important;
+          height: 40px !important;
         }
 
         @media (max-width: 768px) {
@@ -503,12 +517,15 @@ margin-bottom:10px;}
           gap: 20px;
           white-space: nowrap;
         }
+
           .tab-image, .tab-image-mobile {
           width: 80px;
           height: 80px;
           object-fit: fill;
           object-position: center;
+          transition: width 0.3s ease, height 0.3s ease;
         }
+
         .category-tab-mobile.disabled {
             filter: grayscale(100%);
             opacity: 0.6;
