@@ -129,9 +129,9 @@ function ProductPopup({
                                                 onClick={handleAddToCart}
                                                 style={{
                                                     backgroundColor: '#0a5640', color: '#ffffff', width: '100%', height: '30px',
-                                                    padding: '10px 10px', borderRadius: '4px', alignItems: 'center',
+                                                    padding: '5px', borderRadius: '4px', alignItems: 'center',
                                                     border: 'none', cursor: 'pointer',
-                                                    fontSize: '0.7rem',
+                                                    fontSize: '0.9rem',
                                                     fontWeight: 600, height: '30px', marginTop: '10px'
                                                 }} disabled={isAdding}    >
                                                 {isAdding === product?.id ? t('ADDING...') : t('Add to Cart')}
@@ -320,7 +320,7 @@ function ProductPopup({
                     }
                     .unit-price {
                         font-size: 1.1rem;
-                        padding-bottom: 10px;
+                        margin-bottom: 20px;
                     }
                     [dir="rtl"].unit-price {
                         text-align: right;
@@ -345,7 +345,7 @@ function ProductPopup({
                         color: rgb(255, 255, 255);
                         width: 90%;
                         height: 40px;
-                        padding: 10px;
+                        padding: 5px;
                         border-radius: 5px;
                         align-items: flex-end;
                         border: none;
@@ -383,12 +383,27 @@ function ProductPopup({
                         .popup-content {
                             flex-direction: column;
                             gap: 0px;
-                            padding: 0px 10px 10px 10px;
+                            padding: 10px;
                         }
+                        .popup-close {
+                            top: 10px;
+                            left: 20px;
+                            right: auto;
+                            font-size: 2rem;
+                            color: #5f5e5e;
+                            cursor: pointer;
+                            z-index: 2;
+                            transition: color 0.15s;
+                    }
                         .popup-image {
                             min-width: 120px;
                             min-height: 120px;
                             max-width: 100%;
+                        }
+                        .popup-product-description {
+                            font-size: 1rem;
+                            color: #888;
+                            margin: 0 0 8px 0;
                         }
                         .popup-details {
                             min-width: 0;
