@@ -631,12 +631,10 @@ function OrderDetails() {
             const entityCreditData = creditPeriodResult?.details?.[entity];
 
             if (entityCreditData?.Block) {
-              // Block is true, show the reason
               const reason = entityCreditData?.Reason || "Credit is not available";
               Swal.fire({
                 icon: "warning",
-                title: t("Credit Not Available"),
-                text: t(reason),
+                title: t(reason),
               });
               setSaving(false);
               return { allowed: false };
@@ -3390,7 +3388,7 @@ function OrderDetails() {
       try {
         const params = new URLSearchParams({
           page: 1,
-          pageSize: 10, // Fetch a reasonable number of customers
+          pageSize: 10, 
           sortBy:
             i18n.language === "ar" ? "company_name_ar" : "company_name_en",
           sortOrder: "asc",
