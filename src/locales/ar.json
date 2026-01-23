@@ -40,7 +40,7 @@
     "Invite": "دعوة",
     "Home": "الرئيسية",
     "Support - tickets": "الدعم - التذاكر",
-    "Ticket #": "رقم التذكرة #",
+    "Ticket #": "رقم التذك#",
     "Order#": "رقم الطلب",
     "Order Details": "تفاصيل الطلب",
     "Order Status :": ": حالة الطلب:",
@@ -152,7 +152,7 @@
     "Add Customers": "إضافة عملاء",
     "Remove Customers": "إزالة العملاء",
     "Export Customers": "تصدير العملاء",
-    "Ticket#": "رقم التذكرة",
+    "Ticket#": "تذكرة#",
     "Ticket Details": "تفاصيل التذكرة",
     "Customer Name": "اسم العميل",
     "Customer Company Name": "اسم الشركة",
@@ -454,7 +454,8 @@
     "Verified": "تم التحقق",
     "New Ticket": "تذكرة جديدة",
     "New Request": "طلب جديد",
-    "Ticket Status": "حالة التذكرة",
+    "Ticket Status :": "حالة التذكرة:",
+  
     "Assigned T": ": تم التعيين إلى:",
     "Select Department": "اختر القسم",
     "Auto-calculated": "محسوب تلقائيًا",
@@ -926,7 +927,9 @@
 "Sandwiches, Bakery & Pastry":"المعجنات والمخبوزات",
 "Fresh Vegetables & Fruits":"الخضروات والفواكه الطازجة",
 "Hygiene Chemicals":"شركة نقي",
-"Business Unit":"وحدة الأعمال"
+"Business Unit":"وحدة الأعمال",
+"Are you sure you want to close this ticket? Please provide closing comments.":"هل أنت متأكد من رغبتك في إغلاق هذه التذكرة؟ يرجى تقديم تعليقات ختامية.",
+"Assigned To:":"مُسند إلى:"
 
 
 

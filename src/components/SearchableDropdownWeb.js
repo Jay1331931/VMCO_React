@@ -163,7 +163,7 @@ function SearchableDropdown({
       {isOpen && !disabled && createPortal(
         <div
           className={`dropdown-content ${className || ''} ${isMobile ? "mobile" : ""}`}
-          style={{ ...dropdownPosition, display: 'flex', flexDirection: 'column' }}
+          style={{ ...dropdownPosition,  flexDirection: 'column' }}
           onClick={(e) => e.stopPropagation()}
         >
           <input

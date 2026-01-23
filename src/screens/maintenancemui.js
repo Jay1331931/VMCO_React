@@ -597,7 +597,7 @@ function Maintenance() {
                               showColumnVisibility={false}
                               showFilters={false}
                               showExport={
-                                user.userType === "employee" ? true : false
+                                user?.userType === "employee" ? true : false
                               }
                               handleExportClick={handleExportToExcel}
                               exportLoading={exportLoading}
