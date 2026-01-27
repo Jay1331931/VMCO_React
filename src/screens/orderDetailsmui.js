@@ -523,62 +523,62 @@ function OrderDetails() {
           return { allowed: "Insufficient balance" };
         } else {
           // Check credit period eligibility
-             return { allowed: true, paymentMethod: 'Credit' };
-          // try {
-          //   const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${formData.erpCustId}`, {
-          //     method: "GET",
-          //     headers: {
-          //       "Content-Type": "application/json",
-          //       Authorization: `Bearer ${token}`,
-          //     },
-          //   });
+            //  return { allowed: true, paymentMethod: 'Credit' };
+          try {
+            const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${formData.erpCustId}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            });
 
-          //   if (!creditPeriodResponse.ok) {
-          //     console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
-          //     // Continue with credit if API fails
-          //     return { allowed: true, paymentMethod: 'Credit' };
-          //   }
+            if (!creditPeriodResponse.ok) {
+              console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
+              // Continue with credit if API fails
+              return { allowed: true, paymentMethod: 'Credit' };
+            }
 
-          //   const creditPeriodResult = await creditPeriodResponse.json();
-          //   // Check if the response indicates success
-          //   if (!creditPeriodResult.success) {
-          //     console.warn("Credit period check failed:", creditPeriodResult.message);
-          //     // If details is null, show the error message
-          //     if (creditPeriodResult.details === null) {
-          //       Swal.fire({
-          //         icon: "warning",
-          //         title: t("Credit Check Failed"),
-          //         text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
-          //       });
-          //       setSaving(false);
-          //       return { allowed: false };
-          //     }
-          //     // Otherwise continue with credit if API succeeds but details is available
-          //     return { allowed: true, paymentMethod: 'Credit' };
-          //   }
+            const creditPeriodResult = await creditPeriodResponse.json();
+            // Check if the response indicates success
+            if (!creditPeriodResult.success) {
+              console.warn("Credit period check failed:", creditPeriodResult.message);
+              // If details is null, show the error message
+              if (creditPeriodResult.details === null) {
+                Swal.fire({
+                  icon: "warning",
+                  title: t("Credit Check Failed"),
+                  text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
+                });
+                setSaving(false);
+                return { allowed: false };
+              }
+              // Otherwise continue with credit if API succeeds but details is available
+              return { allowed: true, paymentMethod: 'Credit' };
+            }
 
-          //   // Get entity-specific block status from details
-          //   const entityCreditData = creditPeriodResult?.details?.[entity];
+            // Get entity-specific block status from details
+            const entityCreditData = creditPeriodResult?.details?.[entity];
 
-          //   if (entityCreditData?.Block) {
-          //     // Block is true, show the reason
-          //     const reason = entityCreditData?.Reason || "Credit is not available";
-          //     Swal.fire({
-          //       icon: "warning",
-          //       title: t("Credit Not Available"),
-          //       text: t(reason),
-          //     });
-          //     setSaving(false);
-          //     return { allowed: false };
-          //   } else {
-          //     // Block is false, proceed with credit
-          //     return { allowed: true, paymentMethod: 'Credit' };
-          //   }
-          // } catch (err) {
-          //   console.error("Error checking credit period:", err);
-          //   // Continue with credit if API call fails
-          //   return { allowed: true, paymentMethod: 'Credit' };
-          // }
+            if (entityCreditData?.Block) {
+              // Block is true, show the reason
+              const reason = entityCreditData?.Reason || "Credit is not available";
+              Swal.fire({
+                icon: "warning",
+                title: t("Credit Not Available"),
+                text: t(reason),
+              });
+              setSaving(false);
+              return { allowed: false };
+            } else {
+              // Block is false, proceed with credit
+              return { allowed: true, paymentMethod: 'Credit' };
+            }
+          } catch (err) {
+            console.error("Error checking credit period:", err);
+            // Continue with credit if API call fails
+            return { allowed: true, paymentMethod: 'Credit' };
+          }
         }
       }
     } catch (err) {
