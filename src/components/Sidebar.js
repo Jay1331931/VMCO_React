@@ -89,7 +89,36 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   const [showPopup, setShowPopup] = useState(false);
 
   const [showMenu, setShowMenu] = useState(true);
+  const [cartItemsCount, setCartItemsCount] = useState(0);
   const dragStartY = useRef(0);
+
+  useEffect(() => {
+    // Get initial cart items count from localStorage
+    const cartItems = localStorage.getItem("cartItems");
+    if (cartItems) {
+      setCartItemsCount(parseInt(cartItems, 10) || 0);
+    }
+
+    // Listen for storage changes (when cartItems is updated from other tabs/windows)
+    const handleStorageChange = (e) => {
+      if (e.key === "cartItems") {
+        setCartItemsCount(parseInt(e.newValue, 10) || 0);
+      }
+    };
+
+    // Listen for custom event triggered when localStorage is updated in the same tab
+    const handleCartUpdate = (e) => {
+      setCartItemsCount(e.detail || 0);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("cartItemsUpdated", handleCartUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("cartItemsUpdated", handleCartUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     const handleTouchStart = (e) => {
@@ -1133,14 +1162,38 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                   style={{
                     opacity: !selectedLocation ? 0.6 : 1,
                     cursor: !selectedLocation ? "not-allowed" : "pointer",
+                    position: "relative",
                   }}
                   onClick={handleGoToCart}
                   disabled={!selectedLocation}
                 >
-                  <FontAwesomeIcon
-                    icon={faShoppingCart}
-                    className="cart-icon"
-                  />
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <FontAwesomeIcon
+                      icon={faShoppingCart}
+                      className="cart-icon"
+                    />
+                    {cartItemsCount > 0 && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: "-8px",
+                          right: "-12px",
+                          backgroundColor: "var(--logo-red)",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: "20px",
+                          height: "20px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {cartItemsCount}
+                      </span>
+                    )}
+                  </div>
                   {window.innerWidth >= 350 && <span>{t("Go to Cart")}</span>}
                 </button>
               )}
@@ -1265,8 +1318,32 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                         isMenuItemActive() ? "active" : ""  
                       }   ${isMenuLabelActive(label) ? "active" : ""}`}
                       onClick={() => handleMenuClick(label)}
+                      style={{ position: "relative" }}
                     >
-                      <FontAwesomeIcon icon={icon} />
+                      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                        <FontAwesomeIcon icon={icon} />
+                        {label === "Your Cart" && cartItemsCount > 0 && (
+                          <span
+                            style={{
+                              position: "absolute",
+                              top: "-8px",
+                              right: "-12px",
+                              backgroundColor: "var(--logo-red)",
+                              color: "white",
+                              borderRadius: "50%",
+                              width: "20px",
+                              height: "20px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {cartItemsCount}
+                          </span>
+                        )}
+                      </div>
                       <span style={{ fontSize: "11px" }}>
                         {label === t("Catalog")
                           ? t("Home")

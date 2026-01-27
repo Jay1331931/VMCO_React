@@ -9,12 +9,12 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import RbacManager from "../utilities/rbac";
 import { isMobile } from '../utilities/isMobile';
 function Login({ title, userType }) {
-  const { login} = useAuth();
+  const { login } = useAuth();
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-const [isLogin,setLogin]=useState(false)
+  const [isLogin, setLogin] = useState(false)
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -28,9 +28,9 @@ const [isLogin,setLogin]=useState(false)
   useEffect(() => {
     document.title = t("Login");
   }, [t]);
-if (!isLogin){
-  localStorage.removeItem("token")
-}
+  if (!isLogin) {
+    localStorage.removeItem("token")
+  }
   const handleSubmit = async (e) => {
     setLogin(false)
     e.preventDefault();
@@ -57,8 +57,33 @@ if (!isLogin){
 
         localStorage.setItem("token", data.token);
         console.log("Login response:", data);
+        if (data?.userType?.toLowerCase() !== "employee") {
+          try {
+            const response = await fetch(
+              `${API_SERVER_URL}/cart/get-cart-by-userId?id=${data?.data?.userId}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${data?.token}`,
+                },
+              }
+            );
+            const result = await response.json();
+            console.log(result?.data)
+            if (result.status === "Ok") {
+              const totalItems = result?.data?.totalItems || 0;
+              localStorage.setItem("cartItems", JSON.stringify(totalItems));
+              // Dispatch custom event to update cart badge
+              window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: totalItems }));
+            }
+          } catch (error) {
+            console.error("Error fetching cart items:", error);
+          }
+        }
+        console.log("Token stored in localStorage:", data.token);
+        console.log("Cart items:", localStorage.getItem("cartItems"));
         login(data.token, data.data);
-
         if (!data?.success) {
           // setError(data.message || 'Login failed');
           setError(data?.message);
@@ -67,7 +92,7 @@ if (!isLogin){
         console.log("data", data);
         const role =
           data?.data?.roles[0] &&
-          data.data.roles[0]?.toLowerCase() === "employee"
+            data.data.roles[0]?.toLowerCase() === "employee"
             ? data?.data?.designation
             : data.data.roles[0];
 
@@ -81,40 +106,40 @@ if (!isLogin){
           (data?.data?.designation?.toLowerCase() ===
             Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase() ||
             data?.data?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() ||
+            Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() ||
             data?.data?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() ||
+            Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() ||
             data?.data?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() ||
+            Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() ||
             data?.data?.roles[0].toLowerCase() ===
-              Constants.ROLES.SUPER_ADMIN.toLowerCase())
+            Constants.ROLES.SUPER_ADMIN.toLowerCase())
         ) {
-          navigate("/customers",{replace:true});
+          navigate("/customers", { replace: true });
         } else if (
           data?.data?.userType?.toLowerCase() === "employee" &&
           (data?.data?.designation?.toLowerCase() ===
             Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase() ||
             data?.data?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() ||
+            Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() ||
             data?.data?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())
+            Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())
         ) {
-          navigate("/maintenance",{replace:true});
+          navigate("/maintenance", { replace: true });
         } else if (
           data?.data?.userType?.toLowerCase() === "employee" &&
           data?.data?.designation?.toLowerCase() ===
-            Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase()
+          Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase()
         ) {
-          navigate("/bankTransactions",{replace:true});
+          navigate("/bankTransactions", { replace: true });
         }
-        else if ( data?.data?.userType?.toLowerCase() === "employee" &&
+        else if (data?.data?.userType?.toLowerCase() === "employee" &&
           data?.data?.designation?.toLowerCase() ===
-            Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
+          Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
         ) {
-          navigate("/orders",{replace:true});
+          navigate("/orders", { replace: true });
         } else {
           // navigate("/catalog",{replace:true});
-          navigate("/home",{replace:true});
+          navigate("/home", { replace: true });
         }
 
         setMessage(data.message);
@@ -155,11 +180,11 @@ if (!isLogin){
   };
   const handleNavigation = (e) => {
     e.preventDefault();
-    navigate("/login/employee",{replace:true});
+    navigate("/login/employee", { replace: true });
   };
-   const handleCustLogin = (e) => {
+  const handleCustLogin = (e) => {
     e.preventDefault();
-    navigate("/login",{replace:true});
+    navigate("/login", { replace: true });
   };
   return (
     <div className="login-screen">
@@ -171,35 +196,35 @@ if (!isLogin){
 
       <div className="login-component">
         <div className="login-header-container"><div className="login-header">{t("Login")}</div>
-                 {title === "Customer Login" ? (  <a className="login-employee-link"
-                href="#"
-                onClick={isLoading ? (e) => e.preventDefault() : handleNavigation}
-                style={{
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  opacity: isLoading ? 0.5 : 1,
-                  pointerEvents: isLoading ? "none" : "auto",
-                      
+          {title === "Customer Login" ? (<a className="login-employee-link"
+            href="#"
+            onClick={isLoading ? (e) => e.preventDefault() : handleNavigation}
+            style={{
+              cursor: isLoading ? "not-allowed" : "pointer",
+              opacity: isLoading ? 0.5 : 1,
+              pointerEvents: isLoading ? "none" : "auto",
 
-                }}
-              >
-                {t("Employee")}
-              </a>) :(  <a className="login-customer-link"
-                href="#"
-                onClick={isLoading ? (e) => e.preventDefault() : handleCustLogin}
-                style={{
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  opacity: isLoading ? 0.5 : 1,
-                  pointerEvents: isLoading ? "none" : "auto",
-                      
 
-                }}
-              >
-                {t("Customer")}
-              </a>)}
-              </div>
+            }}
+          >
+            {t("Employee")}
+          </a>) : (<a className="login-customer-link"
+            href="#"
+            onClick={isLoading ? (e) => e.preventDefault() : handleCustLogin}
+            style={{
+              cursor: isLoading ? "not-allowed" : "pointer",
+              opacity: isLoading ? 0.5 : 1,
+              pointerEvents: isLoading ? "none" : "auto",
+
+
+            }}
+          >
+            {t("Customer")}
+          </a>)}
+        </div>
         <form onSubmit={handleSubmit}>
-        <div className="login-container">
-          
+          <div className="login-container">
+
             <div className="form-group">
               <label htmlFor="email">{t("Email")}</label>
               <input
@@ -236,75 +261,75 @@ if (!isLogin){
               </div>
             </div>
             {error && <p className="error-message">{t(error)}</p>}
-         
-        </div>
 
-        <div className="login-footer">
-          <div>
-          {title === "Customer Login" ? (
-            <div className="login-footer-text">
-              <a
-                href="#"
-                onClick={
-                  isLoading ? (e) => e.preventDefault() : handleForgotPassword
-                }
-                style={{
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  opacity: isLoading ? 0.5 : 1,
-                  pointerEvents: isLoading ? "none" : "auto",
-                }}
-              >
-                {t("Forgot Password?")}
-              </a>
-              <span> | </span>
-              <a
-                href="#"
-                onClick={isLoading ? (e) => e.preventDefault() : handleRegister}
-                style={{
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  opacity: isLoading ? 0.5 : 1,
-                  pointerEvents: isLoading ? "none" : "auto",
-                }}
-              >
-                {t("Register")}
-              </a>
-             
-            </div>
-          ) : (
-            <div className="login-footer-text">
-              <a
-                href="#"
-                onClick={
-                  isLoading ? (e) => e.preventDefault() : handleForgotPassword
-                }
-                style={{
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  opacity: isLoading ? 0.5 : 1,
-                  pointerEvents: isLoading ? "none" : "auto",
-                }}
-              >
-                {t("Forgot Password?")}
-              </a>
-            </div>
-          )}
           </div>
-          <div>
-            <button
-              type="submit"
-              className="login-button"
-              // onSubmit={handleSubmit}
-              disabled={isLoading}
-              style={{
-                background: isLoading ? "#ccc" : "",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                opacity: isLoading ? 0.6 : 1,
-              }}
-            >
-              {isLoading ? t("Signing In...") : t("Sign In")}
-            </button>
+
+          <div className="login-footer">
+            <div>
+              {title === "Customer Login" ? (
+                <div className="login-footer-text">
+                  <a
+                    href="#"
+                    onClick={
+                      isLoading ? (e) => e.preventDefault() : handleForgotPassword
+                    }
+                    style={{
+                      cursor: isLoading ? "not-allowed" : "pointer",
+                      opacity: isLoading ? 0.5 : 1,
+                      pointerEvents: isLoading ? "none" : "auto",
+                    }}
+                  >
+                    {t("Forgot Password?")}
+                  </a>
+                  <span> | </span>
+                  <a
+                    href="#"
+                    onClick={isLoading ? (e) => e.preventDefault() : handleRegister}
+                    style={{
+                      cursor: isLoading ? "not-allowed" : "pointer",
+                      opacity: isLoading ? 0.5 : 1,
+                      pointerEvents: isLoading ? "none" : "auto",
+                    }}
+                  >
+                    {t("Register")}
+                  </a>
+
+                </div>
+              ) : (
+                <div className="login-footer-text">
+                  <a
+                    href="#"
+                    onClick={
+                      isLoading ? (e) => e.preventDefault() : handleForgotPassword
+                    }
+                    style={{
+                      cursor: isLoading ? "not-allowed" : "pointer",
+                      opacity: isLoading ? 0.5 : 1,
+                      pointerEvents: isLoading ? "none" : "auto",
+                    }}
+                  >
+                    {t("Forgot Password?")}
+                  </a>
+                </div>
+              )}
+            </div>
+            <div>
+              <button
+                type="submit"
+                className="login-button"
+                // onSubmit={handleSubmit}
+                disabled={isLoading}
+                style={{
+                  background: isLoading ? "#ccc" : "",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  opacity: isLoading ? 0.6 : 1,
+                }}
+              >
+                {isLoading ? t("Signing In...") : t("Sign In")}
+              </button>
+            </div>
           </div>
-        </div>
-         </form>
+        </form>
       </div>
       <style>
         {`
