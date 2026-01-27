@@ -14,7 +14,8 @@ function GetProducts({
   entity,
   category,
   t = (x) => x, // fallback translation
-  machineMode // new prop, true or falsy
+  machineMode, // new prop, true or falsy
+  setHideMenu
 }) {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
