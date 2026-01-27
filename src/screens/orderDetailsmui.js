@@ -5438,7 +5438,6 @@ setHideMenu={setHideMenu}
                 entity={formData.entity}
                 category={formData.category}
                 t={t}
-                setHideMenu={setHideMenu}
               />
             )}
 
