@@ -1826,6 +1826,7 @@ setHideMenu={setHideMenu}
           entity={Constants.ENTITY.VMCO}
           category={Constants.CATEGORY.VMCO_MACHINES}
           machineMode={true}
+          setHideMenu={setHideMenu}
         />
       )}
       {showSparePartsPopup && (
