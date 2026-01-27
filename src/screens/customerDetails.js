@@ -3243,7 +3243,6 @@ hideMobileBottomMenu={hideMenu} title={t("Company")} MenuName={t("/customers")}>
                     formErrors={formErrors}
                     logosToUpload={logosToUpload} // <-- pass to BusinessDetails
                     completeWorkflowData={completeWorkflowData}
-                    setHideMenu={setHideMenu}
                   />
                 )}
               {activeTab === "Contact Details" && isV("contactDetailsTab") && (
@@ -3266,7 +3265,6 @@ hideMobileBottomMenu={hideMenu} title={t("Company")} MenuName={t("/customers")}>
                   setTabsHeight={setTabsHeight}
                   formErrors={formErrors}
                   completeWorkflowData={completeWorkflowData}
-                  setHideMenu={setHideMenu}
                 />
               )}
               {activeTab === "Financial Information" &&
@@ -3295,7 +3293,6 @@ hideMobileBottomMenu={hideMenu} title={t("Company")} MenuName={t("/customers")}>
                     completeWorkflowData={completeWorkflowData}
                     customerContactsData={customerContactsData}
                     originalCustomerContactsData={originalCustomerContactsData}
-                    setHideMenu={setHideMenu}
                   />
                 )}
               {activeTab === "Documents" && isV("documentsTab") && (
@@ -3311,7 +3308,6 @@ hideMobileBottomMenu={hideMenu} title={t("Company")} MenuName={t("/customers")}>
                   setTabsHeight={setTabsHeight}
                   mode={mode}
                   formErrors={formErrors}
-                  setHideMenu={setHideMenu}
                 />
               )}
               {activeTab === "Branches" && isV("branchesTab") && (
@@ -3328,7 +3324,6 @@ hideMobileBottomMenu={hideMenu} title={t("Company")} MenuName={t("/customers")}>
                   setTabsHeight={setTabsHeight}
                   mode={mode}
                   inApproval={false}
-                  setHideMenu={setHideMenu}
                 />
               )}
               {activeTab === "Products" && isV("productsTab") && (
@@ -3336,7 +3331,6 @@ hideMobileBottomMenu={hideMenu} title={t("Company")} MenuName={t("/customers")}>
                   customerId={customerId}
                   customer={customerData}
                   setTabsHeight={setTabsHeight}
-                  setHideMenu={setHideMenu}
                 />
               )}
               {activeTab === "Final Submission" && (

@@ -61,7 +61,7 @@ const initialEntities = [
   },
 ];
 
-function Products({ customerId, customer, setTabsHeight, setHideMenu }) {
+function Products({ customerId, customer, setTabsHeight }) {
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [products, setProducts] = useState([]); // all products
   const [currentItems, setCurrentItems] = useState([]); // products on current page

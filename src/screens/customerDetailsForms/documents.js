@@ -25,7 +25,6 @@ function Documents({
   setTabsHeight,
   mode,
   formErrors = {},
-  setHideMenu
 }) {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();

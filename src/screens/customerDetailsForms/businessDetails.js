@@ -32,7 +32,6 @@ function BusinessDetails({
   formErrors = {},
   logosToUpload = {}, // <-- Pass this from CustomerDetails.js
   completeWorkflowData = {},
-  setHideMenu
 }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();

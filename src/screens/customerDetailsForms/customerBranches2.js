@@ -81,7 +81,6 @@ const CustomerBranches = ({
   setTabsHeight,
   mode,
   inApproval,
-  setHideMenu
 }) => {
   const { t, i18n } = useTranslation();
   const contentRef = useRef(null);
@@ -1957,7 +1956,6 @@ const CustomerBranches = ({
                   setShowAllDetails={setShowAllDetails}
                   setExpandedRows={setExpandedRows}
                   isFirstBranch={isFirstBranch}
-                  setHideMenu={setHideMenu}
                 />
                 {/* </div> */}
 
@@ -2141,7 +2139,6 @@ const CustomerBranches = ({
                             mode={mode}
                             setExpandedRows={setExpandedRows}
                             isFirstBranch={isFirstBranch}
-                            setHideMenu={setHideMenu}
                           />
                           {console.log(branch)}
                           <ApprovalDialog

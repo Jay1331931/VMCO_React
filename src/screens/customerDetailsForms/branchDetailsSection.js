@@ -53,7 +53,6 @@ const BranchDetailsForm = ({
   setSameAsCustomer,
   setShowAllDetails,
   setExpandedRows,
-  setHideMenu
 }) => {
   const { t, i18n } = useTranslation();
   const [showMap, setShowMap] = useState(false);
