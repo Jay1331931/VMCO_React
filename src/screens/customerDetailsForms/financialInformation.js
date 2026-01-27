@@ -57,6 +57,7 @@ function FinancialInformation({
   completeWorkflowData = {},
   originalCustomerContactsData = {}, //primaryContactEmail
   customerContactsData = {},
+  setHideMenu
 }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
