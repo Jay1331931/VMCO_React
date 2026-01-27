@@ -127,6 +127,28 @@ function BulkUploadBranchAndCustomer() {
         validateStatus: () => true,
       });
 
+      const blob = response?.data;
+      const text = await blob.text();
+      const data = JSON.parse(text);
+      console.log("????", response);
+      console.log("^^^^", data);
+
+      // For sales executive update, if validation fails, just display the error message
+      if (uploadType === "salesExecutiveUpdate" && !data?.success) {
+        const errorMessage = Array.isArray(data.message) 
+          ? data.message.join("\n\n") 
+          : (data.message || t("An error occurred while uploading the file."));
+        Swal.fire({
+          title: t("File Upload Failed"),
+          html: `
+            <textarea style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px; resize: none; overflow-y: auto;" readonly>${errorMessage}</textarea>
+          `,
+          icon: "error",
+          confirmButtonText: t("OK"),
+        });
+        return;
+      }
+
       if (
         response?.status === 400 &&
         response.headers["content-type"] !== "application/json"
@@ -166,11 +188,6 @@ function BulkUploadBranchAndCustomer() {
         return;
       }
 
-      const blob = response?.data;
-      const text = await blob.text();
-      const data = JSON.parse(text);
-      console.log("????", response);
-      console.log("^^^^", data);
       if (response?.status === 200 && data?.success) {
         setPopup(false);
         Swal.fire({
@@ -181,10 +198,14 @@ function BulkUploadBranchAndCustomer() {
           confirmButtonText: t("OK"),
         });
       } else {
+        const errorMessage = Array.isArray(data.message) 
+          ? data.message.join("\n") 
+          : (data.message || t("An error occurred while uploading the file."));
         Swal.fire({
           title: t("File Upload Failed"),
-          text:
-            t(data.message) || t("An error occurred while uploading the file."),
+          html: `
+            <textarea style="width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px; resize: none; overflow-y: auto;" readonly>${errorMessage}</textarea>
+          `,
           icon: "error",
           confirmButtonText: t("OK"),
         });
