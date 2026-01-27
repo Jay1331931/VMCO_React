@@ -1172,7 +1172,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                       icon={faShoppingCart}
                       className="cart-icon"
                     />
-                    {cartItemsCount > 0 && (
+                    {cartItemsCount > 0 && isMobile && (
                       <span
                         style={{
                           position: "absolute",
