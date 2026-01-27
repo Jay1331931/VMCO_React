@@ -1009,7 +1009,6 @@ function CustomersOnboarding() {
                       </select> */}
 
                           <SearchableDropdown
-setHideMenu={setHideMenu}
                             name={field.name}
                             // options={basicMasterLists?.region || []}
                             options={
