@@ -65,6 +65,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [branches, setBranches] = useState([]);
+  const [hideMenu, setHideMenu] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -1292,7 +1293,7 @@ setHideMenu={setHideMenu}
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
           {isMobile && isMobile && (
-            <div className={`mobile-bottom-menu ${showMenu ? "show" : keyboardOpen || hideMobileBottomMenu ? "hide" : "show"}`}>
+            <div className={`mobile-bottom-menu ${showMenu ? "show" : keyboardOpen || hideMobileBottomMenu || hideMenu ? "hide" : "show"}`}>
               {menuItems
                 .filter(
                   ({ label }) =>
