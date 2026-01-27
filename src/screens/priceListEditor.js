@@ -16,7 +16,7 @@ function PriceListEditor() {
     const [pageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0);
-
+const [hideMenu, setHideMenu] = useState(false);
     const { t } = useTranslation();
     const { user, token } = useAuth();
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -153,7 +153,8 @@ function PriceListEditor() {
     }
 
     return (
-        <Sidebar title={t("Price List Viewer")}>
+        <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Price List Viewer")}>
             <div className="rbac-editor-content">
                 {/* Header with Search */}
                 <div className="logs-header">

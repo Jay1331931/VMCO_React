@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import Sidebar from "../components/Sidebar";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 function Reports() {
   const { t } = useTranslation();
+  const [hideMenu, setHideMenu] = useState(false);
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
 const rbacMgr = new RbacManager(
@@ -47,7 +48,8 @@ const rbacMgr = new RbacManager(
 
   return (
     <div>
-      <Sidebar title={t("Reports")}>
+      <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Reports")}>
         {isV("APILogsReport") && (<div style={{ marginBottom: "40px" }}><h3>{t("API logs link")}</h3>
         <a onClick={handleApiLogReportClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline", marginBottom: "12px" }}>{t("API Logs Report")}</a>
         </div>)}

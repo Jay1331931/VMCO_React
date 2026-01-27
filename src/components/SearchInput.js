@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const SearchInput = ({ onSearch, className = 'search-input', debounceTime = 300 }) => {
+const SearchInput = ({ onSearch, className = 'search-input', debounceTime = 300, onFocusChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const { t } = useTranslation();
 
@@ -32,6 +32,8 @@ const SearchInput = ({ onSearch, className = 'search-input', debounceTime = 300 
         className={className}
         onChange={handleSearchChange}
         style={{ boxSizing: 'border-box' }}
+        onFocus={() => onFocusChange?.(true)}
+        onBlur={() => onFocusChange?.(false)}
       />
       <style>{`
         .search-input {

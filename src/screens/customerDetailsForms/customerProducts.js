@@ -596,6 +596,7 @@ function Products({ customerId, customer, setTabsHeight }) {
 <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%" }}>
                               <div className="category-dropdown-mobile" style={{ flex: 1 }}>
                                   <SearchableDropdown
+setHideMenu={setHideMenu}
                                   id="category-filter"
             name="categoryFilter"
             options={categoryOptions}
@@ -614,6 +615,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                               </div>
                               <div className="subcategory-dropdown" style={{ flex: 1 }}>
                                   <SearchableDropdown
+setHideMenu={setHideMenu}
                                   id="subcategory-filter"
             name="subCategoryFilter"
             options={subCategoryOptions}
@@ -632,6 +634,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                           </div>
         </>) : (<>{/* Category Filter - use SearchableDropdown */}
           <SearchableDropdown
+setHideMenu={setHideMenu}
             id="category-filter"
             name="categoryFilter"
             options={categoryOptions}
@@ -646,6 +649,7 @@ function Products({ customerId, customer, setTabsHeight }) {
           />
           {/* Subcategory Filter - use SearchableDropdown */}
           <SearchableDropdown
+setHideMenu={setHideMenu}
             id="subcategory-filter"
             name="subCategoryFilter"
             options={subCategoryOptions}

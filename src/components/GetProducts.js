@@ -370,6 +370,7 @@ function GetProducts({
             {!machineMode && (
             <div className="gp-filters-row">
               <SearchableDropdown
+setHideMenu={setHideMenu}
                 id="category-filter"
                 name="categoryFilter"
                 options={categories}
@@ -385,6 +386,7 @@ function GetProducts({
               />
 
               <SearchableDropdown
+setHideMenu={setHideMenu}
                 id="subcategory-filter"
                 name="subCategoryFilter"
                 options={subcategories}

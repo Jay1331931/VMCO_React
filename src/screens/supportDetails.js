@@ -46,7 +46,7 @@ function SupportDetails() {
   const formMode = location.state?.mode;
   const { token, user, isAuthenticated, logout, loading } = useAuth();
   const navigate = useNavigate();
-
+const [hideMenu, setHideMenu] = useState(false);
   const ticketRcvd = location.state?.ticket || {};
   const [ticket, setTicket] = useState({
     ...defaultTicket,
@@ -1142,9 +1142,11 @@ function SupportDetails() {
   };
 
   return (
-    // <Sidebar title={`${formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}`} >
+    // <Sidebar
+// hideMobileBottomMenu={hideMenu} title={`${formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}`} >
 
-    <Sidebar title={t("Support")} >
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Support")} >
       <div className='support-details-container'>
         <h2 className='support-details-title'>{formMode === "add" ? t("New Ticket") : `${t("Ticket#")}${ticket.ticketId}`}</h2>
         <div className='support-details-section'>
@@ -1236,6 +1238,7 @@ function SupportDetails() {
     <label>{t("Business Unit")} *</label>
 
     <SearchableDropdown
+setHideMenu={setHideMenu}
       name="entity"
       options={entityOptions.map((entity) =>
         typeof entity === "object"
@@ -1255,6 +1258,7 @@ function SupportDetails() {
     <label>{t("Issue Type")} *</label>
 
     <SearchableDropdown
+setHideMenu={setHideMenu}
       name="grievanceType"
       options={issueTypeOptions.map((issueType) =>
         typeof issueType === "object"
@@ -1433,6 +1437,7 @@ function SupportDetails() {
                 <div>
                   <span>{t("Department:")}</span>
                   <SearchableDropdown
+setHideMenu={setHideMenu}
                     name="assignedTeamMemberDept"
                     options={departments}
                     value={selectedDepartment || ""}
@@ -1448,6 +1453,7 @@ function SupportDetails() {
                 <div>
                   <span>{t("Employee:")}</span>
                   <SearchableDropdown
+setHideMenu={setHideMenu}
                     name="assignedTeamMember"
                     options={employees.map(emp => ({ name: emp.name, employeeId: emp.employeeId }))}
                     value={ticket.assignedTeamMember || ""}

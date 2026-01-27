@@ -31,7 +31,7 @@ const BankTransactions = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("pending");
-
+const [hideMenu, setHideMenu] = useState(false);
   // Pagination + sorting
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -388,7 +388,8 @@ const BankTransactions = () => {
   };
 
   return (
-    <Sidebar title={t("Bank Transactions")}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Bank Transactions")}>
       {isV("BankContent") && (
         <div className="bank-transactions-container">
           {isMobile ? (
