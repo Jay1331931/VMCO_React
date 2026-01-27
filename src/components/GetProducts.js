@@ -14,7 +14,8 @@ function GetProducts({
   entity,
   category,
   t = (x) => x, // fallback translation
-  machineMode // new prop, true or falsy
+  machineMode, // new prop, true or falsy
+  setHideMenu
 }) {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
@@ -370,6 +371,7 @@ function GetProducts({
             {!machineMode && (
             <div className="gp-filters-row">
               <SearchableDropdown
+setHideMenu={setHideMenu}
                 id="category-filter"
                 name="categoryFilter"
                 options={categories}
@@ -385,6 +387,7 @@ function GetProducts({
               />
 
               <SearchableDropdown
+setHideMenu={setHideMenu}
                 id="subcategory-filter"
                 name="subCategoryFilter"
                 options={subcategories}

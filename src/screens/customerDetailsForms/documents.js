@@ -25,6 +25,7 @@ function Documents({
   setTabsHeight,
   mode,
   formErrors = {},
+  setHideMenu
 }) {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
@@ -4877,6 +4878,7 @@ const openUrlSmart = (url) => {
               hidden={mode === "edit"}>
                 
     <SearchableDropdown
+setHideMenu={setHideMenu}
       options={nonTradingDocumentTypes}
       value={selectedDocType}
       onChange={handleNonTradingDropdownChange}

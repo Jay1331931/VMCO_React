@@ -38,6 +38,7 @@ const BranchDetailsForm = ({
   setShowAllDetails,
   setExpandedRows,
   isFirstBranch,
+  setHideMenu
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -1365,6 +1366,7 @@ let branchdata;
         setSameAsCustomer={setSameAsCustomer}
         setShowAllDetails={setShowAllDetails}
         setExpandedRows={setExpandedRows}
+        setHideMenu={setHideMenu}
       />
 
       {/* Contact Section */}

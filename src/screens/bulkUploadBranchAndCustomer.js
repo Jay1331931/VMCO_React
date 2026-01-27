@@ -34,6 +34,7 @@ function BulkUploadBranchAndCustomer() {
   const [emailloading, setEmailLoading] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState("");
     const [cutOffLoading, setcutOffLoading] = useState(false);
+    const [hideMenu, setHideMenu] = useState(false);
   const fileExcelInputRef = useRef();
   const { t } = useTranslation();
   const rbacMgr = new RbacManager(
@@ -322,7 +323,8 @@ function BulkUploadBranchAndCustomer() {
     }
   };
   return (
-    <Sidebar title={t("General")}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("General")}>
       <div
         style={{
           display: "flex",

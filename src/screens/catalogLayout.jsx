@@ -50,6 +50,7 @@ const CatalogLayout = ({
     isRTL,
     dir,
     setSearchQuery,
+    setHideMenu,
     coolingPeriodData,
     disabledEntities,
     categoriesTabImages,
@@ -62,7 +63,6 @@ const CatalogLayout = ({
     const dragStartY = useRef(0);
     const scrollableContentRef = useRef(null);
     const [isContentScrolled, setIsContentScrolled] = useState(false);
-
     // Calculate header height dynamically
     useEffect(() => {
         if (!isMobile) return; // Only run for mobile
@@ -137,6 +137,7 @@ const CatalogLayout = ({
                             <div className="catalog-header">
                                 <div className="location-selector">
                                     <SearchableDropdown
+setHideMenu={setHideMenu}
                                         id={`location-select-${catalogId}`}
                                         name="locationSelect"
                                         value={selectedLocation}
@@ -209,6 +210,7 @@ const CatalogLayout = ({
                                     ...(window.innerWidth <= 425 && window.innerWidth > 375 ? {} : {})
                                 }}>
                                     <SearchableDropdown
+setHideMenu={setHideMenu}
                                         id={`category-filter-${catalogId}`}
                                         name="categoryFilter"
                                         options={categoryOptions}
@@ -218,6 +220,7 @@ const CatalogLayout = ({
                                         onChange={handleCategoryFilterChange}
                                     />
                                     <SearchableDropdown
+setHideMenu={setHideMenu}
                                         id={`subcategory-filter-${catalogId}`}
                                         name="subCategoryFilter"
                                         options={subCategoryOptions}
@@ -321,6 +324,7 @@ const CatalogLayout = ({
                         >
                             <div className="branch-selector" style={{ flex: 1, minWidth: 0, width: '100%' }}>
                                 <SearchableDropdown
+setHideMenu={setHideMenu}
                                     id={`location-select-${catalogId}`}
                                     name="locationSelect"
                                     value={selectedLocation}
@@ -395,6 +399,7 @@ const CatalogLayout = ({
                                 <SearchInput
                                     onSearch={setSearchQuery}
                                     debounceTime={500}
+                                     onFocusChange={setHideMenu}
                                 />
                             </div>
                         </div>
@@ -407,6 +412,7 @@ const CatalogLayout = ({
                                 <SearchInput
                                     onSearch={setSearchQuery}
                                     debounceTime={500}
+                                    onFocusChange={setHideMenu}
                                 />
                             </div>
                         </div>
@@ -430,6 +436,7 @@ const CatalogLayout = ({
                     <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%", padding: "10px" }}>
                         <div className="category-dropdown-mobile" style={{ flex: 1 }}>
                             <SearchableDropdown
+setHideMenu={setHideMenu}
                                 id={`category-filter-${catalogId}`}
                                 name="categoryFilter"
                                 options={categoryOptions}
@@ -442,6 +449,7 @@ const CatalogLayout = ({
                         </div>
                         <div className="subcategory-dropdown" style={{ flex: 1 }}>
                             <SearchableDropdown
+setHideMenu={setHideMenu}
                                 id={`subcategory-filter-${catalogId}`}
                                 name="subCategoryFilter"
                                 options={subCategoryOptions}

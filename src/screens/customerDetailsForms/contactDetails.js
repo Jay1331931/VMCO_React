@@ -58,6 +58,7 @@ function ContactDetails({
   mode,
   setTabsHeight,
   formErrors = {},
+  setHideMenu
 }) {
   const { t, i18n } = useTranslation();
   const dropdownFields = ["zone", "branch"];
@@ -2568,6 +2569,7 @@ const initializeMap = () => {
         </label>
         <div className="input-with-verification">
           <SearchableDropdown
+setHideMenu={setHideMenu}
             name="region"
             // options={basicMasterLists?.region || []}
             options={
@@ -2649,6 +2651,7 @@ const initializeMap = () => {
         </label>
         <div className="input-with-verification">
           <SearchableDropdown
+setHideMenu={setHideMenu}
             name="city"
             options={getCityOptions()}
             value={customerData?.city || ""}
@@ -2790,6 +2793,7 @@ const initializeMap = () => {
         </label>
         <div className="input-with-verification">
           <SearchableDropdown
+setHideMenu={setHideMenu}
             name="district"
             options={getDistrictOptions()}
             value={customerData?.district || ""}
@@ -2937,6 +2941,7 @@ const initializeMap = () => {
           </label>
           <div className="input-with-verification">
             <SearchableDropdown
+setHideMenu={setHideMenu}
               name="zone"
               options={(basicMasterLists?.zone || []).map((item) => ({
                 value: item.value,

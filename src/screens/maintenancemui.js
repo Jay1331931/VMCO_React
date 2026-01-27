@@ -52,7 +52,7 @@ function Maintenance() {
   const [userData, setUserData] = useState(null);
   const { token, user, isAuthenticated, logout } = useAuth();
   const [openTicketsCount, setOpenTicketsCount] = useState(0);
-
+const [hideMenu, setHideMenu] = useState(false);
   // Pagination and filtering state
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -526,7 +526,8 @@ function Maintenance() {
   };
 
   return (
-    <Sidebar title={t("Maintenance")} isV={isV("maintenanceContent")} CardPaddingClass={isMobile}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Maintenance")} isV={isV("maintenanceContent")} CardPaddingClass={isMobile}>
       <div className="maintenance-content">
         {isMobile ? (
           <div className="orders-content">

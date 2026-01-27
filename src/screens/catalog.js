@@ -112,6 +112,7 @@ function Catalog() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
+  const [hideMenu, setHideMenu] = useState(false);
 
   const [categoryFilter, setCategoryFilter] = useState("");
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
@@ -1253,7 +1254,8 @@ function Catalog() {
   console.log("selectedLocation", selectedLocation)
 
   return (
-    <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")} selectBranch={isV("selectBranch")} PaddingClass={true} MenuName={"catalog"} >
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")} selectBranch={isV("selectBranch")} PaddingClass={true} MenuName={"catalog"} >
       {isPageLoading ? (
         <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
           <LoadingSpinner size="medium" />
@@ -1364,6 +1366,7 @@ function Catalog() {
           isRTL={isRTL}
           dir={dir}
           setSearchQuery={setSearchQuery}
+          setHideMenu={setHideMenu}
         />
       )}
     </Sidebar>

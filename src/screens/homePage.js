@@ -124,6 +124,7 @@ const HomePage = () => {
   const isRTL = i18n.language === "ar";
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
   const [disabledEntities, setDisabledEntities] = useState([]);
+  const [hideMenu, setHideMenu] = useState(false);
   const handleCatalog = () => {
     navigate("/catalog");
   };
@@ -162,7 +163,8 @@ const HomePage = () => {
     fetchCoolingPeriod();
   }, [token]);
   return (
-    <Sidebar title={t("Home")} homePage={"home-page"}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Home")} homePage={"home-page"}>
       <div className="home-page-container">
         <div className="home-hero">
           <div className="hero-content">

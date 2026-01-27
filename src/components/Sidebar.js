@@ -44,7 +44,7 @@ const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
  const isAndroidMobile = /Android/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false, CardPaddingClass=false}) {
+function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false, CardPaddingClass=false, hideMobileBottomMenu = false}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -65,6 +65,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [branches, setBranches] = useState([]);
+  const [hideMenu, setHideMenu] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -1131,6 +1132,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
             >
                 {selectBranch && (<div className="location-selector">
               <SearchableDropdown
+setHideMenu={setHideMenu}
                   id={`location-select-${catalogId}`}
                   name="locationSelect"
                   value={selectedLocation}
@@ -1291,7 +1293,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
           {isMobile && isMobile && (
-            <div className={`mobile-bottom-menu ${showMenu ? "show" : keyboardOpen ? "hide" : "show"}`}>
+            <div className={`mobile-bottom-menu ${showMenu ? "show" : keyboardOpen || hideMobileBottomMenu || hideMenu ? "hide" : "show"}`}>
               {menuItems
                 .filter(
                   ({ label }) =>

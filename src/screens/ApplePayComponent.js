@@ -28,6 +28,7 @@ const ApplePayComponent = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { orderId, amount, customerId, orderType } = useParams();
   const [customerDetails, setCustomerDetails] = useState(null);
+  const [hideMenu, setHideMenu] = useState(false);
   const { token } = useAuth();
   const { t } = useTranslation();
   const AppleContainerRef = useRef(null);
@@ -173,7 +174,8 @@ const ApplePayComponent = () => {
 
   return (
     
-            <Sidebar title={t("Apple Payment")}>
+            <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Apple Payment")}>
     <Box
       sx={{
         display: "flex",
