@@ -22,7 +22,6 @@ function RbacEditor() {
   const [pages, setPages] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [error, setError] = useState(null);
-  const [hideMenu, setHideMenu] = useState(false);
   const { t } = useTranslation();
   const { user, token } = useAuth();
   const [showPageInput, setShowPageInput] = useState(false);
@@ -428,8 +427,7 @@ function RbacEditor() {
     }
   };
   return (
-    <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("RBAC Permission Editor")}>
+    <Sidebar title={t("RBAC Permission Editor")}>
       <div className="rbac-editor-content">
         {/* Add Role Section */}
         {/* <div
@@ -472,7 +470,6 @@ hideMobileBottomMenu={hideMenu} title={t("RBAC Permission Editor")}>
               <div className="form-group">
                 <label htmlFor="roleSelect">Role</label>
                 <SearchableDropdown
-setHideMenu={setHideMenu}
                   options={roles}
                   value={selectedRole}
                   onChange={handleRoleChange}
@@ -503,7 +500,6 @@ setHideMenu={setHideMenu}
               <div className="form-group">
                 <label htmlFor="pageSelect">Page</label>
                 <SearchableDropdown
-setHideMenu={setHideMenu}
                 options={pages}
                 value={selectedPage}
                 onChange={handlePageChange}
@@ -753,7 +749,6 @@ setHideMenu={setHideMenu}
               showDeleteFieldInput) && (
                 <>
                 <SearchableDropdown
-setHideMenu={setHideMenu}
                   options={pageNames}
                   onChange={(e) => setPageName(e.target.value)}
                   value={pageName}
@@ -781,7 +776,6 @@ setHideMenu={setHideMenu}
             {pageName && showDeleteFieldInput && (
               <div style={{ display: "flex", flexDirection: "row"}}>
                   <SearchableDropdown
-setHideMenu={setHideMenu}
                    options={fieldNames}
                 onChange={(e) => setDeleteFieldName(e.target.value)}
                 value={deleteFieldName}

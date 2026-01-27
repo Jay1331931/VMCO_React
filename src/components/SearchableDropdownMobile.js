@@ -14,8 +14,7 @@ function SearchableDropdown({
   className,
   placeholder,
   style = {},
-  branchName = null,
-  setHideMenu   
+  branchName = null
 }) {
   const allOption = { name: placeholder || "Select", value: null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
@@ -217,17 +216,6 @@ function SearchableDropdown({
     placeholder={t("Search...")}
     value={searchTerm}
     onChange={(e) => setSearchTerm(e.target.value)}
-    onFocus={() => {
-    setHideMenu?.(true);   // 👈 hide bottom menu
-  }}
-
-  onClick={() => {
-    setHideMenu?.(true);   // 👈 mobile tap safety
-  }}
-
-  onBlur={() => {
-    setHideMenu?.(false);    // 👈 show menu again (optional)
-  }}
     style={{
       flex: 1,
       padding: "10px",

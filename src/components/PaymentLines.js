@@ -26,7 +26,7 @@ const PaymentLines = () => {
   const [loading, setLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
   const token = getCookie("token");
-const [hideMenu, setHideMenu] = useState(false);
+
   const fetchPaymentLines = useCallback(async () => {
     setLoading(true);
     try {
@@ -133,8 +133,7 @@ const [hideMenu, setHideMenu] = useState(false);
   };
 
   return (
-    <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("Payments")}>
+    <Sidebar title={t("Payments")}>
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Typography variant="h5" fontWeight="bold" gutterBottom>
           {t("Payment Lines for Order")} #{orderId}

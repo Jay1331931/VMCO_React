@@ -110,7 +110,7 @@ function Orders() {
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState({});
   const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
-const [hideMenu, setHideMenu] = useState(false);
+
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, token, logout } = useAuth();
@@ -2508,8 +2508,7 @@ renderCell: (params) => {
   };
 
   return (
-    <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("Orders")} CardPaddingClass={isMobile}>
+    <Sidebar title={t("Orders")} CardPaddingClass={isMobile}>
 
       <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin") ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}

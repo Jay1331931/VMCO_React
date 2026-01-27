@@ -364,7 +364,7 @@ function ApprovalHistory() {
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
     const [sortModel, setSortModel] = useState([]);
     const [filterAnchor, setFilterAnchor] = useState(null);
-const [hideMenu, setHideMenu] = useState(false);
+
     // Workflow data popup state
     const [workflowDataPopup, setWorkflowDataPopup] = useState({
         open: false,
@@ -822,8 +822,7 @@ const [hideMenu, setHideMenu] = useState(false);
 
 
     return (
-        <Sidebar
-hideMobileBottomMenu={hideMenu} title={t('Approval History')} isV={isV('approvalHistoryContent')}>
+        <Sidebar title={t('Approval History')} isV={isV('approvalHistoryContent')}>
             <div className="approval-history-content">
                 {isMobile ? (
                     <div className="table-container">

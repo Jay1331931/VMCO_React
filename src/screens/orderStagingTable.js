@@ -25,7 +25,7 @@ function OrderStagingTable() {
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
     const [sortModel, setSortModel] = useState([]);
     const [filterAnchor, setFilterAnchor] = useState(null);
-const [hideMenu, setHideMenu] = useState(false);
+
     const { t, i18n } = useTranslation();
     const { user, token, logout } = useAuth();
     const navigate = useNavigate();
@@ -520,8 +520,7 @@ const [hideMenu, setHideMenu] = useState(false);
     }
 
     return (
-        <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("Card Transaction Temp ID")} isV={isV("orderStagingTableContent")}>
+        <Sidebar title={t("Card Transaction Temp ID")} isV={isV("orderStagingTableContent")}>
             <div className="order-staging-content">
                 {isMobile ? (
                     <div className="table-container">

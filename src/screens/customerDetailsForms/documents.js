@@ -4877,7 +4877,6 @@ const openUrlSmart = (url) => {
               hidden={mode === "edit"}>
                 
     <SearchableDropdown
-setHideMenu={setHideMenu}
       options={nonTradingDocumentTypes}
       value={selectedDocType}
       onChange={handleNonTradingDropdownChange}

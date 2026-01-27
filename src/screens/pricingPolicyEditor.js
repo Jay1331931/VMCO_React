@@ -49,7 +49,7 @@ function PricingPolicyEditor() {
   const [filters, setFilters] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-const [hideMenu, setHideMenu] = useState(false);
+
   // State for Edit Form
   const [editData, setEditData] = useState({
     id: null,
@@ -369,8 +369,7 @@ const isArabicText = (text) => {
   ];
 
   return (
-    <Sidebar
-hideMobileBottomMenu={hideMenu}>
+    <Sidebar>
       <div className="orders-container">
         <div
           style={{
