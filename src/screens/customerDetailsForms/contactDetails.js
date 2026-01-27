@@ -58,6 +58,7 @@ function ContactDetails({
   mode,
   setTabsHeight,
   formErrors = {},
+  setHideMenu
 }) {
   const { t, i18n } = useTranslation();
   const dropdownFields = ["zone", "branch"];
