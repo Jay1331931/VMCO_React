@@ -80,7 +80,9 @@ const Constants = {
         ORDERS_UPLOAD_FORMAT: "orders_upload_format.xlsx",
         PRODUCTS_UPLOAD_FORMAT: "product_mapping_upload_format.xlsx",
         CUSTOMERS_BULK_UPLOAD_FORMAT: "customers_bulk_upload_format.xlsx",
-        BRANCH_BULK_UPLOAD_FORMAT: "branches_bulk_upload_format.xlsx"
+        BRANCH_BULK_UPLOAD_FORMAT: "branches_bulk_upload_format.xlsx",
+        SALES_EXECUTIVE_UPDATE_FORMAT: "customer_sales_executive_update_format.xlsx",
+
     },
     WORKFLOW_NAME: {
         ONBOARDING: 'onboarding',
