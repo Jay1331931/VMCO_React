@@ -39,7 +39,6 @@ import SearchableDropdown from "./SearchableDropdown";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Swal from "sweetalert2";
-import { useKeyboardDetection } from "./UseKeyBoardDetection";
 const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
@@ -52,7 +51,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   );
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const isMobile = usePlatform();
-  const keyboardOpen = useKeyboardDetection();
   const [cartbranchData, setCartBranchData] = useState(null);
 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
@@ -1292,7 +1290,7 @@ setHideMenu={setHideMenu}
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
           {isMobile && isMobile && (
-            <div className={`mobile-bottom-menu ${showMenu ? "show" : keyboardOpen || hideMobileBottomMenu ? "hide" : "show"}`}>
+            <div className={`mobile-bottom-menu ${showMenu ? "show" : "show"}`}>
               {menuItems
                 .filter(
                   ({ label }) =>
