@@ -404,7 +404,10 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                             px: 2,
                             pb: 1.5,
                             display: "flex",
-                            justifyContent: "flex-end"
+                            position: "relative",
+                            left: i18n.language === 'en' ? "15%" : "none",
+                            right: i18n.language === 'ar' ? "17%" : "0",
+                            // justifyContent: "flex-end"
                           }}
                         >
                           <Button
