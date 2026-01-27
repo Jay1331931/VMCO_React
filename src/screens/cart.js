@@ -1836,61 +1836,61 @@ function Cart() {
             const isBalanceValid = await validateCreditBalance(selectedCustomerId, consumablesTotalAmount, entity)
             if (isBalanceValid) {
               // Check credit period eligibility
-               await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit")
+              //  await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit")
                 
-              // try {
-              //   const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${erpCustId}`, {
-              //     method: "GET",
-              //     headers: {
-              //       "Content-Type": "application/json",
-              //       Authorization: `Bearer ${token}`,
-              //     },
-              //   });
+              try {
+                const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${erpCustId}`, {
+                  method: "GET",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
 
-              //   if (!creditPeriodResponse.ok) {
-              //     console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
-              //     Swal.fire({
-              //       icon: "error",
-              //       title: t("Credit Period Check Failed"),
-              //       text: t("Unable to verify credit availability."),
-              //     });
-              //     return;
-              //   }
+                if (!creditPeriodResponse.ok) {
+                  console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
+                  Swal.fire({
+                    icon: "error",
+                    title: t("Credit Period Check Failed"),
+                    text: t("Unable to verify credit availability."),
+                  });
+                  return;
+                }
 
-              //   const creditPeriodResult = await creditPeriodResponse.json();
+                const creditPeriodResult = await creditPeriodResponse.json();
 
-              //   if (!creditPeriodResult.success) {
-              //     console.warn("Credit period check failed:", creditPeriodResult.message);
-              //     Swal.fire({
-              //       icon: "warning",
-              //       title: t("Credit Check Failed"),
-              //       text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
-              //     });
-              //     return;
-              //   }
+                if (!creditPeriodResult.success) {
+                  console.warn("Credit period check failed:", creditPeriodResult.message);
+                  Swal.fire({
+                    icon: "warning",
+                    title: t("Credit Check Failed"),
+                    text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
+                  });
+                  return;
+                }
 
-              //   const entityCreditData = creditPeriodResult?.details?.[entity];
+                const entityCreditData = creditPeriodResult?.details?.[entity];
 
-              //   if (entityCreditData?.Block) {
-              //     const reason = entityCreditData?.Reason || "Credit is not available";
-              //     Swal.fire({
-              //       icon: "warning",
-              //       title: t("Credit Not Available"),
-              //       text: t(reason),
-              //     });
-              //     return;
-              //   } else {
-              //     await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit")
-              //   }
-              // } catch (err) {
-              //   console.error("Error checking credit period:", err);
-              //   Swal.fire({
-              //     icon: "error",
-              //     title: t("Error"),
-              //     text: t("An error occurred while checking credit availability."),
-              //   });
-              //   return;
-              // }
+                if (entityCreditData?.Block) {
+                  const reason = entityCreditData?.Reason || "Credit is not available";
+                  Swal.fire({
+                    icon: "warning",
+                    title: t("Credit Not Available"),
+                    text: t(reason),
+                  });
+                  return;
+                } else {
+                  await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit")
+                }
+              } catch (err) {
+                console.error("Error checking credit period:", err);
+                Swal.fire({
+                  icon: "error",
+                  title: t("Error"),
+                  text: t("An error occurred while checking credit availability."),
+                });
+                return;
+              }
             } else {
               // Insufficient balance - show payment popup
               console.log("VMCO user is credit user but has insufficient balance, showing payment popup")
@@ -2008,63 +2008,63 @@ function Cart() {
           console.log(
             "Credit payment method determined for SHC - checking for existing open orders"
           );
-  await handleSHCExistingOrdersCheck(categoryItems, shcPaymentMethod);
+  // await handleSHCExistingOrdersCheck(categoryItems, shcPaymentMethod);
                
-            // try {
-            //   const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${user?.erpCustomerId}`, {
-            //     method: "GET",
-            //     headers: {
-            //       "Content-Type": "application/json",
-            //       Authorization: `Bearer ${token}`,
-            //     },
-            //   });
+            try {
+              const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${user?.erpCustomerId}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              });
 
-            //   if (!creditPeriodResponse.ok) {
-            //     console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
-            //     Swal.fire({
-            //       icon: "error",
-            //       title: t("Credit Period Check Failed"),
-            //       text: t("Unable to verify credit eligibility. Please try again later."),
-            //     });
-            //     return;
-            //   }
+              if (!creditPeriodResponse.ok) {
+                console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
+                Swal.fire({
+                  icon: "error",
+                  title: t("Credit Period Check Failed"),
+                  text: t("Unable to verify credit eligibility. Please try again later."),
+                });
+                return;
+              }
 
-            //   const creditPeriodResult = await creditPeriodResponse.json();
+              const creditPeriodResult = await creditPeriodResponse.json();
 
-            //   if (!creditPeriodResult.success) {
-            //     console.warn("Credit period check failed:", creditPeriodResult.message);
-            //     Swal.fire({
-            //       icon: "warning",
-            //       title: t("Credit Check Failed"),
-            //       text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
-            //     });
-            //     return;
-            //   }
+              if (!creditPeriodResult.success) {
+                console.warn("Credit period check failed:", creditPeriodResult.message);
+                Swal.fire({
+                  icon: "warning",
+                  title: t("Credit Check Failed"),
+                  text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
+                });
+                return;
+              }
 
-            //   const entityCreditData = creditPeriodResult?.details?.[entity];
+              const entityCreditData = creditPeriodResult?.details?.[entity];
 
-            //   if (entityCreditData?.Block) {
-            //     const reason = entityCreditData?.Reason || "Credit is not available";
-            //     Swal.fire({
-            //       icon: "warning",
-            //       title: t("Credit Not Available"),
-            //       text: t(reason),
-            //     });
-            //     return;
-            //   } else {
-            //     console.log(`${entity}: Credit user with sufficient balance, placing order directly`);
-            //      await handleSHCExistingOrdersCheck(categoryItems, shcPaymentMethod);
-            //     return;
-            //   }
-            // } catch (err) {
-            //   console.error("Error checking credit period:", err);
-            //   Swal.fire({
-            //     icon: "error",
-            //     title: t("Error"),
-            //     text: t("An error occurred while checking credit eligibility."),
-            //   });
-            //   return;
-            // }
+              if (entityCreditData?.Block) {
+                const reason = entityCreditData?.Reason || "Credit is not available";
+                Swal.fire({
+                  icon: "warning",
+                  title: t("Credit Not Available"),
+                  text: t(reason),
+                });
+                return;
+              } else {
+                console.log(`${entity}: Credit user with sufficient balance, placing order directly`);
+                 await handleSHCExistingOrdersCheck(categoryItems, shcPaymentMethod);
+                return;
+              }
+            } catch (err) {
+              console.error("Error checking credit period:", err);
+              Swal.fire({
+                icon: "error",
+                title: t("Error"),
+                text: t("An error occurred while checking credit eligibility."),
+              });
+              return;
+            }
          
         }
         // If a specific payment method was determined (not COD), use it directly
@@ -2120,65 +2120,65 @@ function Cart() {
 
             if (isBalanceValid) {
               // Check credit period eligibility
-               await handleGMTCExistingOrdersCheck(categoryItems, "Credit", categoryName);
+              //  await handleGMTCExistingOrdersCheck(categoryItems, "Credit", categoryName);
                  
-              // try {
-              //   const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${erpCustId}`, {
-              //     method: "GET",
-              //     headers: {
-              //       "Content-Type": "application/json",
-              //       Authorization: `Bearer ${token}`,
-              //     },
-              //   });
+              try {
+                const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${erpCustId}`, {
+                  method: "GET",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
 
-              //   if (!creditPeriodResponse.ok) {
-              //     console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
-              //     Swal.fire({
-              //       icon: "error",
-              //       title: t("Credit Period Check Failed"),
-              //       text: t("Unable to verify credit availability."),
-              //     });
-              //     return;
-              //   }
+                if (!creditPeriodResponse.ok) {
+                  console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
+                  Swal.fire({
+                    icon: "error",
+                    title: t("Credit Period Check Failed"),
+                    text: t("Unable to verify credit availability."),
+                  });
+                  return;
+                }
 
-              //   const creditPeriodResult = await creditPeriodResponse.json();
+                const creditPeriodResult = await creditPeriodResponse.json();
 
-              //   if (!creditPeriodResult.success) {
-              //     console.warn("Credit period check failed:", creditPeriodResult.message);
-              //     Swal.fire({
-              //       icon: "warning",
-              //       title: t("Credit Check Failed"),
-              //       text: t(creditPeriodResult.message || "Unable to verify credit availability"),
-              //     });
-              //     return;
-              //   }
+                if (!creditPeriodResult.success) {
+                  console.warn("Credit period check failed:", creditPeriodResult.message);
+                  Swal.fire({
+                    icon: "warning",
+                    title: t("Credit Check Failed"),
+                    text: t(creditPeriodResult.message || "Unable to verify credit availability"),
+                  });
+                  return;
+                }
 
-              //   const entityCreditData = creditPeriodResult?.details?.[entity];
+                const entityCreditData = creditPeriodResult?.details?.[entity];
 
-              //   if (entityCreditData?.Block) {
-              //     const reason = entityCreditData?.Reason || "Credit is not available";
-              //     Swal.fire({
-              //       icon: "warning",
-              //       title: t("Credit Not Available"),
-              //       text: t(reason),
-              //     });
-              //     return;
-              //   } else {
-              //     console.log("GMTC user is credit user with sufficient balance, checking for existing open orders");
-              //     setPendingOrderCategory(categoryName);
-              //     setPendingOrderItems(categoryItems);
-              //     await handleGMTCExistingOrdersCheck(categoryItems, "Credit", categoryName);
-              //     return;
-              //   }
-              // } catch (err) {
-              //   console.error("Error checking credit period:", err);
-              //   Swal.fire({
-              //     icon: "error",
-              //     title: t("Error"),
-              //     text: t("An error occurred while checking credit eligibility."),
-              //   });
-              //   return;
-              // }
+                if (entityCreditData?.Block) {
+                  const reason = entityCreditData?.Reason || "Credit is not available";
+                  Swal.fire({
+                    icon: "warning",
+                    title: t("Credit Not Available"),
+                    text: t(reason),
+                  });
+                  return;
+                } else {
+                  console.log("GMTC user is credit user with sufficient balance, checking for existing open orders");
+                  setPendingOrderCategory(categoryName);
+                  setPendingOrderItems(categoryItems);
+                  await handleGMTCExistingOrdersCheck(categoryItems, "Credit", categoryName);
+                  return;
+                }
+              } catch (err) {
+                console.error("Error checking credit period:", err);
+                Swal.fire({
+                  icon: "error",
+                  title: t("Error"),
+                  text: t("An error occurred while checking credit eligibility."),
+                });
+                return;
+              }
               return;
             } else {
               // Insufficient balance - show warning
@@ -2220,63 +2220,63 @@ function Cart() {
 
           if (isBalanceValid) {
             // Check credit period eligibility
-             await placeOrderForCategory(categoryItems, categoryName, "Credit", true);
+            //  await placeOrderForCategory(categoryItems, categoryName, "Credit", true);
                
-            // try {
-            //   const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${user?.erpCustomerId}`, {
-            //     method: "GET",
-            //     headers: {
-            //       "Content-Type": "application/json",
-            //       Authorization: `Bearer ${token}`,
-            //     },
-            //   });
+            try {
+              const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${user?.erpCustomerId}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              });
 
-            //   if (!creditPeriodResponse.ok) {
-            //     console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
-            //     Swal.fire({
-            //       icon: "error",
-            //       title: t("Credit Period Check Failed"),
-            //       text: t("Unable to verify credit eligibility. Please try again later."),
-            //     });
-            //     return;
-            //   }
+              if (!creditPeriodResponse.ok) {
+                console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
+                Swal.fire({
+                  icon: "error",
+                  title: t("Credit Period Check Failed"),
+                  text: t("Unable to verify credit eligibility. Please try again later."),
+                });
+                return;
+              }
 
-            //   const creditPeriodResult = await creditPeriodResponse.json();
+              const creditPeriodResult = await creditPeriodResponse.json();
 
-            //   if (!creditPeriodResult.success) {
-            //     console.warn("Credit period check failed:", creditPeriodResult.message);
-            //     Swal.fire({
-            //       icon: "warning",
-            //       title: t("Credit Check Failed"),
-            //       text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
-            //     });
-            //     return;
-            //   }
+              if (!creditPeriodResult.success) {
+                console.warn("Credit period check failed:", creditPeriodResult.message);
+                Swal.fire({
+                  icon: "warning",
+                  title: t("Credit Check Failed"),
+                  text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
+                });
+                return;
+              }
 
-            //   const entityCreditData = creditPeriodResult?.details?.[entity];
+              const entityCreditData = creditPeriodResult?.details?.[entity];
 
-            //   if (entityCreditData?.Block) {
-            //     const reason = entityCreditData?.Reason || "Credit is not available";
-            //     Swal.fire({
-            //       icon: "warning",
-            //       title: t("Credit Not Available"),
-            //       text: t(reason),
-            //     });
-            //     return;
-            //   } else {
-            //     console.log(`${entity}: Credit user with sufficient balance, placing order directly`);
-            //     await placeOrderForCategory(categoryItems, categoryName, "Credit", true);
-            //     return;
-            //   }
-            // } catch (err) {
-            //   console.error("Error checking credit period:", err);
-            //   Swal.fire({
-            //     icon: "error",
-            //     title: t("Error"),
-            //     text: t("An error occurred while checking credit eligibility."),
-            //   });
-            //   return;
-            // }
+              if (entityCreditData?.Block) {
+                const reason = entityCreditData?.Reason || "Credit is not available";
+                Swal.fire({
+                  icon: "warning",
+                  title: t("Credit Not Available"),
+                  text: t(reason),
+                });
+                return;
+              } else {
+                console.log(`${entity}: Credit user with sufficient balance, placing order directly`);
+                await placeOrderForCategory(categoryItems, categoryName, "Credit", true);
+                return;
+              }
+            } catch (err) {
+              console.error("Error checking credit period:", err);
+              Swal.fire({
+                icon: "error",
+                title: t("Error"),
+                text: t("An error occurred while checking credit eligibility."),
+              });
+              return;
+            }
           } else {
             // Insufficient balance - show payment popup
             console.log(`${entity}: Credit user with insufficient balance, showing payment popup`);
