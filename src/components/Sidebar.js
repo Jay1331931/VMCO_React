@@ -39,12 +39,11 @@ import SearchableDropdown from "./SearchableDropdown";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Swal from "sweetalert2";
-import { useKeyboardDetection } from "./UseKeyBoardDetection";
 const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
  const isAndroidMobile = /Android/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false, CardPaddingClass=false, hideMobileBottomMenu = false}) {
+function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false, CardPaddingClass=false}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -52,7 +51,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   );
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const isMobile = usePlatform();
-  const keyboardOpen = useKeyboardDetection();
   const [cartbranchData, setCartBranchData] = useState(null);
 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
@@ -65,7 +63,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [branches, setBranches] = useState([]);
-  const [hideMenu, setHideMenu] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -1132,7 +1129,6 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
             >
                 {selectBranch && (<div className="location-selector">
               <SearchableDropdown
-setHideMenu={setHideMenu}
                   id={`location-select-${catalogId}`}
                   name="locationSelect"
                   value={selectedLocation}
@@ -1293,7 +1289,7 @@ setHideMenu={setHideMenu}
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
           {isMobile && isMobile && (
-            <div className={`mobile-bottom-menu ${showMenu ? "show" : keyboardOpen || hideMobileBottomMenu || hideMenu ? "hide" : "show"}`}>
+            <div className={`mobile-bottom-menu ${showMenu ? "show" : "show"}`}>
               {menuItems
                 .filter(
                   ({ label }) =>

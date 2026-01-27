@@ -68,7 +68,6 @@ function Cart() {
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [selectedCustomerStatus, setSelectedCustomerStatus] = useState("");
   const [selectederpCustId, setSelectederpCustId] = useState("");
-  const [hideMenu, setHideMenu] = useState(false);
   const [selectedBranchName, setSelectedBranchName] = useState(
     "No location selected"
   );
@@ -3871,7 +3870,6 @@ function Cart() {
   };
   return (
     <Sidebar
-hideMobileBottomMenu={hideMenu}
       title={t("Your Cart")}
       dir={t("direction")}
       handleGoToCart={() => { }}

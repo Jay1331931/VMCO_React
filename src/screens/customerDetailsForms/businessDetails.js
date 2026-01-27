@@ -32,7 +32,6 @@ function BusinessDetails({
   formErrors = {},
   logosToUpload = {}, // <-- Pass this from CustomerDetails.js
   completeWorkflowData = {},
-  setHideMenu
 }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
@@ -418,7 +417,6 @@ const checkDisabledStatus = (fieldPath) => {
         </label>
         <div className="input-with-verification">
         <SearchableDropdown
-setHideMenu={setHideMenu}
           name="companyType"
           options={(basicMasterLists?.companyType || []).map((item) => ({
             value: item.value,
@@ -940,7 +938,6 @@ setHideMenu={setHideMenu}
         </label>
         <div className="input-with-verification">
         <SearchableDropdown
-setHideMenu={setHideMenu}
           name="deliveryLocations"
           options={(basicMasterLists?.deliveryLocations || []).map((item) => ({
             value: item.value,
@@ -1012,7 +1009,6 @@ setHideMenu={setHideMenu}
         </label>
         <div className="input-with-verification">
         <SearchableDropdown
-setHideMenu={setHideMenu}
           name="typeOfBusiness"
           options={(basicMasterLists?.typeOfBusiness || []).map((item) => ({
             value: item.value,
@@ -1694,7 +1690,6 @@ setHideMenu={setHideMenu}
               </label>
              <div className="input-with-verification">
   <SearchableDropdown
-setHideMenu={setHideMenu}
     name="primaryBusinessUnit"
     options={(basicMasterLists?.entity || []).map((item) => ({
       value: item.value,
@@ -1765,7 +1760,6 @@ setHideMenu={setHideMenu}
               </label>
               <div className="input-with-verification">
               <SearchableDropdown
-setHideMenu={setHideMenu}
                 name="branch"
                 options={(basicMasterLists?.branch || []).map((item) => ({
                   value: item.value,
@@ -1842,7 +1836,6 @@ setHideMenu={setHideMenu}
               </label>
               <div className="input-with-verification">
               <SearchableDropdown
-setHideMenu={setHideMenu}
                 name="assignedTo"
                 options={
                   employeeList?.map((employee) => ({
@@ -1918,7 +1911,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.DAR}
               options={
                 employeeListWithManagers?.map((employee) => ({
@@ -1983,7 +1975,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.VMCO}
               options={
                 employeeListWithManagers?.map((employee) => ({
@@ -2050,7 +2041,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.SHC}
               options={
                 employeeListWithManagers?.map((employee) => ({
@@ -2115,7 +2105,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.NAQI}
               options={
                 employeeListWithManagers?.map((employee) => ({
@@ -2182,7 +2171,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.GMTC}
               options={
                 employeeListWithManagers?.map((employee) => ({

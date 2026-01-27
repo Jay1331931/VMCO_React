@@ -11,10 +11,9 @@ function Checkout() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-const [hideMenu, setHideMenu] = useState(false);
+
     return (
-        <Sidebar
-hideMobileBottomMenu={hideMenu} title={t('Your Cart')} dir={t('direction')}>
+        <Sidebar title={t('Your Cart')} dir={t('direction')}>
             <div className="cart-header">
                 <h2 className="cart-title">Secure Checkout</h2>
             </div>

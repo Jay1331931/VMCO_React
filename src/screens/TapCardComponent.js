@@ -45,7 +45,6 @@ const TapCardPayment = () => {
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [isCardselected, setisCardselected] = useState(false);
   const [isPayButtonValid, setisPayButtonValid] = useState(false);
-  const [hideMenu, setHideMenu] = useState(false);
     const [showCardForm, setShowCardForm] = useState(true);
   const { token } = useAuth();
   const { t } = useTranslation();
@@ -319,8 +318,7 @@ const TapCardPayment = () => {
 
   return (
 
-        <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("Tap Payment")}>
+        <Sidebar title={t("Tap Payment")}>
     <Box
       sx={{
         display: "flex",

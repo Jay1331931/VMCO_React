@@ -53,7 +53,6 @@ const BranchDetailsForm = ({
   setSameAsCustomer,
   setShowAllDetails,
   setExpandedRows,
-  setHideMenu
 }) => {
   const { t, i18n } = useTranslation();
   const [showMap, setShowMap] = useState(false);
@@ -1223,7 +1222,6 @@ const BranchDetailsForm = ({
                           <>
                             {isV(field.name) && (
                               <SearchableDropdown
-setHideMenu={setHideMenu}
                                 name={field.name}
                                 value={branch?.[field.name]}
                                 onChange={
@@ -1494,7 +1492,6 @@ setHideMenu={setHideMenu}
                       return isV(field.name) ? (
                         <div className="dropdown-wrapper-mobile">
                           <SearchableDropdown
-setHideMenu={setHideMenu}
                             name={field.name}
                             value={branch?.[field.name]}
                             onChange={field.onChange || handleBranchFieldChange}

@@ -45,7 +45,6 @@ function Support() {
     const currentLanguage = i18n.language;
     const isArabic = i18n.language === "ar";
     const [searchQuery, setSearchQuery] = useState("");
-    const [hideMenu, setHideMenu] = useState(false);
     const navigate = useNavigate();
     const [isClosedMode, setClosedMode] = useState("open");
     const [initialTickets, setTickets] = useState([]);
@@ -543,8 +542,7 @@ function Support() {
     };
 
     return (
-        <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("Support")} isV={isV("supportContent")} MenuName={"Others"}>
+        <Sidebar title={t("Support")} isV={isV("supportContent")} MenuName={"Others"}>
             <div className="support-content">
                 {isMobile ? (
                     <div className="orders-content">

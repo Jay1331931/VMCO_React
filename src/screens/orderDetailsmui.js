@@ -108,7 +108,6 @@ function OrderDetails() {
   const formMode = location.state?.mode || "view";
   const orderFromNav = location.state?.order || {};
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [hideMenu, setHideMenu] = useState(false);
   console.log("Order details from nav", orderFromNav);
   const salesOrderLinesFromNav =
     orderFromNav &&
@@ -4312,8 +4311,7 @@ function OrderDetails() {
   }, [formMode, orderFromNav]);
 
   return (
-    <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("Orders")} MenuName={t("Orders")}>
+    <Sidebar title={t("Orders")} MenuName={t("Orders")}>
       {isV("orderDetails") && (
         <div>
           <div className="order-details-container">
@@ -4804,7 +4802,6 @@ hideMobileBottomMenu={hideMenu} title={t("Orders")} MenuName={t("Orders")}>
                             </select>
                           ) : (
                             <SearchableDropdown
-setHideMenu={setHideMenu}
                               options={warehouseOptions}
                               value={selectedWarehouse || ""}
                               onChange={handleWarehouseChange}
@@ -5438,7 +5435,6 @@ setHideMenu={setHideMenu}
                 entity={formData.entity}
                 category={formData.category}
                 t={t}
-                setHideMenu={setHideMenu}
               />
             )}
 

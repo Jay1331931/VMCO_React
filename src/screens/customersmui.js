@@ -66,7 +66,6 @@ function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [hideMenu, setHideMenu] = useState(false);
   const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -2544,8 +2543,7 @@ function Customers() {
     });
   };
   return (
-    <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("Customers")} CardPaddingClass={isMobile}>
+    <Sidebar title={t("Customers")} CardPaddingClass={isMobile}>
       <div className="customer-content">
         {!isMobile && (<><Tabs
           tabs={customerTabs}
@@ -2668,7 +2666,6 @@ hideMobileBottomMenu={hideMenu} title={t("Customers")} CardPaddingClass={isMobil
                 </label>
                 <span className="required-field">*</span>
                 <SearchableDropdown
-setHideMenu={setHideMenu}
                   name="region"
                   options={
                     geoData
@@ -2693,7 +2690,6 @@ setHideMenu={setHideMenu}
                 </label>
                 <span className="required-field">*</span>
                 <SearchableDropdown
-setHideMenu={setHideMenu}
                   name="primaryBusinessUnit"
                   // options={basicMasterLists?.region || []}
                   options={entityOptions}

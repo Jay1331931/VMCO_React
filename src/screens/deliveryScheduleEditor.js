@@ -24,7 +24,6 @@ function DeliveryScheduleEditor() {
     const [filters, setFilters] = useState({});
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [hideMenu, setHideMenu] = useState(false);
     const [editData, setEditData] = useState({
         region: "",
         city: "",
@@ -641,8 +640,7 @@ function DeliveryScheduleEditor() {
     };
 
     return (
-        <Sidebar
-hideMobileBottomMenu={hideMenu} title={t("Delivery Schedule Editor")}>
+        <Sidebar title={t("Delivery Schedule Editor")}>
             <div className="orders-content">
                 {/* Entity Tabs Section */}
                 <div className="filter-section">
@@ -681,7 +679,6 @@ hideMobileBottomMenu={hideMenu} title={t("Delivery Schedule Editor")}>
                             <div>
                                 <label>{t("Region")}</label>
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                     name="region"
                                     value={selectedRegion}
                                     onChange={handleRegionChange}
@@ -700,7 +697,6 @@ setHideMenu={setHideMenu}
                             <div>
                                 <label>{t("City")}</label>
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                     name="city"
                                     value={selectedCity}
                                     onChange={handleCityChange}
@@ -720,7 +716,6 @@ setHideMenu={setHideMenu}
                             <div>
                                 <label>{t("Cut-off Day")}</label>
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                     name="cutoffDay"
                                     value={newSchedule.cutoffDay}
                                     onChange={(e) => {
@@ -741,7 +736,6 @@ setHideMenu={setHideMenu}
                             <div>
                                 <label>{t("Pickup Day")}</label>
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                     name="pickupDay"
                                     value={newSchedule.pickupDay}
                                     onChange={(e) => {
@@ -762,7 +756,6 @@ setHideMenu={setHideMenu}
                             <div>
                                 <label>{t("Delivery Day")}</label>
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                     name="deliveryDay"
                                     value={newSchedule.deliveryDay}
                                     onChange={(e) => {
@@ -953,7 +946,6 @@ setHideMenu={setHideMenu}
                             <div style={{ marginBottom: "15px" }}>
                                 <label>Pickup Day</label>
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                     name="pickupDay"
                                     value={editData.pickupDay}
                                     onChange={(e) => setEditData({ ...editData, pickupDay: e.target.value })}
@@ -973,7 +965,6 @@ setHideMenu={setHideMenu}
                             <div style={{ marginBottom: "20px" }}>
                                 <label>Delivery Day</label>
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                     name="deliveryDay"
                                     value={editData.deliveryDay}
                                     onChange={(e) => setEditData({ ...editData, deliveryDay: e.target.value })}

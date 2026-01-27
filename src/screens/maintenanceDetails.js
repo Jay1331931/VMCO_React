@@ -75,7 +75,6 @@ function MaintenanceDetails() {
   });
   const serialNumberDebounceRef = useRef(null);
   const [branches, setBranches] = useState([]);
-  const [hideMenu, setHideMenu] = useState(false);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || ""));
   const [employees, setEmployees] = useState([]);
@@ -1290,10 +1289,8 @@ function MaintenanceDetails() {
 
 
   return (
-    // <Sidebar
-// hideMobileBottomMenu={hideMenu} title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
-    <Sidebar
-hideMobileBottomMenu={hideMenu} title={`Maintenance`}>
+    // <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
+    <Sidebar title={`Maintenance`}>
 
       <div className='maintenance-details-container'>
         <h2 className='maintenance-details-title'>{formMode === "add" ? t("New Request") : `${t("Request#")} ${ticket.requestId}`}</h2>
@@ -1358,7 +1355,6 @@ hideMobileBottomMenu={hideMenu} title={`Maintenance`}>
                 <label>{t("Issue Type")} *</label>
 
                 <SearchableDropdown
-setHideMenu={setHideMenu}
                   name="issueType"
                   options={issueTypeOptions.map((issueType) =>
                     typeof issueType === "object"
@@ -1693,7 +1689,6 @@ setHideMenu={setHideMenu}
             <div className="support-assign">
               <span>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
               <SearchableDropdown
-setHideMenu={setHideMenu}
                 id="assignedTeamMember"
                 name="assignedTeamMember"
                 value={ticket.assignedTeamMember ? String(ticket.assignedTeamMember) : ""}
@@ -1826,7 +1821,6 @@ setHideMenu={setHideMenu}
           entity={Constants.ENTITY.VMCO}
           category={Constants.CATEGORY.VMCO_MACHINES}
           machineMode={true}
-          setHideMenu={setHideMenu}
         />
       )}
       {showSparePartsPopup && (

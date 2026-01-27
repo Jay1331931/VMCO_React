@@ -61,7 +61,7 @@ const initialEntities = [
   },
 ];
 
-function Products({ customerId, customer, setTabsHeight, setHideMenu }) {
+function Products({ customerId, customer, setTabsHeight }) {
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [products, setProducts] = useState([]); // all products
   const [currentItems, setCurrentItems] = useState([]); // products on current page
@@ -596,7 +596,6 @@ function Products({ customerId, customer, setTabsHeight, setHideMenu }) {
 <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%" }}>
                               <div className="category-dropdown-mobile" style={{ flex: 1 }}>
                                   <SearchableDropdown
-setHideMenu={setHideMenu}
                                   id="category-filter"
             name="categoryFilter"
             options={categoryOptions}
@@ -615,7 +614,6 @@ setHideMenu={setHideMenu}
                               </div>
                               <div className="subcategory-dropdown" style={{ flex: 1 }}>
                                   <SearchableDropdown
-setHideMenu={setHideMenu}
                                   id="subcategory-filter"
             name="subCategoryFilter"
             options={subCategoryOptions}
@@ -634,7 +632,6 @@ setHideMenu={setHideMenu}
                           </div>
         </>) : (<>{/* Category Filter - use SearchableDropdown */}
           <SearchableDropdown
-setHideMenu={setHideMenu}
             id="category-filter"
             name="categoryFilter"
             options={categoryOptions}
@@ -649,7 +646,6 @@ setHideMenu={setHideMenu}
           />
           {/* Subcategory Filter - use SearchableDropdown */}
           <SearchableDropdown
-setHideMenu={setHideMenu}
             id="subcategory-filter"
             name="subCategoryFilter"
             options={subCategoryOptions}

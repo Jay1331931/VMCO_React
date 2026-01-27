@@ -180,7 +180,7 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
 function CustomersDetails() {
   const location = useLocation();
    const { token, user, isAuthenticated, logout, loading } = useAuth();
-const [hideMenu, setHideMenu] = useState(false);
+
   const transformedCustomer = location.state?.transformedCustomer;
   // const {
   //   refreshCustomerData = () =>
@@ -2731,8 +2731,7 @@ const [hideMenu, setHideMenu] = useState(false);
   }
 
   return (
-    <Sidebar
-hideMobileBottomMenu={hideMenu}>
+    <Sidebar>
       <div className="customers">
         <div
           className={`customer-onboarding-content ${
@@ -3106,7 +3105,6 @@ hideMobileBottomMenu={hideMenu}>
 
                               {isV(field.name) && (
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                   name={field.name}
                                   options={dropdownOptions[field.name] || []}
                                   value={
@@ -3174,7 +3172,6 @@ setHideMenu={setHideMenu}
 
                               {isV(field.name) && (
                                 <SearchableDropdown
-setHideMenu={setHideMenu}
                                   id={`${field.name}-select`}
                                   name={field.name}
                                   value={
