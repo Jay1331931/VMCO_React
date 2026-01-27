@@ -20,7 +20,6 @@ function GetProducts({
   const isRTL = i18n.language === 'ar';
   const [backendProducts, setBackendProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
-  const [hideMenu, setHideMenu] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
