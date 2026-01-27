@@ -32,6 +32,7 @@ const AddInvites = () => {
   const [inviteErrors, setInviteErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filteredInvites, setFilteredInvites] = useState([]);
+  const [hideMenu, setHideMenu] = useState(false);
 const getOptionsFromBasicsMaster = async (fieldName) => {
     const params = new URLSearchParams({
       filters: JSON.stringify({ master_name: fieldName }), // Properly stringify the filter
@@ -472,7 +473,8 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
   };
 
   return (
-    <Sidebar title={t("Invites")}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Invites")}>
       <div className="invite-form-container">
         <h2>{t("Invite")}</h2>
 
@@ -533,6 +535,7 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
           <div className="form-group">
             <label>{t("Region")} *</label>
             <SearchableDropdown
+setHideMenu={setHideMenu}
               name="region"
               options={
                 geoData
@@ -553,6 +556,7 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
           <div className="form-group">
             <label>{t("Primary Business Unit")} *</label>
             <SearchableDropdown
+setHideMenu={setHideMenu}
               name="primaryBusinessUnit"
               options={entityOptions}
               value={inviteData.primaryBusinessUnit}

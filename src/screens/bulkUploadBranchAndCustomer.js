@@ -34,6 +34,7 @@ function BulkUploadBranchAndCustomer() {
   const [emailloading, setEmailLoading] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState("");
     const [cutOffLoading, setcutOffLoading] = useState(false);
+    const [hideMenu, setHideMenu] = useState(false);
   const fileExcelInputRef = useRef();
   const { t } = useTranslation();
   const rbacMgr = new RbacManager(
@@ -50,6 +51,7 @@ function BulkUploadBranchAndCustomer() {
       customer: Constants.DOCUMENTS_NAME.CUSTOMERS_BULK_UPLOAD_FORMAT,
       branch: Constants.DOCUMENTS_NAME.BRANCH_BULK_UPLOAD_FORMAT,
       product: Constants.DOCUMENTS_NAME.PRODUCTS_UPLOAD_FORMAT,
+      salesExecutiveUpdate: Constants.DOCUMENTS_NAME.SALES_EXECUTIVE_UPDATE_FORMAT,
     };
     const result = await Swal.fire({
       title: t("Confirm Download?"),
@@ -114,10 +116,14 @@ function BulkUploadBranchAndCustomer() {
         (uploadType === "branch" &&
           `${API_BASE_URL}/auth/bulk_upload_branch`) ||
         (uploadType === "product" &&
-          `${API_BASE_URL}/auth/bulk_upload_product`);
+          `${API_BASE_URL}/auth/bulk_upload_product`) ||
+        (uploadType === "salesExecutiveUpdate" &&
+          `${API_BASE_URL}/customers/update-sales-executive`);
 
       const response = await axios.post(apiUrl, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+        },
         responseType: "blob",
         validateStatus: () => true,
       });
@@ -150,7 +156,8 @@ function BulkUploadBranchAndCustomer() {
           a.download =
             (uploadType === "customer" && "customer_upload_errors.xlsx") ||
             (uploadType === "branch" && "branch_upload_errors.xlsx") ||
-            (uploadType === "product" && "product_upload_errors.xlsx");
+            (uploadType === "product" && "product_upload_errors.xlsx") ||
+            (uploadType === "salesExecutiveUpdate" && "sales_executive_update_errors.xlsx");
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -295,7 +302,8 @@ function BulkUploadBranchAndCustomer() {
     }
   };
   return (
-    <Sidebar title={t("General")}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("General")}>
       <div
         style={{
           display: "flex",
@@ -318,7 +326,7 @@ function BulkUploadBranchAndCustomer() {
             style={{
               textAlign: "center",
               marginBottom: "28px",
-              color: "#0B4C45",
+              color: "var(--logo-deep-green)",
               fontWeight: 700,
             }}
           >
@@ -340,8 +348,8 @@ function BulkUploadBranchAndCustomer() {
                 variant="contained"
                 sx={{
                   ...actionBtnStyle,
-                  backgroundColor: "#32A19F",
-                  "&:hover": { backgroundColor: "#278D8A" },
+                  backgroundColor: "var(--logo-cyan)",
+                  "&:hover": { filter: "brightness(0.85)" },
                 }}
                 onClick={() => {
                   setUploadType("customer");
@@ -357,8 +365,8 @@ function BulkUploadBranchAndCustomer() {
                 variant="contained"
                 sx={{
                   ...actionBtnStyle,
-                  backgroundColor: "#009345",
-                  "&:hover": { backgroundColor: "#007C39" },
+                  backgroundColor: "var(--logo-light-green)",
+                  "&:hover": { filter: "brightness(0.85)" },
                 }}
                 onClick={() => {
                   setUploadType("branch");
@@ -374,8 +382,8 @@ function BulkUploadBranchAndCustomer() {
                 variant="contained"
                 sx={{
                   ...actionBtnStyle,
-                  backgroundColor: "#F6921E",
-                  "&:hover": { backgroundColor: "#DD7F0F" },
+                  backgroundColor: "var(--logo-orange)",
+                  "&:hover": { filter: "brightness(0.85)" },
                 }}
                 onClick={() => {
                   setUploadType("product");
@@ -383,6 +391,23 @@ function BulkUploadBranchAndCustomer() {
                 }}
               >
                 📦 Upload Products
+              </Button>
+            )}
+
+            {isV("BulkSalesExecutive") && (
+              <Button
+                variant="contained"
+                sx={{
+                  ...actionBtnStyle,
+                  backgroundColor: "var(--logo-deep-green)",
+                  "&:hover": { filter: "brightness(0.85)" },
+                }}
+                onClick={() => {
+                  setUploadType("salesExecutiveUpdate");
+                  setPopup(true);
+                }}
+              >
+                👥 Upload Sales Executive
               </Button>
             )}
           </div>
@@ -394,7 +419,7 @@ function BulkUploadBranchAndCustomer() {
             style={{
               textAlign: "center",
               // marginBottom: "28px",
-              color: "#0B4C45",
+              color: "var(--logo-deep-green)",
               fontWeight: 700,
             }}
           >
@@ -440,9 +465,9 @@ function BulkUploadBranchAndCustomer() {
                   py: 1.4,
                   fontWeight: 700,
                   borderRadius: "10px",
-                  backgroundColor: "#0B4C45",
+                  backgroundColor: "var(--logo-deep-green)",
                   whiteSpace: "nowrap",
-                  "&:hover": { backgroundColor: "#083A35" },
+                  "&:hover": { backgroundColor: "var(--logo-deep-green)" },
                 }}
                 variant="contained"
                 disabled={!selectedEntity || cutOffLoading}
@@ -464,6 +489,7 @@ function BulkUploadBranchAndCustomer() {
                 {uploadType === "customer" && t("Upload Customer Data")}
                 {uploadType === "branch" && t("Upload Branch Data")}
                 {uploadType === "product" && t("Upload Products Data")}
+                {uploadType === "salesExecutiveUpdate" && t("Upload Sales Executive Update")}
               </span>
               <button className="gp-close-btn" onClick={onClose}>
                 {t("Close")}
@@ -483,6 +509,8 @@ function BulkUploadBranchAndCustomer() {
                     t("Please upload a valid Branch Excel file.")}
                   {uploadType === "product" &&
                     t("Please upload a valid Product Excel file.")}
+                  {uploadType === "salesExecutiveUpdate" &&
+                    t("Please upload a valid Sales Executive Update Excel file.")}
                 </p>
                 <div className="popup-buttons-row">
                   <button

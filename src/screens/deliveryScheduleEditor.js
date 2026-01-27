@@ -24,6 +24,7 @@ function DeliveryScheduleEditor() {
     const [filters, setFilters] = useState({});
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [hideMenu, setHideMenu] = useState(false);
     const [editData, setEditData] = useState({
         region: "",
         city: "",
@@ -640,7 +641,8 @@ function DeliveryScheduleEditor() {
     };
 
     return (
-        <Sidebar title={t("Delivery Schedule Editor")}>
+        <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Delivery Schedule Editor")}>
             <div className="orders-content">
                 {/* Entity Tabs Section */}
                 <div className="filter-section">
@@ -679,6 +681,7 @@ function DeliveryScheduleEditor() {
                             <div>
                                 <label>{t("Region")}</label>
                                 <SearchableDropdown
+setHideMenu={setHideMenu}
                                     name="region"
                                     value={selectedRegion}
                                     onChange={handleRegionChange}
@@ -697,6 +700,7 @@ function DeliveryScheduleEditor() {
                             <div>
                                 <label>{t("City")}</label>
                                 <SearchableDropdown
+setHideMenu={setHideMenu}
                                     name="city"
                                     value={selectedCity}
                                     onChange={handleCityChange}
@@ -716,6 +720,7 @@ function DeliveryScheduleEditor() {
                             <div>
                                 <label>{t("Cut-off Day")}</label>
                                 <SearchableDropdown
+setHideMenu={setHideMenu}
                                     name="cutoffDay"
                                     value={newSchedule.cutoffDay}
                                     onChange={(e) => {
@@ -736,6 +741,7 @@ function DeliveryScheduleEditor() {
                             <div>
                                 <label>{t("Pickup Day")}</label>
                                 <SearchableDropdown
+setHideMenu={setHideMenu}
                                     name="pickupDay"
                                     value={newSchedule.pickupDay}
                                     onChange={(e) => {
@@ -756,6 +762,7 @@ function DeliveryScheduleEditor() {
                             <div>
                                 <label>{t("Delivery Day")}</label>
                                 <SearchableDropdown
+setHideMenu={setHideMenu}
                                     name="deliveryDay"
                                     value={newSchedule.deliveryDay}
                                     onChange={(e) => {
@@ -946,6 +953,7 @@ function DeliveryScheduleEditor() {
                             <div style={{ marginBottom: "15px" }}>
                                 <label>Pickup Day</label>
                                 <SearchableDropdown
+setHideMenu={setHideMenu}
                                     name="pickupDay"
                                     value={editData.pickupDay}
                                     onChange={(e) => setEditData({ ...editData, pickupDay: e.target.value })}
@@ -965,6 +973,7 @@ function DeliveryScheduleEditor() {
                             <div style={{ marginBottom: "20px" }}>
                                 <label>Delivery Day</label>
                                 <SearchableDropdown
+setHideMenu={setHideMenu}
                                     name="deliveryDay"
                                     value={editData.deliveryDay}
                                     onChange={(e) => setEditData({ ...editData, deliveryDay: e.target.value })}

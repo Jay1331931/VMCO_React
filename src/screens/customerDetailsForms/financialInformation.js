@@ -772,6 +772,7 @@ function FinancialInformation({
         </label>
         <div className="input-with-verification">
           <SearchableDropdown
+setHideMenu={setHideMenu}
             name="bankName"
             options={(basicMasterLists?.bankName || []).map((item) => ({
               value: item.value,

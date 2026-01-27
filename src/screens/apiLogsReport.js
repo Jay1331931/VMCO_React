@@ -29,6 +29,7 @@ function ApiLogsReport() {
   const [selectedStatusCode, setSelectedStatusCode] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [hideMenu, setHideMenu] = useState(false);
   const [apiNameOptions, setApiNameOptions] = useState([]);
   const [callNameOptions, setCallNameOptions] = useState([]);
   const [statusCodeOptions, setStatusCodeOptions] = useState([]);
@@ -295,7 +296,8 @@ function ApiLogsReport() {
   const totalPages = Math.ceil(total / pageSize) || 1;
  
   return (
-    <Sidebar title={t("API Logs Report")}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("API Logs Report")}>
       <div className="logs-content">
         <div className="logs-header">
           <div className="logs-header-controls" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -303,6 +305,7 @@ function ApiLogsReport() {
             <div className="form-group">
               <label>{t("API Type")}</label>
               <SearchableDropdown
+setHideMenu={setHideMenu}
                 options={apiTypeOptions}
                 value={selectedApiType}
                  onChange={(e) => {
@@ -320,6 +323,7 @@ function ApiLogsReport() {
             {/* <div className="form-group">
               <label>{t("API Name")}</label>
               <SearchableDropdown
+setHideMenu={setHideMenu}
                 options={apiNameOptions}
                 value={selectedApiName}
                  onChange={(e) => {
@@ -334,6 +338,7 @@ function ApiLogsReport() {
               <div className="form-group">
                 <label>{t("Call Name")}</label>
                 <SearchableDropdown
+setHideMenu={setHideMenu}
                   options={callNameOptions}
                   value={selectedCallName}
                   onChange={(e) => {
@@ -348,6 +353,7 @@ function ApiLogsReport() {
               {/* <div className="form-group">
                 <label>{t("Status Code")}</label>
               <SearchableDropdown
+setHideMenu={setHideMenu}
                 options={statusCodeOptions}
                 value={selectedStatusCode}
                 onChange={(e) => {

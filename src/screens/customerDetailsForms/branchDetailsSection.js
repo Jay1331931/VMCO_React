@@ -1222,6 +1222,7 @@ const BranchDetailsForm = ({
                           <>
                             {isV(field.name) && (
                               <SearchableDropdown
+setHideMenu={setHideMenu}
                                 name={field.name}
                                 value={branch?.[field.name]}
                                 onChange={
@@ -1492,6 +1493,7 @@ const BranchDetailsForm = ({
                       return isV(field.name) ? (
                         <div className="dropdown-wrapper-mobile">
                           <SearchableDropdown
+setHideMenu={setHideMenu}
                             name={field.name}
                             value={branch?.[field.name]}
                             onChange={field.onChange || handleBranchFieldChange}

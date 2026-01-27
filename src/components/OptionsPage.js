@@ -31,7 +31,7 @@ const OptionsPage = () => {
   const [tempdecodedOrderID, setTempDecodedOrderID] = useState(null);
   const [DecodedorderTpe, setDecodedOrderType] = useState(null);
   const [amount, setAmount] = useState(0);
-
+const [hideMenu, setHideMenu] = useState(false);
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const cookieToken = getCookie("token");
@@ -395,7 +395,8 @@ const OptionsPage = () => {
     isMatch;
 
   return (
-    <Sidebar title={t("Payment Options")}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Payment Options")}>
       { (isVMCO || isNAQI || showApplePay  ) ?  <Box
         sx={{
           display: "flex",

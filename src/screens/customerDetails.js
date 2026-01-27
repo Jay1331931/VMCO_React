@@ -444,6 +444,7 @@ function CustomerDetails() {
   const { token, user, isAuthenticated, logout, loading } = useAuth();
   const location = useLocation();
   const activeTabRequired = location?.state?.activeTabRequired;
+  const [hideMenu, setHideMenu] = useState(false);
   const [activeTab, setActiveTab] = useState(
     user?.roles[0] === "branch_primary"
       ? "Branches"
@@ -3061,7 +3062,8 @@ if (field === "methodDetails" &&
   };
 
   return (
-    <Sidebar title={t("Company")} MenuName={t("/customers")}>
+    <Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Company")} MenuName={t("/customers")}>
       {isLoading && (
         <div className="loading-container" style= {{position: "absolute", top: "50%", left: "50%"}}>
           <LoadingSpinner size="medium" />

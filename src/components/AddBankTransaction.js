@@ -76,6 +76,7 @@ const AddBankTransaction = () => {
   const [isSubmitting, setisSubmitting] = useState(null);
   const [isUploading,setIsUploading]=useState(null)
    const [maxDate, setMaxDate] = useState('');
+   const [hideMenu, setHideMenu] = useState(false);
   const isMobile=usePlatform()
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
@@ -680,6 +681,7 @@ fetchSystemDate()
       {t("Entity")} <span style={{ color: "red" }}> *</span>
     </label>
     <SearchableDropdown
+setHideMenu={setHideMenu}
       id="entity"
       name="entity"
       className="dropdown-mobile-bank "
@@ -1229,7 +1231,8 @@ fetchSystemDate()
   //     {renderTemplate()}
   //   </div>
   // ) : (
-    return(<Sidebar title={t("Bank Transactions")}>
+    return(<Sidebar
+hideMobileBottomMenu={hideMenu} title={t("Bank Transactions")}>
       {/* <div className="bank-transaction-form"> */}
       {renderTemplate()}
       {/* </div> */}
