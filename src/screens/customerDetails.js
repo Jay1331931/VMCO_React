@@ -469,7 +469,6 @@ function CustomerDetails() {
   const [consent, setConsent] = useState(false);
   const [tradingFilesToUpload, setTradingFilesToUpload] = useState([]);
   const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
-  const [hideMenu, setHideMenu] = useState(false);
   // Add this state for logo uploads (similar to tradingFilesToUpload)
   const [logosToUpload, setLogosToUpload] = useState({});
   const [signatureToUpload, setSignatureToUpload] = useState({});
@@ -3062,7 +3061,7 @@ if (field === "methodDetails" &&
   };
 
   return (
-    <Sidebar title={t("Company")} MenuName={t("/customers")} hideMobileBottomMenu={hideMenu}>
+    <Sidebar title={t("Company")} MenuName={t("/customers")}>
       {isLoading && (
         <div className="loading-container" style= {{position: "absolute", top: "50%", left: "50%"}}>
           <LoadingSpinner size="medium" />
@@ -3242,7 +3241,6 @@ if (field === "methodDetails" &&
                     formErrors={formErrors}
                     logosToUpload={logosToUpload} // <-- pass to BusinessDetails
                     completeWorkflowData={completeWorkflowData}
-                    setHideMenu={setHideMenu}
                   />
                 )}
               {activeTab === "Contact Details" && isV("contactDetailsTab") && (

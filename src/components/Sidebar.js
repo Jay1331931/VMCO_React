@@ -1288,7 +1288,7 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
           {isMobile && isMobile && (
-            <div className={`mobile-bottom-menu ${showMenu && !hideMobileBottomMenu ? "show" : hideMobileBottomMenu ? "hide" : "show"}`}>
+            <div className={`mobile-bottom-menu ${showMenu ? "show" : "show"}`}>
               {menuItems
                 .filter(
                   ({ label }) =>
