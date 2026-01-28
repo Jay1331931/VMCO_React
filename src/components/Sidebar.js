@@ -1218,56 +1218,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                       </div>
                     </div>
                   )}
-                  {/* {user?.userType?.toLowerCase() === "customer" &&
-                    user?.roles[0] === "customer_primary" && (
-                      <div className="text">
-                        <div
-                          className="user-details-footer"
-                          title={user?.erpCustomerId}
-                        >
-                          {t("Customer ID")}: {user?.erpCustomerId}
-                        </div>
-                        <div
-                          className="user-details-footer"
-                          title={
-                            i18n.language === "en"
-                              ? user?.companyNameEn
-                              : user?.companyNameAr
-                          }
-                        >
-                          {t("Company")}:{" "}
-                          {i18n.language === "en"
-                            ? user?.companyNameEn
-                            : user?.companyNameAr}
-                        </div>
-                        <div
-                          className="user-details-footer"
-                          title={user?.branchNumber}
-                        >
-                          {t("Branches")}: {user?.branchNumber}
-                        </div>
-                      </div>
-                    )} */}
-                  {/* {user?.userType?.toLowerCase() === "customer" &&
-                    user?.roles[0] === "branch_primary" && (
-                      <div className="text">
-                        <div
-                          className="user-details-footer"
-                          title={user?.erpCustomerId}
-                        >
-                          {t("Customer ID")}: {user?.erpCustomerId}
-                        </div>
-                        <div
-                          className="user-details-footer"
-                          title={user?.branchNumberPrimary}
-                        >
-                          {Number(user?.branchNumberPrimary)
-                            ? t("Branch")
-                            : t("Branch ID")}
-                          : {user?.branchNumberPrimary}
-                        </div>
-                      </div>
-                    )} */}
+               
                 </div>
               )}
 

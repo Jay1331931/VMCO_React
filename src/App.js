@@ -240,6 +240,18 @@ const isMobile=usePlatform()
   };
   const isOnline = useNetworkStatus();
   
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    // If the height increases significantly, the keyboard likely closed
+    const isKeyboardClosed = window.visualViewport.height >= window.innerHeight;
+    
+    if (isKeyboardClosed) {
+      document.body.classList.remove('keyboard-open');
+      // Force focus out if needed
+      document.activeElement.blur();
+    }
+  });
+}
   return (
     <>
      {!isOnline ? (

@@ -134,7 +134,17 @@ function SearchableDropdown({
   }) || allOption;
 
   const displayText = t(typeof selectedOption === "object" ? selectedOption.name : selectedOption) || placeholder;
-
+const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done' ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
   return (
     <div className={`searchable-dropdown ${className || ''}`} ref={dropdownRef} style={{ position: 'relative' }}>
       <div
@@ -218,14 +228,24 @@ function SearchableDropdown({
     value={searchTerm}
     onChange={(e) => setSearchTerm(e.target.value)}
     onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
     setHideMenu?.(true);   // 👈 hide bottom menu
   }}
+  
 
   onClick={() => {
+    
     setHideMenu?.(true);   // 👈 mobile tap safety
   }}
-
+onKeyDown={handleKeyDown}
   onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+    
     setHideMenu?.(false);    // 👈 show menu again (optional)
   }}
     style={{
@@ -331,6 +351,10 @@ function SearchableDropdown({
           outline: none;
           border-color: #007bff;
         }
+           body.keyboard-open .mobile-bottom-menu {
+          display: none !important;
+        }
+        
       `}</style>
     </div>
   );
