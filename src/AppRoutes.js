@@ -53,6 +53,7 @@ import PrivacyPolicy from "./screens/PrivacyPolicy";
 import ContactUs from "./screens/ContactUs";
 import CoolingPeriodEditor from "./screens/coolingPeriodEditor";
 import PricingPolicyEditor from "./screens/pricingPolicyEditor";
+import DataManagement from "./screens/dataManagement";
 import { App } from "@capacitor/app";
 import Swal from "sweetalert2";
 import HomePage from "./screens/homePage";
@@ -308,7 +309,6 @@ function AppRoutes() {
         path="/bankTransactions/order/:amount/:orderId/:orderType"
         element={<AddBankTransaction />}
       />
-      <Route path="/admin/upload" element={<BulkUploadBranchAndCustomer />} />
       <Route path="/customerDetails" element={<CustomerDetails />} />
       {/* Catch-all route for 404 Not Found */}
       <Route path="*" element={<NotFound />} />
@@ -321,6 +321,19 @@ function AppRoutes() {
         element={
           <ProtectedRoute page="reports">
             <Reports />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/admin/upload"
+        element={
+          <ProtectedRoute page="uploads">
+            <BulkUploadBranchAndCustomer />
+          </ProtectedRoute>} />
+      <Route
+        path="/dataManagement"
+        element={
+          <ProtectedRoute page="dataManagement">
+            <DataManagement />
           </ProtectedRoute>
         }
       />
@@ -342,11 +355,11 @@ function AppRoutes() {
       />
       <Route path="/payments/:orderId" element={<PaymentLines />} />
       <Route path="/apple-pay/testing" element={<ApplePaymentReact />} />
-     <Route path="/home"  element={
-          <ProtectedRoute page="home">
-            <HomePage />
-          </ProtectedRoute>
-        }/>
+      <Route path="/home" element={
+        <ProtectedRoute page="home">
+          <HomePage />
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }

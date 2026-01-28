@@ -13,16 +13,43 @@ import {
   Button,
   MenuItem,
   InputLabel,
+  Grid,
+  Paper,
 } from "@mui/material";
+import {
+  FontAwesomeIcon,
+} from "@fortawesome/react-fontawesome";
+import {
+  faUsers,
+  faCodeBranch,
+  faBox,
+  faUserTie,
+} from "@fortawesome/free-solid-svg-icons";
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const actionBtnStyle = {
-  px: 3,
-  py: 1.4,
-  fontSize: "15px",
-  fontWeight: 600,
-  borderRadius: "10px",
-  textTransform: "none",
-  boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
+
+const uploadCardStyle = {
+  padding: "24px",
+  borderRadius: "12px",
+  background: "linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%)",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+  border: "1px solid #e0e0e0",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  height: "100%",
+  width: "250px",
+  "&:hover": {
+    transform: "translateY(-2px)",
+  },
+};
+
+const iconStyle = {
+  fontSize: "32px",
+  marginBottom: "12px",
+  display: "block",
 };
 
 function BulkUploadBranchAndCustomer() {
@@ -32,15 +59,13 @@ function BulkUploadBranchAndCustomer() {
   const [popup, setPopup] = useState(false);
   const { token, user, logout } = useAuth();
   const [emailloading, setEmailLoading] = useState(false);
-  const [selectedEntity, setSelectedEntity] = useState("");
-    const [cutOffLoading, setcutOffLoading] = useState(false);
   const fileExcelInputRef = useRef();
   const { t } = useTranslation();
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
-    "BulkUpload"
+    "Uploads"
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
@@ -120,7 +145,7 @@ function BulkUploadBranchAndCustomer() {
           `${API_BASE_URL}/customers/update-sales-executive`);
 
       const response = await axios.post(apiUrl, formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
         },
         responseType: "blob",
@@ -135,8 +160,8 @@ function BulkUploadBranchAndCustomer() {
 
       // For sales executive update, if validation fails, just display the error message
       if (uploadType === "salesExecutiveUpdate" && !data?.success) {
-        const errorMessage = Array.isArray(data.message) 
-          ? data.message.join("\n\n") 
+        const errorMessage = Array.isArray(data.message)
+          ? data.message.join("\n\n")
           : (data.message || t("An error occurred while uploading the file."));
         Swal.fire({
           title: t("File Upload Failed"),
@@ -162,8 +187,8 @@ function BulkUploadBranchAndCustomer() {
           html: `
             ${t("Some rows contain validation errors.")}<br>
             ${t(
-              "The Excel file has been updated with a new column named"
-            )} <b>${t("Errors")}</b>.<br>
+            "The Excel file has been updated with a new column named"
+          )} <b>${t("Errors")}</b>.<br>
             ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t(
             "column, fix the issues, and re-upload the file."
           )}.
@@ -198,8 +223,8 @@ function BulkUploadBranchAndCustomer() {
           confirmButtonText: t("OK"),
         });
       } else {
-        const errorMessage = Array.isArray(data.message) 
-          ? data.message.join("\n") 
+        const errorMessage = Array.isArray(data.message)
+          ? data.message.join("\n")
           : (data.message || t("An error occurred while uploading the file."));
         Swal.fire({
           title: t("File Upload Failed"),
@@ -270,232 +295,192 @@ function BulkUploadBranchAndCustomer() {
       setEmailLoading(false);
     }
   };
-  const handleCuttOffSubmit = async (entity) => {
-    setcutOffLoading(true);
-    try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/auth/run/runBatchCutOffEntityWise?entity=${entity}`
-      );
 
-      if (data.status?.toLowerCase() === "ok" && (data?.failedOrders==0 )) {
-        Swal.fire({
-          title: t("Cut-off Run Successfully"),
-          text: t(data.message) || t("Cut-off Run Successfully"),
-          icon: "success",
-          confirmButtonText: t("OK"),
-        });
-      } else {
-        const failedMessage = Object.entries(
-          (data?.failedOrders || [])
-            .filter((r) => r.status !== "success")
-            .reduce((acc, result) => {
-              const error = result?.error || "Unknown error";
-              acc[error] = (acc[error] || 0) + 1;
-              return acc;
-            }, {})
-        )
-          .map(([error, count]) => `• ${error}: ${count} order(s)`)
-          .join("\n");
-        Swal.fire({
-          title: "Cut-off Failed",
-          text:
-            t(failedMessage) ||
-            "Some orders failed during the cut-off process.",
-          icon: "error",
-          confirmButtonText: t("OK"),
-        });
-      }
-    } catch (error) {
-      console.error("An error occurred while running Cut-off:", error);
-
-      Swal.fire({
-        title: "Cut-off Failed",
-        text:
-          error.response?.data?.message ||
-          "An error occurred while running Cut-off:",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
-    } finally {
-      setcutOffLoading(false);
-      setSelectedEntity("")
-    }
-  };
   return (
-    <Sidebar title={t("General")}>
+    <Sidebar title={t("Uploads")}>
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          padding: "30px 16px",
         }}
       >
         <div
           style={{
             width: "100%",
-            maxWidth: "1100px",
+            maxWidth: "1200px",
             background: "#fff",
             borderRadius: "16px",
-            padding: "28px",
-            boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
           }}
         >
-          {/* Title */}
-          <h2
-            style={{
-              textAlign: "center",
-              marginBottom: "28px",
-              color: "var(--logo-deep-green)",
-              fontWeight: 700,
-            }}
-          >
-            📦 Bulk Upload Management
-          </h2>
-
-          {/* Upload Buttons */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              flexWrap: "wrap",
-              gap: "16px",
-              marginBottom: "32px",
-            }}
-          >
-            {isV("BulkCustomer") && (
-              <Button
-                variant="contained"
-                sx={{
-                  ...actionBtnStyle,
-                  backgroundColor: "var(--logo-cyan)",
-                  "&:hover": { filter: "brightness(0.85)" },
-                }}
-                onClick={() => {
-                  setUploadType("customer");
-                  setPopup(true);
-                }}
-              >
-                📤 Upload Customers
-              </Button>
-            )}
-
-            {isV("BulkBranch") && (
-              <Button
-                variant="contained"
-                sx={{
-                  ...actionBtnStyle,
-                  backgroundColor: "var(--logo-light-green)",
-                  "&:hover": { filter: "brightness(0.85)" },
-                }}
-                onClick={() => {
-                  setUploadType("branch");
-                  setPopup(true);
-                }}
-              >
-                🏢 Upload Branches
-              </Button>
-            )}
-
-            {isV("BulkProduct") && (
-              <Button
-                variant="contained"
-                sx={{
-                  ...actionBtnStyle,
-                  backgroundColor: "var(--logo-orange)",
-                  "&:hover": { filter: "brightness(0.85)" },
-                }}
-                onClick={() => {
-                  setUploadType("product");
-                  setPopup(true);
-                }}
-              >
-                📦 Upload Products
-              </Button>
-            )}
-
-            {isV("BulkSalesExecutive") && (
-              <Button
-                variant="contained"
-                sx={{
-                  ...actionBtnStyle,
-                  backgroundColor: "var(--logo-deep-green)",
-                  "&:hover": { filter: "brightness(0.85)" },
-                }}
-                onClick={() => {
-                  setUploadType("salesExecutiveUpdate");
-                  setPopup(true);
-                }}
-              >
-                👥 Upload Sales Executive
-              </Button>
-            )}
-          </div>
-
- {isV("EntityWiseCutOff") && (
-          <><hr style={{ border: "none", borderTop: "1px solid #eee" }} />
-
-           <h2
-            style={{
-              textAlign: "center",
-              // marginBottom: "28px",
-              color: "var(--logo-deep-green)",
-              fontWeight: 700,
-            }}
-          >
-           {t("Entity Wise Cut-off")}
-          </h2>
-          <div
-            style={{
-              // marginTop: "28px",
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            
-            <div
+          {/* Upload Section */}
+          {isV("uploadSection") && (<div style={{ marginBottom: "50px" }}>
+            <h2
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                background: "#F9FAFA",
-                padding: "18px 20px",
-                borderRadius: "14px",
-                boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
-                width: "100%",
-                maxWidth: "700px",
+                color: "var(--logo-deep-green)",
+                fontWeight: 600,
+                fontSize: "20px",
+                marginBottom: "24px",
+                paddingBottom: "12px",
+                borderBottom: "2px solid var(--logo-deep-green)",
               }}
             >
-                 
-              <FormControl fullWidth>
-                <InputLabel>{t("Select Entity")}</InputLabel>
-                <Select
-                  value={selectedEntity}
-                  label="Select Entity"
-                  onChange={(e) => setSelectedEntity(e.target.value)}
-                >
-                  <MenuItem value="SHC">SHC</MenuItem>
-                  <MenuItem value="GMTC">GMTC</MenuItem>
-                </Select>
-              </FormControl>
+              Bulk Upload Management
+            </h2>
 
-              <Button
-                sx={{
-                  px: 4,
-                  py: 1.4,
-                  fontWeight: 700,
-                  borderRadius: "10px",
-                  backgroundColor: "var(--logo-deep-green)",
-                  whiteSpace: "nowrap",
-                  "&:hover": { backgroundColor: "var(--logo-deep-green)" },
-                }}
-                variant="contained"
-                disabled={!selectedEntity || cutOffLoading}
-                onClick={() => handleCuttOffSubmit(selectedEntity)}
-              >
-                {cutOffLoading ? "Running..." : "Run Cut-off"}
-              </Button>
-            </div>
-          </div></>)}
+            <Grid container spacing={3} sx={{ justifyContent: "center" }}>
+              {isV("BulkCustomer") && (
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Paper
+                    sx={uploadCardStyle}
+                    onClick={() => {
+                      setUploadType("customer");
+                      setPopup(true);
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faUsers}
+                      style={{
+                        ...iconStyle,
+                        color: "var(--logo-cyan)",
+                      }}
+                    />
+                    <h3
+                      style={{
+                        margin: "0 0 8px 0",
+                        color: "#333",
+                        fontSize: "16px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {t("Upload Customers")}
+                    </h3>
+                    <p
+                      style={{
+                        color: "#666",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Import customer data via Excel
+                    </p>
+                  </Paper>
+                </Grid>
+              )}
+
+              {isV("BulkBranch") && (
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Paper
+                    sx={uploadCardStyle}
+                    onClick={() => {
+                      setUploadType("branch");
+                      setPopup(true);
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faCodeBranch}
+                      style={{
+                        ...iconStyle,
+                        color: "var(--logo-light-green)",
+                      }}
+                    />
+                    <h3
+                      style={{
+                        margin: "0 0 8px 0",
+                        color: "#333",
+                        fontSize: "16px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {t("Upload Branches")}
+                    </h3>
+                    <p
+                      style={{
+                        color: "#666",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Import branch information
+                    </p>
+                  </Paper>
+                </Grid>
+              )}
+
+              {isV("BulkProduct") && (
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Paper
+                    sx={uploadCardStyle}
+                    onClick={() => {
+                      setUploadType("product");
+                      setPopup(true);
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faBox}
+                      style={{
+                        ...iconStyle,
+                        color: "var(--logo-orange)",
+                      }}
+                    />
+                    <h3
+                      style={{
+                        margin: "0 0 8px 0",
+                        color: "#333",
+                        fontSize: "16px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {t("Upload Products")}
+                    </h3>
+                    <p
+                      style={{
+                        color: "#666",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Import product catalog data
+                    </p>
+                  </Paper>
+                </Grid>
+              )}
+
+              {isV("BulkSalesExecutive") && (
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Paper
+                    sx={uploadCardStyle}
+                    onClick={() => {
+                      setUploadType("salesExecutiveUpdate");
+                      setPopup(true);
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faUserTie}
+                      style={{
+                        ...iconStyle,
+                        color: "var(--logo-deep-green)",
+                      }}
+                    />
+                    <h3
+                      style={{
+                        margin: "0 0 8px 0",
+                        color: "#333",
+                        fontSize: "16px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {t("Upload Sales Executive")}
+                    </h3>
+                    <p
+                      style={{
+                        color: "#666",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Update sales executive assignments
+                    </p>
+                  </Paper>
+                </Grid>
+              )}
+            </Grid>
+          </div>)}
         </div>
       </div>
 
@@ -602,20 +587,6 @@ function BulkUploadBranchAndCustomer() {
               --success: #4CAF50;
               --error: #E65100;
             }
-
-
-
-
-
-     
-
-          
-
-
-          
-
-          
-
             .submit-btn {
               background: var(--navy-blue);
               color: #fff;

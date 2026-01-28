@@ -14,8 +14,7 @@ function SearchableDropdown({
   className,
   placeholder,
   style = {},
-  branchName = null,
-  setHideMenu
+  branchName = null
 }) {
   const allOption = { name: placeholder || "Select", value: null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
