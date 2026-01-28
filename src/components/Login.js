@@ -70,22 +70,21 @@ function Login({ title, userType }) {
               }
             );
             const result = await response.json();
-            console.log(result?.data)
             if (result.status === "Ok") {
               const totalItems = result?.data?.totalItems || 0;
               localStorage.setItem("cartItems", JSON.stringify(totalItems));
-              // Dispatch custom event to update cart badge
               window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: totalItems }));
+            } else if (result?.count === 0) {
+              localStorage.setItem("cartItems", JSON.stringify(0));
+              window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: 0 }));
             }
+            console.log("Cart items:", localStorage.getItem("cartItems"));
           } catch (error) {
             console.error("Error fetching cart items:", error);
           }
         }
-        console.log("Token stored in localStorage:", data.token);
-        console.log("Cart items:", localStorage.getItem("cartItems"));
         login(data.token, data.data);
         if (!data?.success) {
-          // setError(data.message || 'Login failed');
           setError(data?.message);
           return;
         }

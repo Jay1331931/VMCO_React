@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core';
 
 function usePlatform() {
     return Capacitor.isNativePlatform();
-    // return true;
+    //return true;
 }
 
 export default usePlatform;

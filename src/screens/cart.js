@@ -347,6 +347,12 @@ function Cart() {
       // Initialize quantities from fetched data
       setQuantities(initialQuantities);
 
+      // Update localStorage with total cart count
+      const totalCount = vmco.length + shc.length + gmtc.length + naqi.length + dar.length;
+      localStorage.setItem("cartItems", JSON.stringify(totalCount));
+      // Dispatch custom event to update cart badge
+      window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: totalCount }));
+
       console.log("Cart items successfully loaded:", {
         vmco: vmco.length,
         shc: shc.length,
@@ -512,6 +518,13 @@ function Cart() {
         delete newQuantities[item.id];
         return newQuantities;
       });
+      // Update localStorage cart count
+      const currentCount = parseInt(localStorage.getItem("cartItems") || "0", 10);
+      const newCount = Math.max(0, currentCount - 1);
+      localStorage.setItem("cartItems", JSON.stringify(newCount));
+      // Dispatch custom event to update cart badge
+      window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: newCount }));
+
       Swal.fire({
         icon: "success",
         title: t("Item Removed"),
@@ -1837,7 +1850,7 @@ function Cart() {
             if (isBalanceValid) {
               // Check credit period eligibility
               //  await handleVMCOOrderProcessing(categoryItems, categoryName, "Credit")
-                
+
               try {
                 const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${erpCustId}`, {
                   method: "GET",
@@ -2008,64 +2021,64 @@ function Cart() {
           console.log(
             "Credit payment method determined for SHC - checking for existing open orders"
           );
-  // await handleSHCExistingOrdersCheck(categoryItems, shcPaymentMethod);
-               
-            try {
-              const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${user?.erpCustomerId}`, {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-              });
+          // await handleSHCExistingOrdersCheck(categoryItems, shcPaymentMethod);
 
-              if (!creditPeriodResponse.ok) {
-                console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
-                Swal.fire({
-                  icon: "error",
-                  title: t("Credit Period Check Failed"),
-                  text: t("Unable to verify credit eligibility. Please try again later."),
-                });
-                return;
-              }
+          try {
+            const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${user?.erpCustomerId}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            });
 
-              const creditPeriodResult = await creditPeriodResponse.json();
-
-              if (!creditPeriodResult.success) {
-                console.warn("Credit period check failed:", creditPeriodResult.message);
-                Swal.fire({
-                  icon: "warning",
-                  title: t("Credit Check Failed"),
-                  text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
-                });
-                return;
-              }
-
-              const entityCreditData = creditPeriodResult?.details?.[entity];
-
-              if (entityCreditData?.Block) {
-                const reason = entityCreditData?.Reason || "Credit is not available";
-                Swal.fire({
-                  icon: "warning",
-                  title: t("Credit Not Available"),
-                  text: t(reason),
-                });
-                return;
-              } else {
-                console.log(`${entity}: Credit user with sufficient balance, placing order directly`);
-                 await handleSHCExistingOrdersCheck(categoryItems, shcPaymentMethod);
-                return;
-              }
-            } catch (err) {
-              console.error("Error checking credit period:", err);
+            if (!creditPeriodResponse.ok) {
+              console.warn("Failed to fetch credit period data:", creditPeriodResponse.statusText);
               Swal.fire({
                 icon: "error",
-                title: t("Error"),
-                text: t("An error occurred while checking credit eligibility."),
+                title: t("Credit Period Check Failed"),
+                text: t("Unable to verify credit eligibility. Please try again later."),
               });
               return;
             }
-         
+
+            const creditPeriodResult = await creditPeriodResponse.json();
+
+            if (!creditPeriodResult.success) {
+              console.warn("Credit period check failed:", creditPeriodResult.message);
+              Swal.fire({
+                icon: "warning",
+                title: t("Credit Check Failed"),
+                text: t(creditPeriodResult.message || "Unable to verify credit eligibility"),
+              });
+              return;
+            }
+
+            const entityCreditData = creditPeriodResult?.details?.[entity];
+
+            if (entityCreditData?.Block) {
+              const reason = entityCreditData?.Reason || "Credit is not available";
+              Swal.fire({
+                icon: "warning",
+                title: t("Credit Not Available"),
+                text: t(reason),
+              });
+              return;
+            } else {
+              console.log(`${entity}: Credit user with sufficient balance, placing order directly`);
+              await handleSHCExistingOrdersCheck(categoryItems, shcPaymentMethod);
+              return;
+            }
+          } catch (err) {
+            console.error("Error checking credit period:", err);
+            Swal.fire({
+              icon: "error",
+              title: t("Error"),
+              text: t("An error occurred while checking credit eligibility."),
+            });
+            return;
+          }
+
         }
         // If a specific payment method was determined (not COD), use it directly
         else if (shcPaymentMethod && shcPaymentMethod !== "Cash on Delivery") {
@@ -2121,7 +2134,7 @@ function Cart() {
             if (isBalanceValid) {
               // Check credit period eligibility
               //  await handleGMTCExistingOrdersCheck(categoryItems, "Credit", categoryName);
-                 
+
               try {
                 const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${erpCustId}`, {
                   method: "GET",
@@ -2221,7 +2234,7 @@ function Cart() {
           if (isBalanceValid) {
             // Check credit period eligibility
             //  await placeOrderForCategory(categoryItems, categoryName, "Credit", true);
-               
+
             try {
               const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${user?.erpCustomerId}`, {
                 method: "GET",
@@ -3761,6 +3774,13 @@ function Cart() {
 
       await Promise.all(deletePromises);
       console.log(`Successfully deleted ${products.length} cart items`);
+      // Update localStorage cart count
+      const currentCount = parseInt(localStorage.getItem("cartItems") || "0", 10);
+      const newCount = Math.max(0, currentCount - products.length);
+      localStorage.setItem("cartItems", JSON.stringify(newCount));
+      // Dispatch custom event to update cart badge
+      window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: newCount }));
+
     } catch (err) {
       console.error("Error during cart cleanup:", err);
       throw err;
