@@ -15,7 +15,156 @@ import usePlatform from "../src/utilities/platform";
 const currentVersion = process.env.REACT_APP_TALAB_VERSION;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
-          const lastSkippedVersion = localStorage.getItem('last_skipped_version');
+const lastSkippedVersion = localStorage.getItem('last_skipped_version');
+
+const useNetworkStatus = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+
+  useEffect(() => {
+    // Function to check actual internet connectivity
+    const checkActualConnection = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+        // Try to fetch a small resource to verify internet
+        await fetch('https://www.google.com/favicon.ico', {
+          method: 'HEAD',
+          cache: 'no-cache',
+          mode: 'no-cors',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    };
+
+    const updateNetworkStatus = async () => {
+      const browserStatus = navigator.onLine;
+      
+      if (!browserStatus) {
+        // Browser says offline
+        setIsOnline(false);
+        setInitialCheckDone(true);
+        return;
+      }
+      
+      // Browser says online, verify actual connection
+      if (!initialCheckDone) {
+        // First time check - verify actual connectivity
+        const actualConnection = await checkActualConnection();
+        setIsOnline(actualConnection);
+        setInitialCheckDone(true);
+      } else {
+        // Subsequent checks - use browser status for speed
+        setIsOnline(browserStatus);
+        
+        // But verify in background
+        checkActualConnection().then(actual => {
+          if (!actual && browserStatus) {
+            setIsOnline(false);
+          }
+        });
+      }
+    };
+
+    // Initial check
+    updateNetworkStatus();
+
+    // Listen for browser events
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // Set up periodic checks (every 10 seconds)
+    const intervalId = setInterval(updateNetworkStatus, 10000);
+
+    return () => {
+      window.removeEventListener('online', updateNetworkStatus);
+      window.removeEventListener('offline', updateNetworkStatus);
+      clearInterval(intervalId);
+    };
+  }, [initialCheckDone]);
+
+  return isOnline;
+};
+
+const CleanOfflineScreen = () => {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        
+        {/* Icon */}
+        <div style={{
+          width: '70px',
+          height: '70px',
+          borderRadius: '50%',
+          backgroundColor: '#F6921E',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '25px'
+        }}>
+          <span style={{ 
+            color: 'white', 
+            fontSize: '32px',
+            fontWeight: 'bold'
+          }}>
+            !
+          </span>
+        </div>
+        
+        {/* Text */}
+        <h1 style={{ 
+          fontSize: '24px', 
+          fontWeight: '600',
+          color: '#0B4C45',
+          marginBottom: '8px'
+        }}>
+          Connection Lost
+        </h1>
+        
+        <p style={{ 
+          color: '#666',
+          marginBottom: '25px',
+          fontSize: '15px'
+        }}>
+          Unable to connect to the internet
+        </p>
+        
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            backgroundColor: '#009345',
+            color: 'white',
+            // border: 'none',
+            padding: '10px 32px',
+            fontSize: '15px',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Reload Page
+        </button>
+        
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
@@ -89,11 +238,21 @@ const isMobile=usePlatform()
     } 
     setShowUpdatePopup(false);
   };
+  const isOnline = useNetworkStatus();
+  
   return (
     <>
-      <Router>
+     {!isOnline ? (
+    <CleanOfflineScreen 
+        />
+
+
+
+
+      ) :  <Router>
         <AppRoutes />
-      </Router>
+      </Router>}
+   
 
       {showUpdatePopup && latestVersion && (
         <VersionPopup
