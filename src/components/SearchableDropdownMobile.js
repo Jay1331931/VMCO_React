@@ -232,20 +232,16 @@ const handleKeyDown = (e) => {
       document.body.classList.add('keyboard-open');
     }
    
-    setHideMenu?.(true);   // 👈 hide bottom menu
+    
   }}
   
 
-  onClick={() => {
-    
-    setHideMenu?.(true);   // 👈 mobile tap safety
-  }}
+  
 onKeyDown={handleKeyDown}
   onBlur={() => {
    
       document.body.classList.remove('keyboard-open');
-    
-    setHideMenu?.(false);    // 👈 show menu again (optional)
+       // 👈 show menu again (optional)
   }}
     style={{
       flex: 1,
