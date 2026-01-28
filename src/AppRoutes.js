@@ -53,6 +53,7 @@ import PrivacyPolicy from "./screens/PrivacyPolicy";
 import ContactUs from "./screens/ContactUs";
 import CoolingPeriodEditor from "./screens/coolingPeriodEditor";
 import PricingPolicyEditor from "./screens/pricingPolicyEditor";
+import DataManagement from "./screens/dataManagement";
 import { App } from "@capacitor/app";
 import Swal from "sweetalert2";
 import HomePage from "./screens/homePage";
@@ -321,6 +322,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute page="reports">
             <Reports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dataManagement"
+        element={
+          <ProtectedRoute page="dataManagement">
+            <DataManagement />
           </ProtectedRoute>
         }
       />
