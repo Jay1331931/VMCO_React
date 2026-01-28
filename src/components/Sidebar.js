@@ -31,6 +31,10 @@ import {
   faUpload,
   faHistory,
   faList,
+  faCogs,
+  faChartBar,
+  faDatabase,
+  faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
@@ -41,9 +45,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Swal from "sweetalert2";
 const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
- const isAndroidMobile = /Android/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false, CardPaddingClass=false, hideMobileBottomMenu=false}) {
+const isIOSsMobile = /iPhone/i.test(navigator.userAgent);
+const isAndroidMobile = /Android/i.test(navigator.userAgent);
+function Sidebar({ children, title = null, MenuName = null, searchable = false, setSelectedBranchLocation, goToCart = false, selectBranch = false, homePage = "", PaddingClass = false, CardPaddingClass = false, hideMobileBottomMenu = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -152,8 +156,8 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts
-      ? [customerContacts]
-      : [];
+        ? [customerContacts]
+        : [];
 
     const contactsMap = contacts.reduce((acc, contact) => {
       acc[contact.contactType] = contact;
@@ -340,7 +344,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
 
   const handleGoToCart = async () => {
     const cartData = await fetchCart();
-    console.log("cartData",cartData)
+    console.log("cartData", cartData)
     if (cartData?.id) {
       navigate("/Cart", {
         state: {
@@ -355,7 +359,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
           selectedBranchNameEn: cartData?.branchNameEn || "",
           selectedBranchErpId: cartData?.erpBranchId || "",
           selectedBranchRegion: cartData?.branchRegion || cartData?.region
- || "",
+            || "",
           selectedBranchCity: cartData?.city || "",
           selectedBranchStatus: cartData?.branchStatus || "",
           selectedCustSequenceId: user?.sequenceId || "",
@@ -422,7 +426,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
       case "Bank":
         navigate("/bankTransactions");
         break;
-      case "General":
+      case "Uploads":
         navigate("/admin/upload");
         break;
       case "Dashboard":
@@ -461,8 +465,8 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
       case "Reports":
         navigate("/reports");
         break;
-      case "Approval History":
-        navigate("/approvalHistory");
+      case "Data Management":
+        navigate("/dataManagement");
         break;
       default:
         break;
@@ -513,7 +517,7 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
       isVisible: true,
     },
     {
-      icon: isMobile ? faBoxOpen : faShoppingCart,
+      icon: faBoxOpen,
       label: "Orders",
       isVisible: isMobile ? true : true,
     },
@@ -538,11 +542,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
       isVisible: true,
     },
     {
-      icon: faFile,
-      label: "Reports",
-      isVisible: isMobile ? false : true,
-    },
-    {
       icon: faBank,
       label: isMobile ? "Bank" : "Bank Transfer",
       permission: "BankTransfer",
@@ -561,42 +560,47 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
     },
     { icon: faCog, label: "Settings", isVisible: true },
     {
-      icon: faUpload,
-      label: isMobile ? "" : "General",
-      permission: isMobile ? false : "General",
+      icon: faChartBar,
+      label: "Reports",
+      permission: "Reports",
       isVisible: isMobile ? false : true,
     },
     {
-      icon: faHistory,
-      label: "Approval History",
-      permission: "approvalHistory",
+      icon: faFileImport,
+      label: isMobile ? "" : "Uploads",
+      permission: isMobile ? false : "Uploads",
+      isVisible: isMobile ? false : true,
+    },
+    {
+      icon: faDatabase,
+      label: "Data Management",
+      permission: "DataManagement",
       isVisible: isMobile ? false : true,
     },
     {
       icon: faList,
       label: "Others",
-      // UPDATED: Menu visible on all screens in mobile
       isVisible: isMobile,
     },
   ];
   const menuItems = isMobile
     ? [
-        // baseMenuItems.find((item) => item.label === "Dashboard"),
-        baseMenuItems.find((item) => item.label === "Home"),
+      // baseMenuItems.find((item) => item.label === "Dashboard"),
+      baseMenuItems.find((item) => item.label === "Home"),
 
-        // 🔥 3rd position
-        baseMenuItems.find((item) => item.label === "Your Cart"),
+      // 🔥 3rd position
+      baseMenuItems.find((item) => item.label === "Your Cart"),
 
-        // 🔥 4th position
-        baseMenuItems.find((item) => item.label === "Orders"),
+      // 🔥 4th position
+      baseMenuItems.find((item) => item.label === "Orders"),
 
-        ...baseMenuItems.filter(
-          (item) =>
-            !["Dashboard", "Home", "Your Cart", "Orders"].includes(
-              item.label
-            )
-        ),
-      ]
+      ...baseMenuItems.filter(
+        (item) =>
+          !["Dashboard", "Home", "Your Cart", "Orders"].includes(
+            item.label
+          )
+      ),
+    ]
     : baseMenuItems;
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
@@ -653,9 +657,6 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
       case "/catalog":
         setActiveMenu("catalog");
         break;
-      case "/admin/upload":
-        setActiveMenu("General");
-        break;
       case "/cart":
         setActiveMenu("Your Cart");
         break;
@@ -666,8 +667,12 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
         console.log("Orders");
         setActiveMenu("Orders");
         break;
-      // default:
-      //   setActiveMenu("Dashboard");
+      case "/admin/upload":
+        setActiveMenu("Uploads");
+        break;
+      case "/dataManagement":
+        setActiveMenu("Data Management");
+        break;
     }
   }, [location.pathname, MenuName]);
   const catalogId = React.useId();
@@ -835,9 +840,9 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
               i18n.language === "en"
                 ? branch.branch_name_en || branch.branchNameEn
                 : branch.branch_name_lc ||
-                  branch.branchNameLc ||
-                  branch.branch_name_en ||
-                  branch.branchNameEn,
+                branch.branchNameLc ||
+                branch.branch_name_en ||
+                branch.branchNameEn,
             erpBranchId: branch.erpBranchId || branch.erp_branch_id,
             branchRegion: branch.region || branch.region,
             branchCity: branch.city || branch.branchCity || branch.branch_city,
@@ -856,80 +861,79 @@ function Sidebar({ children, title = null, MenuName = null,searchable=false ,set
     };
     fetchBranches();
   }, [API_BASE_URL, i18n.language]);
-  const handleback =()=>{
+  const handleback = () => {
     navigate(-1)
   }
- 
-const handleLogoClick=()=>{
-  console.log("user",user)
-  if (user?.customerStatus === "new") {
-          navigate("/customerDetails", {
-            state: { customerId:user?.customerId, mode: "add" },
-          });
-        } else if (
-         user?.userType?.toLowerCase() === "employee" &&
-          (user?.designation?.toLowerCase() ===
-            Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase() ||
-           user?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() ||
-           user?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() ||
-           user?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() ||
-           user?.roles[0].toLowerCase() ===
-              Constants.ROLES.SUPER_ADMIN.toLowerCase())
-        ) {
-          navigate("/customers",{replace:true});
-        } else if (
-         user?.userType?.toLowerCase() === "employee" &&
-          (user?.designation?.toLowerCase() ===
-            Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase() ||
-           user?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() ||
-           user?.designation?.toLowerCase() ===
-              Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())
-        ) {
-          navigate("/maintenance",{replace:true});
-        } else if (
-         user?.userType?.toLowerCase() === "employee" &&
-         user?.designation?.toLowerCase() ===
-            Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase()
-        ) {
-          navigate("/bankTransactions",{replace:true});
-        }
-        else if (user?.userType?.toLowerCase() === "employee" &&
-         user?.designation?.toLowerCase() ===
-            Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
-        ) {
-          navigate("/orders",{replace:true});
-        } else {
-          // navigate("/catalog",{replace:true});
-          navigate("/home",{replace:true});
-        }
-}
 
-
-
-const isMenuLabelActive = (label) => {
-  const currentActive = activeMenu?.toLowerCase();
-  const currentLabel = label?.toLowerCase();
-  if (currentLabel === "home" && t(currentActive) === t("catalog")) {
-    return true;
-  }
- const otherSubItems = ["support", "maintenance", "bank transfer", "bank"];
-  if (isMobile && currentLabel === "others" && otherSubItems.includes(currentActive)) {
-    return true;
+  const handleLogoClick = () => {
+    console.log("user", user)
+    if (user?.customerStatus === "new") {
+      navigate("/customerDetails", {
+        state: { customerId: user?.customerId, mode: "add" },
+      });
+    } else if (
+      user?.userType?.toLowerCase() === "employee" &&
+      (user?.designation?.toLowerCase() ===
+        Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase() ||
+        user?.designation?.toLowerCase() ===
+        Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() ||
+        user?.designation?.toLowerCase() ===
+        Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() ||
+        user?.designation?.toLowerCase() ===
+        Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() ||
+        user?.roles[0].toLowerCase() ===
+        Constants.ROLES.SUPER_ADMIN.toLowerCase())
+    ) {
+      navigate("/customers", { replace: true });
+    } else if (
+      user?.userType?.toLowerCase() === "employee" &&
+      (user?.designation?.toLowerCase() ===
+        Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase() ||
+        user?.designation?.toLowerCase() ===
+        Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() ||
+        user?.designation?.toLowerCase() ===
+        Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())
+    ) {
+      navigate("/maintenance", { replace: true });
+    } else if (
+      user?.userType?.toLowerCase() === "employee" &&
+      user?.designation?.toLowerCase() ===
+      Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase()
+    ) {
+      navigate("/bankTransactions", { replace: true });
+    }
+    else if (user?.userType?.toLowerCase() === "employee" &&
+      user?.designation?.toLowerCase() ===
+      Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
+    ) {
+      navigate("/orders", { replace: true });
+    } else {
+      // navigate("/catalog",{replace:true});
+      navigate("/home", { replace: true });
+    }
   }
 
-  // Otherwise, use standard direct match
-  return currentLabel === currentActive;
-};
+
+
+  const isMenuLabelActive = (label) => {
+    const currentActive = activeMenu?.toLowerCase();
+    const currentLabel = label?.toLowerCase();
+    if (currentLabel === "home" && t(currentActive) === t("catalog")) {
+      return true;
+    }
+    const otherSubItems = ["support", "maintenance", "bank transfer", "bank"];
+    if (isMobile && currentLabel === "others" && otherSubItems.includes(currentActive)) {
+      return true;
+    }
+
+    // Otherwise, use standard direct match
+    return currentLabel === currentActive;
+  };
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
-        className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""} ${
-          isSidebarExpanded ? "expanded" : ""
-        }`}
+        className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""} ${isSidebarExpanded ? "expanded" : ""
+          }`}
       >
         <div className="sidebar-header">
           {isSidebarCollapsed ? (
@@ -938,7 +942,7 @@ const isMenuLabelActive = (label) => {
               alt="Talab Point Logo"
               className="logo-collapsed"
               style={{ maxWidth: "100%", maxHeight: "100%" }}
-              onClick={()=>handleLogoClick()}
+              onClick={() => handleLogoClick()}
             />
           ) : (
             <img
@@ -950,7 +954,7 @@ const isMenuLabelActive = (label) => {
               alt="Talab Point Logo Expanded"
               className="logo-expanded"
               style={{ maxWidth: "100%", maxHeight: "100%", padding: "10px" }}
-               onClick={()=>handleLogoClick()}
+              onClick={() => handleLogoClick()}
             />
           )}
         </div>
@@ -964,9 +968,8 @@ const isMenuLabelActive = (label) => {
                   isVisible && (
                     <div
                       key={label}
-                      className={`menu-item ${
-                        isMenuLabelActive(label) ? "active" : ""
-                      }`}
+                      className={`menu-item ${isMenuLabelActive(label) ? "active" : ""
+                        }`}
                       onClick={() => handleMenuClick(label)}
                       style={{
                         display: isV(permission || label) ? "flex" : "none",
@@ -985,9 +988,8 @@ const isMenuLabelActive = (label) => {
               .map(({ icon, label, permission }) => (
                 <div
                   key={label}
-                  className={`menu-item ${
-                      activeMenu ==label ? "active" : ""
-                  }`}
+                  className={`menu-item ${activeMenu == label ? "active" : ""
+                    }`}
                   onClick={() => handleMenuClick(label)}
                   style={{
                     display: isV(permission || label) ? "flex" : "none",
@@ -1032,17 +1034,17 @@ const isMenuLabelActive = (label) => {
                 {Object.entries(user).map(([key, value]) =>
                   value
                     ? popupValidKey(key) && (
-                        <>
-                          <div className="row-detail-row" key={key}>
-                            <span className="row-detail-label">
-                              {formatKey(key)}:
-                            </span>
-                            <span className="row-detail-value">
-                              {formatValue(value)}
-                            </span>
-                          </div>
-                        </>
-                      )
+                      <>
+                        <div className="row-detail-row" key={key}>
+                          <span className="row-detail-label">
+                            {formatKey(key)}:
+                          </span>
+                          <span className="row-detail-value">
+                            {formatValue(value)}
+                          </span>
+                        </div>
+                      </>
+                    )
                     : null
                 )}
               </div>
@@ -1072,8 +1074,8 @@ const isMenuLabelActive = (label) => {
                   ? faChevronLeft
                   : faChevronRight
                 : isRTL
-                ? faChevronRight
-                : faChevronLeft
+                  ? faChevronRight
+                  : faChevronLeft
             }
           />
         </div>
@@ -1086,8 +1088,8 @@ const isMenuLabelActive = (label) => {
             window.innerWidth <= 768
               ? {}
               : isRTL
-              ? { marginRight: sidebarOffset, marginLeft: 0 }
-              : { marginLeft: sidebarOffset, marginRight: 0 }
+                ? { marginRight: sidebarOffset, marginLeft: 0 }
+                : { marginLeft: sidebarOffset, marginRight: 0 }
           }
         >
           <header className={`header ${showMenu ? "show" : "show"}`}>
@@ -1100,33 +1102,33 @@ const isMenuLabelActive = (label) => {
                 <FontAwesomeIcon icon={faBars} />
               </button>
             )}
-                  {!isAndroidMobile &&isMobile&& (
-i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><ArrowForwardIcon/></span>
-:<span className="nav-btn " onClick={()=>handleback()}><ArrowBackIcon/> </span>
-                  )}
+            {!isAndroidMobile && isMobile && (
+              i18n.language === "ar" ? <span className="nav-btn" onClick={() => handleback()}><ArrowForwardIcon /></span>
+                : <span className="nav-btn " onClick={() => handleback()}><ArrowBackIcon /> </span>
+            )}
             {isMobile && (
               <img
                 src="/logos/talab_point_logo.png"
                 alt="Talab Point Logo"
                 className="logo-collapsed"
                 style={{ maxWidth: "100%", maxHeight: "100%" }}
-                onClick={()=>handleLogoClick()}
+                onClick={() => handleLogoClick()}
               />
             )}
 
             <div className="header-title">{t(activeMenu)}</div>
 
-            {!isMobile &&searchable && !isMobileResponsive&& <><div 
+            {!isMobile && searchable && !isMobileResponsive && <><div
               style={{
                 display: "flex",
                 // justifyContent: "space-between",
                 gap: "10px",
                 width: "100%",
-                alignItems:"center"
+                alignItems: "center"
               }}
             >
-                {selectBranch && (<div className="location-selector">
-              <SearchableDropdown
+              {selectBranch && (<div className="location-selector">
+                <SearchableDropdown
                   id={`location-select-${catalogId}`}
                   name="locationSelect"
                   value={selectedLocation}
@@ -1152,49 +1154,48 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                 )}
               </div>)}
               {(user?.userType?.toLowerCase() !== "employee" ||
-                user?.userType?.toLowerCase() !== "admin") &&goToCart&& (
-                <button
-                  className={`go-to-cart-btn ${
-                    !selectedLocation ? "disabled" : ""
-                  }`}
-                  style={{
-                    opacity: !selectedLocation ? 0.6 : 1,
-                    cursor: !selectedLocation ? "not-allowed" : "pointer",
-                    position: "relative",
-                  }}
-                  onClick={handleGoToCart}
-                  disabled={!selectedLocation}
-                >
-                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                    <FontAwesomeIcon
-                      icon={faShoppingCart}
-                      className="cart-icon"
-                    />
-                    {cartItemsCount > 0 && isMobile && (
-                      <span
-                        style={{
-                          position: "absolute",
-                          top: "-8px",
-                          right: "-12px",
-                          backgroundColor: "var(--logo-red)",
-                          color: "white",
-                          borderRadius: "50%",
-                          width: "20px",
-                          height: "20px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {cartItemsCount}
-                      </span>
-                    )}
-                  </div>
-                  {window.innerWidth >= 350 && <span>{t("Go to Cart")}</span>}
-                </button>
-              )}
+                user?.userType?.toLowerCase() !== "admin") && goToCart && (
+                  <button
+                    className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""
+                      }`}
+                    style={{
+                      opacity: !selectedLocation ? 0.6 : 1,
+                      cursor: !selectedLocation ? "not-allowed" : "pointer",
+                      position: "relative",
+                    }}
+                    onClick={handleGoToCart}
+                    disabled={!selectedLocation}
+                  >
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <FontAwesomeIcon
+                        icon={faShoppingCart}
+                        className="cart-icon"
+                      />
+                      {cartItemsCount > 0 && isMobile && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: "-8px",
+                            right: "-12px",
+                            backgroundColor: "var(--logo-red)",
+                            color: "white",
+                            borderRadius: "50%",
+                            width: "20px",
+                            height: "20px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {cartItemsCount}
+                        </span>
+                      )}
+                    </div>
+                    {window.innerWidth >= 350 && <span>{t("Go to Cart")}</span>}
+                  </button>
+                )}
             </div></>}
             <div className="user-text-header">
               {!isMobile && (
@@ -1271,14 +1272,14 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                 </div>
               )}
 
-              <button className="lang-switch-btn" onClick={toggleLanguage} style={{marginRight: t(activeMenu?.toLowerCase()) === t("catalog") ? "60px" : "20px"}}>
+              <button className="lang-switch-btn" onClick={toggleLanguage} style={{ marginRight: t(activeMenu?.toLowerCase()) === t("catalog") ? "60px" : "20px" }}>
                 <FontAwesomeIcon icon={faLanguage} />
                 <span>{isRTL ? "EN" : "عربى"}</span>
               </button>
             </div>
           </header>
           <div
-            className={`content ${homePage ? homePage : ""} ${PaddingClass ? "catalog-padding-removing":""} ${CardPaddingClass ? "card-padding-removing":""}`}
+            className={`content ${homePage ? homePage : ""} ${PaddingClass ? "catalog-padding-removing" : ""} ${CardPaddingClass ? "card-padding-removing" : ""}`}
             style={{
               padding: isMobile ? (activeMenu ? "0 0px 0px" : "0 20px") : "20px",
             }}
@@ -1312,9 +1313,8 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                   return (
                     <div
                       key={label}
-                      className={`bottom-menu-item ${
-                        isMenuItemActive() ? "active" : ""  
-                      }   ${isMenuLabelActive(label) ? "active" : ""}`}
+                      className={`bottom-menu-item ${isMenuItemActive() ? "active" : ""
+                        }   ${isMenuLabelActive(label) ? "active" : ""}`}
                       onClick={() => handleMenuClick(label)}
                       style={{ position: "relative" }}
                     >
@@ -1346,8 +1346,8 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
                         {label === t("Catalog")
                           ? t("Home")
                           : label === t("Your Cart")
-                          ? t("Cart")
-                          : t(label)}
+                            ? t("Cart")
+                            : t(label)}
                       </span>
                     </div>
                   );
