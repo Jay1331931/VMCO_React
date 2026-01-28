@@ -913,8 +913,6 @@ const handleLogoClick=()=>{
 const isMenuLabelActive = (label) => {
   const currentActive = activeMenu?.toLowerCase();
   const currentLabel = label?.toLowerCase();
-console.log("currentActive",currentActive)
-console.log("currentLabel",currentLabel)
   if (currentLabel === "home" && t(currentActive) === t("catalog")) {
     return true;
   }
