@@ -65,7 +65,7 @@ function BulkUploadBranchAndCustomer() {
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
-    "BulkUpload"
+    "Uploads"
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
