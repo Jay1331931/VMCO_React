@@ -287,7 +287,8 @@ const SearchableDropdown = ({
   className,
   placeholder,
   style = {},
-  branchName = null
+  branchName = null,
+  setHideMenu
 }) => {
   const isMobile = usePlatform();
   const dropdownProps = {
@@ -299,7 +300,8 @@ const SearchableDropdown = ({
   className,
   placeholder,
   style,
-  branchName
+  branchName,
+  setHideMenu
   }
   return isMobile ? 
   <SearchableDropdownMobile {...dropdownProps}/>

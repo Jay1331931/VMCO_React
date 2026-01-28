@@ -43,7 +43,7 @@ const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
  const isAndroidMobile = /Android/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false, CardPaddingClass=false}) {
+function Sidebar({ children, title = null, MenuName = null,searchable=false ,setSelectedBranchLocation,goToCart=false ,selectBranch=false ,homePage="",PaddingClass=false, CardPaddingClass=false, hideMobileBottomMenu=false}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -913,8 +913,6 @@ const handleLogoClick=()=>{
 const isMenuLabelActive = (label) => {
   const currentActive = activeMenu?.toLowerCase();
   const currentLabel = label?.toLowerCase();
-console.log("currentActive",currentActive)
-console.log("currentLabel",currentLabel)
   if (currentLabel === "home" && t(currentActive) === t("catalog")) {
     return true;
   }
@@ -1289,7 +1287,7 @@ i18n.language === "ar" ? <span  className="nav-btn" onClick={()=>handleback()}><
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
           {isMobile && isMobile && (
-            <div className={`mobile-bottom-menu ${showMenu ? "show" : "show"}`}>
+            <div className={`mobile-bottom-menu ${showMenu && !hideMobileBottomMenu ? "show" : hideMobileBottomMenu ? "hide" : "show"}`}>
               {menuItems
                 .filter(
                   ({ label }) =>
