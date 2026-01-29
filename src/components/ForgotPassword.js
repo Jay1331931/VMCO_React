@@ -29,11 +29,11 @@ function ForgotPassword() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const [showPassword, setShowPassword] = useState(false);
-  
-    const togglePasswordVisibility = () => {
-      setShowPassword(!showPassword);
-    };
-  
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
 
   // Get email from navigation state
   useEffect(() => {
@@ -138,7 +138,7 @@ function ForgotPassword() {
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        navigate("/login",{replace:true});
+        navigate("/login", { replace: true });
       }, 2000);
     } catch (err) {
       console.error("Password reset error:", err);
@@ -204,6 +204,22 @@ function ForgotPassword() {
       });
     } finally {
       setIsOtpLoading(false); // Stop loading
+    }
+  };
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
     }
   };
 
@@ -291,6 +307,17 @@ function ForgotPassword() {
                   }
                 }}
                 readOnly={!!location.state?.email}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
 
               {/* Only show Send OTP button when email is entered */}
@@ -351,6 +378,17 @@ function ForgotPassword() {
                       const val = e.target.value;
                       if (/^\d*$/.test(val)) setOtp(val); // Only allow digits
                     }}
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add("keyboard-open");
+                      }
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+                      document.body.classList.remove("keyboard-open");
+                      // 👈 show menu again (optional)
+                    }}
                   />
                   {/* Add Verify OTP button */}
                   {/* <button
@@ -377,43 +415,65 @@ function ForgotPassword() {
             <div className="form-group">
               <label htmlFor="password">{t("New Password")}</label>
               <div className="password-input-wrapper">
-              <input
-               type={showPassword ? "text" : "password"}
-                id="password"
-                value={newPassword}
-                placeholder={t("New Password")}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="password-input"
-              />
-              {newPassword && (<button
-                        type="button"
-                        onClick={togglePasswordVisibility}
-                        className="password-toggle-btn"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye } />
-                      </button>)}
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={newPassword}
+                  placeholder={t("New Password")}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="password-input"
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                    // 👈 show menu again (optional)
+                  }}
+                />
+                {newPassword && (<button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="password-toggle-btn"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                </button>)}
               </div>
             </div>
             <div className="form-group">
               <label htmlFor="confirmpassword">{t("Confirm Password")}</label>
               <div className="password-input-wrapper">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="confirmpassword"
-                value={confirmPassword}
-                placeholder={t("Confirm Password")}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="password-input"
-              />
-              {confirmPassword && (<button
-                        type="button"
-                        onClick={togglePasswordVisibility}
-                        className="password-toggle-btn"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye } />
-                      </button>)}
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="confirmpassword"
+                  value={confirmPassword}
+                  placeholder={t("Confirm Password")}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="password-input"
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                    // 👈 show menu again (optional)
+                  }}
+                />
+                {confirmPassword && (<button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="password-toggle-btn"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                </button>)}
               </div>
             </div>
             {error && <p className="error-message">{t(error)}</p>}
@@ -426,7 +486,7 @@ function ForgotPassword() {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate("/login",{replace:true});
+                  navigate("/login", { replace: true });
                 }}
               >
                 {`\t ${t("Login")}`}

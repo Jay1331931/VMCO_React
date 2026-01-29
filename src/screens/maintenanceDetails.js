@@ -1287,6 +1287,23 @@ function MaintenanceDetails() {
     }
   };
 
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
+    }
+  };
+
 
   return (
     // <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
@@ -1306,6 +1323,17 @@ function MaintenanceDetails() {
                   style={{ cursor: (isE("customerName") && user?.userType !== 'customer' && !isReadOnly) ? 'pointer' : 'default' }}
                   onClick={() => (isE("customerName") && user?.userType !== 'customer' && !isReadOnly) && setShowCustomerPopup(true)}
                   placeholder={user?.userType === 'customer' ? "" : t("Click to select customer")}
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                    // 👈 show menu again (optional)
+                  }}
                 />
               </div>
             )}
@@ -1325,6 +1353,17 @@ function MaintenanceDetails() {
                         : t("Please select a customer first")
                   }
                   disabled={user?.userType === 'customer' ? false : !ticket.customerId}
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                    // 👈 show menu again (optional)
+                  }}
                 />
               </div>
             )}
@@ -1385,6 +1424,17 @@ function MaintenanceDetails() {
                   onClick={handleMachineInputClick}
                   onChange={allowManualMachineInput ? (e) => setManualMachineName(e.target.value) : undefined}
                   style={{ cursor: allowManualMachineInput ? 'text' : 'pointer' }}
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                    // 👈 show menu again (optional)
+                  }}
                 />
               </div>
             )}
@@ -1397,6 +1447,17 @@ function MaintenanceDetails() {
                   onChange={allowManualMachineInput ? (e) => setManualMachineName(e.target.value) : undefined}
                   value={manualMachineName || ""}
                   disabled={!isE("machineOthers") || isReadOnly}
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                    // 👈 show menu again (optional)
+                  }}
                 />
               </div>
             )}
@@ -1411,6 +1472,17 @@ function MaintenanceDetails() {
                     setTicket({ ...ticket, "machineSerialNumber": e.target.value })
                   }}
                   disabled={!isE('machineSerialNumber') || isReadOnly}
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                    // 👈 show menu again (optional)
+                  }}
                 />
                 {!ticket?.warrantyEndDate && formMode === "add" && (
                   <button
@@ -1465,7 +1537,23 @@ function MaintenanceDetails() {
           {isV('issueDetails') && (
             <div className='maintenance-details-field maintenance-details-textarea'>
               <label>{t("Issue Details")} *</label>
-              <textarea id='issueDetails' name='issueDetails' onChange={handleInputChange} value={ticket.issueDetails || ""} disabled={!isE("issueDetails") || isReadOnly} />
+              <textarea
+                id='issueDetails'
+                name='issueDetails'
+                onChange={handleInputChange}
+                value={ticket.issueDetails || ""}
+                disabled={!isE("issueDetails") || isReadOnly}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }} />
             </div>
           )}
 
@@ -1651,6 +1739,17 @@ function MaintenanceDetails() {
                 onChange={handleInputChange}
                 value={ticket?.feedbackComment}
                 disabled={!isE("feedback") || ticket?.feedbackComment}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
               {isV('feedbackButton') && !ticket.feedbackComment && (
                 <button className='feedback-btn' style={{
@@ -1732,7 +1831,7 @@ function MaintenanceDetails() {
                       className="support-action-btn reassign"
                       onClick={handleReassignTicket}
                       disabled={closing || saving || isReadOnly}
-                      style={{padding: i18n.language === "ar" && isMobile ? "10px" : "10px 24px", width: i18n.language === "ar" && isMobile ? "150%": "100%"}}
+                      style={{ padding: i18n.language === "ar" && isMobile ? "10px" : "10px 24px", width: i18n.language === "ar" && isMobile ? "150%" : "100%" }}
                     >
                       {isMobile ? t('Reassign') : t('Request to Reassign')}
                     </button>}
