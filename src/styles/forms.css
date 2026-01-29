@@ -2218,7 +2218,7 @@ td.file-display-cell {
 @media (max-width: 768px) {
   .map-modal-content {
     width: 95%;
-    height: 80vh;
+    height: 50vh;
   }
   .map-container {
     height: 60vh;
