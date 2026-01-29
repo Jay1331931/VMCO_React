@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import '../styles/approvaldialog.css';
 import Swal from 'sweetalert2';
-
+import { isMobile } from "../utilities/isMobile";
 const ApprovalDialog = ({
   isOpen,
   onClose,
@@ -19,7 +19,15 @@ const ApprovalDialog = ({
   const { t } = useTranslation();
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
   const handleSubmit = async () => {
     // Require comment for reject, cancel, close, and reassign actions
     if (!comment.trim() && ['reject', 'cancel', 'close', 'reassign'].includes(action)) {
@@ -85,6 +93,20 @@ const ApprovalDialog = ({
             onChange={(e) => setComment(e.target.value)}
             placeholder={t(placeholder)}
             rows={5}
+            onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           />
         </div>
 

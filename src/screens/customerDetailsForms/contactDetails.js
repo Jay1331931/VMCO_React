@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { isMobile } from "../../utilities/isMobile";
 import { fetchDropdownFromBasicsMaster } from "../../utilities/commonServices";
 import "../../styles/forms.css";
 import "react-phone-number-input/style.css";
@@ -116,7 +117,15 @@ function ContactDetails({
     };
     fetchGeoData();
   }, []);
-
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
   const getBindingValue = (contactType, fieldname) => {
     if (Array.isArray(customerContactsData.data)) {
       const contact = customerContactsData.data.find(
@@ -509,6 +518,21 @@ const initializeMap = () => {
         <div className="location-search">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             placeholder={t("Search for a location...")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -849,6 +873,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="primaryContactName"
             name="primaryContactName"
             className={`text-field small ${
@@ -922,6 +961,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="primaryContactDesignation"
             name="primaryContactDesignation"
             className={`text-field small ${
@@ -1002,6 +1056,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="primaryContactEmail"
             name="primaryContactEmail"
             className={`text-field small ${
@@ -1088,6 +1157,21 @@ const initializeMap = () => {
         </label>
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
           id="primaryContactMobile"
           name="primaryContactMobile"
           className={`text-field small ${
@@ -1250,6 +1334,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="businessHeadName"
             name="businessHeadName"
             className={`text-field small ${
@@ -1325,6 +1424,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="businessHeadDesignation"
             name="businessHeadDesignation"
             className={`text-field small ${
@@ -1405,6 +1519,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="businessHeadEmail"
             name="businessHeadEmail"
             className={`text-field small ${
@@ -1479,6 +1608,21 @@ const initializeMap = () => {
         </label>
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
           id="businessHeadMobile"
           name="businessHeadMobile"
           className={`text-field small ${
@@ -1629,6 +1773,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="financeHeadName"
             name="financeHeadName"
             className={`text-field small ${
@@ -1713,6 +1872,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="financeHeadDesignation"
             name="financeHeadDesignation"
             className={`text-field small ${
@@ -1800,6 +1974,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="financeHeadEmail"
             name="financeHeadEmail"
             className={`text-field small ${
@@ -1874,6 +2063,21 @@ const initializeMap = () => {
         </label>
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
           id="financeHeadMobile"
           name="financeHeadMobile"
           className={`text-field small ${
@@ -2032,6 +2236,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="purchasingHeadName"
             name="purchasingHeadName"
             className={`text-field small ${
@@ -2116,6 +2335,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="purchasingHeadDesignation"
             name="purchasingHeadDesignation"
             className={`text-field small ${
@@ -2205,6 +2439,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="purchasingHeadEmail"
             name="purchasingHeadEmail"
             className={`text-field small ${
@@ -2279,6 +2528,21 @@ const initializeMap = () => {
         </label>
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
           id="purchasingHeadMobile"
           name="purchasingHeadMobile"
           className={`text-field small ${
@@ -2427,6 +2691,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="buildingName"
             name="buildingName"
             className={`text-field small ${
@@ -2499,6 +2778,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="street"
             name="street"
             className={`text-field small ${
@@ -2720,6 +3014,21 @@ const initializeMap = () => {
           <div className="input-with-verification">
             <input
               type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
               id="cityOther"
               name="cityOther"
               className={`text-field small ${
@@ -2863,6 +3172,21 @@ const initializeMap = () => {
           <div className="input-with-verification">
             <input
               type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
               id="districtOther"
               name="districtOther"
               className={`text-field small ${
@@ -3013,6 +3337,21 @@ const initializeMap = () => {
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="pincode"
             name="pincode"
             className={`text-field small ${

@@ -6,6 +6,7 @@ import React, {
   useEffect,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { isMobile } from "../../utilities/isMobile";
 import { useAuth } from "../../context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -83,7 +84,15 @@ const BranchDetailsForm = ({
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
   const [dropdownOptions, setDropdownOptions] = useState({});
-
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
   const getOptionsFromBasicsMaster = async (fieldName) => {
     const params = new URLSearchParams({
       filters: JSON.stringify({ master_name: fieldName }), // Properly stringify the filter
@@ -686,6 +695,21 @@ const BranchDetailsForm = ({
              <div className="location-search">
                <input
                  type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                  placeholder={t("Search for a location...")}
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
@@ -1174,6 +1198,21 @@ const BranchDetailsForm = ({
                         return (
                           <input
                             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                             name={field.name}
                             value={branch?.[field.name]}
                             placeholder={t(field.placeholder)}
@@ -1467,6 +1506,21 @@ const BranchDetailsForm = ({
                         <div className="text-input-wrapper-mobile">
                           <input
                             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                             name={field.name}
                             value={branch?.[field.name] || ""}
                             placeholder={t(field.placeholder)}
