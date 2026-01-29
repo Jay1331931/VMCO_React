@@ -709,8 +709,13 @@ const AddBankTransaction = () => {
                 onKeyDown={handleKeyDown}
                 onBlur={() => {
                   document.body.classList.remove("keyboard-open");
-                  // 👈 show menu again (optional)
+                 
                 }}
+               style={{ 
+                backgroundColor: "white", 
+                opacity: 1, 
+                color: "black" 
+              }}
               />
               {fieldErrors.transactionDate && (
                 <div className="error-message" style={{ color: "red" }}>
