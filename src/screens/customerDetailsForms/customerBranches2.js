@@ -126,7 +126,7 @@ const CustomerBranches = ({
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
-    customerFormMode
+    customerFormMode,
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
@@ -254,7 +254,7 @@ const CustomerBranches = ({
           (col) =>
             col.field !== "updatedAt" &&
             col.field !== "createdAt" &&
-            col?.searchable
+            col?.searchable,
         )
         .map((col) => ({
           column: col.field,
@@ -265,7 +265,7 @@ const CustomerBranches = ({
 
       setSearchOptions(newOptions);
     },
-    [columns]
+    [columns],
   );
   // Transform branch data with contacts
   const transformBranchData = (branches, branchContacts) => {
@@ -273,11 +273,11 @@ const CustomerBranches = ({
     const contactsArray = Array.isArray(branchContacts)
       ? branchContacts
       : branchContacts
-      ? [branchContacts]
-      : [];
+        ? [branchContacts]
+        : [];
     return branchesArray.map((branch) => {
       const branchContacts = contactsArray.filter(
-        (contact) => contact.branchId === branch.id
+        (contact) => contact.branchId === branch.id,
       );
       const contactsMap = branchContacts.reduce((acc, contact) => {
         acc[contact.contactType] = contact;
@@ -329,7 +329,7 @@ const CustomerBranches = ({
           console.log("is approval mode", isAppMode);
           console.log(
             `Workflow check result for branch ${branchId}:`,
-            isAppMode
+            isAppMode,
           );
           setIsApprovalMode(isAppMode);
           inApprovalMode.current = isAppMode;
@@ -340,7 +340,7 @@ const CustomerBranches = ({
           isAppMode = responseText.trim() === "t";
           console.log(
             "Using direct string match, is approval mode:",
-            isAppMode
+            isAppMode,
           );
           // setIsApprovalMode(isAppMode);
           return isAppMode;
@@ -369,20 +369,22 @@ const CustomerBranches = ({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const result = await response.json();
       if (result.status === "Ok") {
         const transformed = transformBranchData(
           branches.filter((branch) => branch.id === branchId),
-          result.data
+          result.data,
         );
         if (transformed.length > 0) {
           setTransformedBranches(transformed);
           setBranches((prevBranches) =>
             prevBranches.map((branch) =>
-              branch.id === branchId ? { ...branch, ...transformed[0] } : branch
-            )
+              branch.id === branchId
+                ? { ...branch, ...transformed[0] }
+                : branch,
+            ),
           );
         }
       } else {
@@ -428,7 +430,7 @@ const CustomerBranches = ({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to fetch branches");
@@ -594,7 +596,7 @@ const CustomerBranches = ({
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
       if (response.ok) {
         const result = await response.json();
@@ -655,8 +657,8 @@ const CustomerBranches = ({
                 id: result.data.id,
                 isNew: false,
               }
-            : branch
-        )
+            : branch,
+        ),
       );
       // setTemporaryBranches((prev) => prev.filter((b) => b.id !== id));
     }
@@ -682,7 +684,7 @@ const CustomerBranches = ({
             customer_id: customer.id,
             branch_id: branchId,
           }),
-        }
+        },
       );
     }
   };
@@ -776,8 +778,8 @@ const CustomerBranches = ({
                     id: result.data.id,
                     isNew: false,
                   }
-                : branch
-            )
+                : branch,
+            ),
           );
           setTemporaryBranches((prev) => prev.filter((b) => b.id !== id));
           console.log(contactPayload);
@@ -796,7 +798,7 @@ const CustomerBranches = ({
                   customer_id: customer.id,
                   branch_id: result.data.id,
                 }),
-              }
+              },
             );
           }
         }
@@ -824,7 +826,7 @@ const CustomerBranches = ({
                 Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify(contactPayload),
-            }
+            },
           );
         }
       }
@@ -1048,7 +1050,7 @@ const CustomerBranches = ({
             ...branchPayload,
             branchStatus: "pending",
           }),
-        }
+        },
       );
       const result = await response.json();
       function showLoadingScreen(message) {
@@ -1103,7 +1105,7 @@ const CustomerBranches = ({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(userPayload),
-          }
+          },
         );
         if (!userResponse.ok) {
           throw new Error("Failed to create user");
@@ -1139,7 +1141,7 @@ const CustomerBranches = ({
       formData.append("erpCustId", customer.erpCustId);
       formData.append(
         "isDeliveryChargesApplicable",
-        customer.isDeliveryChargesApplicable
+        customer.isDeliveryChargesApplicable,
       );
       const response = await axios.post(
         `${API_BASE_URL}/customer-branches/upload-excel`,
@@ -1151,7 +1153,7 @@ const CustomerBranches = ({
           },
           responseType: "blob",
           validateStatus: () => true,
-        }
+        },
       );
       if (
         response?.status === 400 &&
@@ -1165,11 +1167,11 @@ const CustomerBranches = ({
           html: `
     ${t("Some rows contain validation errors.")}<br>
     ${t("The Excel file has been updated with a new column named")} <b>${t(
-            "Errors"
-          )}</b>.<br>
+      "Errors",
+    )}</b>.<br>
     ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t(
-            "column, fix the issues, and re-upload the file."
-          )}.
+      "column, fix the issues, and re-upload the file.",
+    )}.
   `,
           icon: "warning",
           confirmButtonText: t("Download Error File"),
@@ -1325,7 +1327,7 @@ const CustomerBranches = ({
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       if (data?.success) {
         fetchBranches();
@@ -1401,6 +1403,22 @@ const CustomerBranches = ({
     setActionMenuOpen(false);
     if (fileExcelInputRef.current) {
       fileExcelInputRef.current.value = "";
+    }
+  };
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
     }
   };
   return (
@@ -1488,7 +1506,8 @@ const CustomerBranches = ({
                 .filter(
                   (item) =>
                     item.searchString &&
-                    columns.find((col) => col.field === item.column)?.searchable
+                    columns.find((col) => col.field === item.column)
+                      ?.searchable,
                 )} // Filter out empty entries
               inputValue={search || ""}
               onInputChange={(event, newValue) =>
@@ -1517,7 +1536,7 @@ const CustomerBranches = ({
               renderOption={(props, option) => {
                 console.log("columns", columns, option);
                 const columnName = columns.find(
-                  (col) => col.field === option.column
+                  (col) => col.field === option.column,
                 )?.headerName;
                 return (
                   <Box component="li" {...props}>
@@ -1549,6 +1568,15 @@ const CustomerBranches = ({
                   {...params}
                   placeholder={t("Search...")}
                   variant="outlined"
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                  }}
+                  onKeyDown={handleKeyDown}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: "20px",
@@ -1660,7 +1688,7 @@ const CustomerBranches = ({
                         onClick={handleAddBranch}
                         style={{
                           pointerEvents: branches.some(
-                            (branch) => branch.id < 0
+                            (branch) => branch.id < 0,
                           )
                             ? "none"
                             : "auto",
@@ -1789,18 +1817,26 @@ const CustomerBranches = ({
                         {/* First Row */}
                         <div className="info-row">
                           <div className="info-item">
-                             <div className="info-label-icon">
-                             <FontAwesomeIcon icon={faCity} className="info-icon" />
-                            <span className="info-label">{t("City")}</span></div>
+                            <div className="info-label-icon">
+                              <FontAwesomeIcon
+                                icon={faCity}
+                                className="info-icon"
+                              />
+                              <span className="info-label">{t("City")}</span>
+                            </div>
                             <span className="info-value">
                               {branch?.city || "N/A"}
                             </span>
                           </div>
                           <div className="info-item">
-                             <div className="info-label-icon">
-                          <FontAwesomeIcon icon={faGlobeAsia} className="info-icon" />
+                            <div className="info-label-icon">
+                              <FontAwesomeIcon
+                                icon={faGlobeAsia}
+                                className="info-icon"
+                              />
 
-                            <span className="info-label">{t("Region")}</span></div>
+                              <span className="info-label">{t("Region")}</span>
+                            </div>
                             <span className="info-value">
                               {branch?.region || "N/A"}
                             </span>
@@ -1811,10 +1847,13 @@ const CustomerBranches = ({
                         <div className="info-row">
                           <div className="info-item">
                             <div className="info-label-icon">
-                              <FontAwesomeIcon icon={faCalendarAlt} className="info-icon" />
-                            <span className="info-label">
-                              {t("Created At")}
-                            </span>
+                              <FontAwesomeIcon
+                                icon={faCalendarAlt}
+                                className="info-icon"
+                              />
+                              <span className="info-label">
+                                {t("Created At")}
+                              </span>
                             </div>
                             <span className="info-value">
                               {branch?.createdAt
@@ -1847,7 +1886,7 @@ const CustomerBranches = ({
                       <div className="branch-status-container">
                         <div
                           className={`branches-status-badge-mobile ${getStatusClass(
-                            branch.branchStatus
+                            branch.branchStatus,
                           )}`}
                         >
                           {t(branch.branchStatus)}
@@ -2030,7 +2069,7 @@ const CustomerBranches = ({
                     <td className="mobile-secondary">
                       <span
                         className={`branches-status-badge ${getStatusClass(
-                          branch.branchStatus
+                          branch.branchStatus,
                         )}`}
                       >
                         {t(branch.branchStatus)}
@@ -2057,7 +2096,7 @@ const CustomerBranches = ({
                     <td className="desktop-only">
                       <span
                         className={`branches-status-badge ${getStatusClass(
-                          branch.branch_status
+                          branch.branch_status,
                         )}`}
                       >
                         {t(branch.branchStatus)}
@@ -2098,7 +2137,7 @@ const CustomerBranches = ({
                           index === 0 &&
                           String(branch?.id) ===
                             String(
-                              customer?.completeWorkflowData?.workflowData?.id
+                              customer?.completeWorkflowData?.workflowData?.id,
                             )
                             ? "branches-toggle-row-btn-first-row-highlight"
                             : "branches-toggle-row-btn"
@@ -2157,10 +2196,10 @@ const CustomerBranches = ({
                             subtitle={
                               approvalAction === "approve"
                                 ? t(
-                                    "Are you sure you want to approve this branch?"
+                                    "Are you sure you want to approve this branch?",
                                   )
                                 : t(
-                                    "Are you sure you want to reject this branch?"
+                                    "Are you sure you want to reject this branch?",
                                   )
                             }
                           />
@@ -2214,7 +2253,7 @@ const CustomerBranches = ({
                 </p>
                 <p style={{ marginBottom: 20 }}>
                   {t(
-                    "To upload multiple branches at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
+                    "To upload multiple branches at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.",
                   )}
                 </p>
                 <div className="popup-buttons-row">
