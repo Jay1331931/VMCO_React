@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { isMobile } from "../../utilities/isMobile";
 import {
   fetchDropdownFromBasicsMaster,
   getOptionsFromEmployeesWithManager,
@@ -111,7 +112,15 @@ function BusinessDetails({
   const [typeOfBusiness, setTypeOfBusiness] = useState(
     customerData?.typeOfBusiness || ""
   );
-
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
   useEffect(() => {
     setTypeOfBusiness(customerData?.typeOfBusiness || "");
   }, [customerData?.typeOfBusiness]);
@@ -354,6 +363,20 @@ const checkDisabledStatus = (fieldPath) => {
   <div className="input-with-verification">
     <input
       type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
       id="erpCustId"
       name="erpCustId"
       // className={`text-field small 
@@ -486,6 +509,20 @@ const checkDisabledStatus = (fieldPath) => {
         </label>
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="companyNameEn"
           name="companyNameEn"
           className={`text-field small ${
@@ -539,6 +576,20 @@ const checkDisabledStatus = (fieldPath) => {
   <div className="input-with-verification">
     <input
       type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
       id="companyNameEn"
       name="companyNameEn"
       className={`text-field small ${
@@ -604,6 +655,20 @@ const checkDisabledStatus = (fieldPath) => {
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="companyNameAr"
           name="companyNameAr"
           className={`text-field small arabic ${
@@ -671,6 +736,20 @@ const checkDisabledStatus = (fieldPath) => {
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="crNumber"
           name="crNumber"
           className={`text-field small ${
@@ -737,6 +816,20 @@ const checkDisabledStatus = (fieldPath) => {
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="vatNumber"
           name="vatNumber"
           className={`text-field small ${
@@ -801,6 +894,20 @@ const checkDisabledStatus = (fieldPath) => {
          <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="governmentRegistrationNumber"
           name="governmentRegistrationNumber"
           className={`text-field small ${
@@ -871,6 +978,20 @@ const checkDisabledStatus = (fieldPath) => {
          <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="baladeahLicenseNumber"
           name="baladeahLicenseNumber"
           className={`text-field small ${
@@ -1081,6 +1202,20 @@ const checkDisabledStatus = (fieldPath) => {
           <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
             id="typeOfBusinessOther"
             name="typeOfBusinessOther"
             className={`text-field small ${
@@ -1149,6 +1284,20 @@ const checkDisabledStatus = (fieldPath) => {
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="brandNameEn"
           name="brandNameEn"
           className={`text-field small ${
@@ -1208,6 +1357,20 @@ const checkDisabledStatus = (fieldPath) => {
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="brandNameAr"
           name="brandNameAr"
           className={`text-field small arabic ${
@@ -1513,6 +1676,20 @@ const checkDisabledStatus = (fieldPath) => {
           <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
             id="customerSource"
             name="customerSource"
             className={`text-field small ${

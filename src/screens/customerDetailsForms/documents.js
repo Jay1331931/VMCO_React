@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { isMobile } from "../../utilities/isMobile";
 import "../../styles/forms.css";
 import { not } from "ajv/dist/compile/codegen";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -86,6 +87,15 @@ const [customDocName, setCustomDocName] = useState("");
     setTabsHeight("auto");
   }, []);
   const ALLOWED_FILE_TYPES = ['.pdf'];
+   const handleKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+        if (isMobile) {
+          // Close keyboard
+          e.target.blur();
+          document.body.classList.remove('keyboard-open');
+        }
+      }
+    };
   function getCenteredOptions(width, height) {
   const screenWidth = window.screen.width;
   const screenHeight = window.screen.height;
@@ -4886,6 +4896,21 @@ const openUrlSmart = (url) => {
     {selectedDocType === "Others (Specify)" && (
       <input
         type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
         value={customDocName}
         onChange={(e) => setCustomDocName(e.target.value)}
         placeholder="Enter document name"

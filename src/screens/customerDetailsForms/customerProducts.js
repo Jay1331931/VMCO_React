@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "../../components/Sidebar";
 import Pagination from "../../components/Pagination";
+import { isMobile } from "../../utilities/isMobile";
 import Tabs from "../../components/Tabs";
 import "../../styles/pagination.css";
 import "../../styles/components.css";
@@ -119,7 +120,15 @@ function Products({ customerId, customer, setTabsHeight }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
+const handleKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+        if (isMobile) {
+          // Close keyboard
+          e.target.blur();
+          document.body.classList.remove('keyboard-open');
+        }
+      }
+    };
   const fetchProducts = async (activeEntity) => {
     setLoading(true);
     setError(null);
@@ -553,7 +562,22 @@ function Products({ customerId, customer, setTabsHeight }) {
         <div className="toggle-container">
           {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
           {isV("btnApplyAll") && (
-            <input type="text" className="product-text-input" />
+            <input type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+     className="product-text-input" />
           )}
           {isV("btnApplyAll") && (
             <button
@@ -568,6 +592,21 @@ function Products({ customerId, customer, setTabsHeight }) {
           {/* Search */}
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             placeholder={t("Search...")}
             className="product-search-input"
             value={search}
@@ -704,14 +743,26 @@ function Products({ customerId, customer, setTabsHeight }) {
                     <div className="input-with-icons">
                       <input
                         type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    setIsInputFocused(true);
+                          setEditingMoq(product.id);
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                         value={product.moq}
                         onChange={(e) =>
                           handleMoqChange(product.id, e.target.value)
                         }
-                        onFocus={() => {
-                          setIsInputFocused(true);
-                          setEditingMoq(product.id);
-                        }}
                         // onBlur={() => {
                         //     // Use setTimeout to allow button clicks to register
                         //     setTimeout(() => {
