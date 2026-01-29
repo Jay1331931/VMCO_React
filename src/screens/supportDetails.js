@@ -1262,6 +1262,7 @@ function SupportDetails() {
                   disabled={!isE("entity") || isReadOnly}
                   placeholder={t("Select Business Unit")}
                   className="entity-dropdown"
+                  style={{width:"100%"}}
                 />
               </div>
             )}
@@ -1281,6 +1282,7 @@ function SupportDetails() {
                   disabled={!isE("issueType") || isReadOnly}
                   placeholder={t("Select Issue Type")}
                   className="issue-type-dropdown"
+                  style={{width:"100%"}}
                 />
               </div>
             )}

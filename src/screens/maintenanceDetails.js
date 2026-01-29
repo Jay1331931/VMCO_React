@@ -1406,6 +1406,7 @@ function MaintenanceDetails() {
                   placeholder={t("Select Issue Type")}
                   style={{
                     color: ticket.issueType ? "inherit" : "#999",
+                    width:"100%"
                   }}
                   className="issue-type-dropdown"
                 />

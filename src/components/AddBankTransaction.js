@@ -768,6 +768,7 @@ const AddBankTransaction = () => {
                         }
                       });
                     }}
+                    style={{width:"100%"}}
                     disabled={orderId}
                     options={[
                       { value: "", name: t("Select Entity") },

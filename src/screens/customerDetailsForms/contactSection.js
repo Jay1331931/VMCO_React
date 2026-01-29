@@ -775,7 +775,7 @@ onKeyDown={handleKeyDown}
             <span className="contact-type-label">{t(label)}</span>
             {isRequired && <span className="required-badge">{t("Required")}</span>}
           </div>
-          <div className="contact-status-dot"></div>
+          {/* <div className="contact-status-dot"></div> */}
         </div>
 
         {/* Contact Fields */}
@@ -958,9 +958,9 @@ onKeyDown={handleKeyDown}
                             field === "primaryContactEmail")
                         }
                       />
-                      <div className="phone-input-icon-mobile">
+                      {/* <div className="phone-input-icon-mobile">
                         <FontAwesomeIcon icon={faPhone} />
-                      </div>
+                      </div> */}
                     </div>
                   )}
                 </div>
@@ -1146,13 +1146,15 @@ onKeyDown={handleKeyDown}
 }
 
 .secondary-contact {
-  border-color: #32A19F;
-  background: linear-gradient(135deg, #ffffff, rgba(50, 161, 159, 0.03));
+  border-color: #00594C;
+  // background: linear-gradient(135deg, #ffffff, rgba(50, 161, 159, 0.03));
+   background: linear-gradient(135deg, #ffffff, rgba(0, 89, 76, 0.03));
 }
 
 .supervisor-contact {
-  border-color: #F6921E;
-  background: linear-gradient(135deg, #ffffff, rgba(246, 146, 30, 0.03));
+  border-color:#00594C; // #F6921E;
+  // background: linear-gradient(135deg, #ffffff, rgba(246, 146, 30, 0.03));
+   background: linear-gradient(135deg, #ffffff, rgba(0, 89, 76, 0.03));
 }
 
 /* Contact Card Header */
@@ -1184,11 +1186,11 @@ onKeyDown={handleKeyDown}
 }
 
 .secondary-contact .contact-type-icon {
-  background: linear-gradient(135deg, #32A19F, #4CB5B3);
+  background: linear-gradient(135deg, #00594C, #007B6B);
 }
 
 .supervisor-contact .contact-type-icon {
-  background: linear-gradient(135deg, #F6921E, #FFA94D);
+  background: linear-gradient(135deg, #00594C, #007B6B);
 }
 
 .contact-type-label {
