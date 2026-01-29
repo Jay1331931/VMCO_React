@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { isMobile } from "../../utilities/isMobile";
 import {
   fetchDropdownFromBasicsMaster,
   checkFieldForUpdate,
@@ -144,6 +145,15 @@ function FinancialInformation({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  const handleKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+        if (isMobile) {
+          // Close keyboard
+          e.target.blur();
+          document.body.classList.remove('keyboard-open');
+        }
+      }
+    };
   // Dropdown state for pricingPolicy
   const dropdownFields = ["bankName", "entity"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
@@ -723,6 +733,21 @@ function FinancialInformation({
         </label>
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
           id="bankName"
           name="bankName"
           className={`text-field small ${
@@ -845,6 +870,21 @@ function FinancialInformation({
           <div className="input-with-verification">
             <input
               type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
               id="bankNameOther"
               name="bankNameOther"
               className={`text-field small ${originalCustomerData &&
@@ -913,6 +953,21 @@ function FinancialInformation({
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="bankAccountNumber"
             name="bankAccountNumber"
             className={`text-field small ${originalCustomerData &&
@@ -978,6 +1033,21 @@ function FinancialInformation({
         <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
             id="iban"
             name="iban"
             className={`text-field small ${originalCustomerData &&
@@ -1486,6 +1556,21 @@ function FinancialInformation({
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="DARCreditLimit"
                     name="DARCreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -1542,6 +1627,21 @@ function FinancialInformation({
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="DARCreditPeriod"
                     name="DARCreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -1625,6 +1725,21 @@ function FinancialInformation({
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="VMCOCreditLimit"
                     name="VMCOCreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -1681,6 +1796,21 @@ function FinancialInformation({
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="VMCOCreditPeriod"
                     name="VMCOCreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -1764,6 +1894,21 @@ function FinancialInformation({
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="SHCCreditLimit"
                     name="SHCCreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -1820,6 +1965,21 @@ function FinancialInformation({
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="SHCCreditPeriod"
                     name="SHCCreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -1903,6 +2063,21 @@ function FinancialInformation({
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="NAQICreditLimit"
                     name="NAQICreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -1959,6 +2134,21 @@ function FinancialInformation({
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="NAQICreditPeriod"
                     name="NAQICreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -2042,6 +2232,21 @@ function FinancialInformation({
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="GMTCCreditLimit"
                     name="GMTCCreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -2098,6 +2303,21 @@ function FinancialInformation({
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                     id="GMTCCreditPeriod"
                     name="GMTCCreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
@@ -2898,6 +3118,21 @@ function FinancialInformation({
               <label>{t("CC")}</label>
               <input
                 type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                 placeholder={t("comma separated emails.")}
                 value={ccEmail || ""}
                 className={ccError ? "error-border" : ""}

@@ -15,7 +15,6 @@ function SearchableDropdown({
   placeholder,
   style = {},
   branchName = null,
-  setHideMenu
 }) {
   const allOption = { name: placeholder || "Select", value: null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
@@ -27,20 +26,21 @@ function SearchableDropdown({
   const [dropdownPosition, setDropdownPosition] = useState({});
   const isMobile = usePlatform();
   const inputRef = useRef(null);
-  const isBranchDropdown = className?.includes('branch-location-select');
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isBranchDropdown = className?.includes("branch-location-select");
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   // Position Calculation
   useEffect(() => {
     if (isOpen && dropdownRef.current) {
       const updatePosition = () => {
         const rect = dropdownRef.current.getBoundingClientRect();
-        const dropdownHeight = 250; 
-        const isRTL = document.dir === 'rtl' || i18n.language === 'ar';
-        
+        const dropdownHeight = 250;
+        const isRTL = document.dir === "rtl" || i18n.language === "ar";
+
         const spaceAbove = rect.top;
         const spaceBelow = window.innerHeight - rect.bottom;
-        
+
         let topPosition;
         // Logic: If not enough space below, open upward
         if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
@@ -53,12 +53,12 @@ function SearchableDropdown({
         if (isRTL) {
           horizontalStyles = {
             right: window.innerWidth - (rect.right + window.scrollX),
-            left: 'auto',
+            left: "auto",
           };
         } else {
           horizontalStyles = {
             left: rect.left + window.scrollX,
-            right: 'auto',
+            right: "auto",
           };
         }
 
@@ -68,14 +68,14 @@ function SearchableDropdown({
           width: rect.width,
           maxHeight: `${dropdownHeight}px`,
           // zIndex: 999999,
-          ...horizontalStyles
+          ...horizontalStyles,
         });
       };
 
       updatePosition();
       // Recalculate on window resize/scroll for stability
-      window.addEventListener('resize', updatePosition);
-      return () => window.removeEventListener('resize', updatePosition);
+      window.addEventListener("resize", updatePosition);
+      return () => window.removeEventListener("resize", updatePosition);
     }
   }, [isOpen, i18n.language]);
 
@@ -87,12 +87,17 @@ function SearchableDropdown({
       e.stopPropagation();
     }
 
-    const optValue = typeof opt === "object" ? (opt.value !== undefined ? opt.value : opt.employeeId || opt.name) : opt;
-    
+    const optValue =
+      typeof opt === "object"
+        ? opt.value !== undefined
+          ? opt.value
+          : opt.employeeId || opt.name
+        : opt;
+
     // 1. Trigger the change first
     onChange({ target: { name, value: optValue } });
     setSearchTerm("");
-    
+
     // 2. Small delay before closing to ensure the webview processes the state change
     // This fixes the issue where the dropdown closes before the click registers
     setTimeout(() => {
@@ -113,12 +118,16 @@ function SearchableDropdown({
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!isOpen) return;
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
-          dropdownContentRef.current && !dropdownContentRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        dropdownContentRef.current &&
+        !dropdownContentRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
-    
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
@@ -128,61 +137,96 @@ function SearchableDropdown({
     return optionText.toLowerCase().includes((searchTerm || "").toLowerCase());
   });
 
-  const selectedOption = mergedOptions.find(opt => {
-    const optVal = typeof opt === "object" ? (opt.value !== undefined ? opt.value : opt.employeeId || opt.name) : opt;
-    return optVal === value;
-  }) || allOption;
+  const selectedOption =
+    mergedOptions.find((opt) => {
+      const optVal =
+        typeof opt === "object"
+          ? opt.value !== undefined
+            ? opt.value
+            : opt.employeeId || opt.name
+          : opt;
+      return optVal === value;
+    }) || allOption;
 
-  const displayText = t(typeof selectedOption === "object" ? selectedOption.name : selectedOption) || placeholder;
-
+  const displayText =
+    t(
+      typeof selectedOption === "object" ? selectedOption.name : selectedOption,
+    ) || placeholder;
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
+    }
+  };
   return (
-    <div className={`searchable-dropdown ${className || ''}`} ref={dropdownRef} style={{ position: 'relative' }}>
+    <div
+      className={`searchable-dropdown ${className || ""}`}
+      ref={dropdownRef}
+      style={{ position: "relative" }}
+    >
       <div
-        className={`dropdown-header mobile ${isBranchDropdown ? 'branch-dropdown-header' : ''}`}
+        className={`dropdown-header mobile ${isBranchDropdown ? "branch-dropdown-header" : ""}`}
         onClick={handleToggle}
         style={{
           backgroundColor: disabled ? "#e9ecef" : "white",
           cursor: disabled ? "not-allowed" : "pointer",
           ...style,
-          userSelect: 'none'
+          userSelect: "none",
         }}
       >
-        {isBranchDropdown && <FontAwesomeIcon icon={faMapMarkerAlt} className="branch-location-icon" />}
+        {isBranchDropdown && (
+          <FontAwesomeIcon
+            icon={faMapMarkerAlt}
+            className="branch-location-icon"
+          />
+        )}
         <span className="selected-value">
           {displayText.charAt(0).toUpperCase() + displayText.slice(1)}
         </span>
         {!isBranchDropdown && <span className="dropdown-arrow">▼</span>}
       </div>
 
-      {isOpen && !disabled && createPortal(
-        <>
-          {/* Transparent Backdrop to capture clicks outside on mobile/iOS */}
-          <div 
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              // zIndex: 999998,
-              backgroundColor: 'transparent'
-            }}
-            onClick={() => setIsOpen(false)}
-          />
-          
-          <div
-            className={`dropdown-content ${className || ''} ${isIOS ? "ios-dropdown" : ""}`}
-            style={{ 
-              ...dropdownPosition, 
-              display: 'flex', 
-              flexDirection: 'column',
-              backgroundColor: 'white',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              borderRadius: '4px'
-            }}
-            ref={dropdownContentRef}
-          >
-            {/* <div style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
+      {isOpen &&
+        !disabled &&
+        createPortal(
+          <>
+            {/* Transparent Backdrop to capture clicks outside on mobile/iOS */}
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                // zIndex: 999998,
+                backgroundColor: "transparent",
+              }}
+              onClick={() => setIsOpen(false)}
+            />
+
+            <div
+              className={`dropdown-content ${className || ""} ${isIOS ? "ios-dropdown" : ""}`}
+              style={{
+                ...dropdownPosition,
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "white",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                borderRadius: "4px",
+              }}
+              ref={dropdownContentRef}
+            >
+              {/* <div style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
               <input
                 ref={inputRef}
                 type="text"
@@ -201,124 +245,144 @@ function SearchableDropdown({
                 }}
               />
             </div> */}
-<div
-  style={{
-    padding: "8px",
-    borderBottom: "1px solid #eee",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  }}
->
-  <input
-    ref={inputRef}
-    type="text"
-    className="dropdown-search"
-    placeholder={t("Search...")}
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    onFocus={() => {
-    setHideMenu?.(true);   // 👈 hide bottom menu
-  }}
+              <div
+                style={{
+                  padding: "8px",
+                  borderBottom: "1px solid #eee",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="dropdown-search"
+                  placeholder={t("Search...")}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add("keyboard-open");
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove("keyboard-open");
+                    // 👈 show menu again (optional)
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    fontSize: "16px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    WebkitAppearance: "none",
+                  }}
+                />
 
-  onClick={() => {
-    setHideMenu?.(true);   // 👈 mobile tap safety
-  }}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(false); // close dropdown
+                  }}
+                  style={{
+                    padding: "8px 8px",
+                    fontSize: "14px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                    backgroundColor: "#f8f9fa",
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {t("Close")}
+                </button>
+              </div>
 
-  onBlur={() => {
-    setHideMenu?.(false);    // 👈 show menu again (optional)
-  }}
-    style={{
-      flex: 1,
-      padding: "10px",
-      fontSize: "16px",
-      border: "1px solid #ddd",
-      borderRadius: "4px",
-      WebkitAppearance: "none",
-    }}
-  />
+              <div
+                className="dropdown-options"
+                style={{
+                  overflowY: "auto",
+                  flex: 1,
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                {filteredOptions.length > 0 ? (
+                  filteredOptions.map((opt, idx) => {
+                    const isOptDisabled =
+                      typeof opt === "object" && opt.disabled;
+                    const optValue =
+                      typeof opt === "object"
+                        ? opt.value !== undefined
+                          ? opt.value
+                          : opt.employeeId || opt.name
+                        : opt;
+                    const isChecked =
+                      optValue ===
+                      (typeof selectedOption === "object"
+                        ? selectedOption.value
+                        : selectedOption);
 
-  <button
-    type="button"
-    onClick={(e) => {
-      e.stopPropagation();
-      setIsOpen(false); // close dropdown
-    }}
-    style={{
-      padding: "8px 8px",
-      fontSize: "14px",
-      borderRadius: "4px",
-      border: "1px solid #ccc",
-      backgroundColor: "#f8f9fa",
-      cursor: "pointer",
-      whiteSpace: "nowrap",
-    }}
-  >
-    {t("Close")}
-  </button>
-</div>
-
-
-            <div 
-              className="dropdown-options" 
-              style={{ 
-                overflowY: 'auto', 
-                flex: 1,
-                WebkitOverflowScrolling: 'touch' 
-              }}
-            >
-              {filteredOptions.length > 0 ? (
-                filteredOptions.map((opt, idx) => {
-                  const isOptDisabled = typeof opt === "object" && opt.disabled;
-                  const optValue = typeof opt === "object" ? (opt.value !== undefined ? opt.value : opt.employeeId || opt.name) : opt;
-                  const isChecked = optValue === (typeof selectedOption === 'object' ? selectedOption.value : selectedOption);
-
-                  return (
-                    <div
-                      key={idx}
-                      className={`dropdown-option ${isOptDisabled ? "disabled" : ""}`}
-                      // Use onMouseDown/onClick for iOS stability
-                      onClick={(e) => !isOptDisabled && handleOptionSelect(e, opt)}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '12px 16px',
-                        minHeight: '48px', // Larger touch target
-                        cursor: isOptDisabled ? 'not-allowed' : 'pointer',
-                        backgroundColor: isChecked ? '#f0f7ff' : 'transparent',
-                        opacity: isOptDisabled ? 0.5 : 1,
-                        borderBottom: '1px solid #fafafa'
-                      }}
-                    >
-                      <span 
-                      // style={{ pointerEvents: 'none' }}
+                    return (
+                      <div
+                        key={idx}
+                        className={`dropdown-option ${isOptDisabled ? "disabled" : ""}`}
+                        // Use onMouseDown/onClick for iOS stability
+                        onClick={(e) =>
+                          !isOptDisabled && handleOptionSelect(e, opt)
+                        }
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "12px 16px",
+                          minHeight: "48px", // Larger touch target
+                          cursor: isOptDisabled ? "not-allowed" : "pointer",
+                          backgroundColor: isChecked
+                            ? "#f0f7ff"
+                            : "transparent",
+                          opacity: isOptDisabled ? 0.5 : 1,
+                          borderBottom: "1px solid #fafafa",
+                        }}
                       >
-                        {t(typeof opt === "object" ? opt.name : opt)}
-                      </span>
-                      {isMobile && (
-                        <input
-                          type="radio"
-                          checked={isChecked}
-                          readOnly
-                          style={{ accentColor: '#007bff', 
-                            // pointerEvents: 'none' 
-                          }}
-                        />
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
-                  {t("No matches found")}
-                </div>
-              )}
+                        <span
+                        // style={{ pointerEvents: 'none' }}
+                        >
+                          {t(typeof opt === "object" ? opt.name : opt)}
+                        </span>
+                        {isMobile && (
+                          <input
+                            type="radio"
+                            checked={isChecked}
+                            readOnly
+                            style={{
+                              accentColor: "#007bff",
+                              // pointerEvents: 'none'
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div
+                    style={{
+                      padding: "20px",
+                      textAlign: "center",
+                      color: "#888",
+                    }}
+                  >
+                    {t("No matches found")}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </>,
-        document.body
-      )}
+          </>,
+          document.body,
+        )}
 
       <style jsx="true">{`
         .dropdown-option:active {
@@ -330,6 +394,9 @@ function SearchableDropdown({
         .dropdown-search:focus {
           outline: none;
           border-color: #007bff;
+        }
+        body.keyboard-open .mobile-bottom-menu {
+          display: none !important;
         }
       `}</style>
     </div>

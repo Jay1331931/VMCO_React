@@ -79,6 +79,23 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
     }
   };
 
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
+    }
+  };
+
   if (!open) return null;
 
   const totalPages = pagination.total > 0 ? Math.ceil(pagination.total / pagination.pageSize) : 1;
@@ -103,11 +120,16 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
             placeholder={t("Search customers...")}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                setSearchQuery(search);
-                setPagination(prev => ({ ...prev, page: 1 }));
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add("keyboard-open");
               }
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              document.body.classList.remove("keyboard-open");
+              // 👈 show menu again (optional)
             }}
             style={{
               width: "100%",

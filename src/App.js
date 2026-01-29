@@ -12,86 +12,117 @@ import { Capacitor } from "@capacitor/core";
 import VersionPopup from "./components/VersionPopup"; // You'll need to create this component
 import AppRoutes from "./AppRoutes";
 import usePlatform from "../src/utilities/platform";
+import { Network } from '@capacitor/network';
 const currentVersion = process.env.REACT_APP_TALAB_VERSION;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
 const lastSkippedVersion = localStorage.getItem('last_skipped_version');
 
+// const useNetworkStatus = () => {
+//   const [isOnline, setIsOnline] = useState(navigator.onLine);
+//   const [initialCheckDone, setInitialCheckDone] = useState(false);
+
+//   useEffect(() => {
+//     // Function to check actual internet connectivity
+//     const checkActualConnection = async () => {
+//       try {
+//         const controller = new AbortController();
+//         const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+//         // Try to fetch a small resource to verify internet
+//         await fetch('https://www.google.com/favicon.ico', {
+//           method: 'HEAD',
+//           cache: 'no-cache',
+//           mode: 'no-cors',
+//           signal: controller.signal
+//         });
+        
+//         clearTimeout(timeoutId);
+//         return true;
+//       } catch (error) {
+//         return false;
+//       }
+//     };
+
+//     const updateNetworkStatus = async () => {
+//       const browserStatus = navigator.onLine;
+      
+//       if (!browserStatus) {
+//         // Browser says offline
+//         setIsOnline(false);
+//         setInitialCheckDone(true);
+//         return;
+//       }
+      
+//       // Browser says online, verify actual connection
+//       if (!initialCheckDone) {
+//         // First time check - verify actual connectivity
+//         const actualConnection = await checkActualConnection();
+//         setIsOnline(actualConnection);
+//         setInitialCheckDone(true);
+//       } else {
+//         // Subsequent checks - use browser status for speed
+//         setIsOnline(browserStatus);
+        
+//         // But verify in background
+//         checkActualConnection().then(actual => {
+//           if (!actual && browserStatus) {
+//             setIsOnline(false);
+//           }
+//         });
+//       }
+//     };
+
+//     // Initial check
+//     updateNetworkStatus();
+
+//     // Listen for browser events
+//     window.addEventListener('online', updateNetworkStatus);
+//     window.addEventListener('offline', updateNetworkStatus);
+
+//     // Set up periodic checks (every 10 seconds)
+//     const intervalId = setInterval(updateNetworkStatus, 10000);
+
+//     return () => {
+//       window.removeEventListener('online', updateNetworkStatus);
+//       window.removeEventListener('offline', updateNetworkStatus);
+//       clearInterval(intervalId);
+//     };
+//   }, [initialCheckDone]);
+
+//   return isOnline;
+// };
+
+
 const useNetworkStatus = () => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    // Function to check actual internet connectivity
-    const checkActualConnection = async () => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
-        // Try to fetch a small resource to verify internet
-        await fetch('https://www.google.com/favicon.ico', {
-          method: 'HEAD',
-          cache: 'no-cache',
-          mode: 'no-cors',
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        return true;
-      } catch (error) {
-        return false;
-      }
+    // 1. Get initial status natively
+    const checkStatus = async () => {
+      const status = await Network.getStatus();
+      setIsOnline(status.connected);
     };
 
-    const updateNetworkStatus = async () => {
-      const browserStatus = navigator.onLine;
+    checkStatus();
+
+    // 2. Listen for real-time changes
+    const handler = Network.addListener('networkStatusChange', status => {
+      setIsOnline(status.connected);
       
-      if (!browserStatus) {
-        // Browser says offline
-        setIsOnline(false);
-        setInitialCheckDone(true);
-        return;
+      // If we just came back online, force a reload to fetch the server URL
+      if (status.connected) {
+        window.location.reload();
       }
-      
-      // Browser says online, verify actual connection
-      if (!initialCheckDone) {
-        // First time check - verify actual connectivity
-        const actualConnection = await checkActualConnection();
-        setIsOnline(actualConnection);
-        setInitialCheckDone(true);
-      } else {
-        // Subsequent checks - use browser status for speed
-        setIsOnline(browserStatus);
-        
-        // But verify in background
-        checkActualConnection().then(actual => {
-          if (!actual && browserStatus) {
-            setIsOnline(false);
-          }
-        });
-      }
-    };
+    });
 
-    // Initial check
-    updateNetworkStatus();
-
-    // Listen for browser events
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
-
-    // Set up periodic checks (every 10 seconds)
-    const intervalId = setInterval(updateNetworkStatus, 10000);
-
-    return () => {
-      window.removeEventListener('online', updateNetworkStatus);
-      window.removeEventListener('offline', updateNetworkStatus);
-      clearInterval(intervalId);
-    };
-  }, [initialCheckDone]);
+    // return () => {
+    //   handler.remove();
+    // };
+  }, []);
 
   return isOnline;
 };
-
 const CleanOfflineScreen = () => {
   return (
     <div style={{
@@ -157,7 +188,7 @@ const CleanOfflineScreen = () => {
             cursor: 'pointer'
           }}
         >
-          Reload Page
+         Try Again
         </button>
         
       </div>

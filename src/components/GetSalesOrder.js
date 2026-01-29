@@ -7,11 +7,11 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import api from "../utilities/api"
 
-function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x) => x ,token}) {
+function GetSalesOrder({ open, onClose, formData, API_BASE_URL, setFormData, t = (x) => x, token }) {
   const { i18n } = useTranslation();
   // const { token } = useAuth();
   const isRTL = i18n.language === 'ar';
-  
+
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState({
@@ -19,23 +19,23 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
     pageSize: 10,
     total: 0
   });
-    const [customerOrders, setCustomerOrders] = useState([]);
-     const debounceTimeout = useRef();
-    const fetchSalesOrders = useCallback(async () => {
+  const [customerOrders, setCustomerOrders] = useState([]);
+  const debounceTimeout = useRef();
+  const fetchSalesOrders = useCallback(async () => {
     try {
 
       const filteredData = {}
-      filteredData.erpCustId=formData.erpCustId;
-      filteredData.entity= formData.entity;
-      filteredData.paymentStatus="Pending";
-      filteredData.paymentMethod="Pre Payment";
-      const filter=JSON.stringify(filteredData);
+      filteredData.erpCustId = formData.erpCustId;
+      filteredData.entity = formData.entity;
+      filteredData.paymentStatus = "Pending";
+      filteredData.paymentMethod = "Pre Payment";
+      const filter = JSON.stringify(filteredData);
       const { data } = await api.get(`/sales-order/pagination?page=${pagination?.page}&pageSize=${pagination?.pageSize}&search=${searchQuery}&purpose=banktransactions&filters=${filter}`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
       setCustomerOrders(data.data.data || []);
       setPagination({
-        page: data?.data?.page || 1, 
+        page: data?.data?.page || 1,
         pageSize: data?.data.pageSize || 10,
         total: data?.data?.totalRecords || 0
       }
@@ -47,7 +47,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
   useEffect(() => {
     fetchSalesOrders();
   }, [fetchSalesOrders]);
- 
+
   useEffect(() => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => {
@@ -59,40 +59,56 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
 
   if (!open) return null;
 
-const handleSelect = (customer) => {
-  console.log("Selected customer:", customer);
-  setFormData(prev => {
-    const updated = { ...prev };
-    if (customer.erpOrderId) {
-      if (prev.erpOrderId?.includes(customer.erpOrderId)) {
-        updated.erpOrderId = prev.erpOrderId?.filter(id => id !== customer.erpOrderId);
-         updated.amountTransferred = 
-  parseFloat(updated.amountTransferred || 0) - parseFloat(customer.totalAmount || 0);
-      } else {
-        updated.erpOrderId = [...prev.erpOrderId, customer.erpOrderId];
-           updated.amountTransferred = 
-  parseFloat(updated.amountTransferred || 0) + parseFloat(customer.totalAmount || 0);
+  const handleSelect = (customer) => {
+    console.log("Selected customer:", customer);
+    setFormData(prev => {
+      const updated = { ...prev };
+      if (customer.erpOrderId) {
+        if (prev.erpOrderId?.includes(customer.erpOrderId)) {
+          updated.erpOrderId = prev.erpOrderId?.filter(id => id !== customer.erpOrderId);
+          updated.amountTransferred =
+            parseFloat(updated.amountTransferred || 0) - parseFloat(customer.totalAmount || 0);
+        } else {
+          updated.erpOrderId = [...prev.erpOrderId, customer.erpOrderId];
+          updated.amountTransferred =
+            parseFloat(updated.amountTransferred || 0) + parseFloat(customer.totalAmount || 0);
+        }
+      }
+
+
+      if (customer?.id) {
+        if (prev.orderId?.includes(customer.id)) {
+          updated.orderId = prev.orderId.filter(id => id !== customer.id);
+          updated.amountTransferred =
+            parseFloat(updated.amountTransferred || 0) - parseFloat(customer.totalAmount || 0);
+        } else {
+          updated.orderId = [...(prev.orderId || []), customer.id];
+          updated.amountTransferred =
+            parseFloat(updated.amountTransferred || 0) + parseFloat(customer.totalAmount || 0);
+        }
+      }
+      updated.branchVmcoRegion = customer?.branchRegion || null
+
+      return updated;
+    });
+  };
+
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
       }
     }
-
-
-    if (customer?.id) {
-      if (prev.orderId?.includes(customer.id)) {
-        updated.orderId = prev.orderId.filter(id => id !== customer.id);
-              updated.amountTransferred = 
-  parseFloat(updated.amountTransferred || 0) - parseFloat(customer.totalAmount || 0);
-      } else {
-        updated.orderId = [...(prev.orderId || []), customer.id];
-         updated.amountTransferred = 
-  parseFloat(updated.amountTransferred || 0) + parseFloat(customer.totalAmount || 0);
-      }
-    }
-    updated.branchVmcoRegion=customer?.branchRegion || null
-
-    return updated;
-  });
-};
-
+  };
 
   const totalPages = Math.ceil(pagination.total / pagination.pageSize);
   return (
@@ -101,8 +117,8 @@ const handleSelect = (customer) => {
       <div className="gp-modal">
         <div className="gp-header">
           <span className="gp-title">{t("Select a Customer Order")}</span>
-          <button 
-            className="gp-close-btn" 
+          <button
+            className="gp-close-btn"
             onClick={onClose}
             style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
           >
@@ -115,11 +131,16 @@ const handleSelect = (customer) => {
             placeholder={t("Search customers...")}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                setSearchQuery(search);
-                setPagination(prev => ({ ...prev, page: 1 }));
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add("keyboard-open");
               }
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              document.body.classList.remove("keyboard-open");
+              // 👈 show menu again (optional)
             }}
             style={{
               width: "100%",
@@ -137,7 +158,7 @@ const handleSelect = (customer) => {
                 <th>{t('Id')}</th>
                 <th>{t('ERP Order ID')}</th>
                 <th>{t('ERP Customer ID')}</th>
-                
+
                 <th></th>
               </tr>
             </thead>
@@ -155,9 +176,9 @@ const handleSelect = (customer) => {
                     <td>
                       <button
                         className="gp-product-btn"
-                        onClick={() =>handleSelect(customer)} 
+                        onClick={() => handleSelect(customer)}
                       >
-                         {formData.orderId?.includes(customer.id) ? t("Selected") : t("Select")}
+                        {formData.orderId?.includes(customer.id) ? t("Selected") : t("Select")}
                       </button>
                     </td>
                   </tr>

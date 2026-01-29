@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { isMobile } from "../../utilities/isMobile";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
@@ -84,6 +85,15 @@ const FinalSubmissionConfirmation = ({
       canvas.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, []);
+  const handleKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+        if (isMobile) {
+          // Close keyboard
+          e.target.blur();
+          document.body.classList.remove('keyboard-open');
+        }
+      }
+    };
 function getCenteredOptions(width, height) {
   const screenWidth = window.screen.width;
   const screenHeight = window.screen.height;
@@ -294,6 +304,21 @@ function getCenteredOptions(width, height) {
           <div className="input-with-verification">
             <input
               type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
               id="declarationName"
               name="declarationName"
               style={{ width: "100%" }}
@@ -710,6 +735,21 @@ function getCenteredOptions(width, height) {
               <div className="input-with-verification">
                 <input
                   type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                   id="verifiedBy"
                   name="verifiedBy"
                   value={customerData.verifiedBy || user?.userName}

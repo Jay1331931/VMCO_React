@@ -197,6 +197,23 @@ function GetProducts({
     } catch { setSubcategories([]); }
   };
 
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
+    }
+  };
+
   useEffect(() => {
     if (open && entity && !machineMode) {
       fetchCategories();
@@ -261,7 +278,7 @@ function GetProducts({
         if (!productsFromApi.some(p => p.id === "others")) {
           productsFromApi.push({ id: "others", productName: "Others" });
         }
-      } 
+      }
       setBackendProducts(productsFromApi);
       setPagination(prev => ({
         ...prev,
@@ -345,29 +362,34 @@ function GetProducts({
         </div>
 
         {/* Hide category/subcategory/search if machineMode */}
-        
-          <div style={{ padding: "0 28px 10px 28px" }}>
-            <input
-              type="text"
-              placeholder={t("Search products...")}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  setSearchQuery(search);
-                  setPagination(prev => ({ ...prev, page: 1 }));
-                }
-              }}
-              style={{
-                width: "100%",
-                padding: "8px 10px",
-                marginBottom: 10,
-                borderRadius: 4,
-                border: "1px solid #ddd"
-              }}
-            />
 
-            {!machineMode && (
+        <div style={{ padding: "0 28px 10px 28px" }}>
+          <input
+            type="text"
+            placeholder={t("Search products...")}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add("keyboard-open");
+              }
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              document.body.classList.remove("keyboard-open");
+              // 👈 show menu again (optional)
+            }}
+            style={{
+              width: "100%",
+              padding: "8px 10px",
+              marginBottom: 10,
+              borderRadius: 4,
+              border: "1px solid #ddd"
+            }}
+          />
+
+          {!machineMode && (
             <div className="gp-filters-row">
               <SearchableDropdown
                 id="category-filter"
@@ -395,8 +417,8 @@ function GetProducts({
                 disabled={!selectedCategory || subcategories.length === 0}
               />
             </div>
-            )}
-          </div>
+          )}
+        </div>
 
         <div className="gp-table-container">
           {productLoading ? (
@@ -412,6 +434,17 @@ function GetProducts({
                       checked={areAllSelected}
                       onChange={e => handleSelectAll(e.target.checked)}
                       style={{ marginRight: isRTL ? "0" : "8px", marginLeft: isRTL ? "8px" : "0" }}
+                      onFocus={() => {
+                        if (window.innerWidth <= 768) {
+                          // This could trigger hiding the bottom menu
+                          document.body.classList.add("keyboard-open");
+                        }
+                      }}
+                      onKeyDown={handleKeyDown}
+                      onBlur={() => {
+                        document.body.classList.remove("keyboard-open");
+                        // 👈 show menu again (optional)
+                      }}
                     />
                     <span style={{ fontWeight: "bold", fontSize: "14px" }}>
                       {t("Select All")} ({backendProducts.length})
@@ -443,12 +476,23 @@ function GetProducts({
                           cursor: "pointer"
                         }}
                         name={machineMode ? "singleSelectProduct" : undefined}
+                        onFocus={() => {
+                          if (window.innerWidth <= 768) {
+                            // This could trigger hiding the bottom menu
+                            document.body.classList.add("keyboard-open");
+                          }
+                        }}
+                        onKeyDown={handleKeyDown}
+                        onBlur={() => {
+                          document.body.classList.remove("keyboard-open");
+                          // 👈 show menu again (optional)
+                        }}
                       />
                       <span
                         style={{
                           flex: 1,
                           textAlign: isRTL ? 'right' : 'left',
-                          fontSize: isMobile ? "0.7rem":"1rem"
+                          fontSize: isMobile ? "0.7rem" : "1rem"
                         }}
                       >
                         {i18n.language === 'ar' ?

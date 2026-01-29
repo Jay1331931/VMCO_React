@@ -418,7 +418,7 @@ function SupportDetails() {
   const isE = rbacMgr.isE.bind(rbacMgr);
 
   // Check if ticket is in read-only state (closed or cancelled)
-  const isReadOnly = !ticket.isOpen && formMode=== 'edit';
+  const isReadOnly = !ticket.isOpen && formMode === 'edit';
 
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
@@ -552,7 +552,22 @@ function SupportDetails() {
   // Rest of your existing state variables...
   // State for image popup
 
-
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
+    }
+  };
 
 
   // Open file dialog
@@ -1232,43 +1247,43 @@ function SupportDetails() {
               </div>
             )} */}
             {isV("entity") && (
-  <div className="support-details-field">
-    <label>{t("Business Unit")} *</label>
+              <div className="support-details-field">
+                <label>{t("Business Unit")} *</label>
 
-    <SearchableDropdown
-      name="entity"
-      options={entityOptions.map((entity) =>
-        typeof entity === "object"
-          ? { name: entity.displayText, value: entity.value }
-          : { name: entity, value: entity }
-      )}
-      value={ticket.entity || null}
-      onChange={handleInputChange}
-      disabled={!isE("entity") || isReadOnly}
-      placeholder={t("Select Business Unit")}
-      className="entity-dropdown"
-    />
-  </div>
-)}
-{isV("issueType") && (
-  <div className="support-details-field">
-    <label>{t("Issue Type")} *</label>
+                <SearchableDropdown
+                  name="entity"
+                  options={entityOptions.map((entity) =>
+                    typeof entity === "object"
+                      ? { name: entity.displayText, value: entity.value }
+                      : { name: entity, value: entity }
+                  )}
+                  value={ticket.entity || null}
+                  onChange={handleInputChange}
+                  disabled={!isE("entity") || isReadOnly}
+                  placeholder={t("Select Business Unit")}
+                  className="entity-dropdown"
+                />
+              </div>
+            )}
+            {isV("issueType") && (
+              <div className="support-details-field">
+                <label>{t("Issue Type")} *</label>
 
-    <SearchableDropdown
-      name="grievanceType"
-      options={issueTypeOptions.map((issueType) =>
-        typeof issueType === "object"
-          ? { name: issueType.displayText, value: issueType.value }
-          : { name: issueType, value: issueType }
-      )}
-      value={ticket.grievanceType || null}
-      onChange={handleInputChange}
-      disabled={!isE("issueType") || isReadOnly}
-      placeholder={t("Select Issue Type")}
-      className="issue-type-dropdown"
-    />
-  </div>
-)}
+                <SearchableDropdown
+                  name="grievanceType"
+                  options={issueTypeOptions.map((issueType) =>
+                    typeof issueType === "object"
+                      ? { name: issueType.displayText, value: issueType.value }
+                      : { name: issueType, value: issueType }
+                  )}
+                  value={ticket.grievanceType || null}
+                  onChange={handleInputChange}
+                  disabled={!isE("issueType") || isReadOnly}
+                  placeholder={t("Select Issue Type")}
+                  className="issue-type-dropdown"
+                />
+              </div>
+            )}
 
             {isV('issueName') && (
               <div className='support-details-field'>
@@ -1286,7 +1301,23 @@ function SupportDetails() {
           {isV('issueDetails') && (
             <div className='support-details-field support-details-textarea'>
               <label>{t("Issue Details")} *</label>
-              <textarea id='description' name='description' onChange={handleInputChange} value={ticket.description || ""} disabled={!isE("issueDetails") || isReadOnly} />
+              <textarea
+                id='description'
+                name='description'
+                onChange={handleInputChange}
+                value={ticket.description || ""}
+                disabled={!isE("issueDetails") || isReadOnly}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }} />
             </div>
           )}
 
@@ -1392,6 +1423,17 @@ function SupportDetails() {
                 onChange={handleInputChange}
                 value={ticket?.feedbackComment}
                 disabled={!isE("feedback") || ticket?.feedbackComment}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
               {isV('feedbackButton') && !ticket.feedbackComment && (
                 <button className='feedback-btn' style={{

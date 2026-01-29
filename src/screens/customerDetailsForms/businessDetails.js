@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { isMobile } from "../../utilities/isMobile";
 import {
   fetchDropdownFromBasicsMaster,
   getOptionsFromEmployeesWithManager,
@@ -32,7 +33,6 @@ function BusinessDetails({
   formErrors = {},
   logosToUpload = {}, // <-- Pass this from CustomerDetails.js
   completeWorkflowData = {},
-  setHideMenu
 }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
@@ -112,7 +112,15 @@ function BusinessDetails({
   const [typeOfBusiness, setTypeOfBusiness] = useState(
     customerData?.typeOfBusiness || ""
   );
-
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
   useEffect(() => {
     setTypeOfBusiness(customerData?.typeOfBusiness || "");
   }, [customerData?.typeOfBusiness]);
@@ -355,6 +363,20 @@ const checkDisabledStatus = (fieldPath) => {
   <div className="input-with-verification">
     <input
       type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
       id="erpCustId"
       name="erpCustId"
       // className={`text-field small 
@@ -418,7 +440,6 @@ const checkDisabledStatus = (fieldPath) => {
         </label>
         <div className="input-with-verification">
         <SearchableDropdown
-setHideMenu={setHideMenu}
           name="companyType"
           options={(basicMasterLists?.companyType || []).map((item) => ({
             value: item.value,
@@ -488,6 +509,20 @@ setHideMenu={setHideMenu}
         </label>
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="companyNameEn"
           name="companyNameEn"
           className={`text-field small ${
@@ -541,6 +576,20 @@ setHideMenu={setHideMenu}
   <div className="input-with-verification">
     <input
       type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
       id="companyNameEn"
       name="companyNameEn"
       className={`text-field small ${
@@ -606,6 +655,20 @@ setHideMenu={setHideMenu}
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="companyNameAr"
           name="companyNameAr"
           className={`text-field small arabic ${
@@ -673,6 +736,20 @@ setHideMenu={setHideMenu}
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="crNumber"
           name="crNumber"
           className={`text-field small ${
@@ -739,6 +816,20 @@ setHideMenu={setHideMenu}
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="vatNumber"
           name="vatNumber"
           className={`text-field small ${
@@ -803,6 +894,20 @@ setHideMenu={setHideMenu}
          <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="governmentRegistrationNumber"
           name="governmentRegistrationNumber"
           className={`text-field small ${
@@ -873,6 +978,20 @@ setHideMenu={setHideMenu}
          <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="baladeahLicenseNumber"
           name="baladeahLicenseNumber"
           className={`text-field small ${
@@ -940,7 +1059,6 @@ setHideMenu={setHideMenu}
         </label>
         <div className="input-with-verification">
         <SearchableDropdown
-setHideMenu={setHideMenu}
           name="deliveryLocations"
           options={(basicMasterLists?.deliveryLocations || []).map((item) => ({
             value: item.value,
@@ -1012,7 +1130,6 @@ setHideMenu={setHideMenu}
         </label>
         <div className="input-with-verification">
         <SearchableDropdown
-setHideMenu={setHideMenu}
           name="typeOfBusiness"
           options={(basicMasterLists?.typeOfBusiness || []).map((item) => ({
             value: item.value,
@@ -1085,6 +1202,20 @@ setHideMenu={setHideMenu}
           <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
             id="typeOfBusinessOther"
             name="typeOfBusinessOther"
             className={`text-field small ${
@@ -1153,6 +1284,20 @@ setHideMenu={setHideMenu}
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="brandNameEn"
           name="brandNameEn"
           className={`text-field small ${
@@ -1212,6 +1357,20 @@ setHideMenu={setHideMenu}
         <div className="input-with-verification">
         <input
           type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
           id="brandNameAr"
           name="brandNameAr"
           className={`text-field small arabic ${
@@ -1517,6 +1676,20 @@ setHideMenu={setHideMenu}
           <div className="input-with-verification">
           <input
             type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
             id="customerSource"
             name="customerSource"
             className={`text-field small ${
@@ -1694,7 +1867,6 @@ setHideMenu={setHideMenu}
               </label>
              <div className="input-with-verification">
   <SearchableDropdown
-setHideMenu={setHideMenu}
     name="primaryBusinessUnit"
     options={(basicMasterLists?.entity || []).map((item) => ({
       value: item.value,
@@ -1765,7 +1937,6 @@ setHideMenu={setHideMenu}
               </label>
               <div className="input-with-verification">
               <SearchableDropdown
-setHideMenu={setHideMenu}
                 name="branch"
                 options={(basicMasterLists?.branch || []).map((item) => ({
                   value: item.value,
@@ -1842,7 +2013,6 @@ setHideMenu={setHideMenu}
               </label>
               <div className="input-with-verification">
               <SearchableDropdown
-setHideMenu={setHideMenu}
                 name="assignedTo"
                 options={
                   employeeList?.map((employee) => ({
@@ -1918,7 +2088,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.DAR}
               options={
                 employeeListWithManagers?.map((employee) => ({
@@ -1983,7 +2152,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.VMCO}
               options={
                 employeeListWithManagers?.map((employee) => ({
@@ -2050,7 +2218,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.SHC}
               options={
                 employeeListWithManagers?.map((employee) => ({
@@ -2115,7 +2282,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.NAQI}
               options={
                 employeeListWithManagers?.map((employee) => ({
@@ -2182,7 +2348,6 @@ setHideMenu={setHideMenu}
                 )}
             </label>
             <SearchableDropdown
-setHideMenu={setHideMenu}
               name={Constants.ENTITY.GMTC}
               options={
                 employeeListWithManagers?.map((employee) => ({
