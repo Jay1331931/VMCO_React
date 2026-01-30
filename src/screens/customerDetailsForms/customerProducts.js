@@ -955,7 +955,7 @@ function Products({ customerId, customer, setTabsHeight }) {
           }
 
           .product-search-input {
-            width: 100% !important;
+            width: 95% !important;
             margin-bottom: 0;
             padding: 8px 12px !important;
           }
