@@ -1642,9 +1642,9 @@ td.file-display-cell {
   .products-page-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
     flex-direction: row !important;
-    margin-top: 20px;
     grid-template-columns: repeat(2, 1fr);
   }
   td.label-cell {
@@ -1850,7 +1850,7 @@ td.file-display-cell {
   .products-content {
     display: flex;
     flex-direction: column;
-    padding: 40px 10px 10px 10px;
+    padding: 20px 10px 10px 10px;
     border-left: none;
   }
   [dir="rtl"] .products-content {
