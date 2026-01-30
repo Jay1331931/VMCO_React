@@ -135,36 +135,54 @@ function AppRoutes() {
 
 if (loading) {
   return (
-    <div  className="container">
-      <div  className="logoWrapper" style={{position: "fixed",
-    top: "50%",
-    left: "50%"}}>
-        <LoadingSpinner/>
-      </div>
-      <style>
-        {`
-         
-            container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    backgroundColor: '#ffffff',
-    position: 'fixed', // Ensures it covers the whole screen
-    top: 0,
-    left: 0,
-    zIndex: 9999,      // Keeps it above all other elements
-  },
-  logoWrapper: {
-    animation: 'pulse 2s infinite ease-in-out',
-  },
-  logo: {
-    width: '120px',    // Adjust size as needed
-    height: 'auto',
-  }
-        `}
-      </style>
-    </div>
+    <div className="loader-container">
+  <div className="loader-logo-wrapper">
+    <img src={logo} alt="Talab Point Logo" className="loader-logo" />
+  </div>
+  <style>
+    {`
+      .loader-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: white; 
+        z-index: 9999;
+      }
+
+      .loader-logo-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        border-radius: 50%;
+        /* Gradient Transition Effect */
+        // background: linear-gradient(45deg, #ffffff, #f0f0f0);
+        // box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        animation: rotate360 3s linear infinite;
+      }
+
+      .loader-logo {
+        width: 100px;  /* Increased from 50px for better visibility */
+        height: 100px;
+        object-fit: contain;
+      }
+
+      @keyframes rotate360 {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    `}
+  </style>
+</div>
   );
 }
 

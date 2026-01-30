@@ -643,7 +643,7 @@ const AddBankTransaction = () => {
             <div className="form-group">
               <label htmlFor="amountTransferred">
                 {t("Amount Transferred")}
-                <span style={{ color: "red" }}> *</span>
+                <span style={{ color: "red" }}>*</span>
               </label>
               <input
                 id="amountTransferred"
@@ -651,11 +651,7 @@ const AddBankTransaction = () => {
                 type="number"
                 placeholder={t("Amount")}
                 min={0}
-                value={
-                  formData?.amountTransferred ??
-                  updateTransaction?.amountTransferred ??
-                  ""
-                }
+                value={formData?.amountTransferred || updateTransaction?.amountTransferred || ""}
                 disabled={
                   !!(
                     formData?.orderId?.length ||

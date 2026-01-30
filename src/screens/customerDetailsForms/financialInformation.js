@@ -2961,7 +2961,7 @@ onKeyDown={handleKeyDown}
 
 .entity-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(1670px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(167px, 1fr));
   gap: 10px;
 }
 
