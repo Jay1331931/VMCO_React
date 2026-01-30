@@ -1894,7 +1894,7 @@ td.file-display-cell {
     background-color: white;
     cursor: pointer;
     min-height: 38px;
-    width: 275px;
+    width: 260px;
     font-size: 12px;
   }
 
@@ -2680,12 +2680,16 @@ td.file-display-cell {
 
   .map-modal-content {
     width: 95%;
-    height: 50vh;
+    height: 65vh;
   }
 
   .map-container {
     height: 60vh;
   }
+  .map-container-mobile {
+  height: 200px !important;
+  padding: 20px;
+}
 }
 
 .view-invoice {

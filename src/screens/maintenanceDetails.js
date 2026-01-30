@@ -1787,7 +1787,7 @@ function MaintenanceDetails() {
         <div className='support-details-container-right'>
           {isV('assignedTo') && (
             <div className="support-assign">
-              <span>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
+              <span style={{fontWeight: isMobile ? 'bold' : ''}}>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
               <SearchableDropdown
                 id="assignedTeamMember"
                 name="assignedTeamMember"

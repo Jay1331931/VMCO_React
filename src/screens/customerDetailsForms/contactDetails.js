@@ -613,7 +613,7 @@ function ContactDetails({
 
         <div
           ref={mapContainer}
-          className="map-container"
+          className={isMobile ? "map-container-mobile" : "map-container"}
           style={{ width: "100%", height: "300px" }}
         />
 

@@ -448,7 +448,7 @@ function CustomersOnboarding() {
         (await getManagerFromEmployees(formData?.region)) || "";
       if (!isRegistered) {
         const { password, confirmpassword, otp, ...stagingData } = formData;
-
+        let customerId = "";
         try {
           console.log("Lead Data:", leadData);
           const response = await fetch(
@@ -505,7 +505,7 @@ function CustomersOnboarding() {
             }
           );
           const result = await response.json();
-
+          customerId = result?.data?.id;
           console.log(result);
           const contactTypesPrimary = ["primary"];
           const contactTypes = ["finance", "business", "purchasing"];
@@ -598,6 +598,7 @@ function CustomersOnboarding() {
                 body: JSON.stringify({
                   ...registrationPayload,
                   registered: true,
+                  customerId: customerId,
                 }),
               }
             );
@@ -621,6 +622,7 @@ function CustomersOnboarding() {
                   ...stagingData,
                   registered: true,
                   source: "portal",
+                  customerId: customerId,
                 }),
               }
             );
