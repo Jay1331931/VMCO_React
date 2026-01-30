@@ -12,6 +12,8 @@ const Tabs = ({
   catalog = false,
   isContentScrolled = false,
   isMobile = false,
+  loading = false,
+  skeletonCount = 6,
 }) => {
   const { t, i18n } = useTranslation();
   const tabsRef = useRef(null);
@@ -117,36 +119,48 @@ const Tabs = ({
         className={`tabs ${catalog && variant === "pc" ? "category-tabs" : "category-tabs-mobile"
           } ${catalog ? "with-catalog" : "without-catalog"} ${isMobile && catalog && isContentScrolled ? "scrolled" : ""}`}
       >
-        {tabs.map((tab) => (
-          <button
-            key={tab.value}
-            className={`
+        {loading && catalog ? (
+          Array.from({ length: skeletonCount }).map((_, i) => (
+            <div
+              key={`skeleton-${i}`}
+              className={`${variant === "mobile" ? "category-tab-mobile" : "category-tab"} catalog skeleton`}
+            >
+              <div className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"} ${isMobile && isContentScrolled ? "scrolled" : ""}`}>
+                <div className="skeleton-image" />
+              </div>
+            </div>
+          ))
+        ) : (
+          tabs.map((tab) => (
+            <button
+              key={tab.value}
+              className={`
               ${variant === "mobile" ? "category-tab-mobile" : "category-tab"}
               ${catalog ? "catalog" : ""}
               ${activeTab === tab.value ? "active" : ""}
               ${tab.disabled ? "disabled" : ""}
             `}
-            onClick={() => onTabChange(tab.value)}
-            title={tab.disabled ? "This tab is currently disabled" : ""}
-          >
-            {catalog && (
-              <div
-                className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"
-                  } ${isMobile && isContentScrolled ? "scrolled" : ""}`}
-              >
-                <img
-                  src={
-                    currentLanguage == "ar" ? tab.imageUrlAR : tab.imageUrlEN
-                  }
-                  alt={t(tab.label)}
-                />
-              </div>
-            )}
-            {!catalog && (
-              <span className="tab-text">{t(tab.label)}</span>
-            )}
-          </button>
-        ))}
+              onClick={() => onTabChange(tab.value)}
+              title={tab.disabled ? "This tab is currently disabled" : ""}
+            >
+              {catalog && (
+                <div
+                  className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"} ${isMobile && isContentScrolled ? "scrolled" : ""}`}
+                >
+                  <img
+                    src={
+                      currentLanguage == "ar" ? tab.imageUrlAR : tab.imageUrlEN
+                    }
+                    alt={t(tab.label)}
+                  />
+                </div>
+              )}
+              {!catalog && (
+                <span className="tab-text">{t(tab.label)}</span>
+              )}
+            </button>
+          ))
+        )}
       </div>
       {/* RIGHT ARROW */}
       {
@@ -163,6 +177,26 @@ const Tabs = ({
         )}
 
       <style>{`
+        /* Skeleton image placeholder */
+        .skeleton-image {
+          width: 100%;
+          height: 100%;
+          border-radius: 6px;
+          background: linear-gradient(90deg, #e6e6e6 25%, #f5f5f5 37%, #e6e6e6 63%);
+          background-size: 400% 100%;
+          -webkit-animation: shimmer 1.4s linear infinite;
+          animation: shimmer 1.4s linear infinite;
+        }
+
+        @-webkit-keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+
         .tabs {
           display: flex;
           gap: 10px;
@@ -173,6 +207,21 @@ const Tabs = ({
           box-sizing: border-box;
           scroll-behavior: smooth;
           background: #ffffff
+        }
+
+        /* Ensure skeleton tab boxes take up visible space */
+        .category-tab.skeleton, .category-tab-mobile.skeleton {
+          min-width: 140px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+        }
+
+        .category-tab.skeleton .tab-image, .category-tab-mobile.skeleton .tab-image-mobile {
+          width: 140px;
+          height: 140px;
         }
 
         .tabs::-webkit-scrollbar {
@@ -518,13 +567,18 @@ margin-bottom:10px;}
           white-space: nowrap;
         }
 
-          .tab-image, .tab-image-mobile {
-          width: 80px;
-          height: 80px;
-          object-fit: fill;
-          object-position: center;
-          transition: width 0.3s ease, height 0.3s ease;
-        }
+            .tab-image, .tab-image-mobile {
+            width: 80px;
+            height: 80px;
+            object-fit: fill;
+            object-position: center;
+            transition: width 0.3s ease, height 0.3s ease;
+          }
+
+          /* mobile skeleton sizing override */
+          .category-tab.skeleton, .category-tab-mobile.skeleton {
+            min-width: 80px;
+          }
 
         .category-tab-mobile.disabled {
             filter: grayscale(100%);

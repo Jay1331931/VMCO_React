@@ -6,6 +6,8 @@ import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
 import { useTranslation } from "react-i18next";
 import ProductCard from "../components/ProductCard";
 import LoadingSpinner from "../components/LoadingSpinner";
+import SkeletonWrapper from "../components/SkeletonWrapper";
+import { useLoading } from "../hooks/useLoading";
 import Dropdown from "../components/DropDown";
 import Tabs from "../components/Tabs";
 import ProductPopup from "../components/ProductPopup";
@@ -108,9 +110,8 @@ function Catalog() {
   const [products, setProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const { loading: isLoading, startLoading, stopLoading } = useLoading();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
 
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -205,11 +206,7 @@ function Catalog() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isLoading && !isLoadingMore && isPageLoading) {
-      setIsPageLoading(false);
-    }
-  }, [products, isLoading, isLoadingMore, isPageLoading]);
+
 
   useEffect(() => {
     activeCategoryRef.current = activeCategory;
@@ -245,7 +242,7 @@ function Catalog() {
     setCurrentPage(1);
     currentPageRef.current = 1;
     setHasMore(true);
-    setIsLoading(false);
+    stopLoading();
     setIsLoadingMore(false);
     isLoadingRef.current = false;
 
@@ -267,7 +264,7 @@ function Catalog() {
     const currentSearchQuery = searchQueryRef.current;
 
     if (reset) {
-      setIsLoading(true);
+      startLoading();
       isLoadingRef.current = true;
     } else {
       setIsLoadingMore(true);
@@ -370,7 +367,7 @@ function Catalog() {
       console.error("❌ Error fetching products:", err);
       setHasMore(false);
     } finally {
-      setIsLoading(false);
+      stopLoading();
       setIsLoadingMore(false);
       isLoadingRef.current = false;
     }
@@ -705,7 +702,7 @@ function Catalog() {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        setIsLoading(true);
+        startLoading();
         const response = await fetch(
           `${API_BASE_URL}/customer-branches/pagination?pageSize=10000`,
           {
@@ -749,11 +746,11 @@ function Catalog() {
       } catch (error) {
         console.error("Error fetching branches:", error);
       } finally {
-        setIsLoading(false);
+        stopLoading();
       }
     };
     fetchBranches();
-  }, [API_BASE_URL, i18n.language]);
+  }, [API_BASE_URL, i18n.language, startLoading, stopLoading]);
 
   const handleBranchSelect = async (e) => {
     const newBranchId = e.target.value;
@@ -763,7 +760,7 @@ function Catalog() {
       (b) => String(b.value) === String(newBranchId)
     );
     try {
-      setIsLoading(true);
+      startLoading();
       const params = new URLSearchParams({
         page: 1,
         pageSize: 100,
@@ -863,7 +860,7 @@ function Catalog() {
         confirmButtonText: t("OK"),
       });
     } finally {
-      setIsLoading(false);
+      stopLoading();
     }
   };
 
@@ -1254,12 +1251,7 @@ function Catalog() {
 
   return (
     <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")} selectBranch={isV("selectBranch")} PaddingClass={true} MenuName={"catalog"} >
-      {isPageLoading ? (
-        <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-          <LoadingSpinner size="medium" />
-        </div>
-      ) : (
-        <CatalogLayout
+      <CatalogLayout
           // Header section props
           user={user}
           isMobile={isMobile}
@@ -1365,7 +1357,6 @@ function Catalog() {
           dir={dir}
           setSearchQuery={setSearchQuery}
         />
-      )}
     </Sidebar>
   );
 }
