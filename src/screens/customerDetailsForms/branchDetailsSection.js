@@ -790,8 +790,8 @@ onKeyDown={handleKeyDown}
      
              <div
                ref={mapContainer}
-               className="map-container"
-               style={{ width: "100%", height: "300px" }}
+               className={isMobile ? "map-container-mobile" : "map-container"}
+               style={{ width: "100%", height: isMobile ? "200px" : "300px" }}
              />
      
              <div className="location-coords">
@@ -2174,7 +2174,7 @@ onKeyDown={handleKeyDown}
 }
 
 .map-container-mobile {
-  height: 400px;
+  height: 200px;
   padding: 20px;
 }
 
@@ -2237,7 +2237,7 @@ onKeyDown={handleKeyDown}
   }
   
   .map-container-mobile {
-    height: 300px;
+    height: 200px;
     padding: 10px;
   }
 }

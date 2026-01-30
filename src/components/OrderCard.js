@@ -459,7 +459,9 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                           <Typography component="span" fontWeight={600} fontSize={12}>
     {t("Mode")}
   </Typography>
-                          {`: ${t(order?.paymentMethod) || t("N/A")}`}
+                          {`: ${t(order?.paymentMethod?.toLowerCase() === "pre payment"
+            ? "Card Payment"
+            : order?.paymentMethod) || t("N/A")}`}
                         </Typography>
                         </>
                       )}

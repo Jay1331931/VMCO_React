@@ -737,7 +737,6 @@ const AddBankTransaction = () => {
                     onChange={handleChange}
                     disabled={orderId}
                   >
-                    <option value="">{t("Select Entity")}</option>
                     <option value="VMCO">VMCO</option>
                     <option value="NAQI">NAQI</option>
                     <option value="SHC">SHC</option>
@@ -771,7 +770,6 @@ const AddBankTransaction = () => {
                     style={{width:"100%"}}
                     disabled={orderId}
                     options={[
-                      { value: "", name: t("Select Entity") },
                       { value: "VMCO", name: "VMCO" },
                       { value: "NAQI", name: "NAQI" },
                       { value: "SHC", name: "SHC" },

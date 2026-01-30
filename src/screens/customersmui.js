@@ -771,6 +771,7 @@ function Customers() {
     "region",
     "companyName",
     "companyPhone",
+    "status"
   ];
   const customerColumns = [
     {
@@ -1185,6 +1186,18 @@ function Customers() {
       align: isArabic ? 'right' : 'left'
     },
     {
+      field: "status",
+      headerName: t("Status"),
+      include: isV("status"),
+      searchable: true,
+      width: columnDimensions["status"]?.width || 120,
+      // flex: 1,
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
+      ),
+    },
+    {
       field: "employeeId",
       headerName: t("Employee ID"),
       include: isV("employeeId"),
@@ -1378,7 +1391,11 @@ function Customers() {
       const result = await response.json();
       console.log("API Response:", result);
       if (result.status === "Ok") {
-        setFilteredInvites(result.data.data);
+        const updatedInvites = result.data.data.map((invite) => ({
+    ...invite,
+    status: invite?.registered ? invite?.customerStatus?.toLowerCase() === "new" ? "Incomplete" : invite?.customerStatus?.toLowerCase() === "pending" ? "Pending Approval": invite?.customerStatus: "Invite Pending",   // default value
+  }));
+        setFilteredInvites(updatedInvites);
         // }));
         setTotal(result.data.totalRecords);
       } else {
@@ -2302,6 +2319,13 @@ function Customers() {
                             columnsToDisplay={columnsToDisplay}
                             handleApproval={handleApproval}
                             isApprovalMode={false}
+                            dropdownColumns = {{status: [
+    { value: "new", label: "Incomplete" },
+    { value: "pending",  label: "Pending Approval" },
+    { value: "approved", label: "Approved" },
+    { value: "notregistered", label: "Invite Pending" },
+  ],}}
+                            excludeFiltersFromChips = {["status"]}
                           />
                         ),
                       }}

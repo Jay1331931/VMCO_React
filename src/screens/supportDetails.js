@@ -1469,9 +1469,10 @@ function SupportDetails() {
         <div className='support-details-container-center'  >
           {isV('assignedTo') && (
             <div className="support-assign">
-              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '6px'
+               }}>
                 {/* Assigned to Label */}
-                <span>{formMode === "add" ? t("Assign To:") : t("Assigned To:")}</span>
+                <span style={{fontWeight: isMobile ? 'bold' : ''}}>{formMode === "add" ? t("Assign To:") : t("Assigned To:")}</span>
 
                 {/* Department Selection */}
                 <div>
@@ -1507,7 +1508,7 @@ function SupportDetails() {
           )}
         </div>
         <div className='support-details-container-right'>
-          <div className="support-details-actions" style={{ display: 'flex', gap: '10px', height: '60px' }}>
+          <div className="support-details-actions" style={isMobile ? { display: "flex", flexDirection: "row", justifyContent: "center", gap: "10px" } : { display: 'flex', gap: '10px', height: '60px' }}>
             {isEditing ? (
               <>
                 {isV('btnSave') && isE('btnSave') && (
@@ -1527,7 +1528,11 @@ function SupportDetails() {
                     disabled={closing || saving}
                     style={{ backgroundColor: "#28a745", padding: isMobile ? "10px 24px" : "0px 24px" }}
                   >
-                    {closing ? t("Closing...") : t("Close Ticket")}
+                    {closing 
+  ? t("Closing...") 
+  : (isMobile ? t("Close") : t("Close Ticket"))
+}
+
                   </button>
                 )}
 
