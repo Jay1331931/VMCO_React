@@ -725,7 +725,7 @@ const AddBankTransaction = () => {
             </div>
 
             {!isMobile ?
-              Object.keys(updateTransaction)?.length === 0 && (
+             (
                 <div className="form-group">
                   <label htmlFor="entity">
                     {t("Entity")} <span style={{ color: "red" }}> *</span>
@@ -735,7 +735,7 @@ const AddBankTransaction = () => {
                     name="entity"
                     value={formData.entity || updateTransaction?.entity || ""}
                     onChange={handleChange}
-                    disabled={orderId}
+                    disabled={orderId || updateTransaction?.id}
                   >
                     <option value="">{t("Select Entity")}</option>
                     <option value="VMCO">VMCO</option>
@@ -750,7 +750,7 @@ const AddBankTransaction = () => {
                     </div>
                   )}
                 </div>
-              ) : Object.keys(updateTransaction)?.length === 0 && (
+              ) : (
                 <div className="form-group">
                   <label htmlFor="entity">
                     {t("Entity")} <span style={{ color: "red" }}> *</span>
@@ -769,7 +769,7 @@ const AddBankTransaction = () => {
                       });
                     }}
                     style={{width:"100%"}}
-                    disabled={orderId}
+                    disabled={orderId || updateTransaction?.id}
                     options={[
                       { value: "", name: t("Select Entity") },
                       { value: "VMCO", name: "VMCO" },
