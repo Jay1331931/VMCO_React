@@ -3731,6 +3731,6 @@ input:focus {
 
 body.keyboard-open .mobile-bottom-menu {
   display: none !important;
-  transform: translateY(100%) !important;
-  transition: transform 0.3s ease !important;
+  /* transform: translateY(100%) !important; */
+  /* transition: transform 0.3s ease !important; */
 }
