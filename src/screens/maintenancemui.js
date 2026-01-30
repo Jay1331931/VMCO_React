@@ -650,7 +650,9 @@ function Maintenance() {
                             gap: "10px",
                             border: "none",
                           },
-
+                          "& .MuiBox-root": {
+                            justifyContent: "center"
+                          },
                           "&.catalog-datagrid": {
                             border: "2px solid black",
                             borderRadius: "8px",

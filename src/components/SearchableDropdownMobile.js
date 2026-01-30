@@ -279,6 +279,7 @@ function SearchableDropdown({
                     border: "1px solid #ddd",
                     borderRadius: "4px",
                     WebkitAppearance: "none",
+                    width: "75%"
                   }}
                 />
 

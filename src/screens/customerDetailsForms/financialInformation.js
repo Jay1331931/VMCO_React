@@ -2608,6 +2608,15 @@ onKeyDown={handleKeyDown}
                   </p>
                 )}
             </div>
+
+            {/* <div className="gi-footer">
+              <button
+                className="gi-close-btn"
+                onClick={() => setIsCreditBalanceData(false)}
+              >
+                {t("Close")}
+              </button>
+            </div> */}
           </dialog>
           <style>
             {`

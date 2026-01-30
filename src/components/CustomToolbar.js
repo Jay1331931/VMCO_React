@@ -159,6 +159,7 @@ const SearchAutocomplete = ({
   setSearchQuery,
   searchOptions,
   columns,
+  dropdownColumns,
   isMobile,
   t,
 }) => {
@@ -215,7 +216,7 @@ const handleKeyDown = (e) => {
         if (reason === "removeOption") {
           const newFilterObj = {};
           Object.entries(filters).forEach(([key, value]) => {
-            if (excludeFiltersFromChips.includes(key) || key !== details.option.column) {
+            if ((excludeFiltersFromChips.includes(key) && !dropdownColumns(key)) || key !== details.option.column) {
               newFilterObj[key] = value;
             }
           });
@@ -232,7 +233,7 @@ const handleKeyDown = (e) => {
           setFilterObj(newFilterObj);
           const preservedFilters = {};
           excludeFiltersFromChips.forEach(key => {
-            if (filters[key]) {
+            if (filters[key] && !dropdownColumns[key]) {
               preservedFilters[key] = filters[key];
             }
           });
@@ -609,6 +610,7 @@ const CustomToolbar = ({
   activeTransactionTab = "pending",
   handleTransactionTabChange,
   excludeFiltersFromChips = [],
+  dropdownColumns={}
 }) => {
   const { t, i18n } = useTranslation();
   const [searchValue, setSearchValue] = useState(searchQuery || "");
@@ -714,7 +716,7 @@ const CustomToolbar = ({
           (col) =>
             col.field !== "updatedAt" &&
             col.field !== "createdAt" &&
-            col?.searchable
+            col?.searchable && !excludeFiltersFromChips.includes(col.field)
         )
         .map((col) => ({
           column: col.field,
@@ -745,7 +747,7 @@ const CustomToolbar = ({
   };
 
   const displayableFilters = Object.entries(filters)
-    .filter(([key]) => !excludeFiltersFromChips.includes(key))
+    .filter(([key]) => !excludeFiltersFromChips.includes(key) || dropdownColumns[key])
     .map(([key, value]) => ({
       column: value?.column || key,
       searchString: value?.searchString || value,
@@ -797,6 +799,7 @@ const CustomToolbar = ({
               setSearchQuery={setSearchQuery}
               searchOptions={searchOptions}
               columns={columns}
+              dropdownColumns={dropdownColumns}
               isMobile={isMobile}
               t={t}
             />
@@ -900,6 +903,7 @@ const CustomToolbar = ({
             setSearchQuery={setSearchQuery}
             searchOptions={searchOptions}
             columns={columns}
+            dropdownColumns={dropdownColumns}
             isMobile={isMobile}
             t={t}
           />
@@ -1004,6 +1008,7 @@ const CustomToolbar = ({
                 setFilterObj((data) => ({ ...data, operator: e.target.value }));
               }}
               onKeyDown={(e) => e.stopPropagation()}
+              disabled={dropdownColumns[filterObj?.column] ? true : false}
               displayEmpty
               fullWidth
               size="small"
@@ -1021,24 +1026,53 @@ const CustomToolbar = ({
           </Grid>
 
           <Grid item sx={{ flex: 1 }}>
-            <TextField
-              variant="standard"
-              size="small"
-              fullWidth
-              placeholder="Enter value"
-              value={filterObj?.searchString || ""}
-              onChange={(e) => {
-                e.stopPropagation();
-                setFilterObj((data) => ({
-                  ...data,
-                  searchString: e.target.value,
-                }));
-              }}
-              onKeyDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              sx={{ width: "100%" }}
-            />
-          </Grid>
+  {dropdownColumns[filterObj?.column] ? (
+    /* 🔽 Dropdown */
+    <Select
+  variant="standard"
+  value={filterObj?.searchString || ""}
+  onChange={(e) => {
+    e.stopPropagation();
+    setFilterObj((data) => ({
+      ...data,
+      searchString: e.target.value, // stores value
+    }));
+  }}
+  displayEmpty
+  fullWidth
+  size="small"
+>
+  <MenuItem value="" disabled>
+    Select value
+  </MenuItem>
+
+  {dropdownColumns[filterObj.column].map((opt) => (
+    <MenuItem key={opt.value} value={opt.label}>
+      {t(opt.label)}   {/* 👈 display */}
+    </MenuItem>
+  ))}
+</Select>
+  ) : (
+    /* ✍️ Text input */
+    <TextField
+      variant="standard"
+      size="small"
+      fullWidth
+      placeholder="Enter value"
+      value={filterObj?.searchString || ""}
+      onChange={(e) => {
+        e.stopPropagation();
+        setFilterObj((data) => ({
+          ...data,
+          searchString: e.target.value,
+        }));
+      }}
+      onKeyDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+      sx={{ width: "100%" }}
+    />
+  )}
+</Grid>
           <Grid item>
             <Button
               sx={{ minWidth: 40 }}

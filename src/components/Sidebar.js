@@ -654,6 +654,9 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
       case "/customers":
         setActiveMenu("Customers");
         break;
+        case "/customerDetails":
+        setActiveMenu("Company");
+        break;
       case "/catalog":
         setActiveMenu("catalog");
         break;
