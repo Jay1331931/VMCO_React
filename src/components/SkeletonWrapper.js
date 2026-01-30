@@ -10,6 +10,7 @@ import {
   SkeletonTable,
   SkeletonPagination,
   SkeletonList,
+  SkeletonCartList,
   SkeletonGrid,
   SkeletonSearchInput,
 } from './SkeletonLoaders';
@@ -84,6 +85,8 @@ const SkeletonWrapper = ({
         return <SkeletonPagination height={config.height} />;
       case 'list':
         return <SkeletonList count={config.count} height={config.height} />;
+      case 'cart_list':
+        return <SkeletonCartList count={config.count} height={config.height} />;
       case 'grid':
         return <SkeletonGrid count={config.count} columns={columns || 3} height={config.height} />;
       case 'search_input':
