@@ -78,7 +78,7 @@ function InviteCard({ invites, handleResend }) {
                 item
                 xs={12}
                 sx={{
-                  backgroundColor: "#03584d",
+                  backgroundColor: "#32a19f",
                   color: "white",
                   borderTopLeftRadius: "16px",
                   borderTopRightRadius: "16px",
