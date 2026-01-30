@@ -16,6 +16,7 @@ import {
   useGridApiRef,
 } from "@mui/x-data-grid";
 import Pagination from "../components/Pagination";
+import SkeletonWrapper from "../components/SkeletonWrapper";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -525,23 +526,29 @@ const BankTransactions = () => {
                       }
                     />
                   </div>
-                    <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
-                  <BankTransactionsCard
-                    transactions={transactions}
-                    setSelectedRow={handleRowClick}
-                  /></div>
+                  <div style={{ marginTop: "16px", position: "relative", zIndex: 1 }}>
+                    <SkeletonWrapper loading={loading} type="order_card" count={4}>
+                      <BankTransactionsCard
+                        transactions={transactions}
+                        setSelectedRow={handleRowClick}
+                      />
+                   </SkeletonWrapper>
+                  </div>
                 </>
               )}
             </div>
           ) : (
             <div className="table-container">
-              {loading ? (
-                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                  <LoadingSpinner size="medium" />
-                </div>
-              ) : error ? (
+              {
+              // loading ? (
+              //   <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+              //     <LoadingSpinner size="medium" />
+              //   </div>
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
+                <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
                 <DataGrid
                   apiRef={gridApiRef}
                   rows={transactions}
@@ -648,6 +655,7 @@ const BankTransactions = () => {
                     })
                   }}
                 />
+                </SkeletonWrapper>
               )}
             </div>
           )}

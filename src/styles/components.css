@@ -524,6 +524,7 @@ body.catalog-page {
   transition: top 0.3s ease-in-out;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .catalog-scrollable-content {
   flex: 1;
   overflow-y: auto;
@@ -3211,8 +3212,9 @@ input:focus {
   color: #666;
   padding: 5px;
 }
+
 .PhoneInput{
-  width: 100%;
+  width: 210px;
 }
 .custom-phone-input {
   display: flex;
@@ -3668,6 +3670,10 @@ input:focus {
   .item-details {
     align-items: flex-start;
   }
+
+  .PhoneInput {
+    width: 100%;
+  }
 }
 
 @media(max-width:500px) {
@@ -3689,7 +3695,8 @@ input:focus {
     top: 7%;
   }
 
-  .catalog-fixed-header ,.card-fixed-header {
+  .catalog-fixed-header,
+  .card-fixed-header {
     position: sticky;
     top: 0;
     z-index: 100;
@@ -3698,7 +3705,7 @@ input:focus {
     padding-top: 13px !important;
   }
 
-  
+
 
   .order-cards-container {
     margin-top: 120px;
