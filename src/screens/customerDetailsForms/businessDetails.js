@@ -343,7 +343,15 @@ const checkDisabledStatus = (fieldPath) => {
         </div>
       )} */}
       {user?.userType.toLowerCase() === "employee" && (
-        <div className="form-main-header">
+        <div className="form-main-header" style={{ ...(isMobile && {
+    margin: "0px 12px",
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "center",
+    backgroundColor: "#76716926",
+    borderRadius: "11px",
+    padding: "4px 0px"
+  })}}>
           {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
           </div>
       )}
