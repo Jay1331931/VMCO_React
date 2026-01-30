@@ -21,6 +21,7 @@ import {
 } from "@mui/x-data-grid";
 import TableMobile from "../components/TableMobile";
 import MaintenanceCard from "../components/MaintenanceCard";
+import SkeletonWrapper from "../components/SkeletonWrapper";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Status class helper function
@@ -530,9 +531,11 @@ function Maintenance() {
       <div className="maintenance-content">
         {isMobile ? (
           <div className="orders-content">
-            {loading ? (
-              <LoadingSpinner />
-            ) : error ? (
+            {
+            // loading ? (
+            //   <LoadingSpinner />
+            // ) : 
+            error ? (
               <div className="error-message">{error}</div>
             ) : (
               <>
@@ -663,23 +666,28 @@ function Maintenance() {
                   />
                 </div>
                 <div style={{  position: "relative", zIndex: 1 }}>
-                  <MaintenanceCard
-                    tickets={initialTickets}
-                    setSelectedRow={handleShowAllDetailsClick}
-                  />
+                  <SkeletonWrapper loading={loading} type="order_card" count={4}>
+                    <MaintenanceCard
+                      tickets={initialTickets}
+                      setSelectedRow={handleShowAllDetailsClick}
+                    />
+                  </SkeletonWrapper>
                 </div>
               </>
             )}
           </div>
         ) : (
           <div className="table-container">
-            {loading ? (
-              <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                <LoadingSpinner size="medium" />
-              </div>
-            ) : error ? (
+            {
+            // loading ? (
+            //   <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+            //     <LoadingSpinner size="medium" />
+            //   </div>
+            // ) : 
+            error ? (
               <div className="error-message">{error}</div>
             ) : (
+              <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
               <DataGrid
                 apiRef={gridApiRef}
                 rows={initialTickets}
@@ -783,6 +791,7 @@ function Maintenance() {
                     }),
                 }}
               />
+              </SkeletonWrapper>
             )}
           </div>
         )}
