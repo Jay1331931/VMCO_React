@@ -494,7 +494,7 @@ const CatalogLayout = ({
                             ))
                         ) : (
                             !isLoading && !isLoadingMore && !hasMore && (
-                                <div className="no-products-message" style={{ textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center" }}>
+                                <div className="no-products-message" style={{ textAlign: "center", position: "absolute", top: "60%", width: "100%", justifySelf: "anchor-center", maxWidth: "none" }}>
                                     {searchQuery ? (
                                         <p>{t("No products found matching your search term")}</p>
                                     ) : (

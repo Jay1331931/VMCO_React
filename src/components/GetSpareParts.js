@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 function GetSpareparts({
   open,
   onClose,
-  onSelectSpareparts, 
+  onSelectSpareparts,
   API_BASE_URL,
   token
 }) {
@@ -150,6 +150,23 @@ function GetSpareparts({
     }
   };
 
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
+    }
+  };
+
   useEffect(() => {
     fetchSpareparts();
   }, [
@@ -204,11 +221,16 @@ function GetSpareparts({
             placeholder={t("Search spare parts...")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setSearchQuery(search);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add("keyboard-open");
               }
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              document.body.classList.remove("keyboard-open");
+              // 👈 show menu again (optional)
             }}
             style={{
               width: "100%",

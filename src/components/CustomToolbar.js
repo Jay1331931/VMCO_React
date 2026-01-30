@@ -161,114 +161,201 @@ const SearchAutocomplete = ({
   columns,
   isMobile,
   t,
-}) => (
-  <Autocomplete
-    multiple
-    freeSolo
-    fullWidth
-    size="small"
-    value={displayableFilters}
-    inputValue={searchValue || ""}
-    onInputChange={handleInputChange}
-    onChange={(event, newValue, details, reason) => {
-      if (reason === "removeOption") {
-        const newFilterObj = {};
-        Object.entries(filters).forEach(([key, value]) => {
-          if (excludeFiltersFromChips.includes(key) || key !== details.option.column) {
-            newFilterObj[key] = value;
-          }
-        });
-        setFilterObj(newFilterObj);
-        handleFilterChange(newFilterObj);
-        setSearchQuery("");
-      } else {
-        const newFilterObj = { ...filterObj };
-        newValue.forEach((item) => {
-          if (item.column && item.searchString) {
-            newFilterObj[item.column] = item.searchString;
-          }
-        });
-        setFilterObj(newFilterObj);
-        const preservedFilters = {};
-        excludeFiltersFromChips.forEach(key => {
-          if (filters[key]) {
-            preservedFilters[key] = filters[key];
-          }
-        });
-        handleFilterChange({ ...preservedFilters, ...newFilterObj });
-        setSearchQuery("");
-      }
-    }}
-    options={searchOptions}
-    renderOption={(props, option) => {
-      const columnName = columns.find(
-        (col) => col.field === option.column
-      )?.headerName;
-      return (
-        <Box component="li" {...props}>
-          <Typography sx={{ fontSize: "14px" }}>
-            {columnName} <KeyboardDoubleArrowRight fontSize="smaller" />{" "}
-            {option.searchString}
-          </Typography>
-        </Box>
-      );
-    }}
-    getOptionLabel={(option) => {
-      if (typeof option === "string") return option;
+}) => {
+  const [isFocused, setIsFocused] = useState(false);
 
-      const columnName =
-        columns.find((col) => col.field === option.column)
-          ?.headerName || option.column;
-      return `${columnName}: ${typeof option.searchString === "string"
-        ? option.searchString
-        : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${option.searchString?.endDate?.split("T")[0] ?? ""
-        }`
-        }`;
-    }}
-    filterOptions={(options) => options}
-    renderTags={(value, getTagProps) =>
-      value.map((option, index) => {
+  // Handle keyboard close detection
+  useEffect(() => {
+    if (!isMobile || !isFocused) return;
+
+    const handleResize = () => {
+      // Keyboard closes when viewport resizes back
+      setTimeout(() => {
+        if (!document.hasFocus() || document.activeElement?.tagName !== 'INPUT') {
+          document.body.classList.remove('keyboard-open');
+          setIsFocused(false);
+        }
+      }, 300);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        document.body.classList.remove('keyboard-open');
+        setIsFocused(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isMobile, isFocused]);
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
+  return (
+    <Autocomplete
+      multiple
+      freeSolo
+      fullWidth
+      size="small"
+      value={displayableFilters}
+      inputValue={searchValue || ""}
+      onInputChange={handleInputChange}
+      onChange={(event, newValue, details, reason) => {
+        if (reason === "removeOption") {
+          const newFilterObj = {};
+          Object.entries(filters).forEach(([key, value]) => {
+            if (excludeFiltersFromChips.includes(key) || key !== details.option.column) {
+              newFilterObj[key] = value;
+            }
+          });
+          setFilterObj(newFilterObj);
+          handleFilterChange(newFilterObj);
+          setSearchQuery("");
+        } else {
+          const newFilterObj = { ...filterObj };
+          newValue.forEach((item) => {
+            if (item.column && item.searchString) {
+              newFilterObj[item.column] = item.searchString;
+            }
+          });
+          setFilterObj(newFilterObj);
+          const preservedFilters = {};
+          excludeFiltersFromChips.forEach(key => {
+            if (filters[key]) {
+              preservedFilters[key] = filters[key];
+            }
+          });
+          handleFilterChange({ ...preservedFilters, ...newFilterObj });
+          setSearchQuery("");
+        }
+      }}
+      onOpen={() => {
+        if (isMobile) {
+          document.body.classList.add('keyboard-open');
+          setIsFocused(true);
+        }
+      }}
+      onClose={() => {
+        if (isMobile) {
+          // Delay to check if focus moved to another input
+          setTimeout(() => {
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement && 
+              (activeElement.tagName === 'INPUT' || 
+               activeElement.tagName === 'TEXTAREA' ||
+               activeElement.isContentEditable);
+            
+            if (!isInputFocused) {
+              document.body.classList.remove('keyboard-open');
+              setIsFocused(false);
+            }
+          }, 200);
+        }
+      }}
+         onKeyDown={handleKeyDown}
+      options={searchOptions}
+      renderOption={(props, option) => {
         const columnName = columns.find(
           (col) => col.field === option.column
-        )?.headerName || option.column;
-
+        )?.headerName;
         return (
-          <Chip
-            {...getTagProps({ index })}
-            key={index}
-            label={`${columnName}: ${option.searchString}`}
-            size="small"
-            sx={commonStyles.chip(isMobile)}
-          />
+          <Box component="li" {...props}>
+            <Typography sx={{ fontSize: "14px" }}>
+              {columnName} <KeyboardDoubleArrowRight fontSize="smaller" />{" "}
+              {option.searchString}
+            </Typography>
+          </Box>
         );
-      })
-    }
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        placeholder={t("Search...")}
-        variant="outlined"
-        sx={commonStyles.autocompleteTextField(isMobile)}
-        InputProps={{
-          ...params.InputProps,
-          sx: {
-            ...params.InputProps.sx,
-            ...commonStyles.autocompleteInputProps,
-          },
-        }}
-      />
-    )}
-    componentsProps={{
-      paper: {
-        sx: commonStyles.autocompletePaper(isMobile)
+      }}
+      getOptionLabel={(option) => {
+        if (typeof option === "string") return option;
+
+        const columnName =
+          columns.find((col) => col.field === option.column)
+            ?.headerName || option.column;
+        return `${columnName}: ${typeof option.searchString === "string"
+          ? option.searchString
+          : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${option.searchString?.endDate?.split("T")[0] ?? ""
+          }`
+          }`;
+      }}
+      filterOptions={(options) => options}
+      renderTags={(value, getTagProps) =>
+        value.map((option, index) => {
+          const columnName = columns.find(
+            (col) => col.field === option.column
+          )?.headerName || option.column;
+
+          return (
+            <Chip
+              {...getTagProps({ index })}
+              key={index}
+              label={`${columnName}: ${option.searchString}`}
+              size="small"
+              sx={commonStyles.chip(isMobile)}
+            />
+          );
+        })
       }
-    }}
-    ListboxProps={{
-      sx: commonStyles.autocompleteListbox
-    }}
-    sx={commonStyles.autocompleteRoot}
-  />
-);
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          placeholder={t("Search...")}
+          variant="outlined"
+          sx={commonStyles.autocompleteTextField(isMobile)}
+          InputProps={{
+            ...params.InputProps,
+            sx: {
+              ...params.InputProps.sx,
+              ...commonStyles.autocompleteInputProps,
+            },
+          }}
+          inputProps={{
+            ...params.inputProps,
+            inputMode: "search",
+            enterKeyHint: "search",
+            style: {
+              ...params.inputProps?.style,
+              fontSize: isMobile ? "16px" : undefined,
+            },
+            onKeyDown: handleKeyDown,
+          }}
+        />
+      )}
+      componentsProps={{
+        paper: {
+          sx: commonStyles.autocompletePaper(isMobile)
+        }
+      }}
+      sx={{
+        ...commonStyles.autocompleteRoot,
+        '&.Mui-focused': {
+          '@media (max-width: 768px)': {
+            position: 'fixed',
+            top: '10px',
+            left: '10px',
+            right: '10px',
+            width: 'calc(100% - 20px) !important',
+            zIndex: 99999,
+            backgroundColor: 'white',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          },
+        },
+      }}
+    />
+  );
+};
 
 const ToolbarActions = ({
   showAssignfilters,

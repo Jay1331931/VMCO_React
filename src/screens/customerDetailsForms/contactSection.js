@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "../../styles/forms.css";
+import { isMobile } from "../../utilities/isMobile";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBriefcase, faCheck, faCheckCircle, faEdit, faEnvelope, faExclamationTriangle, faHistory, faPaperPlane, faPhone, faRedo, faSpinner, faTimes, faUser, faUserFriends, faUsers, faUserTie } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
@@ -83,7 +84,7 @@ const token = localStorage.getItem("token");
   const [isOtpLoading, setIsOtpLoading] = useState(false);
   const [isVerifyLoading, setIsVerifyLoading] = useState(false);
   const [otpValue, setOtpValue] = useState("");
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 500);
+  // const [isMobile, setIsMobile] = useState(window.innerWidth < 500);
   // Add state to track verified emails from database
   const [verifiedEmails, setVerifiedEmails] = useState(new Set());
   const [currentEmail, setcurrentEmail] = useState("");
@@ -115,7 +116,15 @@ const { user, isAuthenticated, logout } = useAuth();
     }
     return branch[fieldName] ?? "";
   };
-
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
   // Add OTP handling functions
   const handleSendOtp = async (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -569,6 +578,21 @@ const validateEmail = (email) => {
                                 >
                                   <input
                                     type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                                     placeholder={t("Enter OTP")}
                                     value={otpValue}
                                     onChange={(e) =>
@@ -751,7 +775,7 @@ const validateEmail = (email) => {
             <span className="contact-type-label">{t(label)}</span>
             {isRequired && <span className="required-badge">{t("Required")}</span>}
           </div>
-          <div className="contact-status-dot"></div>
+          {/* <div className="contact-status-dot"></div> */}
         </div>
 
         {/* Contact Fields */}
@@ -852,6 +876,21 @@ const validateEmail = (email) => {
                                   <div className="otp-input-group-mobile">
                                     <input
                                       type="text"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
                                       placeholder={t("Enter OTP")}
                                       value={otpValue}
                                       onChange={(e) => setOtpValue(e.target.value)}
@@ -919,9 +958,9 @@ const validateEmail = (email) => {
                             field === "primaryContactEmail")
                         }
                       />
-                      <div className="phone-input-icon-mobile">
+                      {/* <div className="phone-input-icon-mobile">
                         <FontAwesomeIcon icon={faPhone} />
-                      </div>
+                      </div> */}
                     </div>
                   )}
                 </div>
@@ -1107,13 +1146,15 @@ const validateEmail = (email) => {
 }
 
 .secondary-contact {
-  border-color: #32A19F;
-  background: linear-gradient(135deg, #ffffff, rgba(50, 161, 159, 0.03));
+  border-color: #00594C;
+  // background: linear-gradient(135deg, #ffffff, rgba(50, 161, 159, 0.03));
+   background: linear-gradient(135deg, #ffffff, rgba(0, 89, 76, 0.03));
 }
 
 .supervisor-contact {
-  border-color: #F6921E;
-  background: linear-gradient(135deg, #ffffff, rgba(246, 146, 30, 0.03));
+  border-color:#00594C; // #F6921E;
+  // background: linear-gradient(135deg, #ffffff, rgba(246, 146, 30, 0.03));
+   background: linear-gradient(135deg, #ffffff, rgba(0, 89, 76, 0.03));
 }
 
 /* Contact Card Header */
@@ -1145,11 +1186,11 @@ const validateEmail = (email) => {
 }
 
 .secondary-contact .contact-type-icon {
-  background: linear-gradient(135deg, #32A19F, #4CB5B3);
+  background: linear-gradient(135deg, #00594C, #007B6B);
 }
 
 .supervisor-contact .contact-type-icon {
-  background: linear-gradient(135deg, #F6921E, #FFA94D);
+  background: linear-gradient(135deg, #00594C, #007B6B);
 }
 
 .contact-type-label {

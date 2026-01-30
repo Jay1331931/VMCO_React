@@ -51,9 +51,9 @@ const AddBankTransaction = () => {
   const currentLanguage = i18n.language;
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    erpCustId: user?.userType === 'customer' ? user?.erpCustomerId: "",
-    companyNameEn:user?.userType === 'customer' ? user?.companyNameEn: "",
-    companyNameAr: user?.userType === 'customer' ? user?.companyNameAr: "",
+    erpCustId: user?.userType === 'customer' ? user?.erpCustomerId : "",
+    companyNameEn: user?.userType === 'customer' ? user?.companyNameEn : "",
+    companyNameAr: user?.userType === 'customer' ? user?.companyNameAr : "",
     amountTransferred: 0,
     transactionDate: "",
     erpOrderId: [],
@@ -74,16 +74,16 @@ const AddBankTransaction = () => {
   const [TemporderIds, setTempOrderIds] = useState();
   const [totalamount, setAmount] = useState(0);
   const [isSubmitting, setisSubmitting] = useState(null);
-  const [isUploading,setIsUploading]=useState(null)
-   const [maxDate, setMaxDate] = useState('');
-  const isMobile=usePlatform()
+  const [isUploading, setIsUploading] = useState(null)
+  const [maxDate, setMaxDate] = useState('');
+  const isMobile = usePlatform()
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
     "BankTransactions"
   );
-  console.log("user",user)
+  console.log("user", user)
   const cookieToken = getCookie("token");
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
@@ -117,18 +117,18 @@ const AddBankTransaction = () => {
   //   }
   // }, [orderId]);
   const handleChange = (e) => {
-   
+
     const { name, value } = e.target;
-     if(name==="entity"){
-        setFormData((prev) => ({ ...prev, orderId:[],erpOrderId:[],amountTransferred:0}));
+    if (name === "entity") {
+      setFormData((prev) => ({ ...prev, orderId: [], erpOrderId: [], amountTransferred: 0 }));
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = async (e) => {
     const files = e.target.files;
-    
-setIsUploading(true)
+
+    setIsUploading(true)
     for (let file of files) {
       //file Size less than 30MB
       if (file.size > 10 * 1024 * 1024) {
@@ -197,15 +197,15 @@ setIsUploading(true)
 
       setFieldErrors(errors);
       if (Object.keys(errors).length > 0) {
-        if(isMobile){
-            Swal.fire({
-              title: t("Validation Error"),
-              text: t("Please fill all required fields"),
-              icon: "error",
-              confirmButtonText: t("OK"),
-            });
+        if (isMobile) {
+          Swal.fire({
+            title: t("Validation Error"),
+            text: t("Please fill all required fields"),
+            icon: "error",
+            confirmButtonText: t("OK"),
+          });
         }
-       
+
         setError(t("Please fill all required fields"));
         return;
       }
@@ -469,6 +469,22 @@ setIsUploading(true)
       console.error("Error deleting file:", error);
     }
   };
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
+    }
+  };
 
   const handleCancel = () => {
     for (let fileName of imageUrls) {
@@ -498,9 +514,9 @@ setIsUploading(true)
   // };
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
- const fetchSystemDate = useCallback(
+  const fetchSystemDate = useCallback(
     async () => {
-     
+
       try {
 
         const { data } = await api.get(
@@ -509,21 +525,21 @@ setIsUploading(true)
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        if(data?.status?.toLowerCase()==="success"){
-          console.log("data?.data",data?.data)
- setMaxDate(data?.data);
+        if (data?.status?.toLowerCase() === "success") {
+          console.log("data?.data", data?.data)
+          setMaxDate(data?.data);
         }
-       
+
       } catch (err) {
         console.error("Error fetching date:", err);
-       
-      } 
+
+      }
     },
     []
   );
-  useEffect(()=>{
-fetchSystemDate()
-  },[])
+  useEffect(() => {
+    fetchSystemDate()
+  }, [])
   const renderTemplate = () => {
     return (
       <div className="bank-add-container">
@@ -543,6 +559,17 @@ fetchSystemDate()
                 }
                 onClick={() => setShowCustomerPopup(true)}
                 disabled={!!updateTransaction?.erpCustId || orderId}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
               {fieldErrors.erpCustId && (
                 <div className="error-message" style={{ color: "red" }}>
@@ -568,6 +595,17 @@ fetchSystemDate()
                   )
                 }
                 onChange={handleChange}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
             </div>
 
@@ -588,6 +626,17 @@ fetchSystemDate()
                   )
                 }
                 onChange={handleChange}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
             </div>
 
@@ -614,6 +663,17 @@ fetchSystemDate()
                   )
                 }
                 onChange={handleChange}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
 
               {fieldErrors.amountTransferred && (
@@ -640,6 +700,22 @@ fetchSystemDate()
                 onChange={handleChange}
                 disabled={!!updateTransaction?.transactionDate}
                 max={maxDate}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                 
+                }}
+               style={{ 
+                backgroundColor: "white", 
+                opacity: 1, 
+                color: "black" 
+              }}
               />
               {fieldErrors.transactionDate && (
                 <div className="error-message" style={{ color: "red" }}>
@@ -648,69 +724,70 @@ fetchSystemDate()
               )}
             </div>
 
-            { !isMobile ? 
-            Object.keys(updateTransaction)?.length === 0 && (
-              <div className="form-group">
-                <label htmlFor="entity">
-                  {t("Entity")} <span style={{ color: "red" }}> *</span>
-                </label>
-                <select
-                  id="entity"
-                  name="entity"
-                  value={formData.entity || updateTransaction?.entity || ""}
-                  onChange={handleChange}
-                  disabled={orderId}
-                >
-                  <option value="">{t("Select Entity")}</option>
-                  <option value="VMCO">VMCO</option>
-                  <option value="NAQI">NAQI</option>
-                  <option value="SHC">SHC</option>
-                  <option value="DAR">DAR</option>
-                  <option value="GMTC">GMTC</option>
-                </select>
-                {fieldErrors.entity && (
-                  <div className="error-message" style={{ color: "red" }}>
-                    {t(fieldErrors.entity)}
-                  </div>
-                )}
-              </div>
-             ) :      Object.keys(updateTransaction)?.length === 0 && (
-  <div className="form-group">
-    <label htmlFor="entity">
-      {t("Entity")} <span style={{ color: "red" }}> *</span>
-    </label>
-    <SearchableDropdown
-      id="entity"
-      name="entity"
-      className="dropdown-mobile-bank "
-      value={formData.entity || updateTransaction?.entity || ""}
-      onChange={(e) => {
-        handleChange({
-          target: { 
-            name: "entity", 
-            value: e.target.value 
-          }
-        });
-      }}
-      disabled={orderId}
-      options={[
-        { value: "", name: t("Select Entity") },
-        { value: "VMCO", name: "VMCO" },
-        { value: "NAQI", name: "NAQI" },
-        { value: "SHC", name: "SHC" },
-        { value: "DAR", name: "DAR" },
-        { value: "GMTC", name: "GMTC" }
-      ]}
-    />
-    {fieldErrors.entity && (
-      <div className="error-message" style={{ color: "red" }}>
-        {t(fieldErrors.entity)}
-      </div>
-    )}
-  </div>
-)}
+            {!isMobile ?
+             (
+                <div className="form-group">
+                  <label htmlFor="entity">
+                    {t("Entity")} <span style={{ color: "red" }}> *</span>
+                  </label>
+                  <select
+                    id="entity"
+                    name="entity"
+                    value={formData.entity || updateTransaction?.entity || ""}
+                    onChange={handleChange}
+                    disabled={orderId || updateTransaction?.id}
+                  >
+                    <option value="">{t("Select Entity")}</option>
+                    <option value="VMCO">VMCO</option>
+                    <option value="NAQI">NAQI</option>
+                    <option value="SHC">SHC</option>
+                    <option value="DAR">DAR</option>
+                    <option value="GMTC">GMTC</option>
+                  </select>
+                  {fieldErrors.entity && (
+                    <div className="error-message" style={{ color: "red" }}>
+                      {t(fieldErrors.entity)}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label htmlFor="entity">
+                    {t("Entity")} <span style={{ color: "red" }}> *</span>
+                  </label>
+                  <SearchableDropdown
+                    id="entity"
+                    name="entity"
+                    className="dropdown-mobile-bank "
+                    value={formData.entity || updateTransaction?.entity || ""}
+                    onChange={(e) => {
+                      handleChange({
+                        target: {
+                          name: "entity",
+                          value: e.target.value
+                        }
+                      });
+                    }}
+                    style={{width:"100%"}}
+                    disabled={orderId || updateTransaction?.id}
+                    options={[
+                      { value: "", name: t("Select Entity") },
+                      { value: "VMCO", name: "VMCO" },
+                      { value: "NAQI", name: "NAQI" },
+                      { value: "SHC", name: "SHC" },
+                      { value: "DAR", name: "DAR" },
+                      { value: "GMTC", name: "GMTC" }
+                    ]}
+                  />
+                  {fieldErrors.entity && (
+                    <div className="error-message" style={{ color: "red" }}>
+                      {t(fieldErrors.entity)}
+                    </div>
+                  )}
+                </div>
+              )}
 
-            {([Constants.ENTITY.NAQI?.toLowerCase(),Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
+            {([Constants.ENTITY.NAQI?.toLowerCase(), Constants.ENTITY.VMCO.toLowerCase()].includes(formData.entity?.toLowerCase()) && formData.erpCustId) ||
               Object.keys(updateTransaction).length > 0 ? (
               <>
                 <div className="form-group">
@@ -727,6 +804,17 @@ fetchSystemDate()
                     style={{ cursor: "pointer" }}
                     disabled={!!updateTransaction?.erpOrderId || orderId}
                     onClick={() => setshowSalesOrderPopup(true)}
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add("keyboard-open");
+                      }
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+                      document.body.classList.remove("keyboard-open");
+                      // 👈 show menu again (optional)
+                    }}
                   />
                 </div>
                 <div className="form-group">
@@ -749,6 +837,17 @@ fetchSystemDate()
                     disabled={!!updateTransaction?.orderId || orderId}
                     onClick={() => setshowSalesOrderPopup(true)}
                     onChange={handleChange}
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add("keyboard-open");
+                      }
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+                      document.body.classList.remove("keyboard-open");
+                      // 👈 show menu again (optional)
+                    }}
                   />
                 </div>
               </>
@@ -873,7 +972,7 @@ fetchSystemDate()
                     </>
                   )}
                   <div className="scrollable-preview-container">
-                    {isUploading ? <LoadingSpinner/>:<>{fileData?.map((file, index) => {
+                    {isUploading ? <LoadingSpinner /> : <>{fileData?.map((file, index) => {
                       const fileUrl = file.url;
                       const extension = file.fileName
                         .split(".")
@@ -972,6 +1071,17 @@ fetchSystemDate()
                 }
                 disabled={!!updateTransaction?.description}
                 onChange={handleChange}
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
             </div>
 
@@ -1229,11 +1339,11 @@ fetchSystemDate()
   //     {renderTemplate()}
   //   </div>
   // ) : (
-    return(<Sidebar title={t("Bank Transactions")}>
-      {/* <div className="bank-transaction-form"> */}
-      {renderTemplate()}
-      {/* </div> */}
-    </Sidebar>
+  return (<Sidebar title={t("Bank Transactions")}>
+    {/* <div className="bank-transaction-form"> */}
+    {renderTemplate()}
+    {/* </div> */}
+  </Sidebar>
   );
 };
 

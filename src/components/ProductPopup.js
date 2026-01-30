@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
 import FavButton from './FavButton';
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
 function ProductPopup({
     product,
@@ -54,11 +56,11 @@ function ProductPopup({
     return (
         <div className="product-popup-overlay" onClick={onClose}>
             <div className="product-popup" onClick={e => e.stopPropagation()}>
-                {!isMobile && <button className="popup-close" onClick={onClose}>x</button>}
+                {!isMobile && <button className="popup-close" onClick={onClose}><FontAwesomeIcon icon={faXmark} /></button>}
                 <div className="popup-content">
                     <div className="popup-image-section">
                         <div className="popup-image-container">
-                            {isMobile && <button className="popup-close popup-close-mobile" onClick={onClose}>x</button>}
+                            {isMobile && <button className="popup-close popup-close-mobile" onClick={onClose}><FontAwesomeIcon icon={faXmark} /></button>}
                             {isV('favoriteButton') && <FavButton
                                 initialState={product.favorite || false}
                                 onToggle={handleFavoriteToggle}
@@ -212,8 +214,8 @@ function ProductPopup({
                     }
                     .popup-close-mobile {
                         top: 4px;
-                        right: auto;
-                        left: 10px;
+                        right: 10px;
+                        left: auto;
                         font-size: 1.8rem;
                         color: #000000;
                     }

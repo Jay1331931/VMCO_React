@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/pagination.css";
 import "../i18n";
 import { useTranslation } from "react-i18next";
+import { isMobile } from "../utilities/isMobile";
 
 const Pagination = ({
   currentPage,
@@ -88,6 +89,16 @@ const Pagination = ({
   );
 };
 
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+  };
+
 
   const handlePageJump = (e) => {
     const pageNumber = Number(e.target.value);
@@ -130,6 +141,21 @@ const Pagination = ({
         <input
           id="page-jump"
           type="number"
+onFocus={() => {
+       if (window.innerWidth <= 768) {
+      // This could trigger hiding the bottom menu
+      document.body.classList.add('keyboard-open');
+    }
+   
+    
+  }}
+onKeyDown={handleKeyDown}
+  onBlur={() => {
+   
+      document.body.classList.remove('keyboard-open');
+       // 👈 show menu again (optional)
+  }}
+    
           min="1"
           max={totalPages}
           value={pageInput}

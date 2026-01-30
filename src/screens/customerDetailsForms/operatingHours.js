@@ -332,7 +332,7 @@ const OperatingHours = ({
         <FontAwesomeIcon icon={faClock} className="section-icon" />
         <h3 className="section-title-mobile">
           {t("Operating And Delivery Hours")}
-          <span className="required-badge">*</span>
+          {/* <span className="required-badge">*</span> */}
         </h3>
       </div>
       <div className="section-subtitle-mobile">
@@ -667,13 +667,13 @@ const TimeInputGroup = ({
             {(isActive === `${day}-${type}-from` ||
               isActive === `${day}-${type}-to`) && (
               <>
-                <button 
+                {/* <button 
                   className="time-action-btn confirm-btn-mobile"
                   onClick={() => setIsExpanded(false)}
                 >
                   <FontAwesomeIcon icon={faCheck} />
                   <span>Confirm</span>
-                </button>
+                </button> */}
                 <button 
                   className="time-action-btn cancel-btn-mobile"
                   onClick={() => {
@@ -701,13 +701,13 @@ const TimeInputGroup = ({
               </button>
             )}
             
-            <button 
-              className="time-action-btn done-btn-mobile"
-              onClick={() => setIsExpanded(false)}
-            >
-              <FontAwesomeIcon icon={faCheckCircle} />
-              <span>Done</span>
-            </button>
+           <button 
+                  className="time-action-btn confirm-btn-mobile"
+                  onClick={() => setIsExpanded(false)}
+                >
+                  <FontAwesomeIcon icon={faCheck} />
+                  <span>Confirm</span>
+                </button>
           </div>
         </div>
       )}

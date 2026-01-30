@@ -32,12 +32,29 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
   useEffect(() => {
     const setInitialComments = () => {
       if (externalComments && externalComments.length > 0) {
-      setComments(externalComments);
-      setCount(externalComments.length);
+        setComments(externalComments);
+        setCount(externalComments.length);
       }
     }
     setInitialComments();
   }, [externalComments]);
+
+  const handleKeyDown = (e) => {
+    // These keys indicate user is done with keyboard
+    if (
+      e.key === "Enter" ||
+      e.key === "Go" ||
+      e.key === "Search" ||
+      e.key === "Done"
+    ) {
+      if (window.innerWidth <= 768) {
+        // Blur the input to close keyboard
+        e.target.blur();
+        // Remove keyboard class immediately
+        document.body.classList.remove("keyboard-open");
+      }
+    }
+  };
 
   const handleAddComment = () => {
     if (commentText.trim()) {
@@ -94,6 +111,17 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
                 placeholder={t("Add your comment here...")}
                 className='comment-textarea'
                 rows='3'
+                onFocus={() => {
+                  if (window.innerWidth <= 768) {
+                    // This could trigger hiding the bottom menu
+                    document.body.classList.add("keyboard-open");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                onBlur={() => {
+                  document.body.classList.remove("keyboard-open");
+                  // 👈 show menu again (optional)
+                }}
               />
               <button onClick={handleAddComment} className='add-comment-btn' disabled={!commentText.trim()}>
                 {t("Add Comment")}
