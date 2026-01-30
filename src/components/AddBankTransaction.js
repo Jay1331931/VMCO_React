@@ -643,7 +643,7 @@ const AddBankTransaction = () => {
             <div className="form-group">
               <label htmlFor="amountTransferred">
                 {t("Amount Transferred")}
-                <span style={{ color: "red" }}> *</span>
+                <span style={{ color: "red" }}>*</span>
               </label>
               <input
                 id="amountTransferred"
@@ -651,11 +651,7 @@ const AddBankTransaction = () => {
                 type="number"
                 placeholder={t("Amount")}
                 min={0}
-                value={
-                  formData?.amountTransferred ??
-                  updateTransaction?.amountTransferred ??
-                  ""
-                }
+                value={formData?.amountTransferred || updateTransaction?.amountTransferred || ""}
                 disabled={
                   !!(
                     formData?.orderId?.length ||
@@ -700,17 +696,13 @@ const AddBankTransaction = () => {
                 onChange={handleChange}
                 disabled={!!updateTransaction?.transactionDate}
                 max={maxDate}
-                onFocus={() => {
-                  if (window.innerWidth <= 768) {
-                    // This could trigger hiding the bottom menu
-                    document.body.classList.add("keyboard-open");
-                  }
-                }}
-                onKeyDown={handleKeyDown}
-                onBlur={() => {
-                  document.body.classList.remove("keyboard-open");
-                  // 👈 show menu again (optional)
-                }}
+                
+               
+               style={{ 
+                backgroundColor: "white", 
+                opacity: 1, 
+                color: "black" 
+              }}
               />
               {fieldErrors.transactionDate && (
                 <div className="error-message" style={{ color: "red" }}>
@@ -720,7 +712,7 @@ const AddBankTransaction = () => {
             </div>
 
             {!isMobile ?
-              Object.keys(updateTransaction)?.length === 0 && (
+             (
                 <div className="form-group">
                   <label htmlFor="entity">
                     {t("Entity")} <span style={{ color: "red" }}> *</span>
@@ -730,9 +722,8 @@ const AddBankTransaction = () => {
                     name="entity"
                     value={formData.entity || updateTransaction?.entity || ""}
                     onChange={handleChange}
-                    disabled={orderId}
+                    disabled={orderId || updateTransaction?.id}
                   >
-                    <option value="">{t("Select Entity")}</option>
                     <option value="VMCO">VMCO</option>
                     <option value="NAQI">NAQI</option>
                     <option value="SHC">SHC</option>
@@ -745,7 +736,7 @@ const AddBankTransaction = () => {
                     </div>
                   )}
                 </div>
-              ) : Object.keys(updateTransaction)?.length === 0 && (
+              ) : (
                 <div className="form-group">
                   <label htmlFor="entity">
                     {t("Entity")} <span style={{ color: "red" }}> *</span>
@@ -763,9 +754,9 @@ const AddBankTransaction = () => {
                         }
                       });
                     }}
-                    disabled={orderId}
+                    style={{width:"100%"}}
+                    disabled={orderId || updateTransaction?.id}
                     options={[
-                      { value: "", name: t("Select Entity") },
                       { value: "VMCO", name: "VMCO" },
                       { value: "NAQI", name: "NAQI" },
                       { value: "SHC", name: "SHC" },

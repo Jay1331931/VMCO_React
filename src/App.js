@@ -273,17 +273,14 @@ const isMobile=usePlatform()
   
   return (
     <>
-     {!isOnline ? (
+     {/* {!isOnline ? (
     <CleanOfflineScreen 
-        />
-
-
-
-
-      ) :  <Router>
+        />) : <Router>
         <AppRoutes />
-      </Router>}
-   
+      </Router> } */}
+   <Router>
+        <AppRoutes />
+      </Router>
 
       {showUpdatePopup && latestVersion && (
         <VersionPopup

@@ -86,58 +86,58 @@ const FinalSubmissionConfirmation = ({
     };
   }, []);
   const handleKeyDown = (e) => {
-      if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
-        if (isMobile) {
-          // Close keyboard
-          e.target.blur();
-          document.body.classList.remove('keyboard-open');
-        }
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done') {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
       }
-    };
-function getCenteredOptions(width, height) {
-  const screenWidth = window.screen.width;
-  const screenHeight = window.screen.height;
-  
-  // Calculate centered position
-  const left = Math.max(0, (screenWidth - width) / 2);
-  const top = Math.max(0, (screenHeight - height) / 2);
-  
-  return {
-    left: Math.round(left),
-    top: Math.round(top)
+    }
   };
-}
+  function getCenteredOptions(width, height) {
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+
+    // Calculate centered position
+    const left = Math.max(0, (screenWidth - width) / 2);
+    const top = Math.max(0, (screenHeight - height) / 2);
+
+    return {
+      left: Math.round(left),
+      top: Math.round(top)
+    };
+  }
   const openUrlSmart = (url) => {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  if (isMobile) {
-    if (window.cordova && window.cordova.InAppBrowser) {
-      const width = 400;
-      const height = 500;
-      const centeredPosition = getCenteredOptions(width, height);
+    if (isMobile) {
+      if (window.cordova && window.cordova.InAppBrowser) {
+        const width = 400;
+        const height = 500;
+        const centeredPosition = getCenteredOptions(width, height);
 
-      const options =
-        'toolbar=yes,' +
-        'hideurlbar=yes,' +
-        'zoom=no,' +
-        'hardwareback=yes,' +
-        'clearsessioncache=yes,' +
-        'clearcache=yes,' +
-        `width=${width},` +
-        `height=${height},` +
-        `left=${centeredPosition.left},` +
-        `top=${centeredPosition.top}`;
+        const options =
+          'toolbar=yes,' +
+          'hideurlbar=yes,' +
+          'zoom=no,' +
+          'hardwareback=yes,' +
+          'clearsessioncache=yes,' +
+          'clearcache=yes,' +
+          `width=${width},` +
+          `height=${height},` +
+          `left=${centeredPosition.left},` +
+          `top=${centeredPosition.top}`;
 
-      window.cordova.InAppBrowser.open(url, '_blank', options);
+        window.cordova.InAppBrowser.open(url, '_blank', options);
+      } else {
+        // iOS Safari fallback
+        window.open(url, '_blank');
+      }
     } else {
-      // iOS Safari fallback
+      // Desktop
       window.open(url, '_blank');
     }
-  } else {
-    // Desktop
-    window.open(url, '_blank');
-  }
-};
+  };
   // Handle signature save
   // const handleSaveSignature = () => {
   //   if (sigCanvasRef.current.isEmpty()) {
@@ -304,21 +304,21 @@ function getCenteredOptions(width, height) {
           <div className="input-with-verification">
             <input
               type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+              onFocus={() => {
+                if (window.innerWidth <= 768) {
+                  // This could trigger hiding the bottom menu
+                  document.body.classList.add('keyboard-open');
+                }
+
+
+              }}
+              onKeyDown={handleKeyDown}
+              onBlur={() => {
+
+                document.body.classList.remove('keyboard-open');
+                // 👈 show menu again (optional)
+              }}
+
               id="declarationName"
               name="declarationName"
               style={{ width: "100%" }}
@@ -399,59 +399,7 @@ onKeyDown={handleKeyDown}
         <div className="form-group">
           <label htmlFor="confirmationSignature">
             {t("Signature")}
-            {/* <span className="required-field">*</span> */}
           </label>
-
-          {/* Signature Canvas */}
-          {/* <div className="signature-container">
-          <div
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              backgroundColor: "#f8f8f8",
-              marginBottom: "10px",
-            }}
-          >
-            <SignatureCanvas
-              ref={sigCanvasRef}
-              penColor="blue"
-              canvasProps={{
-                width: 400,
-                height: 150,
-                className: "signature-canvas",
-              }}
-            />
-          </div>
-
-          <div className="signature-buttons">
-            <button
-              type="button"
-              onClick={handleSaveSignature}
-              disabled={
-                (mode === "edit" &&
-                  customerData?.customerStatus === "pending") ||
-                isE("declarationName")
-              }
-              className="custom-file-button"
-            >
-              {t("Save Signature")}
-            </button>
-            <button
-              type="button"
-              onClick={handleClearSignature}
-              disabled={
-                (mode === "edit" &&
-                  customerData?.customerStatus === "pending") ||
-                isE("declarationName")
-              }
-              style={{ marginLeft: "10px" }}
-              className="custom-file-button"
-            >
-              {t("Clear")}
-            </button>
-          </div>
-        </div> */}
-
           <div className="signature-container">
             <div className="signature-wrapper">
               <p className="signature-hint">{t("Click and drag to sign")}</p>
@@ -604,23 +552,74 @@ onKeyDown={handleKeyDown}
             <div className="error">{t(formErrors.declarationSignature)}</div>
           )}
 
-          
+
         </div>
-{!isV("assignedToEntityWise") && (<div className="form-header full-width">
-  <label className="checkbox-group-label">
-                <input
-                  type="checkbox"
-                  id="consentCheckbox"
-                  name="consentCheckbox"
-                  checked={consentCheckbox || customerData?.customerStatus?.toLowerCase() === "pending" || customerData?.customerStatus?.toLowerCase() === "approved"}
-                  onChange={onChangeConsentCheckbox}
-                  disabled={customerData?.customerStatus?.toLowerCase() === "approved"}
-                />
-                </label>
-        {t(" I confirm my acceptance of the ")}
-        {(
-          <a
-            href="#"
+        {!isV("assignedToEntityWise") && (<div className="form-header full-width">
+          <label className="checkbox-group-label">
+            <input
+              type="checkbox"
+              id="consentCheckbox"
+              name="consentCheckbox"
+              checked={consentCheckbox || customerData?.customerStatus?.toLowerCase() === "pending" || customerData?.customerStatus?.toLowerCase() === "approved"}
+              onChange={onChangeConsentCheckbox}
+              disabled={customerData?.customerStatus?.toLowerCase() === "approved"}
+            />
+          </label>
+          {t(" I confirm my acceptance of the ")}
+          {(
+            <a
+              href="#"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!TERMS_AND_CONDITIONS) {
+                  alert(t("No checklist URL configured."));
+                  return;
+                }
+
+                try {
+                  const response = await fetch(
+                    `${API_BASE_URL}/get-files`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                      },
+                      body: JSON.stringify({
+                        fileName: TERMS_AND_CONDITIONS,
+                        containerType: "documents",
+                      }),
+
+                    }
+                  );
+                  const res = await response.json();
+                  if (res.status === "Ok") {
+                    // window.open(res.data.url, "_blank", "noopener,noreferrer");
+                    openUrlSmart(res.data.url);
+                  } else {
+                    throw new Error("Failed to fetch file URL");
+                  }
+                } catch (error) {
+                  console.error("Error viewing checklist:", error);
+
+                  // window.open(
+                  //   TERMS_AND_CONDITIONS,
+                  //   "_blank",
+                  //   "noopener,noreferrer"
+                  // );
+                  openUrlSmart(TERMS_AND_CONDITIONS);
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              {t("Terms & Conditions")}
+            </a>
+
+          )}
+          {t(" and consent to the use and processing of my provided business and contact information.")}
+          <button
+            type="button"
+            className="download-icon-button"
             onClick={async (e) => {
               e.preventDefault();
               if (!TERMS_AND_CONDITIONS) {
@@ -641,7 +640,6 @@ onKeyDown={handleKeyDown}
                       fileName: TERMS_AND_CONDITIONS,
                       containerType: "documents",
                     }),
-                    
                   }
                 );
                 const res = await response.json();
@@ -652,8 +650,7 @@ onKeyDown={handleKeyDown}
                   throw new Error("Failed to fetch file URL");
                 }
               } catch (error) {
-                console.error("Error viewing checklist:", error);
-
+                console.error("Error downloading terms:", error);
                 // window.open(
                 //   TERMS_AND_CONDITIONS,
                 //   "_blank",
@@ -662,64 +659,15 @@ onKeyDown={handleKeyDown}
                 openUrlSmart(TERMS_AND_CONDITIONS);
               }
             }}
-            style={{ cursor: "pointer" }}
+            title={t("Download Terms & Conditions")}
           >
-            {t("Terms & Conditions")}
-          </a>
-        
-      )}
-      {t(" and consent to the use and processing of my provided business and contact information.")}
-      <button
-        type="button"
-        className="download-icon-button"
-        onClick={async (e) => {
-          e.preventDefault();
-          if (!TERMS_AND_CONDITIONS) {
-            alert(t("No checklist URL configured."));
-            return;
-          }
-
-          try {
-            const response = await fetch(
-              `${API_BASE_URL}/get-files`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                  fileName: TERMS_AND_CONDITIONS,
-                  containerType: "documents",
-                }),
-              }
-            );
-            const res = await response.json();
-            if (res.status === "Ok") {
-              // window.open(res.data.url, "_blank", "noopener,noreferrer");
-              openUrlSmart(res.data.url);
-            } else {
-              throw new Error("Failed to fetch file URL");
-            }
-          } catch (error) {
-            console.error("Error downloading terms:", error);
-            // window.open(
-            //   TERMS_AND_CONDITIONS,
-            //   "_blank",
-            //   "noopener,noreferrer"
-            // );
-            openUrlSmart(TERMS_AND_CONDITIONS);
-          }
-        }}
-        title={t("Download Terms & Conditions")}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      </div>)}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>)}
         {isV("assignedToEntityWise") && (
           <>
             <div className="form-header full-width">
@@ -735,21 +683,21 @@ onKeyDown={handleKeyDown}
               <div className="input-with-verification">
                 <input
                   type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add('keyboard-open');
+                    }
+
+
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+
+                    document.body.classList.remove('keyboard-open');
+                    // 👈 show menu again (optional)
+                  }}
+
                   id="verifiedBy"
                   name="verifiedBy"
                   value={customerData.verifiedBy || user?.userName}

@@ -57,6 +57,8 @@ import DataManagement from "./screens/dataManagement";
 import { App } from "@capacitor/app";
 import Swal from "sweetalert2";
 import HomePage from "./screens/homePage";
+import logo from "./assets/talab_point_logo.png"
+import LoadingSpinner from "./components/LoadingSpinner";
 function AppRoutes() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("");
@@ -131,9 +133,58 @@ function AppRoutes() {
     };
   }, [location.pathname, navigate]);
 
-  if (loading) {
-    return <div>Loading...</div>; // or a loading spinner
-  }
+if (loading) {
+  return (
+    <div className="loader-container">
+  <div className="loader-logo-wrapper">
+    <img src={logo} alt="Talab Point Logo" className="loader-logo" />
+  </div>
+  <style>
+    {`
+      .loader-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: white; 
+        z-index: 9999;
+      }
+
+      .loader-logo-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        border-radius: 50%;
+        /* Gradient Transition Effect */
+        // background: linear-gradient(45deg, #ffffff, #f0f0f0);
+        // box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        animation: rotate360 3s linear infinite;
+      }
+
+      .loader-logo {
+        width: 100px;  /* Increased from 50px for better visibility */
+        height: 100px;
+        object-fit: contain;
+      }
+
+      @keyframes rotate360 {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    `}
+  </style>
+</div>
+  );
+}
 
   // const tokenIsValid = (token || tokenname) && isTokenValid(token ||tokenname);
   return (

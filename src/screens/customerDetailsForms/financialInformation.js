@@ -146,14 +146,14 @@ function FinancialInformation({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   const handleKeyDown = (e) => {
-      if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
-        if (isMobile) {
-          // Close keyboard
-          e.target.blur();
-          document.body.classList.remove('keyboard-open');
-        }
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done') {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
       }
-    };
+    }
+  };
   // Dropdown state for pricingPolicy
   const dropdownFields = ["bankName", "entity"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
@@ -714,7 +714,15 @@ function FinancialInformation({
         </div>
       )} */}
       {user?.userType.toLowerCase() === "employee" && (
-        <div className="form-main-header">
+        <div className="form-main-header" style={{ ...(isMobile && {
+    margin: "0px 12px",
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "center",
+    backgroundColor: "#76716926",
+    borderRadius: "11px",
+    padding: "4px 0px"
+  })}}>
           {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
         </div>
       )}
@@ -870,30 +878,30 @@ onKeyDown={handleKeyDown}
           <div className="input-with-verification">
             <input
               type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+              onFocus={() => {
+                if (window.innerWidth <= 768) {
+                  // This could trigger hiding the bottom menu
+                  document.body.classList.add('keyboard-open');
+                }
+
+
+              }}
+              onKeyDown={handleKeyDown}
+              onBlur={() => {
+
+                document.body.classList.remove('keyboard-open');
+                // 👈 show menu again (optional)
+              }}
+
               id="bankNameOther"
               name="bankNameOther"
               className={`text-field small ${originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.bankNameOther !=
-                  customerData?.bankNameOther &&
-                  mode === "edit"
-                  ? "update-field"
-                  : ""
+                customerData &&
+                originalCustomerData?.bankNameOther !=
+                customerData?.bankNameOther &&
+                mode === "edit"
+                ? "update-field"
+                : ""
                 }`}
               placeholder={t("Enter other bank name")}
               value={customerData?.bankNameOther || ""}
@@ -953,30 +961,30 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="bankAccountNumber"
             name="bankAccountNumber"
             className={`text-field small ${originalCustomerData &&
-                customerData &&
-                originalCustomerData?.bankAccountNumber !=
-                customerData?.bankAccountNumber &&
-                mode === "edit"
-                ? "update-field"
-                : ""
+              customerData &&
+              originalCustomerData?.bankAccountNumber !=
+              customerData?.bankAccountNumber &&
+              mode === "edit"
+              ? "update-field"
+              : ""
               }`}
             placeholder={t("Enter account number")}
             value={customerData?.bankAccountNumber || ""}
@@ -1033,29 +1041,29 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="iban"
             name="iban"
             className={`text-field small ${originalCustomerData &&
-                customerData &&
-                originalCustomerData?.iban != customerData?.iban &&
-                mode === "edit"
-                ? "update-field"
-                : ""
+              customerData &&
+              originalCustomerData?.iban != customerData?.iban &&
+              mode === "edit"
+              ? "update-field"
+              : ""
               }`}
             placeholder={t("Enter IBAN")}
             value={customerData?.iban || ""}
@@ -1116,12 +1124,12 @@ onKeyDown={handleKeyDown}
               id="pricingPolicy"
               name={[Constants.ENTITY.DAR]}
               className={`dropdown ${originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
-                  mode === "edit"
-                  ? "update-field"
-                  : ""
+                customerData &&
+                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] !==
+                customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
+                mode === "edit"
+                ? "update-field"
+                : ""
                 }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.DAR] || ""}
               onChange={setEntityWisePricePlan}
@@ -1173,12 +1181,12 @@ onKeyDown={handleKeyDown}
               id="pricingPolicy"
               name={[Constants.ENTITY.VMCO]}
               className={`dropdown ${originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
-                  mode === "edit"
-                  ? "update-field"
-                  : ""
+                customerData &&
+                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] !==
+                customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
+                mode === "edit"
+                ? "update-field"
+                : ""
                 }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] || ""}
               onChange={setEntityWisePricePlan}
@@ -1230,12 +1238,12 @@ onKeyDown={handleKeyDown}
               id="pricingPolicy"
               name={[Constants.ENTITY.SHC]}
               className={`dropdown ${originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
-                  mode === "edit"
-                  ? "update-field"
-                  : ""
+                customerData &&
+                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] !==
+                customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
+                mode === "edit"
+                ? "update-field"
+                : ""
                 }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.SHC] || ""}
               onChange={setEntityWisePricePlan}
@@ -1288,12 +1296,12 @@ onKeyDown={handleKeyDown}
               id="pricingPolicy"
               name={[Constants.ENTITY.NAQI]}
               className={`dropdown ${originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
-                  mode === "edit"
-                  ? "update-field"
-                  : ""
+                customerData &&
+                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] !==
+                customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
+                mode === "edit"
+                ? "update-field"
+                : ""
                 }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] || ""}
               onChange={setEntityWisePricePlan}
@@ -1346,12 +1354,12 @@ onKeyDown={handleKeyDown}
               id="pricingPolicy"
               name={[Constants.ENTITY.GMTC]}
               className={`dropdown ${originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
-                  customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
-                  mode === "edit"
-                  ? "update-field"
-                  : ""
+                customerData &&
+                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] !==
+                customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
+                mode === "edit"
+                ? "update-field"
+                : ""
                 }`}
               value={customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] || ""}
               onChange={setEntityWisePricePlan}
@@ -1495,12 +1503,12 @@ onKeyDown={handleKeyDown}
                   id="CODLimit"
                   name="CODLimit"
                   className={`text-field small ${customerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.COD
-                        ?.limit != paymentMethods?.COD?.limit &&
-                      mode === "edit"
-                      ? "update-field"
-                      : ""
+                    originalCustomerPaymentMethodsData &&
+                    originalCustomerPaymentMethodsData?.methodDetails?.COD
+                      ?.limit != paymentMethods?.COD?.limit &&
+                    mode === "edit"
+                    ? "update-field"
+                    : ""
                     }`}
                   placeholder={t("Enter COD limit")}
                   value={
@@ -1556,32 +1564,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="DARCreditLimit"
                     name="DARCreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.DAR
-                        ]?.limit !=
-                        paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.DAR
+                      ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit limit")}
                     value={
@@ -1627,32 +1635,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="DARCreditPeriod"
                     name="DARCreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.DAR
-                        ]?.period !=
-                        paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.DAR
+                      ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit period")}
                     value={
@@ -1725,32 +1733,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="VMCOCreditLimit"
                     name="VMCOCreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.VMCO
-                        ]?.limit !=
-                        paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.VMCO
+                      ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit limit")}
                     value={
@@ -1796,32 +1804,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="VMCOCreditPeriod"
                     name="VMCOCreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.VMCO
-                        ]?.period !=
-                        paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.VMCO
+                      ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit period")}
                     value={
@@ -1894,32 +1902,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="SHCCreditLimit"
                     name="SHCCreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.SHC
-                        ]?.limit !=
-                        paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.SHC
+                      ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit limit")}
                     value={
@@ -1965,32 +1973,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="SHCCreditPeriod"
                     name="SHCCreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.SHC
-                        ]?.period !=
-                        paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.SHC
+                      ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit period")}
                     value={
@@ -2063,32 +2071,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="NAQICreditLimit"
                     name="NAQICreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.NAQI
-                        ]?.limit !=
-                        paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.NAQI
+                      ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit limit")}
                     value={
@@ -2134,32 +2142,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="NAQICreditPeriod"
                     name="NAQICreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.NAQI
-                        ]?.period !=
-                        paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.NAQI
+                      ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit period")}
                     value={
@@ -2232,32 +2240,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditLimit">{t("Credit Limit")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="GMTCCreditLimit"
                     name="GMTCCreditLimit"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.NAQI
-                        ]?.limit !=
-                        paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.NAQI
+                      ]?.limit !=
+                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit limit")}
                     value={
@@ -2303,32 +2311,32 @@ onKeyDown={handleKeyDown}
                   <label htmlFor="creditPeriod">{t("Credit Period")}</label>
                   <input
                     type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+                    onFocus={() => {
+                      if (window.innerWidth <= 768) {
+                        // This could trigger hiding the bottom menu
+                        document.body.classList.add('keyboard-open');
+                      }
+
+
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+
+                      document.body.classList.remove('keyboard-open');
+                      // 👈 show menu again (optional)
+                    }}
+
                     id="GMTCCreditPeriod"
                     name="GMTCCreditPeriod"
                     className={`text-field small ${customerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData &&
-                        originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                          Constants.ENTITY.GMTC
-                        ]?.period !=
-                        paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
-                        mode === "edit"
-                        ? "update-field"
-                        : ""
+                      originalCustomerPaymentMethodsData &&
+                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
+                        Constants.ENTITY.GMTC
+                      ]?.period !=
+                      paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
+                      mode === "edit"
+                      ? "update-field"
+                      : ""
                       }`}
                     placeholder={t("Enter credit period")}
                     value={
@@ -2399,275 +2407,6 @@ onKeyDown={handleKeyDown}
           )}
         </>
       )}
-      {/* {isCreditBalanceData && (
-        <div className="gi-backdrop">
-          <dialog className="credit-balance-dialog" open>
-            <div className="dialog-header">
-              <h2>{t("Credit Balance")}</h2>
-              <button
-                className="close-dialog"
-                onClick={() => setIsCreditBalanceData(false)}
-              >
-                &times;
-              </button>
-            </div>
-            <div className="dialog-content">
-              <div className="balance-table-container">
-                <table className="balance-table">
-                  <thead>
-                    <tr>
-                      <th>{t("Entity")}</th>
-                      <th className="due-to-pay">{t("Due to Pay")}</th>
-                      <th className="balance-amount">{t("Remaining Credit")}</th>
-                      <th className="credit-limit">{t("Credit Limit")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {basicMasterLists?.entity?.map((item) => {
-                      // Calculate due to pay (credit limit - remaining credit)
-                      const creditLimit = creditLimitData?.[item.value]?.limit || 0;
-                      const remainingCredit = creditBalanceData?.[item.value] || 0;
-                      const dueToPay = parseFloat(creditLimit) - parseFloat(remainingCredit);
-
-                      return (
-                        <tr key={item.value}>
-                          <td>
-                            {i18n.language === "en"
-                              ? item.description
-                              : item.descriptionLc}
-                          </td>
-                          <td className={`due-to-pay ${dueToPay === 0
-                            ? "zero"
-                            : dueToPay > 0
-                              ? "positive"
-                              : "negative"
-                            }`}>
-                            {dueToPay !== 0
-                              ? dueToPay.toLocaleString("en-US", {
-                                style: "currency",
-                                currency: "SAR",
-                                minimumFractionDigits: 2,
-                              })
-                              : "SAR 0.00"}
-                          </td>
-                          <td className={`balance-amount ${creditBalanceData?.[item.value] === 0
-                            ? "zero"
-                            : creditBalanceData?.[item.value] > 0
-                              ? "positive"
-                              : "negative"
-                            }`}>
-                            {creditBalanceData?.[item.value]?.toLocaleString("en-US", {
-                              style: "currency",
-                              currency: "SAR",
-                              minimumFractionDigits: 2,
-                            }) || "SAR 0.00"}
-                          </td>
-                          <td className={`balance-amount ${!creditLimitData?.[item.value]?.limit ||
-                            creditLimitData[item.value].limit === 0
-                            ? "zero"
-                            : parseFloat(creditLimitData[item.value].limit) > 0
-                              ? "positive"
-                              : "negative"
-                            }`}>
-                            {creditLimitData?.[item.value]?.limit
-                              ? parseFloat(creditLimitData[item.value].limit).toLocaleString("en-US", {
-                                style: "currency",
-                                currency: "SAR",
-                                minimumFractionDigits: 2,
-                              })
-                              : "SAR 0.00"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              {(!creditBalanceData || Object.keys(creditBalanceData)?.length === 0) && (
-                <p className="no-data">{t("No credit balance data available")}</p>
-              )}
-            </div>
-            <div className="gi-footer">
-              <button
-                className="gi-close-btn"
-                onClick={() => setIsCreditBalanceData(false)}
-              >
-                {t("Close")}
-              </button>
-            </div>
-          </dialog>
-          <style>
-            {`
-        .gi-backdrop {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0,0,0,0.15);
-          z-index: 1000;
-        }
-        .credit-balance-dialog {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 100vw;
-          max-width: 900px;
-          border: 1px solid #ccc;
-          background: #fff;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-          border-radius: 12px;
-          padding: 0;
-          background: #fff;
-          z-index: 1001;
-          overflow: hidden;
-          animation: gi-fadein 0.2s;
-        }
-        [dir="rtl"] .credit-balance-dialog {
-          transform: translate(-25%, -50%);
-        }
-        @keyframes gi-fadein {
-          from {
-            opacity: 0;
-            transform: translate(-50%, -60%);
-          }
-          to {
-            opacity: 1;
-            transform: translate(-50%, -50%);
-          }
-        }
-        .dialog-header {
-          color: #666;
-          padding: 15px 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .dialog-header h2 {
-          font-size: 1.3rem;
-          font-weight: 600;
-          margin: 0;
-        }
-        .close-dialog {
-          background: none;
-          border: none;
-          color: #666;
-          font-size: 1.5rem;
-          cursor: pointer;
-          width: 30px;
-          height: 30px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          transition: background-color 0.2s;
-        }
-        .close-dialog:hover {
-          background-color: rgba(255, 255, 255, 0.2);
-        }
-        .dialog-content {
-          padding: 20px;
-          max-height: 70vh;
-          overflow-y: auto;
-        }
-        .customer-info {
-          margin-bottom: 20px;
-          padding-bottom: 15px;
-          border-bottom: 1px solid #e9ecef;
-        }
-        .customer-info p {
-          margin: 5px 0;
-          color: #6c757d;
-        }
-        .balance-table-container {
-          margin: 10px 28px;
-          padding: 6px;
-          border: 1.9px solid #eee;
-          border-radius: 10px;
-        }
-        .balance-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        .balance-table th, .balance-table td {
-          padding: 15px 8px;
-          text-align: left;
-        }
-        [dir="rtl"] .balance-table th, [dir="rtl"] .balance-table td {
-          text-align: right;
-        }
-        .balance-table th {
-          background: #fff;
-          font-weight: 500;
-          border-bottom: 1px solid #eee;
-        }
-        .balance-table tr:not(:last-child) {
-          border-bottom: 1px solid #eee;
-        }
-        .balance-amount, .due-to-pay, .credit-limit {
-          text-align: right;
-          font-weight: 500;
-        }
-        .balance-amount.zero, .credit-limit.zero {
-          color: #6c757d;
-        }
-        .balance-amount.positive, .credit-limit.positive {
-          color: #6c757d;
-        }
-        .balance-amount.negative, .credit-limit.negative {
-          color: #6c757d;
-        }
-        .due-to-pay.zero {
-          color: #6c757d;
-        }
-        .due-to-pay.positive {
-          color: #dc3545;
-        }
-        .due-to-pay.negative {
-          color: #dc3545;
-        }
-        .no-data {
-          text-align: center;
-          padding: 20px;
-          color: #6c757d;
-          font-style: italic;
-        }
-        .gi-footer {
-          display: flex;
-          justify-content: flex-end;
-          padding: 16px 28px 22px 28px;
-        }
-        .gi-close-btn {
-          padding: 7px 28px;
-          border-radius: 6px;
-          border: 1px solid #bbb;
-          background: #fff;
-          color: #222;
-          font-size: 1rem;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-        .gi-close-btn:hover {
-          background: #f2f2f2;
-        }
-        @media (max-width: 600px) {
-          .credit-balance-dialog {
-            width: 95vw;
-            max-width: none;
-          }
-          .dialog-content {
-            padding: 15px;
-          }
-          .balance-table th, .balance-table td {
-            padding: 8px 10px;
-          }
-        }
-      `}
-          </style>
-        </div>
-      )} */}
-
       {isCreditBalanceData && (
         <div className="gi-backdrop">
           <dialog className="credit-balance-dialog" open>
@@ -2828,10 +2567,10 @@ onKeyDown={handleKeyDown}
                             <td>{row.entity}</td>
                             <td
                               className={`due-to-pay ${row.dueToPay === 0
-                                  ? "zero"
-                                  : row.dueToPay > 0
-                                    ? "positive"
-                                    : "negative"
+                                ? "zero"
+                                : row.dueToPay > 0
+                                  ? "positive"
+                                  : "negative"
                                 }`}
                             >
                               {row.dueToPay.toLocaleString("en-US", {
@@ -2870,14 +2609,14 @@ onKeyDown={handleKeyDown}
                 )}
             </div>
 
-            <div className="gi-footer">
+            {/* <div className="gi-footer">
               <button
                 className="gi-close-btn"
                 onClick={() => setIsCreditBalanceData(false)}
               >
                 {t("Close")}
               </button>
-            </div>
+            </div> */}
           </dialog>
           <style>
             {`
@@ -2952,6 +2691,10 @@ onKeyDown={handleKeyDown}
           padding: 20px;
           max-height: 70vh;
           overflow-y: auto;
+          scrollbar-width: none; /* Firefox */
+        }
+        .dialog-content::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
         }
         .customer-info {
           margin-bottom: 20px;
@@ -3053,133 +2796,135 @@ onKeyDown={handleKeyDown}
           </style>
         </div>
       )}
-   {open && <div className="modal-overlay">
-      <div className="modal-container">
-        <h2 className="modal-title">{t("Account Statement")}</h2>
+      {open && <div className="modal-overlay">
+        <div className="modal-container">
+          <h2 className="modal-title">{t("Account Statement")}</h2>
 
-        <div className="modal-body">
-          <div className="form-group">
-            <label className="section-label">{t("Select Entity")}</label>
-            <div className="entity-grid">
-              {ORDERED_KEYS?.map((key) => (
-                <div key={key} className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id={key}
-                    checked={selectedEntities.includes(key)}
-                    onChange={() => handleEntityChange(key)}
-                  />
-                  <label htmlFor={key}>{t(getDisplayName(key))}</label>
-                </div>
-              ))}
+          <div className="modal-body">
+            <div className="form-group">
+              <label className="section-label">{t("Select Entity")}</label>
+              <div className="entity-grid">
+                {ORDERED_KEYS?.map((key) => (
+                  <div key={key} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      id={key}
+                      checked={selectedEntities.includes(key)}
+                      onChange={() => handleEntityChange(key)}
+                    />
+                    <label htmlFor={key}>{t(getDisplayName(key))}</label>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Section: Date Selection */}
-          <div className="input-row">
-            <div className="input-field">
-              <label>{t("From Date")}</label>
-              <input
-                type="date"
-                value={fromDate}
-                max={dayjs().format("YYYY-MM-DD")}
-                  style={{backgroundColor:"white"}}
-                onChange={(e) => setFromDate(e.target.value)}
-              />
+            {/* Section: Date Selection */}
+            <div className="input-row">
+              <div className="input-field">
+                <label>{t("From Date")}</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  max={dayjs().format("YYYY-MM-DD")}
+                  style={{ backgroundColor: "white" , width: "100%"}}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
+              </div>
+              <div className="input-field">
+                <label>{t("To Date")}</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  style={{ backgroundColor: "white" , width: "100%"}}
+                  max={dayjs().format("YYYY-MM-DD")}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="input-field">
-              <label>{t("To Date")}</label>
-              <input
-                type="date"
-                value={toDate}
-                style={{backgroundColor:"white"}}
-                max={dayjs().format("YYYY-MM-DD")}
-                onChange={(e) => setToDate(e.target.value)}
-              />
-            </div>
-          </div>
 
-          {/* Section: Contact Info */}
-          <div className="input-row">
-            <div className="input-field">
-              <label>{t("Email")}</label>
-              <input
-                type="email"
-                disabled
-                className="disabled-input"
-                value={
-                  user?.userType?.toLowerCase() === "employee" || user?.userType?.toLowerCase() === "admin"
-                    ? user.email
-                    : originalCustomerContactsData?.primaryContactEmail || ""
-                }
-              />
-            </div>
-            <div className="input-field">
-              <label>{t("CC")}</label>
-              <input
-                type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
-                placeholder={t("comma separated emails.")}
-                value={ccEmail || ""}
-                className={ccError ? "error-border" : ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setCcEmail(value);
-                  if (value && !validateEmails(value)) {
-                    setCcError("Invalid email format. Use commas.");
-                  } else {
-                    setCcError("");
+            {/* Section: Contact Info */}
+            <div className="input-row">
+              <div className="input-field">
+                <label>{t("Email")}</label>
+                <input
+                         style={{ width: "100%"}}
+                  type="email"
+                  disabled
+                  className="disabled-input"
+                  value={
+                    user?.userType?.toLowerCase() === "employee" || user?.userType?.toLowerCase() === "admin"
+                      ? user.email
+                      : originalCustomerContactsData?.primaryContactEmail || ""
                   }
-                }}
-              />
-              {ccError && <span className="error-text">{ccError}</span>}
+                />
+              </div>
+              <div className="input-field">
+                <label>{t("CC")}</label>
+                <input
+                  type="text"
+                           style={{ width: "100%"}}
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      // This could trigger hiding the bottom menu
+                      document.body.classList.add('keyboard-open');
+                    }
+
+
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+
+                    document.body.classList.remove('keyboard-open');
+                    // 👈 show menu again (optional)
+                  }}
+
+                  placeholder={t("comma separated emails.")}
+                  value={ccEmail || ""}
+                  className={ccError ? "error-border" : ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setCcEmail(value);
+                    if (value && !validateEmails(value)) {
+                      setCcError("Invalid email format. Use commas.");
+                    } else {
+                      setCcError("");
+                    }
+                  }}
+                />
+                {ccError && <span className="error-text">{ccError}</span>}
+              </div>
             </div>
+
+            <p className="note-text">
+              <strong>{t("Note: ")}</strong>
+              {t("If you have already submitted, please wait 15 minutes to receive the email.")}
+            </p>
+
           </div>
-
-          <p className="note-text">
-            <strong>{t("Note: ")}</strong>
-            {t("If you have already submitted, please wait 15 minutes to receive the email.")}
-          </p>
-          
+          {/* Footer Buttons */}
+          <div className="modal-footer">
+            <button
+              className="btn-submit"
+              onClick={handleSubmit}
+              disabled={isSubmited}
+            >
+              {isSubmited ? t("Submitting...") : t("Submit")}
+            </button>
+            <button
+              className="btn-close"
+              onClick={() => {
+                setOpen(false);
+                setCcEmail("");
+                setCcError("");
+              }}
+            >
+              {t("Close")}
+            </button>
+          </div>
         </div>
-        {/* Footer Buttons */}
-        <div className="modal-footer">
-          <button 
-            className="btn-submit" 
-            onClick={handleSubmit} 
-            disabled={isSubmited}
-          >
-            {isSubmited ? t("Submitting...") : t("Submit")}
-          </button>
-          <button 
-            className="btn-close" 
-            onClick={() => {
-              setOpen(false);
-              setCcEmail("");
-              setCcError("");
-            }}
-          >
-            {t("Close")}
-          </button>
-        </div>
-      </div>
-    </div>}
+      </div>}
 
-    <style>{`/* Backdrop Overlay */
+      <style>{`/* Backdrop Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -3215,16 +2960,17 @@ onKeyDown={handleKeyDown}
 .modal-body {
   padding: 24px;
   overflow-y: auto;
+  scrollbar: none;
   flex: 1;
 }
 
 /* Grids and Inputs */
-.form-group { margin-bottom: 20px; }
+.form-group { margin-bottom: 10px; }
 .section-label { font-weight: 600; display: block; margin-bottom: 10px; }
 
 .entity-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(167px, 1fr));
   gap: 10px;
 }
 
@@ -3257,15 +3003,24 @@ onKeyDown={handleKeyDown}
   margin-bottom: 5px;
 }
 
-.input-field input {
-  width: 100%;
+.input-field  {
+  // width: 100%;
+  padding: 10px;
+  // border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: white;
+}
+  input{
+ 
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
   background-color: white;
-}
+  }
 
 .disabled-input { background: #f5f5f5; cursor: not-allowed; }
 .error-border { border-color: #C01823 !important; }

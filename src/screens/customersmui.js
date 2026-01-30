@@ -40,6 +40,7 @@ import CustomerCard from "../components/CustomerCard";
 import InviteCard from "../components/InviteCard";
 import { faHeartPulse } from "@fortawesome/free-solid-svg-icons";
 import AddInvites from "../components/AddInvites";
+import SkeletonWrapper from "../components/SkeletonWrapper";
 const getStatusClass = (status) => {
   switch (status?.toLowerCase()) {
     case "approved":
@@ -771,6 +772,7 @@ function Customers() {
     "region",
     "companyName",
     "companyPhone",
+    "status"
   ];
   const customerColumns = [
     {
@@ -1185,6 +1187,18 @@ function Customers() {
       align: isArabic ? 'right' : 'left'
     },
     {
+      field: "status",
+      headerName: t("Status"),
+      include: isV("status"),
+      searchable: true,
+      width: columnDimensions["status"]?.width || 120,
+      // flex: 1,
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
+      ),
+    },
+    {
       field: "employeeId",
       headerName: t("Employee ID"),
       include: isV("employeeId"),
@@ -1378,7 +1392,11 @@ function Customers() {
       const result = await response.json();
       console.log("API Response:", result);
       if (result.status === "Ok") {
-        setFilteredInvites(result.data.data);
+        const updatedInvites = result.data.data.map((invite) => ({
+    ...invite,
+    status: invite?.registered ? invite?.customerStatus?.toLowerCase() === "new" ? "Incomplete" : invite?.customerStatus?.toLowerCase() === "pending" ? "Pending Approval": invite?.customerStatus: "Invite Pending",   // default value
+  }));
+        setFilteredInvites(updatedInvites);
         // }));
         setTotal(result.data.totalRecords);
       } else {
@@ -1851,9 +1869,11 @@ function Customers() {
         return isMobile ?
           (
             <div className="orders-content">
-              {loading ? (
-                <LoadingSpinner />
-              ) : error ? (
+              {
+              // loading ? (
+              //   <LoadingSpinner />
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
@@ -1956,23 +1976,27 @@ function Customers() {
                       }
                     />
                   </div>
+                  <SkeletonWrapper loading={loading} type="order_card" count={4}>
                   <CustomerCard
                     customers={isApprovalMode ? paginatedApprovals : paginatedCustomers}
                     isApprovalMode={isApprovalMode}
                     handleViewDetails={handleShowAllDetailsClick}
                     handleSync={HandleFandOFailCustomer}
                   />
+                  </SkeletonWrapper>
                 </>
               )}
             </div>
           )
           : (
             <div className="table-container">
-              {loading ? (
-                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                  <LoadingSpinner size="medium" />
-                </div>
-              ) : error ? (
+              {
+              // loading ? (
+              //   <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+              //     <LoadingSpinner size="medium" />
+              //   </div>
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
@@ -1983,6 +2007,7 @@ function Customers() {
                     display: 'flex',
                     flexDirection: 'column'
                   }}>
+                    <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
                     <DataGrid
                       apiRef={gridApiRef}
                       rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
@@ -2106,6 +2131,7 @@ function Customers() {
                         })
                       }}
                     />
+                    </SkeletonWrapper>
                   </div>
                 </>
               )}
@@ -2116,9 +2142,11 @@ function Customers() {
         return isMobile ?
           (
             <div className="orders-content">
-              {loading ? (
-                <LoadingSpinner />
-              ) : error ? (
+              {
+              // loading ? (
+              //   <LoadingSpinner />
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
@@ -2231,10 +2259,12 @@ function Customers() {
                       }
                     />
                   </div>
+                  <SkeletonWrapper loading={loading} type="order_card" count={4}>
                   <InviteCard
                     invites={paginatedInvites}
                     handleResend={handleResend}
                   />
+                  </SkeletonWrapper>
                 </>
               )}
             </div>
@@ -2242,11 +2272,13 @@ function Customers() {
           :
           (
             <div className="table-container">
-              {loading ? (
-                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                  <LoadingSpinner size="medium" />
-                </div>
-              ) : error ? (
+              {
+              // loading ? (
+              //   <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+              //     <LoadingSpinner size="medium" />
+              //   </div>
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
@@ -2257,6 +2289,7 @@ function Customers() {
                     display: 'flex',
                     flexDirection: 'column'
                   }}>
+                    <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
                     <DataGrid
                       apiRef={gridApiRef}
                       rows={paginatedInvites}
@@ -2302,6 +2335,13 @@ function Customers() {
                             columnsToDisplay={columnsToDisplay}
                             handleApproval={handleApproval}
                             isApprovalMode={false}
+                            dropdownColumns = {{status: [
+    { value: "new", label: "Incomplete" },
+    { value: "pending",  label: "Pending Approval" },
+    { value: "approved", label: "Approved" },
+    { value: "notregistered", label: "Invite Pending" },
+  ],}}
+                            excludeFiltersFromChips = {["status"]}
                           />
                         ),
                       }}
@@ -2381,6 +2421,7 @@ function Customers() {
                         })
                       }}
                     />
+                  </SkeletonWrapper>
                   </div>
 
                 </>

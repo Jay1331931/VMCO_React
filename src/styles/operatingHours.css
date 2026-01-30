@@ -75,7 +75,7 @@
 }
 
 .day-card-mobile.friday-card {
-  border-color: #F6921E;
+  border-color: #00594C;
   background: linear-gradient(135deg, #ffffff, rgba(246, 146, 30, 0.03));
 }
 
@@ -394,12 +394,12 @@
 }
 
 .cancel-btn-mobile {
-  background: linear-gradient(135deg, #ff4757, #ff6b81);
+  background: linear-gradient(135deg, #E65100, #E65100);
   color: white;
 }
 
 .cancel-btn-mobile:hover {
-  background: linear-gradient(135deg, #ff6b81, #ff8fa3);
+  background: linear-gradient(135deg, #E65100, #E65100);
   transform: translateY(-2px);
 }
 

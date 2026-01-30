@@ -23,6 +23,7 @@ import TableMobile from "../components/TableMobile";
 import SupportCard from "../components/SupportCard";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import SkeletonWrapper from "../components/SkeletonWrapper";
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -546,9 +547,11 @@ function Support() {
             <div className="support-content">
                 {isMobile ? (
                     <div className="orders-content">
-                        {loading ? (
-                            <LoadingSpinner />
-                        ) : error ? (
+                        {
+                        // loading ? (
+                        //     <LoadingSpinner />
+                        // ) : 
+                        error ? (
                             <div className="error-message">{error}</div>
                         ) : (
 
@@ -642,10 +645,12 @@ function Support() {
 
                                 {/* Order cards section - This should be separate from the fixed header */}
                                 <div style={{  position: "relative", zIndex: 1 }}>
+                                    <SkeletonWrapper loading={loading} type="order_card" count={4}>
                                     <SupportCard
                                         tickets={initialTickets}
                                         setSelectedRow={handleShowAllDetailsClick}
                                     />
+                                    </SkeletonWrapper>
                                 </div>
                             </>
 
@@ -653,13 +658,16 @@ function Support() {
                     </div>
                 ) : (
                     <div className="table-container">
-                        {loading ? (
-                            <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                                <LoadingSpinner size="medium" />
-                            </div>
-                        ) : error ? (
+                        {
+                        // loading ? (
+                        //     <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                        //         <LoadingSpinner size="medium" />
+                        //     </div>
+                        // ) : 
+                        error ? (
                             <div className="error-message">{error}</div>
                         ) : (
+                            <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
                             <DataGrid
                                 apiRef={gridApiRef}
                                 rows={initialTickets}
@@ -752,6 +760,7 @@ function Support() {
                                     }),
                                 }}
                             />
+                            </SkeletonWrapper>
                         )}
                     </div>
                 )}

@@ -790,8 +790,8 @@ onKeyDown={handleKeyDown}
      
              <div
                ref={mapContainer}
-               className="map-container"
-               style={{ width: "100%", height: "300px" }}
+               className={isMobile ? "map-container-mobile" : "map-container"}
+               style={{ width: "100%", height: isMobile ? "200px" : "300px" }}
              />
      
              <div className="location-coords">
@@ -1266,7 +1266,7 @@ onKeyDown={handleKeyDown}
                                 onChange={
                                   field.onChange || handleBranchFieldChange
                                 }
-                                className={"branchDropDown"}
+                                // className={"branchDropDown"}
                                 style={{
                                   ...(hasUpdate
                                     ? {
@@ -1549,13 +1549,14 @@ onKeyDown={handleKeyDown}
                             name={field.name}
                             value={branch?.[field.name]}
                             onChange={field.onChange || handleBranchFieldChange}
-                            className="dropdown-mobile"
+                            // className="dropdown-mobile"
                             disabled={
                               (customerFormMode === "custDetailsAdd" && inApproval) ||
                               field.disabled
                             }
                             hidden={!isV(field.name)}
                             options={field.options}
+                               style={{width:"100%"}}
                           />
                          
                         </div>
@@ -2174,7 +2175,7 @@ onKeyDown={handleKeyDown}
 }
 
 .map-container-mobile {
-  height: 400px;
+  height: 200px;
   padding: 20px;
 }
 
@@ -2237,7 +2238,7 @@ onKeyDown={handleKeyDown}
   }
   
   .map-container-mobile {
-    height: 300px;
+    height: 200px;
     padding: 10px;
   }
 }

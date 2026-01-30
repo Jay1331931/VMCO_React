@@ -1406,6 +1406,7 @@ function MaintenanceDetails() {
                   placeholder={t("Select Issue Type")}
                   style={{
                     color: ticket.issueType ? "inherit" : "#999",
+                    width:"100%"
                   }}
                   className="issue-type-dropdown"
                 />
@@ -1786,7 +1787,7 @@ function MaintenanceDetails() {
         <div className='support-details-container-right'>
           {isV('assignedTo') && (
             <div className="support-assign">
-              <span>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
+              <span style={{fontWeight: isMobile ? 'bold' : ''}}>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
               <SearchableDropdown
                 id="assignedTeamMember"
                 name="assignedTeamMember"

@@ -51,7 +51,7 @@ function ContactDetails({
   onChangeCustomerContactsData,
   onChangeCustomerData,
   customerPaymentMethodsData = {},
-  originalCustomerPaymentMethodsData={},
+  originalCustomerPaymentMethodsData = {},
   verifiedData = {},
   onChangeVerifiedData,
   setGeoLocation,
@@ -117,8 +117,8 @@ function ContactDetails({
     };
     fetchGeoData();
   }, []);
-const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done') {
       if (isMobile) {
         // Close keyboard
         e.target.blur();
@@ -232,7 +232,7 @@ const handleKeyDown = (e) => {
           if (status === window.google.maps.places.PlacesServiceStatus.OK && placeDetails.geometry) {
             const lat = placeDetails.geometry.location.lat();
             const lng = placeDetails.geometry.location.lng();
-            
+
             if (isValidCoordinate(lat, lng) && map) {
               moveMarkerToLocation(lat, lng);
             }
@@ -249,9 +249,9 @@ const handleKeyDown = (e) => {
 
       // Remove existing marker
       if (markerRef?.current) {
-    markerRef.current.setMap(null);
-    markerRef.current = null;
-  }
+        markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
 
       // Create new draggable marker
       const newMarker = new window.google.maps.Marker({
@@ -285,7 +285,7 @@ const handleKeyDown = (e) => {
       setCoordsArabic(
         `خط العرض: ${Number(lat).toFixed(6)}, خط الطول: ${Number(lng).toFixed(6)}`
       );
-      
+
       // Update manual input fields
       setManualLat(Number(lat).toFixed(6));
       setManualLng(Number(lng).toFixed(6));
@@ -355,74 +355,74 @@ const handleKeyDown = (e) => {
       //     console.error("Map initialization error:", error);
       //   }
       // };
-const initializeMap = () => {
-  try {
-    if (!window.google) {
-      console.error("Google Maps API not loaded");
-      return;
-    }
+      const initializeMap = () => {
+        try {
+          if (!window.google) {
+            console.error("Google Maps API not loaded");
+            return;
+          }
 
-    let initialCenter = defaultCenter;
+          let initialCenter = defaultCenter;
 
-    // If a saved location exists, use it
-    if (initialLat && initialLng) {
-      initialCenter = { lat: initialLat, lng: initialLng };
-      setManualLat(Number(initialLat).toFixed(6));
-      setManualLng(Number(initialLng).toFixed(6));
-    }
+          // If a saved location exists, use it
+          if (initialLat && initialLng) {
+            initialCenter = { lat: initialLat, lng: initialLng };
+            setManualLat(Number(initialLat).toFixed(6));
+            setManualLng(Number(initialLng).toFixed(6));
+          }
 
-    // Create the map instance
-    const mapInstance = new window.google.maps.Map(mapContainer.current, {
-      center: initialCenter,
-      zoom: 12,
-      mapTypeControl: true,
-      streetViewControl: true,
-      fullscreenControl: true,
-    });
+          // Create the map instance
+          const mapInstance = new window.google.maps.Map(mapContainer.current, {
+            center: initialCenter,
+            zoom: 12,
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: true,
+          });
 
-    setMap(mapInstance);
+          setMap(mapInstance);
 
-    // ✅ If no location selected, try to detect user’s current location
-    if (!initialLat && !initialLng && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          moveMarkerToLocation(latitude, longitude, mapInstance);
+          // ✅ If no location selected, try to detect user’s current location
+          if (!initialLat && !initialLng && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const { latitude, longitude } = position.coords;
+                moveMarkerToLocation(latitude, longitude, mapInstance);
 
-          setCoords(
-            `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`
-          );
-          setCoordsArabic(
-            `خط العرض: ${latitude.toFixed(6)}, خط الطول: ${longitude.toFixed(6)}`
-          );
-        },
-        (error) => {
-          console.warn("Geolocation error:", error.message);
-          // Fallback if denied or unavailable
-          setCoords("Unable to detect current location.");
-          setCoordsArabic("تعذر تحديد الموقع الحالي.");
-          mapInstance.setCenter(defaultCenter);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    } else if (initialLat && initialLng) {
-      // Add initial marker if coordinates exist
-      moveMarkerToLocation(initialLat, initialLng, mapInstance);
-    } else {
-      setCoords("Click on the map to select a location");
-      setCoordsArabic("انقر على الخريطة لتحديد موقع");
-    }
+                setCoords(
+                  `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`
+                );
+                setCoordsArabic(
+                  `خط العرض: ${latitude.toFixed(6)}, خط الطول: ${longitude.toFixed(6)}`
+                );
+              },
+              (error) => {
+                console.warn("Geolocation error:", error.message);
+                // Fallback if denied or unavailable
+                setCoords("Unable to detect current location.");
+                setCoordsArabic("تعذر تحديد الموقع الحالي.");
+                mapInstance.setCenter(defaultCenter);
+              },
+              { enableHighAccuracy: true, timeout: 10000 }
+            );
+          } else if (initialLat && initialLng) {
+            // Add initial marker if coordinates exist
+            moveMarkerToLocation(initialLat, initialLng, mapInstance);
+          } else {
+            setCoords("Click on the map to select a location");
+            setCoordsArabic("انقر على الخريطة لتحديد موقع");
+          }
 
-    // Add click listener to map
-    mapInstance.addListener("click", (e) => {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      moveMarkerToLocation(lat, lng, mapInstance);
-    });
-  } catch (error) {
-    console.error("Map initialization error:", error);
-  }
-};
+          // Add click listener to map
+          mapInstance.addListener("click", (e) => {
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            moveMarkerToLocation(lat, lng, mapInstance);
+          });
+        } catch (error) {
+          console.error("Map initialization error:", error);
+        }
+      };
 
       // Load Google Maps script if not already loaded
       if (!window.google) {
@@ -444,9 +444,9 @@ const initializeMap = () => {
         //     console.error("Error cleaning up map:", error);
         //   }
         // }
-  if (markerRef.current) {
-    markerRef.current.setMap(null);
-  }
+        if (markerRef.current) {
+          markerRef.current.setMap(null);
+        }
       };
     }, []);
 
@@ -464,8 +464,8 @@ const initializeMap = () => {
     }, [searchQuery]);
 
     useEffect(() => {
-  handleManualCoordinates();
-}, [manualLat, manualLng]);
+      handleManualCoordinates();
+    }, [manualLat, manualLng]);
     const handleConfirm = () => {
       if (selectedLocation) {
         const { lat, lng } = selectedLocation;
@@ -497,9 +497,9 @@ const initializeMap = () => {
     const handleReset = () => {
       // Remove marker
       if (markerRef?.current) {
-    markerRef.current.setMap(null);
-    markerRef.current = null;
-  }
+        markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
 
       // Reset states
       setSelectedLocation(null);
@@ -518,21 +518,21 @@ const initializeMap = () => {
         <div className="location-search">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             placeholder={t("Search for a location...")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -598,10 +598,10 @@ onKeyDown={handleKeyDown}
               </div>
               <button
                 type="button"
-                 onClick={() => {
-    handleManualCoordinates();
-    setShowManualInput(false);
-  }}
+                onClick={() => {
+                  handleManualCoordinates();
+                  setShowManualInput(false);
+                }}
                 className="apply-coordinates-btn"
                 disabled={!manualLat || !manualLng}
               >
@@ -613,7 +613,7 @@ onKeyDown={handleKeyDown}
 
         <div
           ref={mapContainer}
-          className="map-container"
+          className={isMobile ? "map-container-mobile" : "map-container"}
           style={{ width: "100%", height: "300px" }}
         />
 
@@ -802,7 +802,7 @@ onKeyDown={handleKeyDown}
       console.error("Error updating email:", error?.response?.data?.message);
       setError(
         error?.response?.data?.message ||
-          "Something went wrong while updating email"
+        "Something went wrong while updating email"
       );
     }
   };
@@ -854,9 +854,17 @@ onKeyDown={handleKeyDown}
         </div>
       )} */}
       {user?.userType.toLowerCase() === "employee" && (
-        <div className="form-main-header">
+        <div className="form-main-header" style={{ ...(isMobile && {
+    margin: "0px 12px",
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "center",
+    backgroundColor: "#76716926",
+    borderRadius: "11px",
+    padding: "4px 0px"
+  })}}>
           {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
-          </div>
+        </div>
       )}
       {/* Primary Contact Details Header */}
       <h3 className="form-header full-width">{t("Primary Contact Details")}</h3>
@@ -867,38 +875,37 @@ onKeyDown={handleKeyDown}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.primaryContactName !=
-              customerContactsData?.primaryContactName &&
+            customerContactsData?.primaryContactName &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="primaryContactName"
             name="primaryContactName"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.primaryContactName !=
-                customerContactsData?.primaryContactName &&
+              customerContactsData?.primaryContactName &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter name")}
             value={customerContactsData?.primaryContactName || ""}
             onChange={onChangeCustomerContactsData}
@@ -906,7 +913,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.primaryContactName ===
-                customerContactsData?.primaryContactName &&
+              customerContactsData?.primaryContactName &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -927,7 +934,7 @@ onKeyDown={handleKeyDown}
                   name="primaryContactNameVerified"
                   checked={verifiedData?.primaryContactNameVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="primaryContactNameVerified">Verified</label>
               </div>
@@ -936,7 +943,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactName !=
-            customerContactsData?.primaryContactName &&
+          customerContactsData?.primaryContactName &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -955,38 +962,37 @@ onKeyDown={handleKeyDown}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.primaryContactDesignation !=
-              customerContactsData?.primaryContactDesignation &&
+            customerContactsData?.primaryContactDesignation &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="primaryContactDesignation"
             name="primaryContactDesignation"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.primaryContactDesignation !=
-                customerContactsData?.primaryContactDesignation &&
+              customerContactsData?.primaryContactDesignation &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter designation")}
             value={customerContactsData?.primaryContactDesignation || ""}
             onChange={onChangeCustomerContactsData}
@@ -994,7 +1000,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.primaryContactDesignation ===
-                customerContactsData?.primaryContactDesignation &&
+              customerContactsData?.primaryContactDesignation &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -1017,7 +1023,7 @@ onKeyDown={handleKeyDown}
                     verifiedData?.primaryContactDesignationVerified || false
                   }
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="primaryContactDesignationVerified">
                   Verified
@@ -1028,7 +1034,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactDesignation !=
-            customerContactsData?.primaryContactDesignation &&
+          customerContactsData?.primaryContactDesignation &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1048,7 +1054,7 @@ onKeyDown={handleKeyDown}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.primaryContactEmail !=
-              customerContactsData?.primaryContactEmail &&
+            customerContactsData?.primaryContactEmail &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -1056,32 +1062,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="primaryContactEmail"
             name="primaryContactEmail"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.primaryContactEmail !=
-                customerContactsData?.primaryContactEmail &&
+              customerContactsData?.primaryContactEmail &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter email")}
             value={customerContactsData?.primaryContactEmail || ""}
             onChange={onChangeCustomerContactsData}
@@ -1089,7 +1094,7 @@ onKeyDown={handleKeyDown}
               (originalCustomerContactsData &&
                 customerContactsData &&
                 originalCustomerContactsData?.primaryContactEmail ===
-                  customerContactsData?.primaryContactEmail &&
+                customerContactsData?.primaryContactEmail &&
                 mode === "edit" &&
                 customerData?.customerStatus !== "pending") ||
               true
@@ -1124,7 +1129,7 @@ onKeyDown={handleKeyDown}
                   name="primaryContactEmailVerified"
                   checked={verifiedData?.primaryContactEmailVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="primaryContactEmailVerified">Verified</label>
               </div>
@@ -1133,7 +1138,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactEmail !=
-            customerContactsData?.primaryContactEmail &&
+          customerContactsData?.primaryContactEmail &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1144,73 +1149,6 @@ onKeyDown={handleKeyDown}
           <div className="error">{t(formErrors.primaryContactEmail)}</div>
         )}
       </div>
-
-      {/* <div className="form-group">
-        <label htmlFor="primaryContactMobile">
-          {t("Mobile")}
-          <span className="required-field">*</span>
-          {originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactMobile !=
-              customerContactsData?.primaryContactMobile &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
-        </label>
-        <input
-          type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
-          id="primaryContactMobile"
-          name="primaryContactMobile"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactMobile !=
-              customerContactsData?.primaryContactMobile &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter Mobile number")}
-          value={customerContactsData?.primaryContactMobile || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactMobile ===
-              customerContactsData?.primaryContactMobile &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {originalCustomerContactsData &&
-          customerContactsData &&
-          originalCustomerContactsData?.primaryContactMobile !=
-            customerContactsData?.primaryContactMobile &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous:{" "}
-              {originalCustomerContactsData?.primaryContactMobile || "(empty)"}
-            </div>
-          )}
-        {formErrors.primaryContactMobile && (
-          <div className="error">{t(formErrors.primaryContactMobile)}</div>
-        )}
-      </div> */}
-
       <div className="form-group">
         <label htmlFor="primaryContactMobile">
           {t("Mobile")}
@@ -1218,7 +1156,7 @@ onKeyDown={handleKeyDown}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.primaryContactMobile !=
-              customerContactsData?.primaryContactMobile &&
+            customerContactsData?.primaryContactMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <div className="input-with-verification">
@@ -1231,13 +1169,13 @@ onKeyDown={handleKeyDown}
             className={`phone-input ${
               // Use a specific class for phone input
               originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.primaryContactMobile !=
+                customerContactsData &&
+                originalCustomerContactsData?.primaryContactMobile !=
                 customerContactsData?.primaryContactMobile &&
-              mode === "edit"
+                mode === "edit"
                 ? "update-field"
                 : ""
-            }`}
+              }`}
             placeholder={t("Enter Mobile number")}
             value={customerContactsData?.primaryContactMobile || ""}
             onChange={(value) => {
@@ -1253,7 +1191,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.primaryContactMobile ===
-                customerContactsData?.primaryContactMobile &&
+              customerContactsData?.primaryContactMobile &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -1274,7 +1212,7 @@ onKeyDown={handleKeyDown}
                   name="primaryContactMobileVerified"
                   checked={verifiedData?.primaryContactMobileVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="primaryContactMobileVerified">Verified</label>
               </div>
@@ -1283,7 +1221,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactMobile !=
-            customerContactsData?.primaryContactMobile &&
+          customerContactsData?.primaryContactMobile &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1305,13 +1243,13 @@ onKeyDown={handleKeyDown}
             name="businessHeadSameAsPrimary"
             checked={
               customerContactsData?.businessHeadName ===
-                customerContactsData?.primaryContactName &&
+              customerContactsData?.primaryContactName &&
               customerContactsData?.businessHeadDesignation ===
-                customerContactsData?.primaryContactDesignation &&
+              customerContactsData?.primaryContactDesignation &&
               customerContactsData?.businessHeadEmail ===
-                customerContactsData?.primaryContactEmail &&
+              customerContactsData?.primaryContactEmail &&
               customerContactsData?.businessHeadMobile ===
-                customerContactsData?.primaryContactMobile
+              customerContactsData?.primaryContactMobile
             }
             onChange={(e) => setBusinessHeadSameAsPrimary(e.target.checked)}
           />
@@ -1326,7 +1264,7 @@ onKeyDown={handleKeyDown}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.businessHeadName !=
-              customerContactsData?.businessHeadName &&
+            customerContactsData?.businessHeadName &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -1334,32 +1272,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="businessHeadName"
             name="businessHeadName"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.businessHeadName !=
-                customerContactsData?.businessHeadName &&
+              customerContactsData?.businessHeadName &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter name")}
             value={customerContactsData?.businessHeadName || ""}
             onChange={onChangeCustomerContactsData}
@@ -1367,7 +1304,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.businessHeadName ===
-                customerContactsData?.businessHeadName &&
+              customerContactsData?.businessHeadName &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -1388,7 +1325,7 @@ onKeyDown={handleKeyDown}
                   name="businessHeadNameVerified"
                   checked={verifiedData?.businessHeadNameVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="businessHeadNameVerified">Verified</label>
               </div>
@@ -1397,7 +1334,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.businessHeadName !=
-            customerContactsData?.businessHeadName &&
+          customerContactsData?.businessHeadName &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1416,7 +1353,7 @@ onKeyDown={handleKeyDown}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.businessHeadDesignation !=
-              customerContactsData?.businessHeadDesignation &&
+            customerContactsData?.businessHeadDesignation &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -1424,32 +1361,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="businessHeadDesignation"
             name="businessHeadDesignation"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.businessHeadDesignation !=
-                customerContactsData?.businessHeadDesignation &&
+              customerContactsData?.businessHeadDesignation &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter designation")}
             value={customerContactsData?.businessHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
@@ -1457,7 +1393,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.businessHeadDesignation ===
-                customerContactsData?.businessHeadDesignation &&
+              customerContactsData?.businessHeadDesignation &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -1480,7 +1416,7 @@ onKeyDown={handleKeyDown}
                     verifiedData?.businessHeadDesignationVerified || false
                   }
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="businessHeadDesignationVerified">
                   Verified
@@ -1491,7 +1427,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.businessHeadDesignation !=
-            customerContactsData?.businessHeadDesignation &&
+          customerContactsData?.businessHeadDesignation &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1511,7 +1447,7 @@ onKeyDown={handleKeyDown}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.businessHeadEmail !=
-              customerContactsData?.businessHeadEmail &&
+            customerContactsData?.businessHeadEmail &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -1519,32 +1455,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="businessHeadEmail"
             name="businessHeadEmail"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.businessHeadEmail !=
-                customerContactsData?.businessHeadEmail &&
+              customerContactsData?.businessHeadEmail &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter email")}
             value={customerContactsData?.businessHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
@@ -1552,7 +1487,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.businessHeadEmail ===
-                customerContactsData?.businessHeadEmail &&
+              customerContactsData?.businessHeadEmail &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -1573,7 +1508,7 @@ onKeyDown={handleKeyDown}
                   name="businessHeadEmailVerified"
                   checked={verifiedData?.businessHeadEmailVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="businessHeadEmailVerified">Verified</label>
               </div>
@@ -1582,7 +1517,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.businessHeadEmail !=
-            customerContactsData?.businessHeadEmail &&
+          customerContactsData?.businessHeadEmail &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1593,75 +1528,6 @@ onKeyDown={handleKeyDown}
           <div className="error">{t(formErrors.businessHeadEmail)}</div>
         )}
       </div>
-
-      {/* <div className="form-group">
-        <label htmlFor="businessHeadMobile">
-          {t("Mobile")}
-          <span className="required-field">*</span>
-          {originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadMobile !=
-              customerContactsData?.businessHeadMobile &&
-            mode === "edit" && (
-              <span className="update-badge">{t("Updated")}</span>
-            )}
-        </label>
-        <input
-          type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
-          id="businessHeadMobile"
-          name="businessHeadMobile"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadMobile !=
-              customerContactsData?.businessHeadMobile &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter Mobile number")}
-          value={customerContactsData?.businessHeadMobile || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadMobile ===
-              customerContactsData?.businessHeadMobile &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {originalCustomerContactsData &&
-          customerContactsData &&
-          originalCustomerContactsData?.businessHeadMobile !=
-            customerContactsData?.businessHeadMobile &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous:{" "}
-              {originalCustomerContactsData?.businessHeadMobile || "(empty)"}
-            </div>
-          )}
-        {formErrors.businessHeadMobile && (
-          <div className="error">{t(formErrors.businessHeadMobile)}</div>
-        )}
-      </div> */}
-
       <div className="form-group">
         <label htmlFor="businessHeadMobile">
           {t("Mobile")}
@@ -1669,7 +1535,7 @@ onKeyDown={handleKeyDown}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.businessHeadMobile !=
-              customerContactsData?.businessHeadMobile &&
+            customerContactsData?.businessHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <div className="input-with-verification">
@@ -1682,13 +1548,13 @@ onKeyDown={handleKeyDown}
             className={`phone-input ${
               // Use a specific class for phone input
               originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.businessHeadMobile !=
+                customerContactsData &&
+                originalCustomerContactsData?.businessHeadMobile !=
                 customerContactsData?.businessHeadMobile &&
-              mode === "edit"
+                mode === "edit"
                 ? "update-field"
                 : ""
-            }`}
+              }`}
             placeholder={t("Enter Mobile number")}
             value={customerContactsData?.businessHeadMobile || ""}
             onChange={(value) => {
@@ -1704,7 +1570,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.businessHeadMobile ===
-                customerContactsData?.businessHeadMobile &&
+              customerContactsData?.businessHeadMobile &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -1725,7 +1591,7 @@ onKeyDown={handleKeyDown}
                   name="businessHeadMobileVerified"
                   checked={verifiedData?.businessHeadMobileVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="businessHeadMobileVerified">Verified</label>
               </div>
@@ -1735,7 +1601,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.businessHeadMobile !=
-            customerContactsData?.businessHeadMobile &&
+          customerContactsData?.businessHeadMobile &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1753,19 +1619,19 @@ onKeyDown={handleKeyDown}
         <label htmlFor="financeHeadName">
           {t("Finance Head Name")}
           {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
-                  ?.isAllowed) && (<span className="required-field">*</span>)}
+            ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+              ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.financeHeadName !=
-              customerContactsData?.financeHeadName &&
+            customerContactsData?.financeHeadName &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -1773,32 +1639,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="financeHeadName"
             name="financeHeadName"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.financeHeadName !=
-                customerContactsData?.financeHeadName &&
+              customerContactsData?.financeHeadName &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter name")}
             value={customerContactsData?.financeHeadName || ""}
             onChange={onChangeCustomerContactsData}
@@ -1806,7 +1671,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.financeHeadName ===
-                customerContactsData?.financeHeadName &&
+              customerContactsData?.financeHeadName &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -1827,7 +1692,7 @@ onKeyDown={handleKeyDown}
                   name="financeHeadNameVerified"
                   checked={verifiedData?.financeHeadNameVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="financeHeadNameVerified">Verified</label>
               </div>
@@ -1836,7 +1701,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadName !=
-            customerContactsData?.financeHeadName &&
+          customerContactsData?.financeHeadName &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1852,19 +1717,19 @@ onKeyDown={handleKeyDown}
         <label htmlFor="financeHeadDesignation">
           {t("Designation")}
           {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
-                  ?.isAllowed) && (<span className="required-field">*</span>)}
+            ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+              ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.financeHeadDesignation !=
-              customerContactsData?.financeHeadDesignation &&
+            customerContactsData?.financeHeadDesignation &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -1872,32 +1737,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="financeHeadDesignation"
             name="financeHeadDesignation"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.financeHeadDesignation !=
-                customerContactsData?.financeHeadDesignation &&
+              customerContactsData?.financeHeadDesignation &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter designation")}
             value={customerContactsData?.financeHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
@@ -1905,7 +1769,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.financeHeadDesignation ===
-                customerContactsData?.financeHeadDesignation &&
+              customerContactsData?.financeHeadDesignation &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -1928,7 +1792,7 @@ onKeyDown={handleKeyDown}
                     verifiedData?.financeHeadDesignationVerified || false
                   }
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="financeHeadDesignationVerified">Verified</label>
               </div>
@@ -1937,7 +1801,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadDesignation !=
-            customerContactsData?.financeHeadDesignation &&
+          customerContactsData?.financeHeadDesignation &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -1954,19 +1818,19 @@ onKeyDown={handleKeyDown}
         <label htmlFor="financeHeadEmail">
           {t("Email")}
           {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
-                  ?.isAllowed) && (<span className="required-field">*</span>)}
+            ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+              ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.financeHeadEmail !=
-              customerContactsData?.financeHeadEmail &&
+            customerContactsData?.financeHeadEmail &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -1974,32 +1838,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="financeHeadEmail"
             name="financeHeadEmail"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.financeHeadEmail !=
-                customerContactsData?.financeHeadEmail &&
+              customerContactsData?.financeHeadEmail &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter email")}
             value={customerContactsData?.financeHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
@@ -2007,7 +1870,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.financeHeadEmail ===
-                customerContactsData?.financeHeadEmail &&
+              customerContactsData?.financeHeadEmail &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -2028,7 +1891,7 @@ onKeyDown={handleKeyDown}
                   name="financeHeadEmailVerified"
                   checked={verifiedData?.financeHeadEmailVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="financeHeadEmailVerified">Verified</label>
               </div>
@@ -2037,7 +1900,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadEmail !=
-            customerContactsData?.financeHeadEmail &&
+          customerContactsData?.financeHeadEmail &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -2048,92 +1911,23 @@ onKeyDown={handleKeyDown}
           <div className="error">{t(formErrors.financeHeadEmail)}</div>
         )}
       </div>
-
-      {/* <div className="form-group">
-        <label htmlFor="financeHeadMobile">
-          {t("Mobile")}
-          <span className="required-field">*</span>
-          {originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadMobile !=
-              customerContactsData?.financeHeadMobile &&
-            mode === "edit" && (
-              <span className="update-badge">{t("Updated")}</span>
-            )}
-        </label>
-        <input
-          type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
-          id="financeHeadMobile"
-          name="financeHeadMobile"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadMobile !=
-              customerContactsData?.financeHeadMobile &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter Mobile number")}
-          value={customerContactsData?.financeHeadMobile || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadMobile ===
-              customerContactsData?.financeHeadMobile &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {originalCustomerContactsData &&
-          customerContactsData &&
-          originalCustomerContactsData?.financeHeadMobile !=
-            customerContactsData?.financeHeadMobile &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous:{" "}
-              {originalCustomerContactsData?.financeHeadMobile || "(empty)"}
-            </div>
-          )}
-        {formErrors.financeHeadMobile && (
-          <div className="error">{t(formErrors.financeHeadMobile)}</div>
-        )}
-      </div> */}
-
       <div className="form-group">
         <label htmlFor="financeHeadMobile">
           {t("Mobile")}
           {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
-                  ?.isAllowed) && (<span className="required-field">*</span>)}
+            ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+              ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.financeHeadMobile !=
-              customerContactsData?.financeHeadMobile &&
+            customerContactsData?.financeHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <div className="input-with-verification">
@@ -2146,13 +1940,13 @@ onKeyDown={handleKeyDown}
             className={`phone-input ${
               // Use a specific class for phone input
               originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.financeHeadMobile !=
+                customerContactsData &&
+                originalCustomerContactsData?.financeHeadMobile !=
                 customerContactsData?.financeHeadMobile &&
-              mode === "edit"
+                mode === "edit"
                 ? "update-field"
                 : ""
-            }`}
+              }`}
             placeholder={t("Enter Mobile number")}
             value={customerContactsData?.financeHeadMobile || ""}
             onChange={(value) => {
@@ -2168,7 +1962,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.financeHeadMobile ===
-                customerContactsData?.financeHeadMobile &&
+              customerContactsData?.financeHeadMobile &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -2189,7 +1983,7 @@ onKeyDown={handleKeyDown}
                   name="financeHeadMobileVerified"
                   checked={verifiedData?.financeHeadMobileVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="financeHeadMobileVerified">Verified</label>
               </div>
@@ -2198,7 +1992,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadMobile !=
-            customerContactsData?.financeHeadMobile &&
+          customerContactsData?.financeHeadMobile &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -2216,19 +2010,19 @@ onKeyDown={handleKeyDown}
         <label htmlFor="purchasingHeadName">
           {t("Purchasing Head Name")}
           {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
-                  ?.isAllowed) && (<span className="required-field">*</span>)}
+            ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+              ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadName !=
-              customerContactsData?.purchasingHeadName &&
+            customerContactsData?.purchasingHeadName &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -2236,32 +2030,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="purchasingHeadName"
             name="purchasingHeadName"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.purchasingHeadName !=
-                customerContactsData?.purchasingHeadName &&
+              customerContactsData?.purchasingHeadName &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter name")}
             value={customerContactsData?.purchasingHeadName || ""}
             onChange={onChangeCustomerContactsData}
@@ -2269,7 +2062,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.purchasingHeadName ===
-                customerContactsData?.purchasingHeadName &&
+              customerContactsData?.purchasingHeadName &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -2290,7 +2083,7 @@ onKeyDown={handleKeyDown}
                   name="purchasingHeadNameVerified"
                   checked={verifiedData?.purchasingHeadNameVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="purchasingHeadNameVerified">Verified</label>
               </div>
@@ -2299,7 +2092,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadName !=
-            customerContactsData?.purchasingHeadName &&
+          customerContactsData?.purchasingHeadName &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -2315,19 +2108,19 @@ onKeyDown={handleKeyDown}
         <label htmlFor="purchasingHeadDesignation">
           {t("Designation")}
           {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
-                  ?.isAllowed) && (<span className="required-field">*</span>)}
+            ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+              ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadDesignation !=
-              customerContactsData?.purchasingHeadDesignation &&
+            customerContactsData?.purchasingHeadDesignation &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -2335,32 +2128,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="purchasingHeadDesignation"
             name="purchasingHeadDesignation"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.purchasingHeadDesignation !=
-                customerContactsData?.purchasingHeadDesignation &&
+              customerContactsData?.purchasingHeadDesignation &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter designation")}
             value={customerContactsData?.purchasingHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
@@ -2368,7 +2160,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.purchasingHeadDesignation ===
-                customerContactsData?.purchasingHeadDesignation &&
+              customerContactsData?.purchasingHeadDesignation &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -2391,7 +2183,7 @@ onKeyDown={handleKeyDown}
                     verifiedData?.purchasingHeadDesignationVerified || false
                   }
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="purchasingHeadDesignationVerified">
                   Verified
@@ -2402,7 +2194,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadDesignation !=
-            customerContactsData?.purchasingHeadDesignation &&
+          customerContactsData?.purchasingHeadDesignation &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -2419,19 +2211,19 @@ onKeyDown={handleKeyDown}
         <label htmlFor="purchasingHeadEmail">
           {t("Email")}
           {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
-                  ?.isAllowed) && (<span className="required-field">*</span>)}
+            ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+              ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadEmail !=
-              customerContactsData?.purchasingHeadEmail &&
+            customerContactsData?.purchasingHeadEmail &&
             mode === "edit" && (
               <span className="update-badge">{t("Updated")}</span>
             )}
@@ -2439,32 +2231,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="purchasingHeadEmail"
             name="purchasingHeadEmail"
-            className={`text-field small ${
-              originalCustomerContactsData &&
+            className={`text-field small ${originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.purchasingHeadEmail !=
-                customerContactsData?.purchasingHeadEmail &&
+              customerContactsData?.purchasingHeadEmail &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter email")}
             value={customerContactsData?.purchasingHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
@@ -2472,7 +2263,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.purchasingHeadEmail ===
-                customerContactsData?.purchasingHeadEmail &&
+              customerContactsData?.purchasingHeadEmail &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -2493,7 +2284,7 @@ onKeyDown={handleKeyDown}
                   name="purchasingHeadEmailVerified"
                   checked={verifiedData?.purchasingHeadEmailVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="purchasingHeadEmailVerified">Verified</label>
               </div>
@@ -2502,7 +2293,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadEmail !=
-            customerContactsData?.purchasingHeadEmail &&
+          customerContactsData?.purchasingHeadEmail &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -2513,92 +2304,23 @@ onKeyDown={handleKeyDown}
           <div className="error">{t(formErrors.purchasingHeadEmail)}</div>
         )}
       </div>
-
-      {/* <div className="form-group">
-        <label htmlFor="purchasingHeadMobile">
-          {t("Mobile")}
-          <span className="required-field">*</span>
-          {originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadMobile !=
-              customerContactsData?.purchasingHeadMobile &&
-            mode === "edit" && (
-              <span className="update-badge">{t("Updated")}</span>
-            )}
-        </label>
-        <input
-          type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
-          id="purchasingHeadMobile"
-          name="purchasingHeadMobile"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadMobile !=
-              customerContactsData?.purchasingHeadMobile &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter Mobile number")}
-          value={customerContactsData?.purchasingHeadMobile || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadMobile ===
-              customerContactsData?.purchasingHeadMobile &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {originalCustomerContactsData &&
-          customerContactsData &&
-          originalCustomerContactsData?.purchasingHeadMobile !=
-            customerContactsData?.purchasingHeadMobile &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous:{" "}
-              {originalCustomerContactsData?.purchasingHeadMobile || "(empty)"}
-            </div>
-          )}
-        {formErrors.purchasingHeadMobile && (
-          <div className="error">{t(formErrors.purchasingHeadMobile)}</div>
-        )}
-      </div> */}
-
       <div className="form-group">
         <label htmlFor="purchasingHeadMobile">
           {t("Mobile")}
           {(customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]
-                  ?.isAllowed || 
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
-                  ?.isAllowed ||
-                customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
-                  ?.isAllowed) && (<span className="required-field">*</span>)}
+            ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]
+              ?.isAllowed ||
+            customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]
+              ?.isAllowed) && (<span className="required-field">*</span>)}
           {originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadMobile !=
-              customerContactsData?.purchasingHeadMobile &&
+            customerContactsData?.purchasingHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <div className="input-with-verification">
@@ -2611,13 +2333,13 @@ onKeyDown={handleKeyDown}
             className={`phone-input ${
               // Use a specific class for phone input
               originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.purchasingHeadMobile !=
+                customerContactsData &&
+                originalCustomerContactsData?.purchasingHeadMobile !=
                 customerContactsData?.purchasingHeadMobile &&
-              mode === "edit"
+                mode === "edit"
                 ? "update-field"
                 : ""
-            }`}
+              }`}
             placeholder={t("Enter Mobile number")}
             value={customerContactsData?.purchasingHeadMobile || ""}
             onChange={(value) => {
@@ -2633,7 +2355,7 @@ onKeyDown={handleKeyDown}
               originalCustomerContactsData &&
               customerContactsData &&
               originalCustomerContactsData?.purchasingHeadMobile ===
-                customerContactsData?.purchasingHeadMobile &&
+              customerContactsData?.purchasingHeadMobile &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -2654,7 +2376,7 @@ onKeyDown={handleKeyDown}
                   name="purchasingHeadMobileVerified"
                   checked={verifiedData?.purchasingHeadMobileVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="purchasingHeadMobileVerified">Verified</label>
               </div>
@@ -2663,7 +2385,7 @@ onKeyDown={handleKeyDown}
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadMobile !=
-            customerContactsData?.purchasingHeadMobile &&
+          customerContactsData?.purchasingHeadMobile &&
           mode === "edit" && (
             <div className="current-value">
               Previous:{" "}
@@ -2691,32 +2413,31 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="buildingName"
             name="buildingName"
-            className={`text-field small ${
-              originalCustomerData &&
+            className={`text-field small ${originalCustomerData &&
               customerData &&
               originalCustomerData?.buildingName !=
-                customerData?.buildingName &&
+              customerData?.buildingName &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter building name")}
             value={customerData?.buildingName || ""}
             onChange={onChangeCustomerData}
@@ -2724,7 +2445,7 @@ onKeyDown={handleKeyDown}
               originalCustomerData &&
               customerData &&
               originalCustomerData?.buildingName ===
-                customerData?.buildingName &&
+              customerData?.buildingName &&
               mode === "edit" &&
               customerData?.customerStatus !== "pending"
             }
@@ -2745,7 +2466,7 @@ onKeyDown={handleKeyDown}
                   name="buildingNameVerified"
                   checked={verifiedData?.buildingNameVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="buildingNameVerified">Verified</label>
               </div>
@@ -2778,31 +2499,30 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="street"
             name="street"
-            className={`text-field small ${
-              originalCustomerData &&
+            className={`text-field small ${originalCustomerData &&
               customerData &&
               originalCustomerData?.street != customerData?.street &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter street")}
             value={customerData?.street || ""}
             onChange={onChangeCustomerData}
@@ -2830,7 +2550,7 @@ onKeyDown={handleKeyDown}
                   name="streetVerified"
                   checked={verifiedData?.streetVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="streetVerified">Verified</label>
               </div>
@@ -2867,12 +2587,12 @@ onKeyDown={handleKeyDown}
             options={
               geoData
                 ? Object.keys(geoData).map((region) => ({
-                    value: region,
-                    name:
-                      i18n.language === "ar"
-                        ? geoData[region].ar
-                        : geoData[region].en,
-                  }))
+                  value: region,
+                  name:
+                    i18n.language === "ar"
+                      ? geoData[region].ar
+                      : geoData[region].en,
+                }))
                 : []
             }
             value={customerData?.region || ""}
@@ -2886,9 +2606,9 @@ onKeyDown={handleKeyDown}
             }
             className={
               originalCustomerData &&
-              customerData &&
-              originalCustomerData?.region != customerData?.region &&
-              mode === "edit"
+                customerData &&
+                originalCustomerData?.region != customerData?.region &&
+                mode === "edit"
                 ? "update-field"
                 : ""
             }
@@ -2910,7 +2630,7 @@ onKeyDown={handleKeyDown}
                   name="regionVerified"
                   checked={verifiedData?.regionVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="regionVerified">Verified</label>
               </div>
@@ -2957,9 +2677,9 @@ onKeyDown={handleKeyDown}
             }
             className={
               originalCustomerData &&
-              customerData &&
-              originalCustomerData?.city != customerData?.city &&
-              mode === "edit"
+                customerData &&
+                originalCustomerData?.city != customerData?.city &&
+                mode === "edit"
                 ? "update-field"
                 : ""
             }
@@ -2981,7 +2701,7 @@ onKeyDown={handleKeyDown}
                   name="cityVerified"
                   checked={verifiedData?.cityVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="cityVerified">Verified</label>
               </div>
@@ -3014,31 +2734,30 @@ onKeyDown={handleKeyDown}
           <div className="input-with-verification">
             <input
               type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+              onFocus={() => {
+                if (window.innerWidth <= 768) {
+                  // This could trigger hiding the bottom menu
+                  document.body.classList.add('keyboard-open');
+                }
+
+
+              }}
+              onKeyDown={handleKeyDown}
+              onBlur={() => {
+
+                document.body.classList.remove('keyboard-open');
+                // 👈 show menu again (optional)
+              }}
+
               id="cityOther"
               name="cityOther"
-              className={`text-field small ${
-                originalCustomerData &&
+              className={`text-field small ${originalCustomerData &&
                 customerData &&
                 originalCustomerData?.cityOther != customerData?.cityOther &&
                 mode === "edit"
-                  ? "update-field"
-                  : ""
-              }`}
+                ? "update-field"
+                : ""
+                }`}
               placeholder={t("Enter City")}
               value={customerData?.cityOther || ""}
               onChange={onChangeCustomerData}
@@ -3065,7 +2784,7 @@ onKeyDown={handleKeyDown}
                     name="cityOtherVerified"
                     checked={verifiedData?.cityOtherVerified || false}
                     onChange={onChangeVerifiedData}
-                    // className="verified-checkbox"
+                  // className="verified-checkbox"
                   />
                   <label htmlFor="cityOtherVerified">Verified</label>
                 </div>
@@ -3113,9 +2832,9 @@ onKeyDown={handleKeyDown}
             }
             className={
               originalCustomerData &&
-              customerData &&
-              originalCustomerData?.district != customerData?.district &&
-              mode === "edit"
+                customerData &&
+                originalCustomerData?.district != customerData?.district &&
+                mode === "edit"
                 ? "update-field"
                 : ""
             }
@@ -3137,7 +2856,7 @@ onKeyDown={handleKeyDown}
                   name="districtVerified"
                   checked={verifiedData?.districtVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="districtVerified">Verified</label>
               </div>
@@ -3164,7 +2883,7 @@ onKeyDown={handleKeyDown}
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.districtOther !=
-                customerData?.districtOther &&
+              customerData?.districtOther &&
               mode === "edit" && (
                 <span className="update-badge">{t("Updated")}</span>
               )}
@@ -3172,32 +2891,31 @@ onKeyDown={handleKeyDown}
           <div className="input-with-verification">
             <input
               type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+              onFocus={() => {
+                if (window.innerWidth <= 768) {
+                  // This could trigger hiding the bottom menu
+                  document.body.classList.add('keyboard-open');
+                }
+
+
+              }}
+              onKeyDown={handleKeyDown}
+              onBlur={() => {
+
+                document.body.classList.remove('keyboard-open');
+                // 👈 show menu again (optional)
+              }}
+
               id="districtOther"
               name="districtOther"
-              className={`text-field small ${
-                originalCustomerData &&
+              className={`text-field small ${originalCustomerData &&
                 customerData &&
                 originalCustomerData?.districtOther !=
-                  customerData?.districtOther &&
+                customerData?.districtOther &&
                 mode === "edit"
-                  ? "update-field"
-                  : ""
-              }`}
+                ? "update-field"
+                : ""
+                }`}
               placeholder={t("Enter District")}
               value={customerData?.districtOther || ""}
               onChange={onChangeCustomerData}
@@ -3205,7 +2923,7 @@ onKeyDown={handleKeyDown}
                 originalCustomerData &&
                 customerData &&
                 originalCustomerData?.districtOther ===
-                  customerData?.districtOther &&
+                customerData?.districtOther &&
                 mode === "edit" &&
                 customerData?.customerStatus !== "pending"
               }
@@ -3225,7 +2943,7 @@ onKeyDown={handleKeyDown}
                     name="districtOtherVerified"
                     checked={verifiedData?.districtOtherVerified || false}
                     onChange={onChangeVerifiedData}
-                    // className="verified-checkbox"
+                  // className="verified-checkbox"
                   />
                   <label htmlFor="districtOtherVerified">Verified</label>
                 </div>
@@ -3234,7 +2952,7 @@ onKeyDown={handleKeyDown}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.districtOther !=
-              customerData?.districtOther &&
+            customerData?.districtOther &&
             mode === "edit" && (
               <div className="current-value">
                 Previous: {originalCustomerData?.districtOther || "(empty)"}
@@ -3281,9 +2999,9 @@ onKeyDown={handleKeyDown}
               }
               className={
                 originalCustomerData &&
-                customerData &&
-                originalCustomerData?.zone != customerData?.zone &&
-                mode === "edit"
+                  customerData &&
+                  originalCustomerData?.zone != customerData?.zone &&
+                  mode === "edit"
                   ? "update-field"
                   : ""
               }
@@ -3306,7 +3024,7 @@ onKeyDown={handleKeyDown}
                     name="zoneVerified"
                     checked={verifiedData?.zoneVerified || false}
                     onChange={onChangeVerifiedData}
-                    // className="verified-checkbox"
+                  // className="verified-checkbox"
                   />
                   <label htmlFor="zoneVerified">Verified</label>
                 </div>
@@ -3337,31 +3055,30 @@ onKeyDown={handleKeyDown}
         <div className="input-with-verification">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+
+
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             id="pincode"
             name="pincode"
-            className={`text-field small ${
-              originalCustomerData &&
+            className={`text-field small ${originalCustomerData &&
               customerData &&
               originalCustomerData?.pincode != customerData?.pincode &&
               mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
+              ? "update-field"
+              : ""
+              }`}
             placeholder={t("Enter pincode")}
             value={customerData?.pincode || ""}
             onChange={onChangeCustomerData}
@@ -3389,7 +3106,7 @@ onKeyDown={handleKeyDown}
                   name="pincodeVerified"
                   checked={verifiedData?.pincodeVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="pincodeVerified">Verified</label>
               </div>
@@ -3439,19 +3156,18 @@ onKeyDown={handleKeyDown}
                 originalCustomerData &&
                 customerData &&
                 originalCustomerData?.geolocation ===
-                  customerData?.geolocation &&
+                customerData?.geolocation &&
                 mode === "edit" &&
                 customerData?.customerStatus !== "pending"
               }
-              className={`text-field small ${
-                originalCustomerData &&
+              className={`text-field small ${originalCustomerData &&
                 customerData &&
                 originalCustomerData?.geolocation !=
-                  customerData?.geolocation &&
+                customerData?.geolocation &&
                 mode === "edit"
-                  ? "update-field"
-                  : ""
-              }`}
+                ? "update-field"
+                : ""
+                }`}
               readOnly
               required
             />
@@ -3484,7 +3200,7 @@ onKeyDown={handleKeyDown}
                   name="geolocationVerified"
                   checked={verifiedData?.geolocationVerified || false}
                   onChange={onChangeVerifiedData}
-                  // className="verified-checkbox"
+                // className="verified-checkbox"
                 />
                 <label htmlFor="geolocationVerified">Verified</label>
               </div>
@@ -3517,7 +3233,7 @@ onKeyDown={handleKeyDown}
             </button>
             <h3>{t("Select Location")}</h3>
             <LocationPicker
-              onLocationSelect={() => {}}
+              onLocationSelect={() => { }}
               initialLat={customerData?.geolocation?.x}
               initialLng={customerData?.geolocation?.y}
             />

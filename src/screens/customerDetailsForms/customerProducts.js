@@ -26,7 +26,7 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 const initialEntities = [
   {
     value: Constants.ENTITY.VMCO,
-    label:  Constants.TAB_NAMES.VMCO_MACHINES,
+    label: Constants.TAB_NAMES.VMCO_MACHINES,
     imageUrl: Constants.TAB_IMAGES.VMCO_MACHINES
   },
   {
@@ -99,12 +99,12 @@ function Products({ customerId, customer, setTabsHeight }) {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-   useEffect(() => {
-            const handleResize = () => setIsMobile(window.innerWidth < 768);
-            console.log("isMobile", isMobile);
-            window.addEventListener("resize", handleResize);
-            return () => window.removeEventListener("resize", handleResize);
-          }, []);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -120,15 +120,15 @@ function Products({ customerId, customer, setTabsHeight }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-const handleKeyDown = (e) => {
-      if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done'  ) {
-        if (isMobile) {
-          // Close keyboard
-          e.target.blur();
-          document.body.classList.remove('keyboard-open');
-        }
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done') {
+      if (isMobile) {
+        // Close keyboard
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
       }
-    };
+    }
+  };
   const fetchProducts = async (activeEntity) => {
     setLoading(true);
     setError(null);
@@ -170,7 +170,7 @@ const handleKeyDown = (e) => {
         {
           method: "GET",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          
+
         }
       );
 
@@ -212,15 +212,15 @@ const handleKeyDown = (e) => {
     subCategoryFilter,
   ]);
   useEffect(() => {
-      const activeEl = document.querySelector(".tabs .category-tab.active");
-      if (activeEl) {
-        activeEl.scrollIntoView({
-          behavior: "smooth",
-          inline: "center",
-          block: "nearest",
-        });
-      }
-    }, [activeEntity]);
+    const activeEl = document.querySelector(".tabs .category-tab.active");
+    if (activeEl) {
+      activeEl.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [activeEntity]);
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
@@ -303,7 +303,7 @@ const handleKeyDown = (e) => {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify(updatedItems),
-          
+
         }
       );
 
@@ -329,7 +329,7 @@ const handleKeyDown = (e) => {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({ moq: value }),
-          
+
         }
       );
     } catch (error) {
@@ -430,10 +430,11 @@ const handleKeyDown = (e) => {
           `${API_BASE_URL}/product-categories?${params.toString()}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json" ,
-              "Authorization": `Bearer ${token}`  
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
             },
-            
+
           }
         );
 
@@ -444,9 +445,9 @@ const handleKeyDown = (e) => {
         // Assuming result.data is an array of category names/objects
         const options = Array.isArray(result.data)
           ? result.data.map((cat) => ({
-              name: cat.category || cat.name || cat, // adapt as per API response
-              value: cat.category || cat.name || cat,
-            }))
+            name: cat.category || cat.name || cat, // adapt as per API response
+            value: cat.category || cat.name || cat,
+          }))
           : [];
 
         setCategoryOptions(options);
@@ -491,8 +492,8 @@ const handleKeyDown = (e) => {
           `${API_BASE_URL}/product-subcategories?${params.toString()}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json",  "Authorization": `Bearer ${token}` },
-        
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+
           }
         );
 
@@ -503,9 +504,9 @@ const handleKeyDown = (e) => {
         // Assuming result.data is an array of subcategory names/objects
         const options = Array.isArray(result.data)
           ? result.data.map((sub) => ({
-              name: sub.subCategory || sub.sub_category || sub.name || sub,
-              value: sub.subCategory || sub.sub_category || sub.name || sub,
-            }))
+            name: sub.subCategory || sub.sub_category || sub.name || sub,
+            value: sub.subCategory || sub.sub_category || sub.name || sub,
+          }))
           : [];
 
         setSubCategoryOptions(options);
@@ -520,8 +521,6 @@ const handleKeyDown = (e) => {
 
   return (
     <div className="products-content">
-      <h3>{t("Products")}</h3>
-
       <div className="products-header-controls">
         {/* --- First row: Entity Tabs --- */}
         <div
@@ -549,64 +548,86 @@ const handleKeyDown = (e) => {
         </div>
       </div>
       <div className="products-header-controls">
-        {/* --- Second row: Category & Subcategory dropdowns --- */}
-        <div className="products-page-header">
-          <ToggleButton
-          isToggled={isApprovalMode}
-          onToggle={toggleApprovalMode}
-          leftLabel={t("All")}
-          rightLabel={t("Selected")}
-        />
-          
-          
-        <div className="toggle-container">
-          {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
-          {isV("btnApplyAll") && (
-            <input type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-     className="product-text-input" />
-          )}
-          {isV("btnApplyAll") && (
-            <button
-              className="branches-approve-button"
-              disabled={currentItems?.filter((item) => item.visible).length < 2}
-              onClick={handleApplyAll}
-            >
-              {t("Apply All")}
-            </button>
+        {/* --- Second row: Toggle Button and MoQ Controls --- */}
+        <div className="products-controls-wrapper">
+          <div className="products-controls-left">
+            <ToggleButton
+              isToggled={isApprovalMode}
+              onToggle={toggleApprovalMode}
+              leftLabel={t("All")}
+              rightLabel={t("Selected")}
+            />
+
+            <div className="moq-apply-all-container">
+              {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
+              {isV("btnApplyAll") && (
+                <input type="text"
+                  onFocus={() => {
+                    if (window.innerWidth <= 768) {
+                      document.body.classList.add('keyboard-open');
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => {
+                    document.body.classList.remove('keyboard-open');
+                  }}
+                  className="product-text-input" />
+              )}
+              {isV("btnApplyAll") && (
+                <button
+                  className="apply-all-button"
+                  disabled={currentItems?.filter((item) => item.visible).length < 2}
+                  onClick={handleApplyAll}
+                >
+                  {t("Apply All")}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Search - on same line for desktop, positioned to the right */}
+          {!isMobile && (
+            <input
+              type="text"
+              onFocus={() => {
+                if (window.innerWidth <= 768) {
+                  document.body.classList.add('keyboard-open');
+                }
+              }}
+              onKeyDown={handleKeyDown}
+              onBlur={() => {
+                document.body.classList.remove('keyboard-open');
+              }}
+              placeholder={t("Search...")}
+              className="product-search-input"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
           )}
         </div>
-          {/* Search */}
+      </div>
+
+      {/* --- Search on separate row for mobile --- */}
+      {isMobile && (
+        <div className="products-header-controls">
           <input
             type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
+            onFocus={() => {
+              if (window.innerWidth <= 768) {
+                // This could trigger hiding the bottom menu
+                document.body.classList.add('keyboard-open');
+              }
+            }}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+
+              document.body.classList.remove('keyboard-open');
+              // 👈 show menu again (optional)
+            }}
+
             placeholder={t("Search...")}
             className="product-search-input"
             value={search}
@@ -615,66 +636,66 @@ onKeyDown={handleKeyDown}
               setCurrentPage(1);
             }}
             style={{
-              padding: "10px 15px",
-              width: "250px",
+              padding: "10px",
+              margin: "2px",
+              width: "100%",
               border: "0px solid lightgray",
               borderRadius: "8px",
               fontSize: "1rem",
               backgroundColor: "#fff",
               transition: "all 0.2s ease",
-              marginRight: "10px",
               boxSizing: "border-box",
             }}
           />
         </div>
-      </div>
+      )}
 
       {/* --- Toggle and Apply All below filters --- */}
       <div className="products-page-header">
         {isMobile ? (<>
-<div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%" }}>
-                              <div className="category-dropdown-mobile" style={{ flex: 1 }}>
-                                  <SearchableDropdown
-                                  id="category-filter"
-            name="categoryFilter"
-            options={categoryOptions}
-            placeholder={t("All Categories")}
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setSubCategoryFilter(""); // Reset subcategory when category changes
-              setCurrentPage(1);
-            }}
-                                      
-                                      className="category-filter-mobile"
-                                      style={{ width: '100%', borderRadius: '16px' }}
-                                      
-                                  />
-                              </div>
-                              <div className="subcategory-dropdown" style={{ flex: 1 }}>
-                                  <SearchableDropdown
-                                  id="subcategory-filter"
-            name="subCategoryFilter"
-            options={subCategoryOptions}
-            placeholder={t("All Subcategories")}
-            value={subCategoryFilter}
-            onChange={(e) => {
-              setSubCategoryFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            disabled={!categoryFilter}
-                                      className="subcategory-filter-mobile"
-                                      style={{ width: '100%', borderRadius: '16px' }}
-                                      
-                                  />
-                              </div>
-                          </div>
+          <div className="category-and-subcategory" style={{ display: "flex", flexDirection: "row", gap: "10px", justifyContent: "center", alignItems: "center", width: "100%" }}>
+            <div className="category-dropdown-mobile" style={{ flex: 1 }}>
+              <SearchableDropdown
+                id="category-filter"
+                name="categoryFilter"
+                options={categoryOptions}
+                placeholder={t("All Categories")}
+                value={categoryFilter}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setSubCategoryFilter(""); // Reset subcategory when category changes
+                  setCurrentPage(1);
+                }}
+
+                className="category-filter-mobile"
+                style={{ width: '100%', borderRadius: '16px' }}
+
+              />
+            </div>
+            <div className="subcategory-dropdown" style={{ flex: 1 }}>
+              <SearchableDropdown
+                id="subcategory-filter"
+                name="subCategoryFilter"
+                options={subCategoryOptions}
+                placeholder={t("All Subcategories")}
+                value={subCategoryFilter}
+                onChange={(e) => {
+                  setSubCategoryFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                disabled={!categoryFilter}
+                className="subcategory-filter-mobile"
+                style={{ width: '100%', borderRadius: '16px' }}
+
+              />
+            </div>
+          </div>
         </>) : (<>{/* Category Filter - use SearchableDropdown */}
           <SearchableDropdown
             id="category-filter"
             name="categoryFilter"
             options={categoryOptions}
-            className={isMobile ? "category-filter-mobile" : "category-filter"}
+            className={isMobile ? "category-filter-mobile" : ""}
             placeholder={t("All Categories")}
             value={categoryFilter}
             onChange={(e) => {
@@ -688,7 +709,7 @@ onKeyDown={handleKeyDown}
             id="subcategory-filter"
             name="subCategoryFilter"
             options={subCategoryOptions}
-            className={isMobile ? "subcategory-filter-mobile" : "category-filter"}
+            className={isMobile ? "subcategory-filter-mobile" : ""}
             placeholder={t("All Subcategories")}
             value={subCategoryFilter}
             onChange={(e) => {
@@ -697,143 +718,216 @@ onKeyDown={handleKeyDown}
             }}
             disabled={!categoryFilter}
           /></>)}
-        
+
       </div>
-      
-{loading && (
-              <div style={{ padding: 24 }}>
-                <LoadingSpinner />
-              </div>
-        )}
-      
-      {!loading && (<div className="products-table-container">
-        <table className="products-data-table">
-          <thead>
-            <tr>
-              <th className="checkbox-cell">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  onChange={handleSelectAll}
-                  disabled={!isV("btnSelectItems")}
-                />
-              </th>
-              <th>{t("Name")}</th>
-              {isV("btnApplyAll") && <th>{t("Minimum Order Quantity")}</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems?.map((product) => (
-              <tr key={product.id}>
-                <td className="checkbox-cell">
+
+      {
+        loading && (
+          <div style={{ padding: 24 }}>
+            <LoadingSpinner />
+          </div>
+        )
+      }
+
+      {
+        !loading && (<div className="products-table-container">
+          <table className="products-data-table">
+            <thead>
+              <tr>
+                <th className="checkbox-cell">
                   <input
                     type="checkbox"
-                    checked={product.visible}
-                    onChange={() => handleToggleVisibility(product.id)}
+                    checked={isAllSelected}
+                    onChange={handleSelectAll}
                     disabled={!isV("btnSelectItems")}
                   />
-                </td>
-                {i18n.language === "en" ? (
-                  <td>{product.productName}</td>
-                ) : (
-                  <td>{product.productNameLc}</td>
-                )}
-                {isV("btnApplyAll") && (
-                  <td className="edit-cell">
-                    <div className="input-with-icons">
-                      <input
-                        type="text"
-onFocus={() => {
-       if (window.innerWidth <= 768) {
-      // This could trigger hiding the bottom menu
-      document.body.classList.add('keyboard-open');
-    }
-   
-    setIsInputFocused(true);
-                          setEditingMoq(product.id);
-  }}
-onKeyDown={handleKeyDown}
-  onBlur={() => {
-   
-      document.body.classList.remove('keyboard-open');
-       // 👈 show menu again (optional)
-  }}
-    
-                        value={product.moq}
-                        onChange={(e) =>
-                          handleMoqChange(product.id, e.target.value)
-                        }
-                        // onBlur={() => {
-                        //     // Use setTimeout to allow button clicks to register
-                        //     setTimeout(() => {
-                        //         setIsInputFocused(false);
-                        //         setEditingMoq(null);
-                        //     }, 200);
-                        // }}
-                        disabled={!isV("btnApplyAll")}
-                        style={{ width: "80px" }}
-                      />
-                      {isInputFocused && (
-                        <>
-                          <button
-                            className="icon-button"
-                            onClick={() =>
-                              handleSaveMoq(product.id, product.moq)
-                            }
-                            onMouseDown={(e) => e.preventDefault()}
-                          >
-                            <FontAwesomeIcon icon={faCheck} />
-                          </button>
-                          <button
-                            className="icon-button"
-                            onClick={() => handleCancelMoq(product.id)}
-                            onMouseDown={(e) => e.preventDefault()}
-                          >
-                            <FontAwesomeIcon icon={faXmark} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                )}
+                </th>
+                <th>{t("Name")}</th>
+                {isV("btnApplyAll") && <th>{t("Minimum Order Quantity")}</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {/* Pagination */}
-        {currentItems && currentItems.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(page) => {
-              setCurrentPage(page);
-              fetchProducts();
-            }}
-          />
-        )}
-      </div>)}
+            </thead>
+            <tbody>
+              {currentItems?.map((product) => (
+                <tr key={product.id}>
+                  <td className="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      checked={product.visible}
+                      onChange={() => handleToggleVisibility(product.id)}
+                      disabled={!isV("btnSelectItems")}
+                    />
+                  </td>
+                  {i18n.language === "en" ? (
+                    <td>{product.productName}</td>
+                  ) : (
+                    <td>{product.productNameLc}</td>
+                  )}
+                  {isV("btnApplyAll") && (
+                    <td className="edit-cell">
+                      <div className="input-with-icons">
+                        <input
+                          type="text"
+                          onFocus={() => {
+                            if (window.innerWidth <= 768) {
+                              // This could trigger hiding the bottom menu
+                              document.body.classList.add('keyboard-open');
+                            }
+
+                            setIsInputFocused(true);
+                            setEditingMoq(product.id);
+                          }}
+                          onKeyDown={handleKeyDown}
+                          onBlur={() => {
+
+                            document.body.classList.remove('keyboard-open');
+                            // 👈 show menu again (optional)
+                          }}
+
+                          value={product.moq}
+                          onChange={(e) =>
+                            handleMoqChange(product.id, e.target.value)
+                          }
+                          // onBlur={() => {
+                          //     // Use setTimeout to allow button clicks to register
+                          //     setTimeout(() => {
+                          //         setIsInputFocused(false);
+                          //         setEditingMoq(null);
+                          //     }, 200);
+                          // }}
+                          disabled={!isV("btnApplyAll")}
+                          style={{ width: "80px" }}
+                        />
+                        {isInputFocused && (
+                          <>
+                            <button
+                              className="icon-button"
+                              onClick={() =>
+                                handleSaveMoq(product.id, product.moq)
+                              }
+                              onMouseDown={(e) => e.preventDefault()}
+                            >
+                              <FontAwesomeIcon icon={faCheck} />
+                            </button>
+                            <button
+                              className="icon-button"
+                              onClick={() => handleCancelMoq(product.id)}
+                              onMouseDown={(e) => e.preventDefault()}
+                            >
+                              <FontAwesomeIcon icon={faXmark} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {/* Pagination */}
+          {currentItems && currentItems.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => {
+                setCurrentPage(page);
+                fetchProducts();
+              }}
+            />
+          )}
+        </div>)
+      }
       <style jsx="true">{`
+        .products-controls-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .products-controls-left {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          flex: 0 1 auto;
+        }
+
+        .moq-apply-all-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .moq-apply-all-container label {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: #333;
+          white-space: nowrap;
+        }
+
+        .product-text-input {
+          padding: 8px 10px;
+          width: 70px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          background-color: #fff;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-text-input:focus {
+          border-color: #1d396d;
+          outline: none;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .apply-all-button {
+          padding: 8px 16px;
+          font-size: 0.9rem;
+          background-color: var(--logo-deep-green, #1d396d);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+
+        .apply-all-button:hover:not(:disabled) {
+          background-color: var(--logo-deep-green-hover, #162a54);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .apply-all-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          background-color: #cccccc;
+        }
+
         .product-search-input {
           padding: 10px 15px;
-          width: 300px;
-          border: 2px solid #1d396d;
+          width: 250px;
+          border: 0px solid lightgray;
           border-radius: 8px;
           font-size: 1rem;
           background-color: #fff;
           box-shadow: 0 0 0 2px #e5e4e2;
           transition: all 0.2s ease;
-          margin-right: 10px;
           box-sizing: border-box;
+          flex: 0 0 auto;
         }
+
         .product-search-input:focus {
-          border-color: #1d396d;
           box-shadow: 0 0 0 2px #e5e4e2;
           outline: none;
         }
+
         .product-search-input::placeholder {
           color: #d3d3d3;
           opacity: 1;
         }
+
         .category-filter {
           margin-right: 10px;
           padding: 8px 12px;
@@ -842,18 +936,36 @@ onKeyDown={handleKeyDown}
           font-size: 1rem;
           background: #fff;
         }
+
         @media (max-width: 768px) {
-          .product-search-input {
-            width: 125px !important;
-            margin-bottom: 10px;
-            padding: 5px 10px !important;
+          .products-controls-wrapper {
+            flex-direction: column;
+            gap: 10px;
           }
+
+          .products-controls-left {
+            width: 100%;
+            flex-direction: row;
+            gap: 10px;
+          }
+
+          .moq-apply-all-container {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .product-search-input {
+            width: 95% !important;
+            margin-bottom: 0;
+            padding: 8px 12px !important;
+          }
+
           .products-header-controls {
             flex-direction: column;
           }
         }
       `}</style>
-    </div>
+    </div >
   );
 }
 
