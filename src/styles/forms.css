@@ -1308,7 +1308,7 @@ td.file-display-cell {
 @media (max-width: 480px) {
   .customers .customer-onboarding-form-grid {
     /* gap: 20px; */
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border-left: none;
     display: table-column;
   }
@@ -1437,10 +1437,34 @@ td.file-display-cell {
     margin-top: 20px;
   }
   .customers .text-field.small {
-    width: 275px !important;
+    width: 100% !important;
+  }
+  .customers .text-field {
+    width: 100% !important;
   }
   .customers .dropdown {
-    width: 280px;
+    width: 100% !important;
+  }
+  .customers .form-group select {
+    width: 100% !important;
+  }
+  .searchable-dropdown-container {
+    width: 100% !important;
+  }
+  .searchable-dropdown {
+    width: 100% !important;
+  }
+  .dropdown-header {
+    width: 100% !important;
+  }
+  .dropdown-content {
+    width: 100% !important;
+  }
+  .PhoneInputInput {
+    width: 100% !important;
+  }
+  .branchDropDown .dropdown-header {
+    width: 100% !important;
   }
   .customers .document-upload.full-width {
     display: flex;
@@ -1642,9 +1666,9 @@ td.file-display-cell {
   .products-page-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
     flex-direction: row !important;
-    margin-top: 20px;
     grid-template-columns: repeat(2, 1fr);
   }
   td.label-cell {
@@ -1834,7 +1858,6 @@ td.file-display-cell {
   }
   .form-group {
     width: 100%;
-    margin-bottom: 10px;
   }
   .pagination-controls.large-screen {
     gap: 0;
@@ -1850,7 +1873,7 @@ td.file-display-cell {
   .products-content {
     display: flex;
     flex-direction: column;
-    padding: 40px 10px 10px 10px;
+    padding: 20px 0px 10px 0px;
     border-left: none;
   }
   [dir="rtl"] .products-content {

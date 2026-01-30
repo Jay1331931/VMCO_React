@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
 import LoadingSpinner from "../components/LoadingSpinner";
+import SkeletonWrapper from "../components/SkeletonWrapper";
 import SearchInput from "../components/SearchInput";
 import SearchableDropdown from "../components/SearchableDropdown";
 import Tabs from "../components/Tabs";
@@ -62,6 +63,14 @@ const CatalogLayout = ({
     const dragStartY = useRef(0);
     const scrollableContentRef = useRef(null);
     const [isContentScrolled, setIsContentScrolled] = useState(false);
+    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
+    // Track initial page load completion
+    useEffect(() => {
+        if (!initialLoadComplete && !isLoading && filteredCategoryTabs.length > 0) {
+            setInitialLoadComplete(true);
+        }
+    }, [isLoading, initialLoadComplete, filteredCategoryTabs.length]);
 
     // Calculate header height dynamically
     useEffect(() => {
@@ -189,6 +198,8 @@ const CatalogLayout = ({
                                     catalog={true}
                                     isContentScrolled={isContentScrolled}
                                     isMobile={isMobile}
+                                    loading={isLoading && !initialLoadComplete}
+                                    skeletonCount={8}
                                 />
                             </div>
                         </div>
@@ -234,43 +245,36 @@ const CatalogLayout = ({
                 )}
 
                 <div className="catalog-scrollable-content" ref={scrollableContentRef}>
-                    <div className="products-grid">
-                        {displayedProducts?.length > 0 ? (
-                            displayedProducts.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={mapProductToCardProps(product)}
-                                    quantities={quantities}
-                                    setQuantities={setQuantities}
-                                    onQuantityChange={handleQuantityChange}
-                                    onAddToCart={() => handleAddToCart(product.id)}
-                                    onToggleFavorite={onToggleFavorite}
-                                    onProductClick={() => handleProductClick(product)}
-                                    isAdding={isAdding}
-                                    isMobile={false}
-                                />
-                            ))
-                        ) : (
-                            !isLoading && !isLoadingMore && !hasMore && (
-                                <div className="no-products-message" style={{ textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center" }}>
-                                    {searchQuery ? (
-                                        <p>{t("No products found matching your search term")}</p>
-                                    ) : (
-                                        <p>{t("No products found matching your criteria.")}</p>
-                                    )}
-                                </div>
-                            )
-                        )}
-
-                        {isLoading && (
-                            <div
-                                className="loading-container"
-                                style={{ position: "absolute", top: "50%", left: "50%" }}
-                            >
-                                <LoadingSpinner size="medium" />
-                            </div>
-                        )}
-                    </div>
+                    <SkeletonWrapper loading={isLoading} type="card" count={4}>
+                        <div className="products-grid">
+                            {displayedProducts?.length > 0 ? (
+                                displayedProducts.map((product) => (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={mapProductToCardProps(product)}
+                                        quantities={quantities}
+                                        setQuantities={setQuantities}
+                                        onQuantityChange={handleQuantityChange}
+                                        onAddToCart={() => handleAddToCart(product.id)}
+                                        onToggleFavorite={onToggleFavorite}
+                                        onProductClick={() => handleProductClick(product)}
+                                        isAdding={isAdding}
+                                        isMobile={false}
+                                    />
+                                ))
+                            ) : (
+                                !isLoading && !isLoadingMore && !hasMore && (
+                                    <div className="no-products-message" style={{ textAlign: "center", position: "absolute", top: "50%", width: "100%", justifySelf: "anchor-center" }}>
+                                        {searchQuery ? (
+                                            <p>{t("No products found matching your search term")}</p>
+                                        ) : (
+                                            <p>{t("No products found matching your criteria.")}</p>
+                                        )}
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    </SkeletonWrapper>
 
                     {isLoadingMore && (
                         <div className="loading-more-container">
@@ -423,7 +427,10 @@ const CatalogLayout = ({
                                 catalog={true}
                                 isContentScrolled={isContentScrolled}
                                 isMobile={isMobile}
+                                loading={isLoading && !initialLoadComplete}
+                                skeletonCount={6}
                             />
+                            
                         </div>
                     </div>
 
@@ -459,52 +466,45 @@ const CatalogLayout = ({
 
             {/* Rest of your component remains exactly the same */}
             <div className="catalog-scrollable-content" ref={scrollableContentRef} style={{ height: 'calc(100vh - ' + headerHeight + 'px)' }}>
-                <div
-                    className="products-grid"
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px',
-                        marginTop: '10px',
-                        width: '100%'
-                    }}
-                >
-                    {displayedProducts?.length > 0 ? (
-                        displayedProducts.map((product) => (
-                            <ProductCard
-                                key={product.id}
-                                product={mapProductToCardProps(product)}
-                                quantities={quantities}
-                                setQuantities={setQuantities}
-                                onQuantityChange={handleQuantityChange}
-                                onToggleFavorite={onToggleFavorite}
-                                onAddToCart={() => handleAddToCart(product.id)}
-                                onProductClick={() => handleProductClick(product)}
-                                isAdding={isAdding}
-                                isMobile={true}
-                            />
-                        ))
-                    ) : (
-                        !isLoading && !isLoadingMore && !hasMore && (
-                            <div className="no-products-message" style={{ textAlign: "center", position: "absolute", top: "60%", width: "100%", justifySelf: "anchor-center", maxWidth: "none" }}>
-                                {searchQuery ? (
-                                    <p>{t("No products found matching your search term")}</p>
-                                ) : (
-                                    <p>{t("No products found matching your criteria.")}</p>
-                                )}
-                            </div>
-                        )
-                    )}
-                </div>
-
-                {isLoading && (
+                <SkeletonWrapper loading={isLoading} type="mobile_card" count={6}>
                     <div
-                        className="loading-container"
-                        style={{ position: "absolute", top: "50%", left: "50%" }}
+                        className="products-grid"
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            marginTop: '10px',
+                            width: '100%'
+                        }}
                     >
-                        <LoadingSpinner size="medium" />
+                        {displayedProducts?.length > 0 ? (
+                            displayedProducts.map((product) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={mapProductToCardProps(product)}
+                                    quantities={quantities}
+                                    setQuantities={setQuantities}
+                                    onQuantityChange={handleQuantityChange}
+                                    onToggleFavorite={onToggleFavorite}
+                                    onAddToCart={() => handleAddToCart(product.id)}
+                                    onProductClick={() => handleProductClick(product)}
+                                    isAdding={isAdding}
+                                    isMobile={true}
+                                />
+                            ))
+                        ) : (
+                            !isLoading && !isLoadingMore && !hasMore && (
+                                <div className="no-products-message" style={{ textAlign: "center", position: "absolute", top: "60%", width: "100%", justifySelf: "anchor-center", maxWidth: "none" }}>
+                                    {searchQuery ? (
+                                        <p>{t("No products found matching your search term")}</p>
+                                    ) : (
+                                        <p>{t("No products found matching your criteria.")}</p>
+                                    )}
+                                </div>
+                            )
+                        )}
                     </div>
-                )}
+                </SkeletonWrapper>
 
                 {isLoadingMore && (
                     <div className="loading-more-container">

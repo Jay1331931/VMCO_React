@@ -44,6 +44,16 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
   };
 
 
+  const getDisplayPaymentMethod = (paymentMethod, isSampleOrder) => {
+    if (isSampleOrder) {
+      return "FOC";
+    }
+    if (paymentMethod?.toLowerCase() === "pre payment") {
+      return "Card Payment";
+    }
+    return paymentMethod || "N/A";
+  };
+
   const getEntityBadge = (entity, order, t) => {
     if (!entity) return null;
 
@@ -73,13 +83,13 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    
+
     const day = String(date.getDate()).padStart(2, '0');
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const month = monthNames[date.getMonth()];
     const year = date.getFullYear();
-    
+
     // Force LTR direction using Unicode character
     return `\u202A${day} ${month} ${year}\u202C`;
   };
@@ -344,8 +354,8 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                         sx={{ mt: 0.3 }}
                       >
                         <Typography component="span" fontWeight={600} fontSize={12}>
-    {t("Approver")}
-  </Typography>
+                          {t("Approver")}
+                        </Typography>
                         {`: ${t(order?.currentApproverType) || t("N/A")}`}
                       </Typography>)}
                     </Grid>
@@ -362,7 +372,7 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                       // paddingRight: "10px",
                     }}
                   >
-                    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingRight: "10px", paddingLeft: "6px", left: i18n.language === 'en' ? "52%" : "none", right: i18n.language === 'ar' ? "55%" : "0",  position: "absolute" }}>
+                    <Grid item xs={12} sx={{ px: 2, py: 1.5, paddingRight: "10px", paddingLeft: "6px", left: i18n.language === 'en' ? "52%" : "none", right: i18n.language === 'ar' ? "55%" : "0", position: "absolute" }}>
                       {/* Footer / Action */}
                       <Typography
                         fontSize={14}
@@ -441,28 +451,26 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                         </Grid>
                       ) : (
                         <>
-                        <Typography
-                          fontSize={12}
-                          color="textSecondary"
-                          sx={{ mt: 0.3 }}
-                        >
-                          <Typography component="span" fontWeight={600} fontSize={12}>
-    {t("Payments")}
-  </Typography>
-                          {`: ${t(order?.paymentStatus) || t("N/A")}`}
-                        </Typography>
-                        <Typography
-                          fontSize={12}
-                          color="textSecondary"
-                          sx={{ mt: 0.3 }}
-                        >
-                          <Typography component="span" fontWeight={600} fontSize={12}>
-    {t("Mode")}
-  </Typography>
-                          {`: ${t(order?.paymentMethod?.toLowerCase() === "pre payment"
-            ? "Card Payment"
-            : order?.paymentMethod) || t("N/A")}`}
-                        </Typography>
+                          <Typography
+                            fontSize={12}
+                            color="textSecondary"
+                            sx={{ mt: 0.3 }}
+                          >
+                            <Typography component="span" fontWeight={600} fontSize={12}>
+                              {t("Payments")}
+                            </Typography>
+                            {`: ${t(order?.paymentStatus) || t("N/A")}`}
+                          </Typography>
+                          <Typography
+                            fontSize={12}
+                            color="textSecondary"
+                            sx={{ mt: 0.3 }}
+                          >
+                            <Typography component="span" fontWeight={600} fontSize={12}>
+                              {t("Mode")}
+                            </Typography>
+                            {`: ${t(getDisplayPaymentMethod(order?.paymentMethod, order?.sampleOrder))}`}
+                          </Typography>
                         </>
                       )}
                     </Grid>

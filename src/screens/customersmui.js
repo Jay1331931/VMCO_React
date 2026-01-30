@@ -40,6 +40,7 @@ import CustomerCard from "../components/CustomerCard";
 import InviteCard from "../components/InviteCard";
 import { faHeartPulse } from "@fortawesome/free-solid-svg-icons";
 import AddInvites from "../components/AddInvites";
+import SkeletonWrapper from "../components/SkeletonWrapper";
 const getStatusClass = (status) => {
   switch (status?.toLowerCase()) {
     case "approved":
@@ -1868,9 +1869,11 @@ function Customers() {
         return isMobile ?
           (
             <div className="orders-content">
-              {loading ? (
-                <LoadingSpinner />
-              ) : error ? (
+              {
+              // loading ? (
+              //   <LoadingSpinner />
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
@@ -1973,23 +1976,27 @@ function Customers() {
                       }
                     />
                   </div>
+                  <SkeletonWrapper loading={loading} type="order_card" count={4}>
                   <CustomerCard
                     customers={isApprovalMode ? paginatedApprovals : paginatedCustomers}
                     isApprovalMode={isApprovalMode}
                     handleViewDetails={handleShowAllDetailsClick}
                     handleSync={HandleFandOFailCustomer}
                   />
+                  </SkeletonWrapper>
                 </>
               )}
             </div>
           )
           : (
             <div className="table-container">
-              {loading ? (
-                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                  <LoadingSpinner size="medium" />
-                </div>
-              ) : error ? (
+              {
+              // loading ? (
+              //   <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+              //     <LoadingSpinner size="medium" />
+              //   </div>
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
@@ -2000,6 +2007,7 @@ function Customers() {
                     display: 'flex',
                     flexDirection: 'column'
                   }}>
+                    <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
                     <DataGrid
                       apiRef={gridApiRef}
                       rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
@@ -2123,6 +2131,7 @@ function Customers() {
                         })
                       }}
                     />
+                    </SkeletonWrapper>
                   </div>
                 </>
               )}
@@ -2133,9 +2142,11 @@ function Customers() {
         return isMobile ?
           (
             <div className="orders-content">
-              {loading ? (
-                <LoadingSpinner />
-              ) : error ? (
+              {
+              // loading ? (
+              //   <LoadingSpinner />
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
@@ -2248,10 +2259,12 @@ function Customers() {
                       }
                     />
                   </div>
+                  <SkeletonWrapper loading={loading} type="order_card" count={4}>
                   <InviteCard
                     invites={paginatedInvites}
                     handleResend={handleResend}
                   />
+                  </SkeletonWrapper>
                 </>
               )}
             </div>
@@ -2259,11 +2272,13 @@ function Customers() {
           :
           (
             <div className="table-container">
-              {loading ? (
-                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                  <LoadingSpinner size="medium" />
-                </div>
-              ) : error ? (
+              {
+              // loading ? (
+              //   <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+              //     <LoadingSpinner size="medium" />
+              //   </div>
+              // ) : 
+              error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
@@ -2274,6 +2289,7 @@ function Customers() {
                     display: 'flex',
                     flexDirection: 'column'
                   }}>
+                    <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
                     <DataGrid
                       apiRef={gridApiRef}
                       rows={paginatedInvites}
@@ -2405,6 +2421,7 @@ function Customers() {
                         })
                       }}
                     />
+                  </SkeletonWrapper>
                   </div>
 
                 </>
