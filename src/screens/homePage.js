@@ -9,6 +9,8 @@ import StarIcon from "@mui/icons-material/Star";
 import WindowIcon from "@mui/icons-material/Window";
 import ThreeSixtyIcon from "@mui/icons-material/ThreeSixty";
 import { useAuth } from "../context/AuthContext";
+import SkeletonWrapper from "../components/SkeletonWrapper";
+import { useLoading } from "../hooks/useLoading";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -124,6 +126,7 @@ const HomePage = () => {
   const isRTL = i18n.language === "ar";
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
   const [disabledEntities, setDisabledEntities] = useState([]);
+  const { loading, startLoading, stopLoading } = useLoading();
   const handleCatalog = () => {
     navigate("/catalog");
   };
@@ -132,6 +135,7 @@ const HomePage = () => {
     const fetchCoolingPeriod = async () => {
       if (!token) return;
       try {
+        startLoading();
         const response = await fetch(`${API_BASE_URL}/cooling-period/now`, {
           method: "GET",
           headers: {
@@ -156,11 +160,13 @@ const HomePage = () => {
         }
       } catch (error) {
         console.error("Error fetching cooling period:", error);
+      } finally {
+        stopLoading();
       }
     };
 
     fetchCoolingPeriod();
-  }, [token]);
+  }, [token, startLoading, stopLoading]);
   return (
     <Sidebar title={t("Home")} homePage={"home-page"}>
       <div className="home-page-container">
@@ -176,66 +182,68 @@ const HomePage = () => {
         </div>
 
         <div className="categories-section">
-          <div className="categories-grid">
-            {initialCategories.map((cat, idx) => {
-              const isDisabled = disabledEntities?.some(
-                (entity) => entity?.toLowerCase() === cat?.entity?.toLowerCase()
-              );
-              // const isDisabled = disabledEntities.includes(cat.value);
-             const categoryEntity= getEntityFromCategory(cat?.entity?.toLowerCase())
-                const coolingInfo = isDisabled
-                ? coolingPeriodData.find((cp) => cp.entity === categoryEntity)
-                : null;
+          <SkeletonWrapper loading={loading} type="home_card" count={7}>
+            <div className="categories-grid">
+              {initialCategories.map((cat, idx) => {
+                const isDisabled = disabledEntities?.some(
+                  (entity) => entity?.toLowerCase() === cat?.entity?.toLowerCase()
+                );
+                // const isDisabled = disabledEntities.includes(cat.value);
+               const categoryEntity= getEntityFromCategory(cat?.entity?.toLowerCase())
+                  const coolingInfo = isDisabled
+                  ? coolingPeriodData.find((cp) => cp.entity === categoryEntity)
+                  : null;
 
-              return (
-                <div
-                  key={idx}
-                  className={`category-card ${
-                    isDisabled ? "disabled-card" : ""
-                  }`}
-                  onClick={() => {
-                                          if (isDisabled) {
-                                            
-                                            const todayUTC = new Date().toISOString().split("T")[0];
-                                            const utcDateTime = `${todayUTC}T${coolingInfo?.toTime}Z`;
+                return (
+                  <div
+                    key={idx}
+                    className={`category-card ${
+                      isDisabled ? "disabled-card" : ""
+                    }`}
+                    onClick={() => {
+                                            if (isDisabled) {
+                                              
+                                              const todayUTC = new Date().toISOString().split("T")[0];
+                                              const utcDateTime = `${todayUTC}T${coolingInfo?.toTime}Z`;
+                      
+                                              const timezone = userTimezone;
+                                                  const localTime =getTimeOnly(utcDateTime,userTimezone,"HH:mm:ss")
+                                              // const localTime = new Date(utcDateTime).toLocaleTimeString("en-IN", {
+                                              //   timeZone: timezone,
+                                              //   hour: "2-digit",
+                                              //   minute: "2-digit",
+                                              //   hour12: true,
+                                              // });
+                                              Swal.fire({
+                                                icon: "warning",
+                                                title: t("Ordering Window Closed"),
+                                                text: `${t("Ordering window is closed.")} ${t(
+                                                  "You may place an order after"
+                                                )} ${localTime}`,
+                                                confirmButtonText: t("OK"),
+                                              });
+                                            } else {
+                                              navigate(`/catalog/${cat.value}`)
+                                            }
+                                          }}
+                     
                     
-                                            const timezone = userTimezone;
-                                                const localTime =getTimeOnly(utcDateTime,userTimezone,"HH:mm:ss")
-                                            // const localTime = new Date(utcDateTime).toLocaleTimeString("en-IN", {
-                                            //   timeZone: timezone,
-                                            //   hour: "2-digit",
-                                            //   minute: "2-digit",
-                                            //   hour12: true,
-                                            // });
-                                            Swal.fire({
-                                              icon: "warning",
-                                              title: t("Ordering Window Closed"),
-                                              text: `${t("Ordering window is closed.")} ${t(
-                                                "You may place an order after"
-                                              )} ${localTime}`,
-                                              confirmButtonText: t("OK"),
-                                            });
-                                          } else {
-                                            navigate(`/catalog/${cat.value}`)
-                                          }
-                                        }}
-                   
-                  
-                >
-                  <img
-                    src={isRTL ? cat.imageUrlAR : cat.imageUrlEN}
-                    alt={cat.label}
-                    className="category-img"
-                  />
+                  >
+                    <img
+                      src={isRTL ? cat.imageUrlAR : cat.imageUrlEN}
+                      alt={cat.label}
+                      className="category-img"
+                    />
+                  </div>
+                );
+              })}
+              {/* {initialCategories.map((cat, idx) => (
+                <div key={idx} className="category-card" onClick={() => navigate(`/catalog/${cat.value}`)}>
+                  <img src={isRTL ? cat.imageUrlAR : cat.imageUrlEN} alt={cat.label} className="category-img" />
                 </div>
-              );
-            })}
-            {/* {initialCategories.map((cat, idx) => (
-              <div key={idx} className="category-card" onClick={() => navigate(`/catalog/${cat.value}`)}>
-                <img src={isRTL ? cat.imageUrlAR : cat.imageUrlEN} alt={cat.label} className="category-img" />
-              </div>
-            ))} */}
-          </div>
+              ))} */}
+            </div>
+          </SkeletonWrapper>
         </div>
         {/* <div className="action-buttons-row">
             <button className="action-btn"><ThreeSixtyIcon size={18} /> {t("Reorder Last Order")}</button>

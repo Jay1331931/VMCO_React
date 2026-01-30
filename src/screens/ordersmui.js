@@ -19,6 +19,8 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import GetCustomers from "../components/GetCustomers";
 import OrderCard from "../components/OrderCard";
 import OrderCardsMobile from "../components/OrderCardsMobile";
+import { useLoading } from "../hooks/useLoading";
+import SkeletonWrapper from "../components/SkeletonWrapper";
 import Tabs from "../components/Tabs";
 import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
@@ -102,7 +104,7 @@ const initialCategories = [
 function Orders() {
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { loading, startLoading, stopLoading } = useLoading();
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -535,7 +537,7 @@ function Orders() {
   // Fetch orders from API
   const fetchOrders = useCallback(
     async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
-      setLoading(true);
+      startLoading();
       setError(null);
 
       const filtersCopy = { ...customFilters };
@@ -606,7 +608,7 @@ function Orders() {
         setError(err.message);
         setFilteredOrders([]);
       } finally {
-        setLoading(false);
+        stopLoading();
       }
     },
     [pageSize, token]
@@ -619,7 +621,7 @@ function Orders() {
     customFilters = {},
     sortedModel = []
   ) => {
-    setLoading(true);
+    startLoading();
     setError(null);
     const filtersCopy = { ...customFilters };
 
@@ -677,7 +679,7 @@ function Orders() {
       setError(err.message);
       setFilteredOrders([]);
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   };
 
@@ -740,7 +742,7 @@ function Orders() {
       cancelButtonText: t("No, cancel"),
     });
     if (result.isConfirmed) {
-      setLoading(true);
+      startLoading();
       setError(null);
       const filtersCopy = { ...filters };
       if (
@@ -808,7 +810,7 @@ function Orders() {
         setError(err.message);
         setFilteredOrders([]);
       } finally {
-        setLoading(false);
+        stopLoading();
       }
     }
   };
@@ -2514,9 +2516,7 @@ renderCell: (params) => {
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
       >
         {isMobile ? (
-          loading ? (
-            <LoadingSpinner />
-          ) : error ? (
+          error ? (
             <div className="error-message">{error}</div>
           ) : (
             <>
@@ -2651,13 +2651,15 @@ renderCell: (params) => {
 
                 {/* Order cards section - This should be separate from the fixed header */}
                 <div style={{  position: "relative", zIndex: 1 }}>
-                  <OrderCard
-                    orders={filteredOrders}
-                    isApprovalMode={isApprovalMode}
-                    orderIds={filteredOrders.map((o) => o.id)}
-                    setSelectedRow={handleOrderNumberClick}
-                    handlePay={handlePay}
-                  />
+                  <SkeletonWrapper loading={loading} type="order_card" count={4}>
+                    <OrderCard
+                      orders={filteredOrders}
+                      isApprovalMode={isApprovalMode}
+                      orderIds={filteredOrders.map((o) => o.id)}
+                      setSelectedRow={handleOrderNumberClick}
+                      handlePay={handlePay}
+                    />
+                  </SkeletonWrapper>
                 </div>
               </div>
             </>
@@ -2701,32 +2703,29 @@ renderCell: (params) => {
               </div>
             )}
             <div className="table-container">
-              {loading ? (
-                <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                  <LoadingSpinner size="medium" />
-                </div>
-              ) : error ? (
+              {error ? (
                 <div className="error-message">{error}</div>
               ) : (
                 <>
                   {/* Fixed height container with proper toolbar spacing and scrollable rows */}
-                  <Grid
-                    item
-                    xs={12}
-                    sx={{
-                      // height: {
-                      //   xs: "250px !important", // extra small
-                      //   sm: "300px !important", // small
-                      //   md: "386px !important", // medium
-                      //   lg: "489px !important", // large
-                      //   xl: "800px !important", // extra large
-                      // },
-                      width: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
-                  >
-                    <DataGrid
+                  <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
+                    <Grid
+                      item
+                      xs={12}
+                      sx={{
+                        // height: {
+                        //   xs: "250px !important", // extra small
+                        //   sm: "300px !important", // small
+                        //   md: "386px !important", // medium
+                        //   lg: "489px !important", // large
+                        //   xl: "800px !important", // extra large
+                        // },
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <DataGrid
                       apiRef={gridApiRef}
                       rows={filteredOrders}
                       columns={visibleColumns}
@@ -2860,7 +2859,8 @@ renderCell: (params) => {
                         }),
                       }}
                     />
-                  </Grid>
+                    </Grid>
+                  </SkeletonWrapper>
                 </>
               )}
             </div>
@@ -3036,11 +3036,13 @@ renderCell: (params) => {
         )}
 
         {isV("ordersPagination") && paginatedOrders.length > 0 && !loading && (
-          <Pagination
-            currentPage={page}
-            totalPages={String(totalPages)}
-            onPageChange={setPage}
-          />
+          <SkeletonWrapper loading={loading} type="pagination">
+            <Pagination
+              currentPage={page}
+              totalPages={String(totalPages)}
+              onPageChange={setPage}
+            />
+          </SkeletonWrapper>
         )}
 
 
