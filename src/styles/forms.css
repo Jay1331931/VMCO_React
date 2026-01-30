@@ -777,7 +777,7 @@ body::-webkit-scrollbar {
   gap: 15px;
   /* flex: 1; */
   width: var(--branches-header-controls-width);
-  --branches-header-controls-width: 80%;
+  --branches-header-controls-width: 90%;
   justify-content: space-between;
 }
 .branches-status-badge {
@@ -1457,9 +1457,9 @@ td.file-display-cell {
   .dropdown-header {
     width: 100% !important;
   }
-  .dropdown-content {
+  /* .dropdown-content {
     width: 100% !important;
-  }
+  } */
   .PhoneInputInput {
     width: 100% !important;
   }

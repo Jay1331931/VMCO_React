@@ -57,6 +57,8 @@ import DataManagement from "./screens/dataManagement";
 import { App } from "@capacitor/app";
 import Swal from "sweetalert2";
 import HomePage from "./screens/homePage";
+import logo from "./assets/talab_point_logo.png"
+import LoadingSpinner from "./components/LoadingSpinner";
 function AppRoutes() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("");
@@ -131,9 +133,40 @@ function AppRoutes() {
     };
   }, [location.pathname, navigate]);
 
-  if (loading) {
-    return <div>Loading...</div>; // or a loading spinner
+if (loading) {
+  return (
+    <div  className="container">
+      <div  className="logoWrapper" style={{position: "fixed",
+    top: "50%",
+    left: "50%"}}>
+        <LoadingSpinner/>
+      </div>
+      <style>
+        {`
+         
+            container: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    backgroundColor: '#ffffff',
+    position: 'fixed', // Ensures it covers the whole screen
+    top: 0,
+    left: 0,
+    zIndex: 9999,      // Keeps it above all other elements
+  },
+  logoWrapper: {
+    animation: 'pulse 2s infinite ease-in-out',
+  },
+  logo: {
+    width: '120px',    // Adjust size as needed
+    height: 'auto',
   }
+        `}
+      </style>
+    </div>
+  );
+}
 
   // const tokenIsValid = (token || tokenname) && isTokenValid(token ||tokenname);
   return (

@@ -394,7 +394,36 @@ const BankTransactions = () => {
           {isMobile ? (
             <div className="orders-content">
               {loading ? (
-                <LoadingSpinner />
+                <div  className="container">
+                     <div  className="logoWrapper" style={{position: "fixed",
+                   top: "50%",
+                   left: "50%"}}>
+                       <LoadingSpinner/>
+                     </div>
+                     <style>
+                       {`
+                        
+                           container: {
+                   display: 'flex',
+                   justifyContent: 'center',
+                   alignItems: 'center',
+                   width: '100%',
+                   backgroundColor: '#ffffff',
+                   position: 'fixed', // Ensures it covers the whole screen
+                   top: 0,
+                   left: 0,
+                   zIndex: 9999,      // Keeps it above all other elements
+                 },
+                 logoWrapper: {
+                   animation: 'pulse 2s infinite ease-in-out',
+                 },
+                 logo: {
+                   width: '120px',    // Adjust size as needed
+                   height: 'auto',
+                 }
+                       `}
+                     </style>
+                   </div>
               ) : error ? (
                 <div className="error-message">{error}</div>
               ) : (

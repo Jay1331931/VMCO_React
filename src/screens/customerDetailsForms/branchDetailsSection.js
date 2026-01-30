@@ -1266,7 +1266,7 @@ onKeyDown={handleKeyDown}
                                 onChange={
                                   field.onChange || handleBranchFieldChange
                                 }
-                                className={"branchDropDown"}
+                                // className={"branchDropDown"}
                                 style={{
                                   ...(hasUpdate
                                     ? {
@@ -1549,13 +1549,14 @@ onKeyDown={handleKeyDown}
                             name={field.name}
                             value={branch?.[field.name]}
                             onChange={field.onChange || handleBranchFieldChange}
-                            className="dropdown-mobile"
+                            // className="dropdown-mobile"
                             disabled={
                               (customerFormMode === "custDetailsAdd" && inApproval) ||
                               field.disabled
                             }
                             hidden={!isV(field.name)}
                             options={field.options}
+                               style={{width:"100%"}}
                           />
                          
                         </div>

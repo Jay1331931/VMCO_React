@@ -700,17 +700,8 @@ const AddBankTransaction = () => {
                 onChange={handleChange}
                 disabled={!!updateTransaction?.transactionDate}
                 max={maxDate}
-                onFocus={() => {
-                  if (window.innerWidth <= 768) {
-                    // This could trigger hiding the bottom menu
-                    document.body.classList.add("keyboard-open");
-                  }
-                }}
-                onKeyDown={handleKeyDown}
-                onBlur={() => {
-                  document.body.classList.remove("keyboard-open");
-                 
-                }}
+                
+               
                style={{ 
                 backgroundColor: "white", 
                 opacity: 1, 
