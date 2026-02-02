@@ -11,6 +11,26 @@ import Swal from "sweetalert2"; // Add this import at the top if not already pre
 import Constants from "../../constants";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import i18n from "../../i18n";
+import { Document, Page, pdfjs } from 'react-pdf';
+// import PDFWorker from "pdfjs-dist/webpack";
+// import { WorkerMessageHandler } from "pdfjs-dist/build/pdf.worker.min.mjs";
+
+// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+//   WorkerMessageHandler,
+//   import.meta.url
+// ).toString();
+// import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+// import 'react-pdf/dist/esm/Page/TextLayer.css';
+// pdfjs.GlobalWorkerOptions.workerSrc = PDFWorker;
+// pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+// const PDFJS_VERSION = '5.4.296'; // or use the latest stable version
+
+// Set the version first, then the worker
+// pdfjs.version = PDFJS_VERSION;
+// pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`;
+
+// OR use jsdelivr
+// pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.js`;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const CUSTOMER_APPROVAL_CHECKLIST_URL = Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
 const CUSTOMER_APPROVAL_CHECKLIST = Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
@@ -137,10 +157,12 @@ const openUrlSmart = (url) => {
     //   // iOS Safari fallback
     //   window.open(url, '_blank');
     // }
-    setPopupUrl(url);
+    // setPopupUrl(url);
+    window.open(url, '_blank');
   } else {
     // Desktop
     window.open(url, '_blank');
+    // setPopupUrl(url);
   }
 };
 
@@ -5151,6 +5173,9 @@ onKeyDown={handleKeyDown}
           border: "none",
         }}
       />
+       {/* <Document file={popupUrl}>
+          <Page pageNumber={1} />
+        </Document> */}
 
       <button
         className="image-popup-close"

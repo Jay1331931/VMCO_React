@@ -134,7 +134,8 @@ const FinalSubmissionConfirmation = ({
       //   // iOS Safari fallback
       //   window.open(url, '_blank');
       // }
-      setPopupUrl(url);
+      // setPopupUrl(url);
+      window.open(url, '_blank');
     } else {
       // Desktop
       window.open(url, '_blank');
