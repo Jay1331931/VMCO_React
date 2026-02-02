@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import Constants from "../constants";
 import { useAuth } from "../context/AuthContext";
 import SyncIcon from "@mui/icons-material/Sync";
-
+import IosShareIcon from "@mui/icons-material/IosShare";
 function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay,FandOSyncSo=false,handleSync,syncLoading,syncLoadingId, toolbarProps }) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -491,7 +491,7 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay,FandOSync
                       >
                         {`${Number(order?.totalAmount || 0).toFixed(2)} ${t("SAR")}`}
                       </Typography>
-                      {(user.userType?.toLowerCase() === 'customer' && order?.status?.toLowerCase() !== "cancelled" &&
+                      {((user.userType?.toLowerCase() === 'customer' || (user.userType?.toLowerCase() === 'employee' && user?.designation?.toLowerCase() === 'sales executive')) && order?.status?.toLowerCase() !== "cancelled" &&
                         order?.status?.toLowerCase() !== "rejected" &&
                         order?.paymentMethod?.toLowerCase() != "cash on delivery" &&
                         order?.paymentMethod?.toLowerCase() !== "credit" &&
@@ -529,7 +529,7 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay,FandOSync
                             // justifyContent: "flex-end"
                           }}
                         >
-                          <Button
+                          {user?.userType?.toLowerCase() === 'customer' ? (<Button
                             variant="contained"
                             size="small"
                             sx={{
@@ -556,7 +556,35 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay,FandOSync
                                         <AccountBalanceWalletIcon />
                                       </Tooltip> */}
                             {t("Pay")}
-                          </Button>
+                          </Button>) : (<Button
+                            variant="contained"
+                            size="small"
+                            sx={{
+                              backgroundColor: "#009688",
+                              textTransform: "none",
+                              fontSize: "12px",
+                              borderRadius: "20px",
+                              px: 2,
+                              py: 0.6,
+                              zIndex: 2500,
+                              "&:hover": {
+                                //   backgroundColor: "#2f4341",
+                              },
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // navigate(`/orders/${order?.id}/pay`, {
+                              //   state: { order },
+                              // });
+                              handlePay(order, false, true)
+                            }}
+                          >
+                            {/* <Tooltip title={("Pay")} arrow>
+                                        <AccountBalanceWalletIcon />
+                                      </Tooltip> */}
+                            <IosShareIcon fontSize="small" />
+                                                    &nbsp; {t("Send")}
+                          </Button>)}
                         </Grid>
                       ) : (
                         <>
