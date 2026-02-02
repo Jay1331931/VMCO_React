@@ -35,6 +35,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { useCustomer } from "../context/CustomerContext";
 import Constants from "../constants";
+import {isMobile} from '../utilities/isMobile';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
@@ -152,7 +153,7 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
 
   return (
     <div className="location-picker-container">
-      <div ref={mapContainer} className="map-container" />
+      <div ref={mapContainer} className={isMobile ? "map-container-mobile" : "map-container"} />
       <div className="location-coords">
         {i18n.language === "ar" ? coordsArabic : coords}
       </div>

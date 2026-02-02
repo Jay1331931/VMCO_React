@@ -790,8 +790,8 @@
   }
   body.keyboard-open .mobile-bottom-menu {
   display: none !important;
-  transform: translateY(100%) !important;
-  transition: transform 0.3s ease !important;
+  /* transform: translateY(100%) !important;
+  transition: transform 0.3s ease !important; */
 }
   .orders-bottom-bar {
     bottom: calc(70px + env(safe-area-inset-bottom, 0px));

@@ -714,7 +714,15 @@ function FinancialInformation({
         </div>
       )} */}
       {user?.userType.toLowerCase() === "employee" && (
-        <div className="form-main-header">
+        <div className="form-main-header" style={{ ...(isMobile && {
+    margin: "0px 12px",
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "center",
+    backgroundColor: "#76716926",
+    borderRadius: "11px",
+    padding: "4px 0px"
+  })}}>
           {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
         </div>
       )}
@@ -2600,6 +2608,15 @@ onKeyDown={handleKeyDown}
                   </p>
                 )}
             </div>
+
+            {/* <div className="gi-footer">
+              <button
+                className="gi-close-btn"
+                onClick={() => setIsCreditBalanceData(false)}
+              >
+                {t("Close")}
+              </button>
+            </div> */}
           </dialog>
           <style>
             {`
@@ -2809,7 +2826,7 @@ onKeyDown={handleKeyDown}
                   type="date"
                   value={fromDate}
                   max={dayjs().format("YYYY-MM-DD")}
-                  style={{ backgroundColor: "white" }}
+                  style={{ backgroundColor: "white" , width: "100%"}}
                   onChange={(e) => setFromDate(e.target.value)}
                 />
               </div>
@@ -2818,7 +2835,7 @@ onKeyDown={handleKeyDown}
                 <input
                   type="date"
                   value={toDate}
-                  style={{ backgroundColor: "white" }}
+                  style={{ backgroundColor: "white" , width: "100%"}}
                   max={dayjs().format("YYYY-MM-DD")}
                   onChange={(e) => setToDate(e.target.value)}
                 />
@@ -2830,6 +2847,7 @@ onKeyDown={handleKeyDown}
               <div className="input-field">
                 <label>{t("Email")}</label>
                 <input
+                         style={{ width: "100%"}}
                   type="email"
                   disabled
                   className="disabled-input"
@@ -2844,6 +2862,7 @@ onKeyDown={handleKeyDown}
                 <label>{t("CC")}</label>
                 <input
                   type="text"
+                           style={{ width: "100%"}}
                   onFocus={() => {
                     if (window.innerWidth <= 768) {
                       // This could trigger hiding the bottom menu
@@ -2951,7 +2970,7 @@ onKeyDown={handleKeyDown}
 
 .entity-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(167px, 1fr));
   gap: 10px;
 }
 
@@ -2984,15 +3003,24 @@ onKeyDown={handleKeyDown}
   margin-bottom: 5px;
 }
 
-.input-field input {
-  width: 280px;
+.input-field  {
+  // width: 100%;
+  padding: 10px;
+  // border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: white;
+}
+  input{
+ 
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
   background-color: white;
-}
+  }
 
 .disabled-input { background: #f5f5f5; cursor: not-allowed; }
 .error-border { border-color: #C01823 !important; }
