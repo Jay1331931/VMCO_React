@@ -2713,6 +2713,10 @@ renderCell: (params) => {
                       orderIds={filteredOrders.map((o) => o.id)}
                       setSelectedRow={handleOrderNumberClick}
                       handlePay={handlePay}
+                      FandOSyncSo={isV("FandOSyncSO")} 
+                      handleSync={handleFandOFailSO}
+                      syncLoading={syncLoading}
+                      syncLoadingId={syncLoadingId}
                     />
                   </SkeletonWrapper>
                 </div>

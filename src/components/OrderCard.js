@@ -6,9 +6,9 @@ import CustomToolbarMobile from "../components/CustomToolbarMobile";
 import { useTranslation } from "react-i18next";
 import Constants from "../constants";
 import { useAuth } from "../context/AuthContext";
+import SyncIcon from "@mui/icons-material/Sync";
 import IosShareIcon from "@mui/icons-material/IosShare";
-
-function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarProps }) {
+function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay,FandOSyncSo=false,handleSync,syncLoading,syncLoadingId, toolbarProps }) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user, token, logout } = useAuth();
@@ -115,7 +115,7 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
     // Force LTR direction using Unicode character
     return `\u202A${hoursStr}:${minutesStr} ${ampm}\u202C`;
   };
-
+    
 
   return (
     <div
@@ -143,7 +143,91 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
         }}
       >
         {orders?.length > 0 ? (
-          orders.map((order) => (
+          orders.map((order) =>
+             {
+              const COMMON_RULES = {
+    SHC_GMTC: [
+      {
+        paymentMethod: "Pre Payment",
+        paymentStatus: "Paid",
+        status: "approved",
+      },
+      { paymentMethod: "Credit", paymentStatus: "Credit", status: "approved" },
+      {
+        paymentMethod: "Cash on Delivery",
+        paymentStatus: "Pending",
+        status: "approved",
+      },
+      { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
+      { paymentMethod: "Credit", paymentStatus: "Credit", status: "open" },
+      {
+        paymentMethod: "Cash on Delivery",
+        paymentStatus: "Pending",
+        status: "open",
+      },
+    ],
+    NAQI_DAR: [
+      {
+        paymentMethod: "Pre Payment",
+        paymentStatus: "Paid",
+        status: "approved",
+      },
+      {
+        paymentMethod: "Pre Payment",
+        paymentStatus: "Under Review",
+        status: "approved",
+      },
+      { paymentMethod: "Credit", paymentStatus: "Credit", status: "approved" },
+      {
+        paymentMethod: "Cash on Delivery",
+        paymentStatus: "Pending",
+        status: "approved",
+      },
+    ],
+  };
+  const SYNC_RULES = {
+          [Constants.ENTITY.VMCO]: (order) =>
+            order.isMachine
+              ? [
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+
+              ]
+              : [
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Credit",
+                  paymentStatus: "Credit",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Cash on Delivery",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                }
+              ],
+          [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
+          [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
+          [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
+          [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
+        };
+        const rules = SYNC_RULES[order?.entity]?.(order) || [];
+        const isValidForSync = rules?.some(
+          (rule) =>
+            rule?.paymentMethod?.toLowerCase() ===
+            order.paymentMethod?.toLowerCase() &&
+            rule?.paymentStatus?.toLowerCase() ===
+            order.paymentStatus?.toLowerCase() &&
+            rule?.status?.toLowerCase() === order?.status?.toLowerCase()
+        );
+              return(
             <Grid
               key={order?.id}
               item
@@ -187,8 +271,8 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    minHeight: 80,
-                    maxHeight: 80,
+                    minHeight: 94,
+                    maxHeight: 94,
                     width: "100%",          // ✅ force full width
                     boxSizing: "border-box", // ✅ ensures padding doesn't shrink width
                   }}
@@ -347,7 +431,32 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                       >
                         {order?.erpOrderId}
                       </Typography>
-
+                         {FandOSyncSo && !order?.erpOrderId && (isValidForSync || (order?.status?.toLowerCase() === 'approved' && order?.sampleOrder === true)) && (
+  <Tooltip 
+    title={syncLoading && syncLoadingId === order.id ? t("Syncing...") : t("Sync")} 
+    arrow
+  >
+    <Button
+      variant="contained"
+      size="small"
+      sx={{
+        backgroundColor: "#32a19f",
+        color: "white",
+        textTransform: "none",
+        fontSize: "12px",
+        borderRadius: "20px",
+        px: 1,
+        py: 0.6,
+        "&:hover": { backgroundColor: "#e28d12" },
+      }}
+      onClick={() => handleSync(order?.id)} 
+      disabled={syncLoading && syncLoadingId === order?.id}
+    >
+      <SyncIcon fontSize="small" />
+      &nbsp; 
+    </Button>
+  </Tooltip>
+)}
                       {isApprovalMode && (<Typography
                         fontSize={12}
                         color="textSecondary"
@@ -506,7 +615,7 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay, toolbarP
                 </Grid>
               </Grid>
             </Grid>
-          ))
+          )})
         ) : (
           <Typography align="center" sx={{ mt: 2 }}>
             No orders found
