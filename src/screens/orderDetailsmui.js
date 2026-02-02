@@ -26,6 +26,10 @@ import PdfPopupViewer from "../components/PdfPopupViewer";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { Box, Button, Typography, Tooltip, Chip } from "@mui/material";
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+
 import {
   DataGrid,
   GridFooterContainer,
@@ -523,7 +527,7 @@ function OrderDetails() {
           return { allowed: "Insufficient balance" };
         } else {
           // Check credit period eligibility
-            //  return { allowed: true, paymentMethod: 'Credit' };
+          //  return { allowed: true, paymentMethod: 'Credit' };
           try {
             const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${formData.erpCustId}`, {
               method: "GET",
@@ -5055,43 +5059,120 @@ function OrderDetails() {
                                     return;
                                   }
                                 }
-                                // In edit mode, always use values from formData (order state)
                                 setShowProductPopup(true);
                               }}
                               disabled={!isE("addProducts")}
                               style={{
-                                cursor: !isE("addProducts")
-                                  ? "not-allowed"
-                                  : "pointer",
+                                cursor: !isE("addProducts") ? "not-allowed" : "pointer",
                               }}
                             >
                               {t("Add products")}
                             </button>
                           )}
                           {isV("sampleOrder", fromApproval, true) && (
-                            <button
-                              type="button"
-                              className="order-action-btn"
-                              onClick={() => setSampleMode(!sampleMode)}
-                              disabled={
-                                !isE("sampleOrder") ||
-                                (formData.products &&
-                                  formData.products.length > 0)
-                              }
-                              style={{
-                                backgroundColor: sampleMode || formData.sampleOrder ? "var(--logo-orange)" : "white",
-                                color: "black",
-                                border: "1px solid #ccc",
-                                cursor:
+                            isMobile ? (
+                              <div
+                                className="order-action-btn sample-switch-container"
+                                style={{
+                                  position: 'relative',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-around',
+                                  padding: '4px 6px',
+                                  height: '100%',
+                                  border: 'none',
+                                  transition: 'none',
+                                  pointerEvents: 'none' 
+                                }}
+                              >
+                                <div style={{ pointerEvents: 'auto' }}>  {/* Make only switch clickable */}
+                                  <Switch
+                                    checked={sampleMode || formData.sampleOrder}
+                                    onClick={() => setSampleMode(!sampleMode)}
+                                    disabled={
+                                      !isE("sampleOrder") ||
+                                      (formData.products && formData.products.length > 0)
+                                    }
+                                    sx={{
+                                      width: 44,
+                                      height: 26,
+                                      padding: 0,
+                                      '& .MuiSwitch-switchBase': {
+                                        padding: '2px',
+                                        margin: '0',
+                                      },
+                                      '& .MuiSwitch-switchBase.Mui-checked': {
+                                        color: 'white',
+                                      },
+                                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                        backgroundColor: 'var(--logo-orange)',
+                                      },
+                                      '& .Mui-disabled': {
+                                        opacity: 0.4,
+                                      },
+                                      '& .MuiSwitch-track': {
+                                        borderRadius: 13,
+                                        backgroundColor: '#d9d9d6',
+                                        height: 22,
+                                      },
+                                      '& .MuiSwitch-thumb': {
+                                        width: 18,
+                                        height: 18,
+                                        boxShadow: '0px 2px 4px rgba(0,0,0,0.2)',
+                                        zIndex: 1,
+                                      },
+                                      '& .MuiSwitch-switchBase.Mui-disabled .MuiSwitch-thumb': {
+                                        color: '#a0a0a0',
+                                      },
+                                      // Disable all hover effects
+                                      '&:hover': {
+                                        backgroundColor: 'transparent',
+                                      },
+                                      '& .MuiSwitch-switchBase:hover': {
+                                        backgroundColor: 'transparent',
+                                      },
+                                      'css-aqlqb4-MuiButtonBase-root-MuiSwitchBase-root-MuiSwitch-switchBase .MuiSwitch-input': {
+                                        left: '0',
+                                        width: '100%',
+                                      },
+                                      '.css-aqlqb4-MuiButtonBase-root-MuiSwitchBase-root-MuiSwitch-switchBase.Mui-checked:hover': {
+                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                        padding: '2px',
+                                      },
+                                    }}
+                                  />
+                                </div>
+                                <span style={{
+                                  fontWeight: 600,
+                                  fontSize: '12px',
+                                  color: (!isE("sampleOrder") || (formData.products && formData.products.length > 0)) ? '#a0a0a0' : '#222',
+                                }}>
+                                  {t("Sample Order")}
+                                </span>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="order-action-btn"
+                                onClick={() => setSampleMode(!sampleMode)}
+                                disabled={
                                   !isE("sampleOrder") ||
-                                    (formData.products &&
-                                      formData.products.length > 0)
-                                    ? "not-allowed"
-                                    : "pointer",
-                              }}
-                            >
-                              {t("Sample Order")}
-                            </button>
+                                  (formData.products && formData.products.length > 0)
+                                }
+                                style={{
+                                  backgroundColor: sampleMode || formData.sampleOrder ? "var(--logo-orange)" : "white",
+                                  color: "black",
+                                  border: "1px solid #ccc",
+                                  cursor:
+                                    !isE("sampleOrder") ||
+                                      (formData.products && formData.products.length > 0)
+                                      ? "not-allowed"
+                                      : "pointer",
+                                }}
+                              >
+                                {t("Sample Order")}
+                              </button>
+                            )
                           )}
                         </div>
                       )}
@@ -5298,7 +5379,7 @@ function OrderDetails() {
                                    <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
                                   </div> */}
                                   {/* Price Summary */}
-                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px", justifyContent: "space-between" }} >
+                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px", justifyContent: "space-around" }} >
                                     <div className="item-price-panel" >
                                       <span className="tax-row" style={{ fontSize: 13 }} >
                                         {t("VAT: ")}
@@ -5741,9 +5822,9 @@ function OrderDetails() {
             action="cancel"
             onSubmit={handleCancelOrderSubmit}
             customerName={formData.selectedCustomerName}
-            title="Cancel Order"
-            subtitle={`Are you sure you want to cancel this order? Please provide a reason for cancellation.`}
-            placeholder="Enter reason for cancellation..."
+            title={t("Cancel Order")}
+            subtitle={t(`Are you sure you want to cancel this order? Please provide a reason for cancellation.`)}
+            placeholder={t("Enter reason for cancellation...")}
             pageType="order" // Important: specifies this is for order page
           />
         </div>

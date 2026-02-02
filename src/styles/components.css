@@ -2318,6 +2318,24 @@ body.catalog-page {
     font-size: 1.1rem;
   }
 
+  .sample-switch-container {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .sample-switch-container:hover {
+    background: #fff !important;
+  }
+
+  .sample-switch-container .MuiSwitch-root:hover {
+    background: transparent !important;
+  }
+
+  .sample-switch-container:has(.MuiSwitch-root:disabled) {
+    background: #f0f0f0 !important;
+  }
+
+
   /* .order-details-footer {
     background-color: #f8f9fa;
   } */
@@ -3221,9 +3239,10 @@ input:focus {
   padding: 5px;
 }
 
-.PhoneInput{
+.PhoneInput {
   width: 210px;
 }
+
 .custom-phone-input {
   display: flex;
   align-items: center;
