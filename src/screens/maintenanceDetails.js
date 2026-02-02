@@ -18,9 +18,6 @@ import Constants from "../constants";
 import ApprovalDialog from "../components/ApprovalDialog";
 import GetProducts from '../components/GetProducts';
 import GetSpareParts from '../components/GetSpareParts';
-// Add Capacitor imports
-import { Capacitor } from '@capacitor/core';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 function MaintenanceDetails() {
   const defaultTicket = {
@@ -121,79 +118,8 @@ function MaintenanceDetails() {
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  // Function to handle file selection with Capacitor
-  const handleFileSelect = async (type) => {
-    // Check if running on iOS native
-    if (Capacitor.isNativePlatform()) {
-      try {
-        // Request camera permissions
-        const permission = await Camera.checkPermissions();
-        if (permission.camera !== 'granted' || permission.photos !== 'granted') {
-          const request = await Camera.requestPermissions();
-          if (request.camera !== 'granted' || request.photos !== 'granted') {
-            Swal.fire({
-              title: t("Permission Required"),
-              text: t("Camera and photo library permissions are required to upload files"),
-              icon: "warning",
-              confirmButtonText: t("OK"),
-              confirmButtonColor: "#dc3545"
-            });
-            return;
-          }
-        }
-
-        const image = await Camera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          resultType: CameraResultType.Uri,
-          source: type === 'image' ? CameraSource.Prompt : CameraSource.Prompt,
-          presentationStyle: 'fullscreen',
-          webUseInput: false,
-        });
-
-        if (image.webPath) {
-          // Convert URI to blob for upload
-          const response = await fetch(image.webPath);
-          const blob = await response.blob();
-          const file = new File([blob], `photo_${Date.now()}.${image.format || 'jpg'}`, { 
-            type: type === 'image' ? 'image/jpeg' : 'video/mp4' 
-          });
-          
-          // Call your existing upload function
-          await handleFileUpload({ target: { files: [file] } }, type);
-        }
-      } catch (error) {
-        console.error('Camera error:', error);
-        if (error.message !== 'User cancelled photos app') {
-          Swal.fire({
-            title: t("Error"),
-            text: t("Failed to capture photo. Please try again."),
-            icon: "error",
-            confirmButtonText: t("OK"),
-            confirmButtonColor: "#dc3545"
-          });
-        }
-      }
-    } else {
-      // Use normal file input for web
-      if (type === "image" && fileInputRef.current) {
-        fileInputRef.current.click();
-      } else if (type === "video" && videoInputRef.current) {
-        videoInputRef.current.click();
-      }
-    }
-  };
-
   const handleFileUpload = async (e, type) => {
-    let file;
-    
-    // Handle both direct file input and Capacitor file
-    if (e.target && e.target.files) {
-      file = e.target.files && e.target.files[0];
-    } else if (e instanceof File) {
-      file = e;
-    }
-    
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
@@ -256,10 +182,7 @@ function MaintenanceDetails() {
       }
     }
 
-    // Reset input value for web
-    if (e.target && e.target.value) {
-      e.target.value = "";
-    }
+    e.target.value = "";
   };
 
   const fetchUploadedFiles = useCallback(async (fileNames, type) => {
@@ -824,11 +747,11 @@ function MaintenanceDetails() {
   };
 
   const openFileDialog = () => {
-    handleFileSelect('image');
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   const openVideoDialog = () => {
-    handleFileSelect('video');
+    if (videoInputRef.current) videoInputRef.current.click();
   };
 
   const handleSelectCustomer = (customer) => {
