@@ -22,6 +22,7 @@ import Constants from "../../constants";
 import { getOptionsFromBasicsMaster } from "../../utilities/commonServices";
 import SearchableDropdown from "../../components/SearchableDropdown"; // Add this import
 import LoadingSpinner from "../../components/LoadingSpinner";
+import SkeletonWrapper from "../../components/SkeletonWrapper";
 // --- Entities (Tabs) like catalog.js ---
 const initialEntities = [
   {
@@ -723,9 +724,10 @@ function Products({ customerId, customer, setTabsHeight }) {
 
       {
         loading && (
-          <div style={{ padding: 24 }}>
-            <LoadingSpinner />
-          </div>
+          // <div style={{ padding: 24 }}>
+          //   <LoadingSpinner />
+          // </div>
+          <SkeletonWrapper loading={loading} type="table" rows={3} columns={1}> </SkeletonWrapper>
         )
       }
 

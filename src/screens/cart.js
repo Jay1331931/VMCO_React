@@ -13,6 +13,7 @@ import Swal from "sweetalert2";
 import Constants from "../constants";
 import axios from "axios";
 import { Capacitor } from "@capacitor/core";
+import SkeletonWrapper from "../components/SkeletonWrapper";
 const isMobileDevice = Capacitor.isNativePlatform();
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -3912,9 +3913,10 @@ function Cart() {
       </div>
       <div className="cart-main-content">
         {isLoading ? (
-          <div className="loading-indicator">
-            {t("Loading your cart items...")}
-          </div>
+          // <div className="loading-indicator">
+          //   {t("Loading your cart items...")}
+          // </div>
+          <SkeletonWrapper loading={isLoading} type="cart_list" count={4}></SkeletonWrapper>
         ) : error ? (
           <div className="error-message">{error}</div>
         ) : (
