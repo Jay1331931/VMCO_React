@@ -940,8 +940,9 @@
 "Assigned To:":"مُسند إلى:",
 "assignedTo":"معين إلى",
 "Mode":"وضع",
-"Payable days Overdue": "تم تجاوز عدد أيام السداد المسموح بها"
-
+"Payable days Overdue": "تم تجاوز عدد أيام السداد المسموح بها",
+"Select Customer Orders":"حدد طلبات العملاء",
+"Search orders...":"أوامر البحث..."
 
 
 }
