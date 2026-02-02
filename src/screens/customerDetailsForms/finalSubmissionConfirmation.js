@@ -780,7 +780,7 @@ const FinalSubmissionConfirmation = ({
       className="image-popup-content"
       onClick={(e) => e.stopPropagation()}
     >
-      <iframe
+      <img
         src={popupUrl}
         title="Popup Browser"
         style={{
