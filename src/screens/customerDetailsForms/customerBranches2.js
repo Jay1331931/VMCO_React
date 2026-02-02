@@ -2029,6 +2029,7 @@ const CustomerBranches = ({
         </>
       ) : (
         <div className="branches-table-container">
+          <SkeletonWrapper loading={loading} type="table" rows={4} columns={5}>
           <table className="branches-data-table">
             <thead>
               <tr>
@@ -2221,6 +2222,7 @@ const CustomerBranches = ({
               ))}
             </tbody>
           </table>
+          </SkeletonWrapper>
           {branches && branches.length > 0 && (
             <Pagination
               currentPage={currentPage}
