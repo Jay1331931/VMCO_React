@@ -2336,10 +2336,10 @@ function Customers() {
                             handleApproval={handleApproval}
                             isApprovalMode={false}
                             dropdownColumns = {{status: [
-    { value: "new", label: "Incomplete" },
-    { value: "pending",  label: "Pending Approval" },
-    { value: "approved", label: "Approved" },
-    { value: "notregistered", label: "Invite Pending" },
+    { value: "new", label: Constants.INVITE_STATUS.INCOMPLETE },
+    { value: "pending",  label: Constants.INVITE_STATUS.PENDING_APPROVAL },
+    { value: "approved", label: Constants.INVITE_STATUS.APPROVED },
+    { value: "notregistered", label: Constants.INVITE_STATUS.INVITE_PENDING },
   ],}}
                             excludeFiltersFromChips = {["status"]}
                           />
