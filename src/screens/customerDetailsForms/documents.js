@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isMobile } from "../../utilities/isMobile";
 import "../../styles/forms.css";
+import "../../styles/components.css";
 import { not } from "ajv/dist/compile/codegen";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import RbacManager from "../../utilities/rbac";
@@ -60,6 +61,7 @@ function Documents({
   });
   const [tradingFilePreviews, setTradingFilePreviews] = useState({});
   const [nonTradingFilePreviews, setNonTradingFilePreviews] = useState({});
+  const [popupUrl, setPopupUrl] = useState(null);
   const fileInputRefs = {
     // acknowledgementSignature: useRef(),
     crCertificate: useRef(),
@@ -113,28 +115,29 @@ const openUrlSmart = (url) => {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   if (isMobile) {
-    if (window.cordova && window.cordova.InAppBrowser) {
-      const width = 400;
-      const height = 500;
-      const centeredPosition = getCenteredOptions(width, height);
+    // if (window.cordova && window.cordova.InAppBrowser) {
+    //   const width = 400;
+    //   const height = 500;
+    //   const centeredPosition = getCenteredOptions(width, height);
 
-      const options =
-        'toolbar=yes,' +
-        'hideurlbar=yes,' +
-        'zoom=no,' +
-        'hardwareback=yes,' +
-        'clearsessioncache=yes,' +
-        'clearcache=yes,' +
-        `width=${width},` +
-        `height=${height},` +
-        `left=${centeredPosition.left},` +
-        `top=${centeredPosition.top}`;
+    //   const options =
+    //     'toolbar=yes,' +
+    //     'hideurlbar=yes,' +
+    //     'zoom=no,' +
+    //     'hardwareback=yes,' +
+    //     'clearsessioncache=yes,' +
+    //     'clearcache=yes,' +
+    //     `width=${width},` +
+    //     `height=${height},` +
+    //     `left=${centeredPosition.left},` +
+    //     `top=${centeredPosition.top}`;
 
-      window.cordova.InAppBrowser.open(url, '_blank', options);
-    } else {
-      // iOS Safari fallback
-      window.open(url, '_blank');
-    }
+    //   window.cordova.InAppBrowser.open(url, '_blank', options);
+    // } else {
+    //   // iOS Safari fallback
+    //   window.open(url, '_blank');
+    // }
+    setPopupUrl(url);
   } else {
     // Desktop
     window.open(url, '_blank');
@@ -5130,6 +5133,35 @@ onKeyDown={handleKeyDown}
           </tr>
         </>
       )}
+      {popupUrl && (
+  <div
+    className="image-popup-overlay"
+    onClick={() => setPopupUrl(null)}
+  >
+    <div
+      className="image-popup-content"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <img
+        src={popupUrl}
+        title="Popup Browser"
+        style={{
+          width: "100%",
+          height: "100%",
+          border: "none",
+        }}
+      />
+
+      <button
+        className="image-popup-close"
+        onClick={() => setPopupUrl(null)}
+      >
+        ×
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
