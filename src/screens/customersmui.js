@@ -1232,7 +1232,7 @@ function Customers() {
       searchable: false,
       flex: 1,
       headerAlign: "center",
-      renderCell: (params) => (
+      renderCell: (params) => {if( params?.row?.status?.toLowerCase()=="invite pending") return(
         <Box sx={{ display: "flex", gap: 1 }}>
           <Box
             component="span"
@@ -1252,7 +1252,7 @@ function Customers() {
             </Tooltip>
           </Box>
         </Box>
-      ),
+      )},
     },
   ];
 
@@ -1394,7 +1394,7 @@ function Customers() {
       if (result.status === "Ok") {
         const updatedInvites = result.data.data.map((invite) => ({
     ...invite,
-    status: invite?.registered ? invite?.customerStatus?.toLowerCase() === "new" ? "Incomplete" : invite?.customerStatus?.toLowerCase() === "pending" ? "Pending Approval": invite?.customerStatus: "Invite Pending",   // default value
+    status: invite?.registered ? invite?.customerStatus?.toLowerCase() === "new" ? "Incomplete" : invite?.customerStatus?.toLowerCase() === "pending" ? "Pending Approval": invite?.customerStatus?.toLowerCase() === "blocked" ?  "Approved": invite?.customerStatus: "Invite Pending" ,   // default value
   }));
         setFilteredInvites(updatedInvites);
         // }));
@@ -2336,10 +2336,10 @@ function Customers() {
                             handleApproval={handleApproval}
                             isApprovalMode={false}
                             dropdownColumns = {{status: [
-    { value: "new", label: "Incomplete" },
-    { value: "pending",  label: "Pending Approval" },
-    { value: "approved", label: "Approved" },
-    { value: "notregistered", label: "Invite Pending" },
+    { value: "new", label: Constants.INVITE_STATUS.INCOMPLETE },
+    { value: "pending",  label: Constants.INVITE_STATUS.PENDING_APPROVAL },
+    { value: "approved", label: Constants.INVITE_STATUS.APPROVED },
+    { value: "notregistered", label: Constants.INVITE_STATUS.INVITE_PENDING },
   ],}}
                             excludeFiltersFromChips = {["status"]}
                           />
