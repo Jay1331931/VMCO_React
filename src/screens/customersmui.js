@@ -1626,6 +1626,227 @@ function Customers() {
       )}
     </div>
   );
+  const headerMap = {
+  // IDs
+  id: "Registration ID",
+  erpCustId: "ERP ID",
+  salesExecutiveName: "Sales Executive Name",
+  currentApprover: "Current Approver",
+  // Company
+  companyNameEn: "Company Name (EN)",
+  companyNameAr: "Company Name (AR)",
+  companyType: "Company Type",
+  crNumber: "CR Number",
+  vatNumber: "VAT Number",
+  baladeahLicenseNumber: "Baladeah License #",
+  governmentRegistrationNumber: "Government Registration #",
+  typeOfBusiness: "Type of Business",
+  typeOfBusinessOther: "Type Of Business (Other)",
+  deliveryLocations: "Delivery Locations",
+  // companyLogo: "Company Logo",
+  // brandLogo: "Brand Logo",
+
+  // Brand
+  brandNameEn: "Brand Name (EN)",
+  brandNameAr: "Brand Name (AR)",
+
+  // Address
+  buildingName: "Building Name",
+  branch: "Branch Region",
+  street: "Street",
+  city: "City",
+  district: "District",
+  cityOther: "City Other",
+  districtOther: "District Other",
+  region: "Region",
+  pincode: "Pincode",
+  // geolocation: "Geolocation",
+
+  // Banking & docs
+  bankName: "Bank Name",
+  bankNameOther: "Bank Name (Other)",
+  bankAccountNumber: "Bank Account Number",
+  iban: "IBAN",
+  // crCertificate: "CR Certificate",
+  // vatCertificate: "VAT Certificate",
+  // nationalId: "nationalId",
+  // bankLetter: "bankLetter",
+  // nationalAddress: "nationalAddress",
+
+  // Source & contracts
+  customerSource: "Customer Source",
+  // acknowledgementSignature: "acknowledgementSignature",
+  // contractAgreement: "contractAgreement",
+  // contractAgreementShc: "contractAgreementShc",
+  // contractAgreementNaqi: "contractAgreementNaqi",
+  // contractAgreementGmtc: "contractAgreementGmtc",
+  // contractAgreementVmco: "contractAgreementVmco",
+  // contractAgreementDar: "contractAgreementDar",
+  // creditApplicationShc: "creditApplicationShc",
+  // creditApplicationNaqi: "creditApplicationNaqi",
+  // creditApplicationGmtc: "creditApplicationGmtc",
+  // creditApplicationVmco: "creditApplicationVmco",
+  // creditApplicationDar: "creditApplicationDar",
+  // customerContract: "customerContract",
+  // creditApplication: "creditApplication",
+
+  // Declaration
+  declarationName: "Declaration Name",
+  // declarationSignature: "declarationSignature",
+  declarationDate: "Declaration Date",
+
+  // Pricing Policy
+  "pricingPolicy - DAR": "Pricing Policy (DAR)",
+  "pricingPolicy - SHC": "Pricing Policy (SHC)",
+  "pricingPolicy - GMTC": "Pricing Policy (GMTC)",
+  "pricingPolicy - NAQI": "Pricing Policy (NAQI)",
+  "pricingPolicy - VMCO": "Pricing Policy (VMCO)",
+
+  // Status / flags
+  customerStatus: "Status",
+  isDeliveryChargesApplicable: "Is Delivery Charges Applicable",
+  isBlocked: "Is Blocked",
+
+  // Assignment
+  assignedTo: "Assigned To",
+  "assignedToEntityWise - DAR": "Assigned To Entity Wise - DAR",
+  "assignedToEntityWise - SHC": "Assigned To Entity Wise - SHC",
+  "assignedToEntityWise - GMTC": "Assigned To Entity Wise - GMTC",
+  "assignedToEntityWise - NAQI": "Assigned To Entity Wise - NAQI",
+  "assignedToEntityWise - VMCO": "Assigned To Entity Wise - VMCO",
+  // nonTradingDocuments: "Non Trading Documents",
+  interCompany: "Inter Company",
+  entity: "Entity",
+  primaryBusinessUnit: "Primary Business Unit",
+  zone: "Zone",
+  verifiedBy: "Verified By",
+
+  // Workflow dates
+  registration: "Registration Date",
+  verified: "Verified Date",
+  approved: "Approved Date",
+  // onboardTour: "onboardTour",
+  // tapCustId: "tapCustId",
+  sequenceId: "Sequence ID",
+  createdAt: "Created Date",
+  updatedAt: "Updated Date",
+  createdBy: "Created By",
+  modifiedBy: "Modified By",
+  // consent: "consent",
+  branchCount: "Branch Count",
+  // customerId: "customerId",
+
+  // Contacts – Business Head
+  businessHeadName: "Business Head Name",
+  businessHeadDesignation: "Business Head Designation",
+  businessHeadEmail: "Business Head Email",
+  businessHeadMobile: "Business Head Mobile",
+
+  // Contacts – Finance Head
+  financeHeadName: "Finance Head Name",
+  financeHeadDesignation: "Finance Head Designation",
+  financeHeadEmail: "Finance Head Email",
+  financeHeadMobile: "Finance Head Mobile",
+
+  // Contacts – Purchasing Head
+  purchasingHeadName: "Purchasing Head Name",
+  purchasingHeadDesignation: "Purchasing Head Designation",
+  purchasingHeadEmail: "Purchasing Head Email",
+  purchasingHeadMobile: "Purchasing Head Mobile",
+
+  // Contacts – Primary
+  primaryContactName: "Primary Contact Name",
+  primaryContactDesignation: "Primary Contact Designation",
+  primaryContactEmail: "Primary Contact Email",
+  primaryContactMobile: "Primary Contact Mobile",
+
+  // Workflow
+  // isApprovalMode: "Is Approval Mode",
+  // workflowData: "Workflow Data",
+
+  // COD
+  "COD - limit": "COD Limit",
+  "COD - isAllowed": "COD Allowed",
+
+  // Credit – DAR
+  "credit - DAR - limit": "DAR Credit Limit",
+  "credit - DAR - period": "DAR Credit Period",
+  "credit - DAR - isAllowed": "DAR Credit Allowed",
+
+  // Credit – SHC
+  "credit - SHC - limit": "SHC Credit Limit",
+  "credit - SHC - period": "SHC Credit Period",
+  "credit - SHC - isAllowed": "SHC Credit Allowed",
+
+  // Credit – GMTC
+  "credit - GMTC - limit": "GMTC Credit Limit",
+  "credit - GMTC - period": "GMTC Credit Period",
+  "credit - GMTC - isAllowed": "GMTC Credit Allowed",
+
+  // Credit – NAQI
+  "credit - NAQI - limit": "NAQI Credit Limit",
+  "credit - NAQI - period": "NAQI Credit Period",
+  "credit - NAQI - isAllowed": "NAQI Credit Allowed",
+
+  // Credit – VMCO
+  "credit - VMCO - limit": "VMCO Credit Limit",
+  "credit - VMCO - period": "VMCO Credit Period",
+  "credit - VMCO - isAllowed": "VMCO Credit Allowed",
+
+  // Credit summary
+  // creditLimit: "creditLimit",
+  // creditPeriod: "creditPeriod",
+  // creditBalance: "creditBalance",
+
+  // Payments
+  "prePayment - isAllowed": "Prepayment Allowed",
+  "partialPayment - isAllowed": "Partial Payment Allowed",
+
+  // Geo
+  "geolocation - x": "Latitude",
+  "geolocation - y": "Longitude",
+};
+
+const formatValue = (value) => {
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  return value;
+};
+
+const prettifyHeaders = (row) => {
+  const output = {};
+
+  Object.keys(headerMap).forEach((key) => {
+    if (row[key] !== undefined) {
+      output[headerMap[key]] = formatValue(row[key]);
+    }
+  });
+
+  return output;
+};
+
+const flattenObject = (obj, parentKey = "", result = {}) => {
+  for (const key in obj) {
+    if (!obj.hasOwnProperty(key)) continue;
+
+    const newKey = parentKey ? `${parentKey} - ${key}` : key;
+    const value = obj[key];
+
+    if (
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      !(value instanceof Date)
+    ) {
+      flattenObject(value, newKey, result);
+    } else {
+      result[newKey] =
+        value === null || value === undefined ? "" : value;
+    }
+  }
+  return result;
+};
 
   const downloadCustomersAsExcel = async () => {
     try {
@@ -1638,7 +1859,7 @@ function Customers() {
         search: searchQuery,
         sortBy: "id",
         sortOrder: "asc",
-        filters: "{}",
+        filters: JSON.stringify(filters),
       });
 
       const response = await fetch(
@@ -1690,69 +1911,73 @@ function Customers() {
           );
           console.log("Transformed Customers:", transformedCustomers);
           // Prepare data for Excel export with transformed customer data
-          const exportData = transformedCustomers.map((customer) => ({
-            "Registration ID": customer.id,
-            "ERP ID": customer.erpCustId || "",
-            "Company Name (EN)": customer.companyNameEn || "",
-            "Company Name (AR)": customer.companyNameAr || "",
-            "Company Type": customer.companyType || "",
-            "Type of Business": customer.typeOfBusiness || "",
-            "CR Number": customer.crNumber || "",
-            "VAT Number": customer.vatNumber || "",
-            "Government Registration #":
-              customer.governmentRegistrationNumber || "",
-            "Baladeah License #": customer.baladeahLicenseNumber || "",
-            "Brand Name (EN)": customer.brandNameEn || "",
-            "Brand Name (AR)": customer.brandNameAr || "",
-            "Delivery Locations": customer.deliveryLocations || "",
-            Status: customer.customerStatus || "",
-            Region: customer.region || "",
-            City: customer.city || "",
-            District: customer.district || "",
-            Street: customer.street || "",
-            "Building Name": customer.buildingName || "",
-            "Location Type": customer.locationType || "",
+          // const exportData = transformedCustomers.map((customer) => ({
+          //   "Registration ID": customer.id,
+          //   "ERP ID": customer.erpCustId || "",
+          //   "Company Name (EN)": customer.companyNameEn || "",
+          //   "Company Name (AR)": customer.companyNameAr || "",
+          //   "Company Type": customer.companyType || "",
+          //   "Type of Business": customer.typeOfBusiness || "",
+          //   "CR Number": customer.crNumber || "",
+          //   "VAT Number": customer.vatNumber || "",
+          //   "Government Registration #":
+          //     customer.governmentRegistrationNumber || "",
+          //   "Baladeah License #": customer.baladeahLicenseNumber || "",
+          //   "Brand Name (EN)": customer.brandNameEn || "",
+          //   "Brand Name (AR)": customer.brandNameAr || "",
+          //   "Delivery Locations": customer.deliveryLocations || "",
+          //   Status: customer.customerStatus || "",
+          //   Region: customer.region || "",
+          //   City: customer.city || "",
+          //   District: customer.district || "",
+          //   Street: customer.street || "",
+          //   "Building Name": customer.buildingName || "",
+          //   "Location Type": customer.locationType || "",
 
-            // Primary Contact
-            "Primary Contact Name": customer.primaryContactName || "",
-            "Primary Contact Designation":
-              customer.primaryContactDesignation || "",
-            "Primary Contact Email": customer.primaryContactEmail || "",
-            "Primary Contact Mobile": customer.primaryContactMobile || "",
+          //   // Primary Contact
+          //   "Primary Contact Name": customer.primaryContactName || "",
+          //   "Primary Contact Designation":
+          //     customer.primaryContactDesignation || "",
+          //   "Primary Contact Email": customer.primaryContactEmail || "",
+          //   "Primary Contact Mobile": customer.primaryContactMobile || "",
 
-            // Business Head Contact
-            "Business Head Name": customer.businessHeadName || "",
-            "Business Head Designation": customer.businessHeadDesignation || "",
-            "Business Head Email": customer.businessHeadEmail || "",
-            "Business Head Mobile": customer.businessHeadMobile || "",
+          //   // Business Head Contact
+          //   "Business Head Name": customer.businessHeadName || "",
+          //   "Business Head Designation": customer.businessHeadDesignation || "",
+          //   "Business Head Email": customer.businessHeadEmail || "",
+          //   "Business Head Mobile": customer.businessHeadMobile || "",
 
-            // Finance Head Contact
-            "Finance Head Name": customer.financeHeadName || "",
-            "Finance Head Designation": customer.financeHeadDesignation || "",
-            "Finance Head Email": customer.financeHeadEmail || "",
-            "Finance Head Mobile": customer.financeHeadMobile || "",
+          //   // Finance Head Contact
+          //   "Finance Head Name": customer.financeHeadName || "",
+          //   "Finance Head Designation": customer.financeHeadDesignation || "",
+          //   "Finance Head Email": customer.financeHeadEmail || "",
+          //   "Finance Head Mobile": customer.financeHeadMobile || "",
 
-            // Purchasing Head Contact
-            "Purchasing Head Name": customer.purchasingHeadName || "",
-            "Purchasing Head Designation":
-              customer.purchasingHeadDesignation || "",
-            "Purchasing Head Email": customer.purchasingHeadEmail || "",
-            "Purchasing Head Mobile": customer.purchasingHeadMobile || "",
+          //   // Purchasing Head Contact
+          //   "Purchasing Head Name": customer.purchasingHeadName || "",
+          //   "Purchasing Head Designation":
+          //     customer.purchasingHeadDesignation || "",
+          //   "Purchasing Head Email": customer.purchasingHeadEmail || "",
+          //   "Purchasing Head Mobile": customer.purchasingHeadMobile || "",
 
-            // Geolocation
-            Latitude: customer.geolocation?.x || "",
-            Longitude: customer.geolocation?.y || "",
+          //   // Geolocation
+          //   Latitude: customer.geolocation?.x || "",
+          //   Longitude: customer.geolocation?.y || "",
 
-            // Assignment Information
-            "Assigned To": customer.assignedTo || "",
-            "Branch Region": customer.branch || "",
-            Entity: customer.entity || "",
-            "Inter Company": customer.interCompany ? "Yes" : "No",
+          //   // Assignment Information
+          //   "Assigned To": customer.assignedTo || "",
+          //   "Branch Region": customer.branch || "",
+          //   Entity: customer.entity || "",
+          //   "Inter Company": customer.interCompany ? "Yes" : "No",
 
-            "Created Date": customer.createdAt
-              ? new Date(customer.createdAt).toLocaleDateString()
-              : "",
-          }));
+          //   "Created Date": customer.createdAt
+          //     ? new Date(customer.createdAt).toLocaleDateString()
+          //     : "",
+          // }));
+          const exportData = transformedCustomers.map((customer) => {
+  return prettifyHeaders(flattenObject(customer));
+});
+
 
           // Close the loading dialog
           Swal.close();
@@ -2045,12 +2270,12 @@ function Customers() {
                             searchPlaceholder="Search customers..."
                             showColumnVisibility={true}
                             showFilters={true}
-                            showExport={isApprovalMode ? true : false}
+                            showExport={isApprovalMode ? true : true}
                             showUpload={false}
                             showApproval={true}
                             columnsToDisplay={columnsToDisplay}
                             handleApproval={handleApproval}
-                            handleExportClick={handleExportData}
+                            handleExportClick={isApprovalMode ? handleExportData : downloadCustomersAsExcel}
                             isApprovalMode={isApprovalMode}
                           />
                         ),
