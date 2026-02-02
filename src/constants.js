@@ -98,6 +98,12 @@ const Constants = {
         VMCO_MACHINES_DISCOUNT: 'vmco machines discount',
         VMCO_CONSUMABLES: 'vmco consumables',
         OTHER_ENTITIES: 'other entities'
+    },
+    INVITE_STATUS: {
+        INVITE_PENDING: 'Invite Pending',
+        PENDING_APPROVAL: 'Pending Approval',
+        APPROVED: 'Approved',
+        INCOMPLETE: 'Incomplete'
     }
 
 };
