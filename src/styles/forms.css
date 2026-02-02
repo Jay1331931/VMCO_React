@@ -2027,7 +2027,7 @@ td.file-display-cell {
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: #f8f8f8;
-  width: fit-content;
+  width: 100%;
 }
 
 /* Mobile styles */

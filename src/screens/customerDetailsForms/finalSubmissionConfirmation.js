@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 import usePlatform from "../../utilities/platform";
 import i18n from "../../i18n";
 import Constants from "../../constants";
+import "../../styles/components.css";
 
 const FinalSubmissionConfirmation = ({
   customerData = {},
@@ -44,7 +45,7 @@ const FinalSubmissionConfirmation = ({
   const [signaturePreviews, setSignaturePreviews] = useState({
     declarationSignature: null,
   });
-
+  const [popupUrl, setPopupUrl] = useState(null);
   useEffect(() => {
     setTabsHeight("auto");
   }, []);
@@ -111,28 +112,29 @@ const FinalSubmissionConfirmation = ({
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     if (isMobile) {
-      if (window.cordova && window.cordova.InAppBrowser) {
-        const width = 400;
-        const height = 500;
-        const centeredPosition = getCenteredOptions(width, height);
+      // if (window.cordova && window.cordova.InAppBrowser) {
+      //   const width = 400;
+      //   const height = 500;
+      //   const centeredPosition = getCenteredOptions(width, height);
 
-        const options =
-          'toolbar=yes,' +
-          'hideurlbar=yes,' +
-          'zoom=no,' +
-          'hardwareback=yes,' +
-          'clearsessioncache=yes,' +
-          'clearcache=yes,' +
-          `width=${width},` +
-          `height=${height},` +
-          `left=${centeredPosition.left},` +
-          `top=${centeredPosition.top}`;
+      //   const options =
+      //     'toolbar=yes,' +
+      //     'hideurlbar=yes,' +
+      //     'zoom=no,' +
+      //     'hardwareback=yes,' +
+      //     'clearsessioncache=yes,' +
+      //     'clearcache=yes,' +
+      //     `width=${width},` +
+      //     `height=${height},` +
+      //     `left=${centeredPosition.left},` +
+      //     `top=${centeredPosition.top}`;
 
-        window.cordova.InAppBrowser.open(url, '_blank', options);
-      } else {
-        // iOS Safari fallback
-        window.open(url, '_blank');
-      }
+      //   window.cordova.InAppBrowser.open(url, '_blank', options);
+      // } else {
+      //   // iOS Safari fallback
+      //   window.open(url, '_blank');
+      // }
+      setPopupUrl(url);
     } else {
       // Desktop
       window.open(url, '_blank');
@@ -286,7 +288,17 @@ const FinalSubmissionConfirmation = ({
     <>
       <div className="customer-onboarding-form-grid">
         {user?.userType.toLowerCase() === "employee" && (
-          <div className="form-main-header">
+          <div className="form-main-header" style={{
+            ...(isMobile && {
+              margin: "0px 12px",
+              alignItems: "center",
+              display: "flex",
+              justifyContent: "center",
+              backgroundColor: "#76716926",
+              borderRadius: "11px",
+              padding: "4px 0px"
+            })
+          }}>
             {t("ERP ID")}: {customerData?.erpCustId ?? "-"}
           </div>
         )}
@@ -769,6 +781,34 @@ const FinalSubmissionConfirmation = ({
           </>
         )}
       </div>
+      {popupUrl && (
+  <div
+    className="image-popup-overlay"
+    onClick={() => setPopupUrl(null)}
+  >
+    <div
+      className="image-popup-content"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <iframe
+        src={popupUrl}
+        title="Popup Browser"
+        style={{
+          width: "100%",
+          height: "100%",
+          border: "none",
+        }}
+      />
+
+      <button
+        className="image-popup-close"
+        onClick={() => setPopupUrl(null)}
+      >
+        ×
+      </button>
+    </div>
+  </div>
+)}
     </>
   );
 };
