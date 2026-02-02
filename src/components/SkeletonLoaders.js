@@ -146,6 +146,24 @@ export const SkeletonList = ({ count = 5, height = 80 }) => {
 };
 
 /**
+ * SkeletonCartList - Animated skeleton for cart list layouts
+ */
+export const SkeletonCartList = ({ count = 5, height = 80 }) => {
+  return (
+    <div className="skeleton-list-container">
+      {Array.from({ length: count }).map((_, idx) => (
+        <div key={idx} className="skeleton-list-item" style={{ minHeight: `${height}px` }}>
+          <div className="skeleton-list-content" style={{ minWidth: "100%" }}>
+            <div className="skeleton-line skeleton-line-title"></div>
+            <div className="skeleton-line skeleton-line-text-short"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/**
  * SkeletonGrid - Animated skeleton for grid layouts
  */
 export const SkeletonGrid = ({ count = 6, height = 200, columns = 3 }) => {
