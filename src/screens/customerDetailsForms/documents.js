@@ -11,7 +11,7 @@ import Swal from "sweetalert2"; // Add this import at the top if not already pre
 import Constants from "../../constants";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import i18n from "../../i18n";
-import { Document, Page, pdfjs } from 'react-pdf';
+// import { Document, Page, pdfjs } from 'react-pdf';
 // import PDFWorker from "pdfjs-dist/webpack";
 // import { WorkerMessageHandler } from "pdfjs-dist/build/pdf.worker.min.mjs";
 
