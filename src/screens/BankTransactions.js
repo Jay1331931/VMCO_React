@@ -127,7 +127,7 @@ const BankTransactions = () => {
           pageSize,
           search: searchTerm,
           sortBy: sortedModel[0]?.field || "id",
-          sortOrder: sortedModel[0]?.sort || "asc",
+          sortOrder: sortedModel[0]?.sort || "desc",
           filters: JSON.stringify(customFilters),
         });
 
