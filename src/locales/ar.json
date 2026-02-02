@@ -523,6 +523,7 @@
     "Verify Otp": "تحقق من رمز التحقق",
     "Resend Otp": "إعادة إرسال رمز التحقق",
     "Send Otp": "إرسال رمز التحقق",
+    "Send": "يرسل",
     "Already have an account?": "هل لديك حساب بالفعل؟",
     "OTP already sent. Please verify or wait until it expires.": "تم إرسال رمز التحقق بالفعل. يرجى التحقق أو الانتظار حتى تنتهي صلاحيته.",
     "Please verify the email by clicking on the Verify Otp button.": "يرجى التحقق من البريد الإلكتروني بالنقر على زر التحقق من رمز التحقق.",
@@ -996,7 +997,9 @@
 "Please update the open order": "يرجى تحديث الطلب المفتوح",
 "instead of creating a new one.": "بدلاً من إنشاء طلب جديد.",
 "Enter reason for cancellation...": "أدخل سبب الإلغاء...",
-"Are you sure you want to cancel this order? Please provide a reason for cancellation.": "هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟ يرجى تقديم سبب للإلغاء."
+"Are you sure you want to cancel this order? Please provide a reason for cancellation.": "هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟ يرجى تقديم سبب للإلغاء.",
+"Select Customer Orders":"حدد طلبات العملاء",
+"Search orders...":"أوامر البحث..."
 
 
 }
