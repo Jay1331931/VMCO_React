@@ -327,7 +327,7 @@ function ProductPopup({
                         height: 40px;
                         padding: 5px;
                         border-radius: 5px;
-                        align-items: flex-end;
+                        align-items: center;
                         border: none;
                         cursor: pointer;
                         font-size: 0.9rem;
