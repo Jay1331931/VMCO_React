@@ -427,6 +427,17 @@ function Maintenance() {
     { field: "assignedSalesExecutive", headerName: t("Assigned Sales Executive"), width: 160, searchable: false, },
     { field: "issueType", headerName: t("Issue Type"), width: 120, searchable: true },
     {
+            field: "daysOpen",
+            headerName: t("Days Open"),
+            include: isClosedMode === 'open',
+            searchable: false,
+            width: columnDimensions["daysOpen"]?.width || 120,
+            flex: 1,
+            align: isArabic ? "right" : "left",
+            headerAlign: isArabic ? "right" : "left",
+            renderCell: (params) => <span>{params.value}</span>,
+        },
+    {
       field: "createdAt", headerName: t("Created Date"), width: 120,
       renderCell: (params) => (
         <span>

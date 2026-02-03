@@ -407,6 +407,17 @@ function Support() {
             renderCell: (params) => <span>{params.value}</span>,
         },
         {
+            field: "daysOpen",
+            headerName: t("Days Open"),
+            include: isClosedMode === 'open',
+            searchable: false,
+            width: columnDimensions["daysOpen"]?.width || 120,
+            flex: 1,
+            align: isArabic ? "right" : "left",
+            headerAlign: isArabic ? "right" : "left",
+            renderCell: (params) => <span>{params.value}</span>,
+        },
+        {
             field: "createdAt",
             headerName: t("Created Date"),
             include: isV("createdDateCol"),
