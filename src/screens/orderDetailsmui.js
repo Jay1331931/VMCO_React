@@ -5397,11 +5397,14 @@ function OrderDetails() {
             ? editingDiscount[item.id]
             : item?.lineDiscount}
       onChange={(e) =>{
+        const idx = formData.products.findIndex(
+          (p) => (p.id || p.productid) === (item.id || item.productid)
+        );
               setEditingDiscount((prev) => ({
                 ...prev,
                 [item.id]: e.target.value,
               }));
-        handleLineDiscountChange(item.id, e.target.value)
+        handleLineDiscountChange(idx, parseFloat(e.target.value))
       }
       }
       style={{
