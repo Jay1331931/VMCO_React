@@ -392,8 +392,8 @@ function OrderCard({ orders, isApprovalMode, setSelectedRow, handlePay,FandOSync
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    minHeight: 80,
-                    maxHeight: 80,
+                    minHeight: 94,
+                    maxHeight: 94,
                     width: "100%",          // ✅ force full width
                     boxSizing: "border-box", // ✅ ensures padding doesn't shrink width
                     paddingLeft: "0px",
