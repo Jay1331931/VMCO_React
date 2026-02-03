@@ -160,6 +160,20 @@ function MaintenanceCard({
                         ? ticket?.companyNameAr || "Unknown Customer"
                         : ticket?.companyNameEn || "Unknown Customer"}
                     </Typography>
+                    {ticket?.isOpen && (<Typography
+                                          fontSize={11}
+                                          // fontWeight={500}
+                                          color="white"
+                                          // sx={{
+                                          //   lineHeight: 1.2,
+                                          //   textAlign: "right",
+                                          // }}
+                                        >
+                                                                    <Typography component="span" fontWeight={600} fontSize={11} color="white">
+                                                                      {t("Days Open")}
+                                                                    </Typography>
+                                                                    {`: ${ticket?.daysOpen || 0}`}
+                                                                  </Typography>)}
                     {/* <Typography
                       fontSize={12}
                       color="white"

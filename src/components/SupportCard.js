@@ -132,12 +132,12 @@ function SupportCard({
                       flex: 1,
                       marginRight: "8px",
                       minWidth: 0, // Important for text overflow
-                      gap: "10px",
+                      gap: "5px",
                     }}
                   >
                     <Typography
                       title={ticket?.companyNameEn || ticket?.companyNameAr}
-                      fontSize={14}
+                      fontSize={13}
                       fontWeight={600}
                       sx={{
                         lineHeight: 1.2,
@@ -153,6 +153,20 @@ function SupportCard({
                         ? ticket?.companyNameAr || "Unknown Customer"
                         : ticket?.companyNameEn || "Unknown Customer"}
                     </Typography>
+                    {ticket?.isOpen && (<Typography
+                      fontSize={11}
+                      // fontWeight={500}
+                      color="white"
+                      // sx={{
+                      //   lineHeight: 1.2,
+                      //   textAlign: "right",
+                      // }}
+                    >
+                                                <Typography component="span" fontWeight={600} fontSize={11} color="white">
+                                                  {t("Days Open")}
+                                                </Typography>
+                                                {`: ${ticket?.daysOpen || 0}`}
+                                              </Typography>)}
                   </div>
 
                   {/* Right Side - Status & Date */}
