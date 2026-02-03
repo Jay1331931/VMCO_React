@@ -98,7 +98,7 @@ const ProductCard = ({
             <div className="product-details">
                 <div className="product-info-section">
                     <div className="product-name-row">
-                        <h3 className={`product-name ${isMobile ? "product-name-mobile":""}`} title={product.name}>{product.name}</h3>
+                        <h3 className={`product-name ${isMobile ? "product-name-mobile":"product-name-desktop"}`} title={product.name}>{product.name}</h3>
                         {isV('favoriteButton') && isMobile && (
                             <div className="mobile-favorite-wrapper">
                                 <FavButton
@@ -170,9 +170,9 @@ const ProductCard = ({
                 }
 
                 .product-card.desktop-layout .responsive-product-image {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
+                    max-width:201px;
+                max-height:188px
+                object-fit:contain
                     border-radius: 8px;
                 }
 
@@ -192,8 +192,18 @@ const ProductCard = ({
                     text-overflow: ellipsis;  
                     max-width: 100%;         
                     cursor: default;
+                    white-space: normal;
                 }
-
+                .product-name-desktop {
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2; /* Shows exactly 2 lines */
+                    -webkit-box-orient: vertical;
+                    // font-size: 1rem;
+                    max-width: 100%;
+                }
+                .product-card{
+                max-height:350px
+                }
                 .product-card.desktop-layout .product-code {
                     font-size: 0.9rem;
                     color: #6B7280;
