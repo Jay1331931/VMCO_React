@@ -4132,11 +4132,9 @@ function OrderDetails() {
       if (res.ok) {
         Swal.fire({
           icon: "success",
-          title: t(
-            approvalAction === "approve"
-              ? "Approved Successfully"
-              : "Rejected Successfully"
-          ),
+          title: approvalAction === "approve"
+            ? t("Approved Successfully")
+            : t("Rejected Successfully"),
           confirmButtonText: t("OK"),
         });
         // alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
@@ -5082,7 +5080,7 @@ function OrderDetails() {
                                   height: '100%',
                                   border: 'none',
                                   transition: 'none',
-                                  pointerEvents: 'none' 
+                                  pointerEvents: 'none'
                                 }}
                               >
                                 <div style={{ pointerEvents: 'auto' }}>  {/* Make only switch clickable */}
@@ -5408,7 +5406,7 @@ function OrderDetails() {
                                       isE("deleteCol") && (
                                         <button
                                           className="order-action-btn reject"
-                                          style={{ marginTop: "20px", marginLeft: "40px", fontSize: 12, width: "90px", justifyContent: "flex-end" }}
+                                          style={{ marginTop: "20px",  ...(i18n.language === "ar" ? { marginRight: "40px" } : { marginLeft: "40px" }), fontSize: 12, width: "90px", justifyContent: "flex-end" }}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleDeleteProductRow(idx);
