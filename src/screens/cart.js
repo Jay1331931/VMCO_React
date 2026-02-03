@@ -1550,7 +1550,7 @@ function Cart() {
         entity: entity,
         erpCustId: user?.erpCustomerId,
         erpBranchId: selectedBranchErpId,
-        orderBy: user?.userName || "ABCD",
+        orderBy: user?.userName,
         paymentMethod: selectedPaymentMethod,
         totalAmount: totalAmount,
         totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),

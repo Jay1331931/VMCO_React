@@ -1004,7 +1004,9 @@
 "Are you sure you want to cancel this order? Please provide a reason for cancellation.": "هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟ يرجى تقديم سبب للإلغاء.",
 "Select Customer Orders":"حدد طلبات العملاء",
 "Search orders...":"أوامر البحث...",
-"Discount: ": "خصم: "
+"Discount: ": "خصم: ",
+"Error Creating Order": "خطأ في إنشاء الطلب",
+"Order was deleted because there was an issue adding products.": "تم حذف الطلب بسبب وجود مشكلة في إضافة المنتجات."
 
 
 }

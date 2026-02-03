@@ -2017,27 +2017,17 @@ function OrderDetails() {
         } catch (err) {
           console.error("Error saving product lines:", err);
           console.log(
-            "Product line items creation failed, but order was created successfully"
+            "Product line items creation failed, so order was deleted"
           );
-          // Even if product lines failed, the order was created successfully
+          // If product lines failed, the order was deleted
           Swal.fire({
             icon: "warning",
-            title: t("Order Created with Issues"),
+            title: t("Error Creating Order"),
             html: `<div style="text-align: center;">
-                    <p style="font-size: 16px; margin-bottom: 10px;">${t(
-              "Order created successfully, but there was an issue adding products: "
-            ) + err.message
-              }</p>
-                    <p style="font-size: 18px; font-weight: bold; color: #ff9500; margin: 10px 0;">
-                        ${t("Order Number")}: #${result.data.id}
-                    </p>
-                    <p style="font-size: 14px; color: #666;">${t(
-                "Please save this order number for your records."
-              )}</p>
+                    <p style="font-size: 16px; margin-bottom: 10px;">${t("Order was deleted because there was an issue adding products.")}</p>
                   </div>`,
             confirmButtonText: t("OK"),
           });
-          // alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
           navigate("/orders");
         }
         break; // Exit the loop on success
@@ -2456,9 +2446,6 @@ function OrderDetails() {
               netAmount,
               lineDiscount: "0.00",
             };
-
-            // In edit mode, we don't immediately update the sales order line in the database
-            // We'll only do that when the Save button is clicked
           }
         }
       });
@@ -5406,7 +5393,7 @@ function OrderDetails() {
                                       isE("deleteCol") && (
                                         <button
                                           className="order-action-btn reject"
-                                          style={{ marginTop: "20px",  ...(i18n.language === "ar" ? { marginRight: "40px" } : { marginLeft: "40px" }), fontSize: 12, width: "90px", justifyContent: "flex-end" }}
+                                          style={{ marginTop: "20px", ...(i18n.language === "ar" ? { marginRight: "40px" } : { marginLeft: "40px" }), fontSize: 12, width: "90px", justifyContent: "flex-end" }}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleDeleteProductRow(idx);
