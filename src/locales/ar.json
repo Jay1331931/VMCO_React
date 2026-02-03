@@ -813,6 +813,10 @@
     "Select Region": "اختر المنطقة",
     "Select City": "اختر المدينة",
     "Select Day": "اختر الأيام",
+    "Approve Order": "الموافقة على الطلب",
+    "Reject Order": "رفض الطلب",
+    "Are you sure you want to approve this order?": "هل أنت متأكد أنك تريد الموافقة على هذا الطلب؟",
+    "Are you sure you want to reject this order?": "هل أنت متأكد أنك تريد رفض هذا الطلب؟",
     "Approved Successfully": "تمت الموافقة بنجاح",
     "Rejected Successfully": "تم الرفض بنجاح",
     "Warehouse Required": "المستودع مطلوب",
@@ -999,7 +1003,8 @@
 "Enter reason for cancellation...": "أدخل سبب الإلغاء...",
 "Are you sure you want to cancel this order? Please provide a reason for cancellation.": "هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟ يرجى تقديم سبب للإلغاء.",
 "Select Customer Orders":"حدد طلبات العملاء",
-"Search orders...":"أوامر البحث..."
+"Search orders...":"أوامر البحث...",
+"Discount: ": "خصم: "
 
 
 }
