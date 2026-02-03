@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { isMobile } from "../../utilities/isMobile";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
@@ -109,37 +108,25 @@ const FinalSubmissionConfirmation = ({
     };
   }
   const openUrlSmart = (url) => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     if (isMobile) {
-      // if (window.cordova && window.cordova.InAppBrowser) {
-      //   const width = 400;
-      //   const height = 500;
-      //   const centeredPosition = getCenteredOptions(width, height);
-
-      //   const options =
-      //     'toolbar=yes,' +
-      //     'hideurlbar=yes,' +
-      //     'zoom=no,' +
-      //     'hardwareback=yes,' +
-      //     'clearsessioncache=yes,' +
-      //     'clearcache=yes,' +
-      //     `width=${width},` +
-      //     `height=${height},` +
-      //     `left=${centeredPosition.left},` +
-      //     `top=${centeredPosition.top}`;
-
-      //   window.cordova.InAppBrowser.open(url, '_blank', options);
-      // } else {
-      //   // iOS Safari fallback
-      //   window.open(url, '_blank');
-      // }
-      // setPopupUrl(url);
-      window.open(url, '_blank');
+    if (window.cordova && window.cordova.InAppBrowser) {
+    const options = "location=no,toolbar=yes,clearcache=yes,clearsessioncache=yes";
+    const finalUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
+      
+     window.cordova.InAppBrowser.open(finalUrl, '_blank', options);
     } else {
-      // Desktop
+      // iOS Safari fallback
       window.open(url, '_blank');
     }
+    // setPopupUrl(url);
+    // window.open(url, '_blank');
+  } else {
+    // Desktop
+    window.open(url, '_blank');
+    // setPopupUrl(url);
+  }
   };
   // Handle signature save
   // const handleSaveSignature = () => {
