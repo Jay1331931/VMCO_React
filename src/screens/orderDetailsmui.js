@@ -5386,8 +5386,63 @@ function OrderDetails() {
                                       {formData.entity.toLocaleLowerCase() === Constants.ENTITY.VMCO.toLocaleLowerCase() &&
                                         <span className="line-discount-row" style={{ fontSize: 13 }} >
                                           {t("Discount: ")}
+                                          
+                                          {fromApproval ? (<>
+                                          <input
+      type="number"
+      min="0"
+      max="100"
+      step="0.01"
+      value={editingDiscount[item.id] !== undefined
+            ? editingDiscount[item.id]
+            : item?.lineDiscount}
+      onChange={(e) =>{
+              setEditingDiscount((prev) => ({
+                ...prev,
+                [item.id]: e.target.value,
+              }));
+        handleLineDiscountChange(item.id, e.target.value)
+      }
+      }
+      style={{
+        width: 40,
+        fontSize: 13,
+        borderRadius: 4,
+        marginRight: 4,
+        border: "1px solid black",
+        textAlign: "center"
+      }}
+    />
+
+    %
+                                          </>) : <>
                                           {Number(item.lineDiscount)}%
+                                          </>}
                                         </span>}
+{/* {formData.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && (
+  <span className="line-discount-row" style={{ fontSize: 13 }}>
+    <>
+    {t("Discount:")}
+    <input
+      type="number"
+      min="0"
+      max="100"
+      step="0.01"
+      value={item.lineDiscount ?? ""}
+      onChange={(e) =>
+        handleLineDiscountChange(item.id, e.target.value)
+      }
+      style={{
+        width: 60,
+        fontSize: 13,
+        marginRight: 4,
+      }}
+    />
+
+    %
+    </>
+  </span>
+)} */}
 
                                       <span className="item-total-price" style={{ fontSize: 13 }}>
                                         {t("Net Amount:")}{" "}
