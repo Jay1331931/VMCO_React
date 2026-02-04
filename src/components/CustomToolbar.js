@@ -302,7 +302,11 @@ const handleKeyDown = (e) => {
             <Chip
               {...getTagProps({ index })}
               key={index}
-              label={`${columnName}: ${option.searchString}`}
+              label={`${columnName}: ${typeof option.searchString === "string"
+          ? option.searchString
+          : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${option.searchString?.endDate?.split("T")[0] ?? ""
+          }`
+          }`}
               size="small"
               sx={commonStyles.chip(isMobile)}
             />
