@@ -79,9 +79,58 @@
   /* grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); */
   gap: 10px;
   flex: 1;
-  padding: 20px;
+  padding: 0 20px;
   border-left: 1px solid #ccc;
 }
+
+
+/* Mobile Specific: Fixed Horizontal Tabs */
+@media (max-width: 768px) {
+    .tabs-fixed-mobile {
+        position: sticky !important;
+        top: 6%;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background: #ffffff;
+        display: flex !important;
+        flex-direction: row !important; /* Change vertical to horizontal */
+        overflow-x: auto !important;   /* Allow swiping through tabs */
+        white-space: nowrap;           /* Keep tabs in one line */
+        padding: 20px 5px 5px;
+        /* border-bottom: 2px solid #e0e0e0; */
+        /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */
+        scrollbar-width: none;         /* Hide scrollbar for clean look */
+    }
+
+    .tabs-fixed-mobile::-webkit-scrollbar {
+        display: none; /* Hide scrollbar for Chrome/Safari */
+    }
+
+    .tabs-fixed-mobile .tabs-title {
+        display: none; /* Hide the title "Customer Details" to save space on mobile */
+    }
+
+    .tabs-fixed-mobile .tab {
+        flex: 0 0 auto;
+        padding: 8px 15px;
+        margin: 0 5px;
+        font-size: 14px;
+        border-radius: 20px;
+        background: #f1f1f1;
+    }
+
+    .tabs-fixed-mobile .tab.active {
+        background: #0b4c45; /* Talabpoint primary green */
+        color: #fff;
+    }
+
+    /* Ensure the content doesn't hide under the fixed tabs */
+    .customer-onboarding-content {
+        padding-top: 10px;
+    }
+}
+
 
 [dir="rtl"] .customers .customer-onboarding-form-grid {
   border-left: none;
@@ -1611,7 +1660,7 @@ td.file-display-cell {
   .customers .customer-onboarding-content {
     padding: 0px;
     width: 100%;
-    margin-top: 40px;
+    /* margin-top: 40px; */
     /* position: relative; */
   }
 
@@ -1732,7 +1781,7 @@ td.file-display-cell {
     /* Stack content vertically on smaller screens */
     gap: 20px;
     /* Space between sections */
-    margin-top: 20px;
+    /* margin-top: 20px; */
   }
 
   .customers .text-field.small {
@@ -2090,7 +2139,7 @@ td.file-display-cell {
     border-left: none;
     width: 100%;
     min-height: 200px;
-    margin-top: 30px;
+    margin-top: 10px;
   }
 
   .customers .branches-content .form-main-header {
