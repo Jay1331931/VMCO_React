@@ -947,6 +947,7 @@
 "assignedTo":"معين إلى",
 "Mode":"وضع",
 "Payable days Overdue": "تم تجاوز عدد أيام السداد المسموح بها",
+"Days Open": "أيام مفتوحة",
 "Request Sent":"تم إرسال الطلب",
 "Your request has been sent for approval! Order #":"تم إرسال طلبك للموافقة! الطلب #",
 "Request sent with orders": "تم إرسال طلبك للموافقة! الطلب #{{orders}} - طريقة الدفع: {{method}}",

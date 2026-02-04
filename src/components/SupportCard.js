@@ -3,6 +3,8 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import RbacManager from "../utilities/rbac";
+import { useAuth } from "../context/AuthContext";
 function SupportCard({
   tickets,
   setSelectedRow,
@@ -12,7 +14,17 @@ function SupportCard({
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const handleTicketClick = (ticket) => setSelectedRow(ticket);
-
+  const { token, user, isAuthenticated, logout } = useAuth();
+  const rbacMgr = new RbacManager(
+        user?.userType === "employee"
+            ? user?.roles[0] !== "admin"
+                ? user?.designation
+                : user?.roles[0]
+            : "",
+        "supList"
+    );
+    const isV = rbacMgr.isV.bind(rbacMgr);
+    const isE = rbacMgr.isE.bind(rbacMgr);
   // 🎨 Status-based colors
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -153,7 +165,7 @@ function SupportCard({
                         ? ticket?.companyNameAr || "Unknown Customer"
                         : ticket?.companyNameEn || "Unknown Customer"}
                     </Typography>
-                    {ticket?.isOpen && (<Typography
+                    {ticket?.isOpen && isV("daysOpen") && (<Typography
                       fontSize={11}
                       // fontWeight={500}
                       color="white"
