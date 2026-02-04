@@ -6,6 +6,9 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
+import PageTransition from "./components/PageTransition";
+import { usePageTransition } from "./hooks/usePageTransition";
+import { getTransitionForRoute } from "./config/transitionConfig";
 import Sidebar from "../src/components/Sidebar";
 import OrdersMui from "./screens/ordersmui";
 import Catalog from "./screens/catalog";
@@ -62,9 +65,12 @@ import LoadingSpinner from "./components/LoadingSpinner";
 function AppRoutes() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("");
-
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Get transition type based on current route using configuration
+  const transitionType = getTransitionForRoute(location.pathname);
+
   const tokenFromStorage = localStorage.getItem("token");
   const tokenIsValid =
     (token || tokenFromStorage) && isTokenValid(token || tokenFromStorage);
@@ -411,7 +417,7 @@ if (loading) {
           <HomePage />
         </ProtectedRoute>
       } />
-    </Routes>
+      </Routes>
   );
 }
 

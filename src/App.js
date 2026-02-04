@@ -13,6 +13,7 @@ import VersionPopup from "./components/VersionPopup"; // You'll need to create t
 import AppRoutes from "./AppRoutes";
 import usePlatform from "../src/utilities/platform";
 import { Network } from '@capacitor/network';
+import "./styles/transitions.css"; // Import page transitions styles
 const currentVersion = process.env.REACT_APP_TALAB_VERSION;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile= /iPhone/i.test(navigator.userAgent);
