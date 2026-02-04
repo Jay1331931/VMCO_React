@@ -1272,7 +1272,7 @@ onKeyDown={handleKeyDown}
                                     ? {
                                         backgroundColor: "#fff8e1",
                                       }
-                                    : {}),
+                                    : {width:"150px"}),
                                 }}
                                 disabled={
                                   // (customerFormMode === "custDetailsEdit" &&
