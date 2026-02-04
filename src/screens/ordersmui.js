@@ -1022,7 +1022,60 @@ function Orders() {
           confirmButtonText: t("OK"),
         });
       } else if (copyUrl) {
-        Swal.fire({
+        if(isMobile) {
+          Swal.fire({
+          title: t(`Payment Link`),
+          html: `
+    <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+      <input id="payment-link"
+             class="swal2-input"
+             style="flex:1;margin:0 8px 0 0;"
+             type="text"
+             value="${data.details.url}"
+             readonly />
+      <button id="copyBtn" 
+              style="padding:10px 16px; border-radius:5px; background:#32a19f; color:#fff; border:none; cursor:pointer;">
+        Copy
+      </button>
+    </div>
+  `,
+          showConfirmButton: false,
+          showCancelButton: false,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          footer: `
+    <div style="display:flex;justify-content:center; gap:10px; width:100%;">
+      <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style=" background:#009345">Send Link</button>
+      <button id="closeBtn" class="swal2-cancel swal2-styled">Close</button>
+    </div>
+  `,
+          didOpen: () => {
+            const input = document.getElementById("payment-link");
+            const copyBtn = document.getElementById("copyBtn");
+            const sendLinkBtn = document.getElementById("sendLinkBtn");
+            const closeBtn = document.getElementById("closeBtn");
+
+            copyBtn.addEventListener("click", async () => {
+              input.select();
+              input.setSelectionRange(0, 99999);
+              await navigator.clipboard.writeText(input.value);
+
+              copyBtn.textContent = "Copied!";
+              copyBtn.style.background = "#0b4c45";
+            });
+
+            sendLinkBtn.addEventListener("click", () => {
+              handlePay(order, true, false);
+              Swal.close();
+            });
+
+            closeBtn.addEventListener("click", () => {
+              Swal.close();
+            });
+          },
+          });
+        } else {
+          Swal.fire({
           title: t(`Payment Link`),
           html: `
     <div style="display:flex;align-items:center;">
@@ -1072,7 +1125,9 @@ function Orders() {
               Swal.close();
             });
           },
-        });
+          });
+        }
+        
       } else if (!email && !copyUrl && data?.details?.url) {
         // window.location.replace(data.details.url);
         const extracted = data?.details?.url?.split('/payment-options')[1]
@@ -2658,6 +2713,10 @@ renderCell: (params) => {
                       orderIds={filteredOrders.map((o) => o.id)}
                       setSelectedRow={handleOrderNumberClick}
                       handlePay={handlePay}
+                      FandOSyncSo={isV("FandOSyncSO")} 
+                      handleSync={handleFandOFailSO}
+                      syncLoading={syncLoading}
+                      syncLoadingId={syncLoadingId}
                     />
                   </SkeletonWrapper>
                 </div>

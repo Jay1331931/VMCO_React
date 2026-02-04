@@ -324,8 +324,13 @@ function SupportDetails() {
           ...prev,
           customerId: user.customerId,
           companyNameEn: user.customerCompanyNameEn,
-          companyNameAr: user.customerCompanyNameLc
+          companyNameAr: user.customerCompanyNameLc,
+          assignedTeamMember: user.assignedTo || prev.assignedTeamMember
         }));
+      }
+
+      if (user.assignedTo && formMode === 'add') {
+        setSelectedEmployee(user.assignedTo);
       }
 
       // Load existing files if in edit mode
@@ -760,9 +765,9 @@ function SupportDetails() {
         description: ticket.description,
         dateOfComplaint:
           formMode === "add" ? new Date().toISOString() : dateOfComplaintValue,
-        assignedTeamMember: ticket.assignedTeamMember || "",
-        assignedTeamMemberDept: ticket.assignedTeamMemberDept || selectedDepartment || "",
-        status: formMode === "add" ? "New" : ticket.status,
+        assignedTeamMember: formMode === "add" ? selectedEmployee : ticket.assignedTeamMember || "",
+        assignedTeamMemberDept: formMode === "add" ? "Sales" : ticket.assignedTeamMemberDept || selectedDepartment || "",
+        status: formMode === "add" ? "In Progress" : ticket.status,
         attachment:
           formMode === "add"
             ? { images: images || [], videos: videos || [] }
@@ -1262,7 +1267,7 @@ function SupportDetails() {
                   disabled={!isE("entity") || isReadOnly}
                   placeholder={t("Select Business Unit")}
                   className="entity-dropdown"
-                  style={{width:"100%"}}
+                  style={{ width: "100%" }}
                 />
               </div>
             )}
@@ -1282,7 +1287,7 @@ function SupportDetails() {
                   disabled={!isE("issueType") || isReadOnly}
                   placeholder={t("Select Issue Type")}
                   className="issue-type-dropdown"
-                  style={{width:"100%"}}
+                  style={{ width: "100%" }}
                 />
               </div>
             )}
@@ -1469,10 +1474,11 @@ function SupportDetails() {
         <div className='support-details-container-center'  >
           {isV('assignedTo') && (
             <div className="support-assign">
-              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '6px'
-               }}>
+              <div style={{
+                display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '6px'
+              }}>
                 {/* Assigned to Label */}
-                <span style={{fontWeight: isMobile ? 'bold' : ''}}>{formMode === "add" ? t("Assign To:") : t("Assigned To:")}</span>
+                <span style={{ fontWeight: isMobile ? 'bold' : '' }}>{formMode === "add" ? t("Assign To:") : t("Assigned To:")}</span>
 
                 {/* Department Selection */}
                 <div>
@@ -1528,10 +1534,10 @@ function SupportDetails() {
                     disabled={closing || saving}
                     style={{ backgroundColor: "#28a745", padding: isMobile ? "10px 24px" : "0px 24px" }}
                   >
-                    {closing 
-  ? t("Closing...") 
-  : (isMobile ? t("Close") : t("Close Ticket"))
-}
+                    {closing
+                      ? t("Closing...")
+                      : (isMobile ? t("Close") : t("Close Ticket"))
+                    }
 
                   </button>
                 )}

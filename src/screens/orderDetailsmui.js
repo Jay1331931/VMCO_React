@@ -26,6 +26,10 @@ import PdfPopupViewer from "../components/PdfPopupViewer";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { Box, Button, Typography, Tooltip, Chip } from "@mui/material";
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+
 import {
   DataGrid,
   GridFooterContainer,
@@ -523,7 +527,7 @@ function OrderDetails() {
           return { allowed: "Insufficient balance" };
         } else {
           // Check credit period eligibility
-            //  return { allowed: true, paymentMethod: 'Credit' };
+          //  return { allowed: true, paymentMethod: 'Credit' };
           try {
             const creditPeriodResponse = await fetch(`${API_BASE_URL}/get-upadted-credit-block-customer?erpCustId=${formData.erpCustId}`, {
               method: "GET",
@@ -2013,27 +2017,17 @@ function OrderDetails() {
         } catch (err) {
           console.error("Error saving product lines:", err);
           console.log(
-            "Product line items creation failed, but order was created successfully"
+            "Product line items creation failed, so order was deleted"
           );
-          // Even if product lines failed, the order was created successfully
+          // If product lines failed, the order was deleted
           Swal.fire({
             icon: "warning",
-            title: t("Order Created with Issues"),
+            title: t("Error Creating Order"),
             html: `<div style="text-align: center;">
-                    <p style="font-size: 16px; margin-bottom: 10px;">${t(
-              "Order created successfully, but there was an issue adding products: "
-            ) + err.message
-              }</p>
-                    <p style="font-size: 18px; font-weight: bold; color: #ff9500; margin: 10px 0;">
-                        ${t("Order Number")}: #${result.data.id}
-                    </p>
-                    <p style="font-size: 14px; color: #666;">${t(
-                "Please save this order number for your records."
-              )}</p>
+                    <p style="font-size: 16px; margin-bottom: 10px;">${t("Order was deleted because there was an issue adding products.")}</p>
                   </div>`,
             confirmButtonText: t("OK"),
           });
-          // alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
           navigate("/orders");
         }
         break; // Exit the loop on success
@@ -2452,9 +2446,6 @@ function OrderDetails() {
               netAmount,
               lineDiscount: "0.00",
             };
-
-            // In edit mode, we don't immediately update the sales order line in the database
-            // We'll only do that when the Save button is clicked
           }
         }
       });
@@ -4128,11 +4119,9 @@ function OrderDetails() {
       if (res.ok) {
         Swal.fire({
           icon: "success",
-          title: t(
-            approvalAction === "approve"
-              ? "Approved Successfully"
-              : "Rejected Successfully"
-          ),
+          title: approvalAction === "approve"
+            ? t("Approved Successfully")
+            : t("Rejected Successfully"),
           confirmButtonText: t("OK"),
         });
         // alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
@@ -5055,43 +5044,120 @@ function OrderDetails() {
                                     return;
                                   }
                                 }
-                                // In edit mode, always use values from formData (order state)
                                 setShowProductPopup(true);
                               }}
                               disabled={!isE("addProducts")}
                               style={{
-                                cursor: !isE("addProducts")
-                                  ? "not-allowed"
-                                  : "pointer",
+                                cursor: !isE("addProducts") ? "not-allowed" : "pointer",
                               }}
                             >
                               {t("Add products")}
                             </button>
                           )}
                           {isV("sampleOrder", fromApproval, true) && (
-                            <button
-                              type="button"
-                              className="order-action-btn"
-                              onClick={() => setSampleMode(!sampleMode)}
-                              disabled={
-                                !isE("sampleOrder") ||
-                                (formData.products &&
-                                  formData.products.length > 0)
-                              }
-                              style={{
-                                backgroundColor: sampleMode || formData.sampleOrder ? "var(--logo-orange)" : "white",
-                                color: "black",
-                                border: "1px solid #ccc",
-                                cursor:
+                            isMobile ? (
+                              <div
+                                className="order-action-btn sample-switch-container"
+                                style={{
+                                  position: 'relative',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-around',
+                                  padding: '4px 6px',
+                                  height: '100%',
+                                  border: 'none',
+                                  transition: 'none',
+                                  pointerEvents: 'none'
+                                }}
+                              >
+                                <div style={{ pointerEvents: 'auto' }}>  {/* Make only switch clickable */}
+                                  <Switch
+                                    checked={sampleMode || formData.sampleOrder}
+                                    onClick={() => setSampleMode(!sampleMode)}
+                                    disabled={
+                                      !isE("sampleOrder") ||
+                                      (formData.products && formData.products.length > 0)
+                                    }
+                                    sx={{
+                                      width: 44,
+                                      height: 26,
+                                      padding: 0,
+                                      '& .MuiSwitch-switchBase': {
+                                        padding: '2px',
+                                        margin: '0',
+                                      },
+                                      '& .MuiSwitch-switchBase.Mui-checked': {
+                                        color: 'white',
+                                      },
+                                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                        backgroundColor: 'var(--logo-orange)',
+                                      },
+                                      '& .Mui-disabled': {
+                                        opacity: 0.4,
+                                      },
+                                      '& .MuiSwitch-track': {
+                                        borderRadius: 13,
+                                        backgroundColor: '#d9d9d6',
+                                        height: 22,
+                                      },
+                                      '& .MuiSwitch-thumb': {
+                                        width: 18,
+                                        height: 18,
+                                        boxShadow: '0px 2px 4px rgba(0,0,0,0.2)',
+                                        zIndex: 1,
+                                      },
+                                      '& .MuiSwitch-switchBase.Mui-disabled .MuiSwitch-thumb': {
+                                        color: '#a0a0a0',
+                                      },
+                                      // Disable all hover effects
+                                      '&:hover': {
+                                        backgroundColor: 'transparent',
+                                      },
+                                      '& .MuiSwitch-switchBase:hover': {
+                                        backgroundColor: 'transparent',
+                                      },
+                                      'css-aqlqb4-MuiButtonBase-root-MuiSwitchBase-root-MuiSwitch-switchBase .MuiSwitch-input': {
+                                        left: '0',
+                                        width: '100%',
+                                      },
+                                      '.css-aqlqb4-MuiButtonBase-root-MuiSwitchBase-root-MuiSwitch-switchBase.Mui-checked:hover': {
+                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                        padding: '2px',
+                                      },
+                                    }}
+                                  />
+                                </div>
+                                <span style={{
+                                  fontWeight: 600,
+                                  fontSize: '12px',
+                                  color: (!isE("sampleOrder") || (formData.products && formData.products.length > 0)) ? '#a0a0a0' : '#222',
+                                }}>
+                                  {t("Sample Order")}
+                                </span>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="order-action-btn"
+                                onClick={() => setSampleMode(!sampleMode)}
+                                disabled={
                                   !isE("sampleOrder") ||
-                                    (formData.products &&
-                                      formData.products.length > 0)
-                                    ? "not-allowed"
-                                    : "pointer",
-                              }}
-                            >
-                              {t("Sample Order")}
-                            </button>
+                                  (formData.products && formData.products.length > 0)
+                                }
+                                style={{
+                                  backgroundColor: sampleMode || formData.sampleOrder ? "var(--logo-orange)" : "white",
+                                  color: "black",
+                                  border: "1px solid #ccc",
+                                  cursor:
+                                    !isE("sampleOrder") ||
+                                      (formData.products && formData.products.length > 0)
+                                      ? "not-allowed"
+                                      : "pointer",
+                                }}
+                              >
+                                {t("Sample Order")}
+                              </button>
+                            )
                           )}
                         </div>
                       )}
@@ -5298,7 +5364,7 @@ function OrderDetails() {
                                    <h4 className="item-name" style={{fontSize:"small"}}>{i18n.language === "ar" ? item.productNameLc : item.productName || t("Unnamed Product")}</h4>
                                   </div> */}
                                   {/* Price Summary */}
-                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px", justifyContent: "space-between" }} >
+                                  <div className="item-price-panel-with-delete" style={{ display: "flex", flexDirection: "row", marginBottom: "10px", justifyContent: "space-around" }} >
                                     <div className="item-price-panel" >
                                       <span className="tax-row" style={{ fontSize: 13 }} >
                                         {t("VAT: ")}
@@ -5307,8 +5373,66 @@ function OrderDetails() {
                                       {formData.entity.toLocaleLowerCase() === Constants.ENTITY.VMCO.toLocaleLowerCase() &&
                                         <span className="line-discount-row" style={{ fontSize: 13 }} >
                                           {t("Discount: ")}
+                                          
+                                          {fromApproval ? (<>
+                                          <input
+      type="number"
+      min="0"
+      max="100"
+      step="0.01"
+      value={editingDiscount[item.id] !== undefined
+            ? editingDiscount[item.id]
+            : item?.lineDiscount}
+      onChange={(e) =>{
+        const idx = formData.products.findIndex(
+          (p) => (p.id || p.productid) === (item.id || item.productid)
+        );
+              setEditingDiscount((prev) => ({
+                ...prev,
+                [item.id]: e.target.value,
+              }));
+        handleLineDiscountChange(idx, parseFloat(e.target.value))
+      }
+      }
+      style={{
+        width: 40,
+        fontSize: 13,
+        borderRadius: 4,
+        marginRight: 4,
+        border: "1px solid black",
+        textAlign: "center"
+      }}
+    />
+
+    %
+                                          </>) : <>
                                           {Number(item.lineDiscount)}%
+                                          </>}
                                         </span>}
+{/* {formData.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && (
+  <span className="line-discount-row" style={{ fontSize: 13 }}>
+    <>
+    {t("Discount:")}
+    <input
+      type="number"
+      min="0"
+      max="100"
+      step="0.01"
+      value={item.lineDiscount ?? ""}
+      onChange={(e) =>
+        handleLineDiscountChange(item.id, e.target.value)
+      }
+      style={{
+        width: 60,
+        fontSize: 13,
+        marginRight: 4,
+      }}
+    />
+
+    %
+    </>
+  </span>
+)} */}
 
                                       <span className="item-total-price" style={{ fontSize: 13 }}>
                                         {t("Net Amount:")}{" "}
@@ -5327,7 +5451,7 @@ function OrderDetails() {
                                       isE("deleteCol") && (
                                         <button
                                           className="order-action-btn reject"
-                                          style={{ marginTop: "20px", marginLeft: "40px", fontSize: 12, width: "90px", justifyContent: "flex-end" }}
+                                          style={{ marginTop: "20px", ...(i18n.language === "ar" ? { marginRight: "40px" } : { marginLeft: "40px" }), fontSize: 12, width: "90px", justifyContent: "flex-end" }}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleDeleteProductRow(idx);
@@ -5741,9 +5865,9 @@ function OrderDetails() {
             action="cancel"
             onSubmit={handleCancelOrderSubmit}
             customerName={formData.selectedCustomerName}
-            title="Cancel Order"
-            subtitle={`Are you sure you want to cancel this order? Please provide a reason for cancellation.`}
-            placeholder="Enter reason for cancellation..."
+            title={t("Cancel Order")}
+            subtitle={t(`Are you sure you want to cancel this order? Please provide a reason for cancellation.`)}
+            placeholder={t("Enter reason for cancellation...")}
             pageType="order" // Important: specifies this is for order page
           />
         </div>

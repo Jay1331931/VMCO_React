@@ -902,7 +902,7 @@ function Cart() {
       Swal.fire({
         icon: "error",
         title: t("Error"),
-        text: `Failed to process order: ${error.message}`,
+        text: t("Failed to process order") + ": " + error.message,
         confirmButtonText: t("OK"),
       });
     } finally {
@@ -976,10 +976,10 @@ function Cart() {
           const existingIds = existingResults
             .map((r) => `#${r.existingOrderId}`)
             .join(" and ");
-          const messageText = `Open order${existingResults.length > 1 ? "s" : ""
-            } ${existingIds} already exist${existingResults.length > 1 ? "" : "s"
-            }. Please update the open order${existingResults.length > 1 ? "s" : ""
-            } instead of creating a new one.`;
+          const messageText = t("Open order") + `${existingResults.length > 1 ? t("s") : ""
+            } ${existingIds} ${t("already exist")}${existingResults.length > 1 ? "" : t("s")
+            }. ${t("Please update the open order")} ${existingResults.length > 1 ? t("s") : ""
+            } ${t("instead of creating a new one.")}`;
 
           Swal.fire({
             icon: "warning",
@@ -994,7 +994,7 @@ function Cart() {
         else if (createdResults.length === 2 && existingResults.length === 0) {
           const freshOrder = createdResults.find((r) => r.type === "FRESH");
           const frozenOrder = createdResults.find((r) => r.type === "FROZEN");
-          const messageText = `Fresh order #${freshOrder?.orderId} and Frozen order #${frozenOrder?.orderId} placed successfully. Payment Method: ${selectedPaymentMethod}`;
+          const messageText = t("Fresh order #") + freshOrder?.orderId + " " + t("and Frozen order #") + frozenOrder?.orderId + " " + t("placed successfully. Payment Method: ") + selectedPaymentMethod;
 
           Swal.fire({
             icon: "success",
@@ -1011,7 +1011,7 @@ function Cart() {
           existingResults.length === 0 &&
           createdResults[0].type === "FRESH"
         ) {
-          const messageText = `Fresh order #${createdResults[0].orderId} placed successfully. Payment Method: ${selectedPaymentMethod}`;
+          const messageText = t("Fresh order #") + createdResults[0].orderId + " " + t("placed successfully. Payment Method: ") + selectedPaymentMethod;
 
           Swal.fire({
             icon: "success",
@@ -1028,7 +1028,7 @@ function Cart() {
           existingResults.length === 0 &&
           createdResults[0].type === "FROZEN"
         ) {
-          const messageText = `Frozen order #${createdResults[0].orderId} placed successfully. Payment Method: ${selectedPaymentMethod}`;
+          const messageText = t("Frozen order #") + createdResults[0].orderId + " " + t("placed successfully. Payment Method: ") + selectedPaymentMethod;
 
           Swal.fire({
             icon: "success",
@@ -1046,7 +1046,7 @@ function Cart() {
           createdResults[0].type === "FRESH" &&
           existingResults[0].type === "FROZEN"
         ) {
-          const messageText = `Fresh Order #${createdResults[0].orderId} created successfully. But Frozen order #${existingResults[0].existingOrderId} already exists. Please update the open order instead of creating a new one. Payment Method: ${selectedPaymentMethod}`;
+          const messageText = t("Fresh order #") + createdResults[0].orderId + " " + t("created successfully. But Frozen order #") + existingResults[0].existingOrderId + " " + t("already exists. Please update the open order instead of creating a new one. Payment Method: ") + selectedPaymentMethod;
 
           Swal.fire({
             icon: "warning",
@@ -1064,7 +1064,7 @@ function Cart() {
           createdResults[0].type === "FROZEN" &&
           existingResults[0].type === "FRESH"
         ) {
-          const messageText = `Frozen Order #${createdResults[0].orderId} created successfully. But Fresh order #${existingResults[0].existingOrderId} already exists. Please update the open order instead of creating a new one. Payment Method: ${selectedPaymentMethod}`;
+          const messageText = t("Frozen order #") + createdResults[0].orderId + " " + t("created successfully. But Fresh order #") + existingResults[0].existingOrderId + " " + t("already exists. Please update the open order instead of creating a new one. Payment Method: ") + selectedPaymentMethod;
 
           Swal.fire({
             icon: "warning",
@@ -1550,7 +1550,7 @@ function Cart() {
         entity: entity,
         erpCustId: user?.erpCustomerId,
         erpBranchId: selectedBranchErpId,
-        orderBy: user?.userName || "ABCD",
+        orderBy: user?.userName,
         paymentMethod: selectedPaymentMethod,
         totalAmount: totalAmount,
         totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
@@ -1674,53 +1674,53 @@ function Cart() {
         Swal.fire({
           icon: "success",
           title: t("Request Sent"),
-          text: `Order ${orderIds
-            .map((id) => `#${id}`)
-            .join(
-              " and "
-            )} Sent for Approval. Payment Method: ${selectedPaymentMethod}`,
+          text: t("Request sent with orders", {
+            orders: orderIds.map((id) => `${id}`).join(", "),
+            method: selectedPaymentMethod,
+          }),
           confirmButtonText: t("OK"),
-        }).then(async () => {
-          // Delete cart items
-          if (machineProducts.length > 0) {
-            await deleteCartItems(
-              selectedCustomerId,
-              selectedBranchId,
-              entity,
-              null,
-              true,
-              machineProducts
-            );
-          }
-          if (consumableProducts.length > 0) {
-            await deleteCartItems(
-              selectedCustomerId,
-              selectedBranchId,
-              entity,
-              null,
-              false,
-              consumableProducts
-            );
-          }
+        })
+          .then(async () => {
+            // Delete cart items
+            if (machineProducts.length > 0) {
+              await deleteCartItems(
+                selectedCustomerId,
+                selectedBranchId,
+                entity,
+                null,
+                true,
+                machineProducts
+              );
+            }
+            if (consumableProducts.length > 0) {
+              await deleteCartItems(
+                selectedCustomerId,
+                selectedBranchId,
+                entity,
+                null,
+                false,
+                consumableProducts
+              );
+            }
 
-          // Update cart state
-          setCartItems((prevCartItems) =>
-            prevCartItems.map((category) => ({
-              ...category,
-              items: category.items.filter(
-                (cartItem) => !categoryItems.some((ci) => ci.id === cartItem.id)
-              ),
-            }))
-          );
+            // Update cart state
+            setCartItems((prevCartItems) =>
+              prevCartItems.map((category) => ({
+                ...category,
+                items: category.items.filter(
+                  (cartItem) => !categoryItems.some((ci) => ci.id === cartItem.id)
+                ),
+              }))
+            );
 
-          setQuantities((prevQuantities) => {
-            const newQuantities = { ...prevQuantities };
-            categoryItems.forEach((item) => delete newQuantities[item.id]);
-            return newQuantities;
+            setQuantities((prevQuantities) => {
+              const newQuantities = { ...prevQuantities };
+              categoryItems.forEach((item) => delete newQuantities[item.id]);
+              return newQuantities;
+            });
+
+            fetchCartItems();
           });
-
-          fetchCartItems();
-        });
       }
     } catch (err) {
       console.error("Error in VMCO order processing:", err);
@@ -1978,9 +1978,7 @@ function Cart() {
             Swal.fire({
               icon: "success",
               title: t("Request Sent"),
-              text: t(
-                `Your request has been sent for approval! Order #${machineOrderId}`
-              ),
+              text: t("Request sent with order", { orders: machineOrderId }),
               confirmButtonText: t("OK"),
             }).then(() => {
               fetchCartItems();
@@ -3082,7 +3080,7 @@ function Cart() {
               entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
               ? t("Request Sent")
               : t("Order Placed"),
-          text: `${orderStatusMessage} Order #${orderId}. Payment Method: ${selectedPaymentMethod}`,
+          text: `${orderStatusMessage} ${t("Order #")}${orderId}. ${t("Payment Method")}: ${selectedPaymentMethod}`,
           confirmButtonText: t("OK"),
         }).then(() => {
           // Update cart items state to remove ordered items

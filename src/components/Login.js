@@ -57,7 +57,7 @@ function Login({ title, userType }) {
 
         localStorage.setItem("token", data.token);
         console.log("Login response:", data);
-        if (data?.userType?.toLowerCase() !== "employee") {
+        if (data?.userType?.toLowerCase() !== "employee" || data?.userType?.toLowerCase() !== "admin"  ) {
           try {
             const response = await fetch(
               `${API_SERVER_URL}/cart/get-cart-by-userId?id=${data?.data?.userId}`,
@@ -225,12 +225,12 @@ function Login({ title, userType }) {
           <div className="login-container">
 
             <div className="form-group">
-              <label htmlFor="email">{t("Email")}</label>
+              <label htmlFor="email">{title === "Customer Login" ? t("UserName"): t("Email")}</label>
               <input
                 type="text"
                 id="email"
                 value={email}
-                placeholder={t("Email")}
+                placeholder={title === "Customer Login" ? t("Please Enter Email or ErpId"): t("Email")}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>

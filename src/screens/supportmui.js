@@ -163,7 +163,8 @@ function Support() {
             ? user?.roles[0] !== "admin"
                 ? user?.designation
                 : user?.roles[0]
-            : "supList"
+            : "",
+        "supList"
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
@@ -407,6 +408,17 @@ function Support() {
             renderCell: (params) => <span>{params.value}</span>,
         },
         {
+            field: "daysOpen",
+            headerName: t("Days Open"),
+            include: isClosedMode === 'open',
+            searchable: false,
+            width: columnDimensions["daysOpen"]?.width || 120,
+            flex: 1,
+            align: isArabic ? "right" : "left",
+            headerAlign: isArabic ? "right" : "left",
+            renderCell: (params) => <span>{params.value}</span>,
+        },
+        {
             field: "createdAt",
             headerName: t("Created Date"),
             include: isV("createdDateCol"),
@@ -548,220 +560,220 @@ function Support() {
                 {isMobile ? (
                     <div className="orders-content">
                         {
-                        // loading ? (
-                        //     <LoadingSpinner />
-                        // ) : 
-                        error ? (
-                            <div className="error-message">{error}</div>
-                        ) : (
+                            // loading ? (
+                            //     <LoadingSpinner />
+                            // ) : 
+                            error ? (
+                                <div className="error-message">{error}</div>
+                            ) : (
 
-                            <>
-                                <div className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}>
-                                    {/* This DataGrid is only for the toolbar, not for displaying rows */}
-                                    <div style={{ height: "auto", marginBottom: "16px" }}>
-                                        <DataGrid
-                                            apiRef={gridApiRef}
-                                            rows={[]}
-                                            columns={[]}
-                                            pageSize={pageSize}
-                                            rowCount={total}
-                                            onRowClick={(params) => handleRowClick(params.row)}
-                                            columnVisibilityModel={columnVisibilityModel}
-                                            onColumnVisibilityModelChange={handleColumnVisibilityChange}
-                                            sortModel={sortModel}
-                                            onSortModelChange={handleSortModelChange}
-                                            disableSelectionOnClick
-                                            disableColumnMenu
-                                            hideFooter={true}
-                                            hideFooterPagination={true}
-                                            disableExtendRowFullWidth={true}
-                                            pagination={false}
-                                            autoHeight
-                                            rowHeight={55}
-                                            showToolbar
-                                            slots={{
-                                                toolbar: () => (
-                                                    <CustomToolbar
-                                                        searchQuery={searchQuery}
-                                                        filterAnchor={filterAnchor}
-                                                        onSearch={handleSearch}
-                                                        setSearchQuery={setSearchQuery}
-                                                        setFilterAnchor={setFilterAnchor}
-                                                        handleFilterChange={handleFilterChange}
-                                                        onColumnVisibilityChange={setColumnVisibilityModel}
-                                                        columns={visibleColumns}
-                                                        filters={filters}
-                                                        columnVisibilityModel={columnVisibilityModel}
-                                                        searchPlaceholder="Search tickets..."
-                                                        showColumnVisibility={false}
-                                                        showFilters={false}
-                                                        showExport={false}
-                                                        showUpload={false}
-                                                        showAdd={isV("btnAdd")}
-                                                        buttonName={t("Add Ticket")}
-                                                        showApproval={false}
-                                                        showClosed={true}
-                                                        isClosedMode={isClosedMode}
-                                                        handleClosedTickets={handleShowClosedTickets}
-                                                        handleAddClick={handleAddTicket}
-                                                        columnsToDisplay={columnsToDisplay}
-                                                        openTicketsCount={openTicketsCount}
-                                                    />
-                                                ),
-                                            }}
-                                            sx={{
-                                                border: "none !important",
-                                                "& .MuiDataGrid-overlay": {
-                                                    display: "none !important",
-                                                },
-                                                "& .MuiDataGrid-row": {
-                                                    display: "none !important",
-                                                },
-                                                ".MuiDataGrid-cell": {
-                                                    display: "none !important",
-                                                },
-                                                "& .MuiDataGrid-main": {
-                                                    display: "none",
-                                                },
-                                                "& .MuiDataGrid-toolbar": {
-                                                    padding: "0px 8px",
-                                                    gap: "10px",
-                                                    border: "none",
-                                                    marginBottom: "0",
-                                                },
-                                                "&.catalog-datagrid": {
-                                                    border: "2px solid black",
-                                                    borderRadius: "8px",
-                                                    backgroundColor: "#f8f9fa",
-                                                },
-                                                "& .MuiOutlinedInput-root": {
-                                                    width: "100% !important",
-                                                    minWidth: "230px !important",
-                                                }
-                                            }}
-                                        />
+                                <>
+                                    <div className={`catalog-fixed-header ${showHeader ? "show" : "show"}`}>
+                                        {/* This DataGrid is only for the toolbar, not for displaying rows */}
+                                        <div style={{ height: "auto", marginBottom: "16px" }}>
+                                            <DataGrid
+                                                apiRef={gridApiRef}
+                                                rows={[]}
+                                                columns={[]}
+                                                pageSize={pageSize}
+                                                rowCount={total}
+                                                onRowClick={(params) => handleRowClick(params.row)}
+                                                columnVisibilityModel={columnVisibilityModel}
+                                                onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                                                sortModel={sortModel}
+                                                onSortModelChange={handleSortModelChange}
+                                                disableSelectionOnClick
+                                                disableColumnMenu
+                                                hideFooter={true}
+                                                hideFooterPagination={true}
+                                                disableExtendRowFullWidth={true}
+                                                pagination={false}
+                                                autoHeight
+                                                rowHeight={55}
+                                                showToolbar
+                                                slots={{
+                                                    toolbar: () => (
+                                                        <CustomToolbar
+                                                            searchQuery={searchQuery}
+                                                            filterAnchor={filterAnchor}
+                                                            onSearch={handleSearch}
+                                                            setSearchQuery={setSearchQuery}
+                                                            setFilterAnchor={setFilterAnchor}
+                                                            handleFilterChange={handleFilterChange}
+                                                            onColumnVisibilityChange={setColumnVisibilityModel}
+                                                            columns={visibleColumns}
+                                                            filters={filters}
+                                                            columnVisibilityModel={columnVisibilityModel}
+                                                            searchPlaceholder="Search tickets..."
+                                                            showColumnVisibility={false}
+                                                            showFilters={false}
+                                                            showExport={false}
+                                                            showUpload={false}
+                                                            showAdd={isV('btnAdd')}
+                                                            buttonName={t("Add Ticket")}
+                                                            showApproval={false}
+                                                            showClosed={true}
+                                                            isClosedMode={isClosedMode}
+                                                            handleClosedTickets={handleShowClosedTickets}
+                                                            handleAddClick={handleAddTicket}
+                                                            columnsToDisplay={columnsToDisplay}
+                                                            openTicketsCount={openTicketsCount}
+                                                        />
+                                                    ),
+                                                }}
+                                                sx={{
+                                                    border: "none !important",
+                                                    "& .MuiDataGrid-overlay": {
+                                                        display: "none !important",
+                                                    },
+                                                    "& .MuiDataGrid-row": {
+                                                        display: "none !important",
+                                                    },
+                                                    ".MuiDataGrid-cell": {
+                                                        display: "none !important",
+                                                    },
+                                                    "& .MuiDataGrid-main": {
+                                                        display: "none",
+                                                    },
+                                                    "& .MuiDataGrid-toolbar": {
+                                                        padding: "0px 8px",
+                                                        gap: "10px",
+                                                        border: "none",
+                                                        marginBottom: "0",
+                                                    },
+                                                    "&.catalog-datagrid": {
+                                                        border: "2px solid black",
+                                                        borderRadius: "8px",
+                                                        backgroundColor: "#f8f9fa",
+                                                    },
+                                                    "& .MuiOutlinedInput-root": {
+                                                        width: "100% !important",
+                                                        minWidth: "230px !important",
+                                                    }
+                                                }}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Order cards section - This should be separate from the fixed header */}
-                                <div style={{  position: "relative", zIndex: 1 }}>
-                                    <SkeletonWrapper loading={loading} type="order_card" count={4}>
-                                    <SupportCard
-                                        tickets={initialTickets}
-                                        setSelectedRow={handleShowAllDetailsClick}
-                                    />
-                                    </SkeletonWrapper>
-                                </div>
-                            </>
+                                    {/* Order cards section - This should be separate from the fixed header */}
+                                    <div style={{ position: "relative", zIndex: 1 }}>
+                                        <SkeletonWrapper loading={loading} type="order_card" count={4}>
+                                            <SupportCard
+                                                tickets={initialTickets}
+                                                setSelectedRow={handleShowAllDetailsClick}
+                                            />
+                                        </SkeletonWrapper>
+                                    </div>
+                                </>
 
-                        )}
+                            )}
                     </div>
                 ) : (
                     <div className="table-container">
                         {
-                        // loading ? (
-                        //     <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
-                        //         <LoadingSpinner size="medium" />
-                        //     </div>
-                        // ) : 
-                        error ? (
-                            <div className="error-message">{error}</div>
-                        ) : (
-                            <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
-                            <DataGrid
-                                apiRef={gridApiRef}
-                                rows={initialTickets}
-                                columns={visibleColumns}
-                                pageSize={pageSize}
-                                rowCount={total}
-                                onRowClick={(params) => handleRowClick(params.row)}
-                                columnVisibilityModel={columnVisibilityModel}
-                                onColumnVisibilityModelChange={handleColumnVisibilityChange}
-                                sortModel={sortModel}
-                                onSortModelChange={handleSortModelChange}
-                                disableSelectionOnClick
-                                disableColumnMenu
-                                hideFooter={true}
-                                hideFooterPagination={true}
-                                pagination={false}
-                                // autoHeight
-                                rowHeight={55}
-                                showToolbar
-                                onColumnResize={handleColumnResize}
-                                columnDimensions={columnDimensions}
-                                slots={{
-                                    toolbar: () => (
-                                        <CustomToolbar
-                                            searchQuery={searchQuery}
-                                            filterAnchor={filterAnchor}
-                                            onSearch={handleSearch}
-                                            setSearchQuery={setSearchQuery}
-                                            setFilterAnchor={setFilterAnchor}
-                                            handleFilterChange={handleFilterChange}
-                                            onColumnVisibilityChange={handleColumnVisibilityChange}
-                                            columns={visibleColumns}
-                                            filters={filters}
-                                            columnVisibilityModel={columnVisibilityModel}
-                                            searchPlaceholder={"Search tickets..."}
-                                            showColumnVisibility={true}
-                                            showFilters={true}
-                                            showExport={false}
-                                            showUpload={false}
-                                            showAdd={isV("btnAdd")}
-                                            buttonName={t("Add Ticket")}
-                                            showApproval={false}
-                                            showClosed={true}
-                                            isClosedMode={isClosedMode}
-                                            handleClosedTickets={handleShowClosedTickets}
-                                            handleAddClick={handleAddTicket}
-                                            columnsToDisplay={columnsToDisplay}
-                                            openTicketsCount={openTicketsCount}
-                                        />
-                                    ),
-                                }}
-                                sx={{
-                                    "& .MuiDataGrid-row": {
-                                        cursor: "pointer",
-                                        "&:hover": {
-                                            backgroundColor: "rgba(0, 0, 0, 0.04)",
-                                        },
-                                    },
-                                    "& .MuiDataGrid-toolbar": {
-                                        padding: "0px 8px"
-                                    },
-                                    ...(isArabic && {
-                                        direction: "rtl",
-                                        "& .MuiDataGrid-cell": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-columnHeader": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-columnHeaderTitle": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-cellContent": {
-                                            textAlign: "right !important",
-                                        },
-                                    }),
-                                    ...(!isArabic && {
-                                        "& .MuiDataGrid-cell": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-columnHeader": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-columnHeaderTitle": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-cellContent": {
-                                            textAlign: "left",
-                                        },
-                                    }),
-                                }}
-                            />
-                            </SkeletonWrapper>
-                        )}
+                            // loading ? (
+                            //     <div className="loading-container" style={{ position: "absolute", top: "50%", left: "50%" }}>
+                            //         <LoadingSpinner size="medium" />
+                            //     </div>
+                            // ) : 
+                            error ? (
+                                <div className="error-message">{error}</div>
+                            ) : (
+                                <SkeletonWrapper loading={loading} type="table" rows={10} columns={5}>
+                                    <DataGrid
+                                        apiRef={gridApiRef}
+                                        rows={initialTickets}
+                                        columns={visibleColumns}
+                                        pageSize={pageSize}
+                                        rowCount={total}
+                                        onRowClick={(params) => handleRowClick(params.row)}
+                                        columnVisibilityModel={columnVisibilityModel}
+                                        onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                                        sortModel={sortModel}
+                                        onSortModelChange={handleSortModelChange}
+                                        disableSelectionOnClick
+                                        disableColumnMenu
+                                        hideFooter={true}
+                                        hideFooterPagination={true}
+                                        pagination={false}
+                                        // autoHeight
+                                        rowHeight={55}
+                                        showToolbar
+                                        onColumnResize={handleColumnResize}
+                                        columnDimensions={columnDimensions}
+                                        slots={{
+                                            toolbar: () => (
+                                                <CustomToolbar
+                                                    searchQuery={searchQuery}
+                                                    filterAnchor={filterAnchor}
+                                                    onSearch={handleSearch}
+                                                    setSearchQuery={setSearchQuery}
+                                                    setFilterAnchor={setFilterAnchor}
+                                                    handleFilterChange={handleFilterChange}
+                                                    onColumnVisibilityChange={handleColumnVisibilityChange}
+                                                    columns={visibleColumns}
+                                                    filters={filters}
+                                                    columnVisibilityModel={columnVisibilityModel}
+                                                    searchPlaceholder={"Search tickets..."}
+                                                    showColumnVisibility={true}
+                                                    showFilters={true}
+                                                    showExport={false}
+                                                    showUpload={false}
+                                                    showAdd={isV("btnAdd")}
+                                                    buttonName={t("Add Ticket")}
+                                                    showApproval={false}
+                                                    showClosed={true}
+                                                    isClosedMode={isClosedMode}
+                                                    handleClosedTickets={handleShowClosedTickets}
+                                                    handleAddClick={handleAddTicket}
+                                                    columnsToDisplay={columnsToDisplay}
+                                                    openTicketsCount={openTicketsCount}
+                                                />
+                                            ),
+                                        }}
+                                        sx={{
+                                            "& .MuiDataGrid-row": {
+                                                cursor: "pointer",
+                                                "&:hover": {
+                                                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                                                },
+                                            },
+                                            "& .MuiDataGrid-toolbar": {
+                                                padding: "0px 8px"
+                                            },
+                                            ...(isArabic && {
+                                                direction: "rtl",
+                                                "& .MuiDataGrid-cell": {
+                                                    textAlign: "right !important",
+                                                },
+                                                "& .MuiDataGrid-columnHeader": {
+                                                    textAlign: "right !important",
+                                                },
+                                                "& .MuiDataGrid-columnHeaderTitle": {
+                                                    textAlign: "right !important",
+                                                },
+                                                "& .MuiDataGrid-cellContent": {
+                                                    textAlign: "right !important",
+                                                },
+                                            }),
+                                            ...(!isArabic && {
+                                                "& .MuiDataGrid-cell": {
+                                                    textAlign: "left",
+                                                },
+                                                "& .MuiDataGrid-columnHeader": {
+                                                    textAlign: "left",
+                                                },
+                                                "& .MuiDataGrid-columnHeaderTitle": {
+                                                    textAlign: "left",
+                                                },
+                                                "& .MuiDataGrid-cellContent": {
+                                                    textAlign: "left",
+                                                },
+                                            }),
+                                        }}
+                                    />
+                                </SkeletonWrapper>
+                            )}
                     </div>
                 )}
                 {isV("supportPagination") && !loading && initialTickets.length > 0 && (
