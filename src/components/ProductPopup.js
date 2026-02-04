@@ -156,7 +156,7 @@ function ProductPopup({
                                 {isV('addToCart') && (
                                     <div className='addtocartbutton'>
                                         <button
-                                            className="add-to-cart-btn"
+                                            className="add-to-cart-btn-popup"
                                             onClick={handleAddToCart}
                                             style={{ backgroundColor: '#0a5640', color: '#ffffff', width: '100%' }} disabled={isAdding}    >
                                             {isAdding === product?.id ? t('ADDING...') : t('Add to Cart')}
@@ -320,7 +320,7 @@ function ProductPopup({
                         display: flex;
                         justify-content: flex-end;
                     }
-                    .add-to-cart-btn {
+                    .add-to-cart-btn-popup {
                         background-color: var(--logo-deep-green);
                         color: rgb(255, 255, 255);
                         width: 90%;
@@ -334,7 +334,7 @@ function ProductPopup({
                         font-weight: 600;
                         margin-top: 10px;
                     }
-                    .add-to-cart-btn:hover {
+                    .add-to-cart-btn-popup:hover {
                         background-color: #001845;
                     }
                     @media (max-width: 900px) {
@@ -396,7 +396,7 @@ function ProductPopup({
                             min-width: 0;
                             gap: 8px;
                         }
-                        .add-to-cart-btn {
+                        .add-to-cart-btn-popup {
                             align-items: center;
                             height: 44px;
                             width: 100%;
