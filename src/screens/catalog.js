@@ -1359,13 +1359,15 @@ function Catalog() {
           }
 
           // Normal tab change
-          console.log('Tab changing from', activeCategory, 'to', newCategory);
+          console.log('Tab changing from', location, 'to', newCategory);
+         
           setActiveCategory(newCategory);
           setSearchQuery('');
           setCategoryFilter('');
           setSubCategoryFilter('');
           setSubCategoryEnOptions([]);
           setSubCategoryArOptions([]);
+           navigate(`/catalog/${newCategory}`,{ replace: true })
         }}
         coolingPeriodData={coolingPeriodData}
         disabledEntities={disabledEntities}
