@@ -3578,7 +3578,7 @@ function OrderDetails() {
 
           const arOptions = result.data.data.map(item => ({
             value: item.name,
-            label: item.nameLc // Arabic name
+            label: item.nameLc
           }));
 
           setPricingPolicyEnOptions(enOptions);
