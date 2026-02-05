@@ -260,11 +260,11 @@ function Catalog() {
     }
   }, []);
 
-  const fetchProducts = async (page = 1, reset = false) => {
+  const fetchProducts = useCallback(async (page = 1, reset = false) => {
     const currentActiveCategory = activeCategoryRef.current;
-    const currentCategoryFilter = categoryFilterRef.current;
-    const currentSubCategoryFilter = subCategoryFilterRef.current;
-    const currentSearchQuery = searchQueryRef.current;
+    const currentCategoryFilter = categoryFilterRef.current || '';  // Fix: default to empty string
+    const currentSubCategoryFilter = subCategoryFilterRef.current || '';  // Fix: default to empty string
+    const currentSearchQuery = searchQueryRef.current || '';
 
     if (reset) {
       startLoading();
@@ -276,56 +276,60 @@ function Catalog() {
 
     try {
       const params = new URLSearchParams({
-        page: page,
+        page,
         pageSize: productsPerPage,
-        sortBy: "id",
-        sortOrder: "asc",
+        sortBy: 'id',
+        sortOrder: 'asc',
       });
 
-      if (currentActiveCategory === "SPECIAL_PRODUCTS") {
-        params.append("filters", JSON.stringify({ "specialProduct": true }));
-      } else if (currentActiveCategory === "FAVORITES") {
-        params.append("favorite", "true");
+      if (currentActiveCategory === 'SPECIAL_PRODUCTS') {
+        params.append('filters', JSON.stringify({ specialProduct: true }));
+      } else if (currentActiveCategory === 'FAVORITES') {
+        params.append('favorite', 'true');
       } else {
         const selectedCategory = categories.find(cat => cat.value === currentActiveCategory);
         const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+        if (entityToFilter) params.append('entity', entityToFilter);
 
-        if (entityToFilter) {
-          params.append("entity", entityToFilter);
-          if (entityToFilter === Constants.ENTITY.VMCO) {
-            if (currentActiveCategory === Constants.CATEGORY.VMCO_MACHINES) {
-              params.append("isMachine", "true");
-            } else if (currentActiveCategory === Constants.CATEGORY.VMCO_CONSUMABLES) {
-              params.append("isMachine", "false");
-            }
+        if (entityToFilter === Constants.ENTITY.VMCO) {
+          if (currentActiveCategory === Constants.CATEGORY.VMCO_MACHINES) {
+            params.append('isMachine', 'true');
+          } else if (currentActiveCategory === Constants.CATEGORY.VMCO_CONSUMABLES) {
+            params.append('isMachine', 'false');
           }
+        }
+
+        // Fixed: Safe string check before trim()
+        if (currentCategoryFilter && typeof currentCategoryFilter === 'string' && currentCategoryFilter.trim()) {
+          params.append('category', currentCategoryFilter.trim());
+          console.log('Category filter applied:', currentCategoryFilter.trim());  // Debug
+        }
+        if (currentSubCategoryFilter && typeof currentSubCategoryFilter === 'string' && currentSubCategoryFilter.trim()) {
+          params.append('subCategory', currentSubCategoryFilter.trim());
+          console.log('Subcategory filter applied:', currentSubCategoryFilter.trim());  // Debug
         }
       }
 
-      if (currentCategoryFilter && currentCategoryFilter.trim() !== "") {
-        params.append("category", currentCategoryFilter);
-      }
-      if (currentSubCategoryFilter && currentSubCategoryFilter.trim() !== "") {
-        params.append("subCategory", currentSubCategoryFilter);
-      }
-      if (currentSearchQuery) {
-        params.append("search", currentSearchQuery);
-        params.append("searchFields", "productName,product_name,product_name_lc,productNameLc");
+      if (currentSearchQuery && typeof currentSearchQuery === 'string' && currentSearchQuery.trim()) {
+        params.append('search', currentSearchQuery.trim());
+        params.append('searchFields', 'productName,productname,productnamelc,productNameLc');
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/products?${params.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          }
-        }
-      );
+      console.log('API URL:', `${API_BASE_URL}/products?${params.toString()}`);  // Debug full URL
+      console.log('Filters:', { category: currentCategoryFilter, subCategory: currentSubCategoryFilter });
+
+      const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
       const result = await response.json();
+      console.log('API Response:', result);  // Debug response
 
+      // Stale closure check
       if (currentActiveCategory !== activeCategoryRef.current ||
         currentCategoryFilter !== categoryFilterRef.current ||
         currentSubCategoryFilter !== subCategoryFilterRef.current ||
@@ -336,21 +340,16 @@ function Catalog() {
       let pageProducts = [];
       let totalCount = 0;
 
-      if (result && result.data) {
+      if (result?.data) {
         if (Array.isArray(result.data.data)) {
           pageProducts = result.data.data;
         } else if (Array.isArray(result.data)) {
           pageProducts = result.data;
         }
-
-        totalCount = result.data.totalRecords ||
-          result.data.total ||
-          result.total ||
-          (result.pagination && result.pagination.total) ||
-          pageProducts.length;
+        totalCount = result.data.totalRecords || result.data.total || result.total || result.pagination?.total || pageProducts.length;
       }
 
-      if (reset || page === 1) {
+      if (reset) {
         setProducts(pageProducts);
         setCurrentPage(1);
         currentPageRef.current = 1;
@@ -359,7 +358,6 @@ function Catalog() {
         setCurrentPage(page);
         currentPageRef.current = page;
       }
-
       setTotalProducts(totalCount);
 
       const currentProductsCount = reset ? pageProducts.length : products.length + pageProducts.length;
@@ -367,14 +365,14 @@ function Catalog() {
       setHasMore(hasMoreProducts);
 
     } catch (err) {
-      console.error("❌ Error fetching products:", err);
+      console.error('Error fetching products:', err);
       setHasMore(false);
     } finally {
       stopLoading();
       setIsLoadingMore(false);
       isLoadingRef.current = false;
     }
-  };
+  }, [categories, productsPerPage, API_BASE_URL, token, products.length, startLoading, stopLoading]);
 
   const loadMoreProducts = useCallback(() => {
     if (isLoadingRef.current) return;
@@ -1360,14 +1358,14 @@ function Catalog() {
 
           // Normal tab change
           console.log('Tab changing from', location, 'to', newCategory);
-         
+
           setActiveCategory(newCategory);
           setSearchQuery('');
           setCategoryFilter('');
           setSubCategoryFilter('');
           setSubCategoryEnOptions([]);
           setSubCategoryArOptions([]);
-           navigate(`/catalog/${newCategory}`,{ replace: true })
+          navigate(`/catalog/${newCategory}`, { replace: true })
         }}
         coolingPeriodData={coolingPeriodData}
         disabledEntities={disabledEntities}
@@ -1376,17 +1374,25 @@ function Catalog() {
         // Search section props
         categoryFilter={categoryFilter}
         handleCategoryFilterChange={(e) => {
-          setCategoryFilter(e.target.value);
-          setSubCategoryFilter("");
-          if (!e.target.value) {
+          const value = e.target.value || '';  // Ensure string
+          console.log('Category selected:', value);  // Debug
+          setCategoryFilter(value);
+          setSubCategoryFilter('');
+          if (!value) {
             setSubCategoryEnOptions([]);
             setSubCategoryArOptions([]);
           }
         }}
+
+
         categoryEnOptions={categoryEnOptions}
         categoryArOptions={categoryArOptions}
         subCategoryFilter={subCategoryFilter}
-        handleSubCategoryFilterChange={(e) => setSubCategoryFilter(e.target.value)}
+        handleSubCategoryFilterChange={(e) => {
+          const value = e.target.value || '';  // Ensure string
+          console.log('Subcategory selected:', value);  // Debug
+          setSubCategoryFilter(value);
+        }}
         subCategoryEnOptions={subCategoryEnOptions}
         subCategoryArOptions={subCategoryArOptions}
 

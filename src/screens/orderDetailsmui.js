@@ -3572,13 +3572,13 @@ function OrderDetails() {
         if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
           // Separate English and Arabic options
           const enOptions = result.data.data.map(item => ({
-            value: item.id,
+            value: item.name,
             label: item.name
           }));
 
           const arOptions = result.data.data.map(item => ({
-            value: item.id,
-            label: item.nameLc // Arabic name
+            value: item.name,
+            label: item.nameLc
           }));
 
           setPricingPolicyEnOptions(enOptions);
