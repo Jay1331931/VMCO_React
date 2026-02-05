@@ -29,10 +29,12 @@ const CatalogLayout = ({
     handleTabChange,
     categoryFilter,
     handleCategoryFilterChange,
-    categoryOptions,
+    categoryEnOptions,
+    categoryArOptions,
     subCategoryFilter,
     handleSubCategoryFilterChange,
-    subCategoryOptions,
+    subCategoryEnOptions,
+    subCategoryArOptions,
     displayedProducts,
     mapProductToCardProps,
     quantities,
@@ -222,7 +224,7 @@ const CatalogLayout = ({
                                     <SearchableDropdown
                                         id={`category-filter-${catalogId}`}
                                         name="categoryFilter"
-                                        options={categoryOptions}
+                                        options={isRTL ? categoryArOptions : categoryEnOptions}
                                         className={window.innerWidth <= 375 ? "category-filter-double" : "category-filter"}
                                         placeholder={t("Category")}
                                         value={categoryFilter}
@@ -231,12 +233,12 @@ const CatalogLayout = ({
                                     <SearchableDropdown
                                         id={`subcategory-filter-${catalogId}`}
                                         name="subCategoryFilter"
-                                        options={subCategoryOptions}
+                                        options={isRTL ? subCategoryArOptions : subCategoryEnOptions}
                                         className={window.innerWidth <= 375 ? "category-filter-double" : "category-filter"}
                                         placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
                                         value={subCategoryFilter}
                                         onChange={handleSubCategoryFilterChange}
-                                        disabled={!categoryFilter || subCategoryOptions.length === 0}
+                                        disabled={!categoryFilter}
                                     />
                                 </div>
                             </div>
@@ -430,7 +432,7 @@ const CatalogLayout = ({
                                 loading={isLoading && !initialLoadComplete}
                                 skeletonCount={6}
                             />
-                            
+
                         </div>
                     </div>
 
@@ -439,7 +441,7 @@ const CatalogLayout = ({
                             <SearchableDropdown
                                 id={`category-filter-${catalogId}`}
                                 name="categoryFilter"
-                                options={categoryOptions}
+                                options={isRTL ? categoryArOptions : categoryEnOptions}
                                 className="category-filter-mobile"
                                 style={{ width: '100%', borderRadius: '16px' }}
                                 placeholder={t("Category")}
@@ -451,13 +453,13 @@ const CatalogLayout = ({
                             <SearchableDropdown
                                 id={`subcategory-filter-${catalogId}`}
                                 name="subCategoryFilter"
-                                options={subCategoryOptions}
+                                options={isRTL ? subCategoryArOptions : subCategoryEnOptions}
                                 className="subcategory-filter-mobile"
                                 style={{ width: '100%', borderRadius: '16px' }}
                                 placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
                                 value={subCategoryFilter}
                                 onChange={handleSubCategoryFilterChange}
-                                disabled={!categoryFilter || subCategoryOptions.length === 0}
+                                disabled={!categoryFilter}
                             />
                         </div>
                     </div>
