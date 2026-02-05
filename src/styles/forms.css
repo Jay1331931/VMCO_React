@@ -2069,6 +2069,10 @@ td.file-display-cell {
   .customers .customer-onboarding-tabs-vertical {
     top: calc(var(--catalog-header-top, 25px) + env(safe-area-inset-top));
   }
+/* bank transaction date */
+  .custom-width {
+  width: 90% !important;
+}
 }
 
 .signature-wrapper {
