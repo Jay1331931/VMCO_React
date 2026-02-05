@@ -4694,7 +4694,6 @@ function OrderDetails() {
                           />
                         ) : fromApproval ? (
                           <input
-                            type="text"
                             name="expectedDeliveryDate"
                             value={
                               formData.expectedDeliveryDate
@@ -4716,7 +4715,6 @@ function OrderDetails() {
                           />
                         ) : formData.expectedDeliveryDate ? (
                           <input
-                            type="date"
                             name="expectedDeliveryDate"
                             value={convertToTimezone(
                               formData.expectedDeliveryDate,
@@ -4728,7 +4726,6 @@ function OrderDetails() {
                           />
                         ) : (
                           <input
-                            type="text"
                             name="expectedDeliveryDate"
                             value={t("Delivery date will update soon")}
                             disabled
