@@ -1079,28 +1079,34 @@ const AddBankTransaction = () => {
               </div>
             )} */}
           </div>
-          {popupImage && (
-            <div
-              className="image-popup-overlay"
-              onClick={() => setPopupImage(null)}
-            >
-              <div
-                className="image-popup-content"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <img
-                  src={popupImage}
-                  style={{ maxWidth: "100%", maxHeight: "100%" }}
-                />
-                <button
-                  className="image-popup-close"
-                  onClick={() => setPopupImage(null)}
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          )}
+         {popupImage && (
+  <div className="img-viewer-overlay" onClick={() => setPopupImage(null)}>
+    <div className="img-viewer-window" onClick={(e) => e.stopPropagation()}>
+      
+      <div className="img-viewer-header">
+        <span className="img-viewer-title">{t("Preview")}</span>
+        <button 
+          className="img-viewer-close" 
+          onClick={() => setPopupImage(null)}
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="img-viewer-body">
+        <img 
+          src={popupImage} 
+          className="img-viewer-element" 
+          alt="File Content" 
+          onError={(e) => {
+            e.target.src = 'https://via.placeholder.com/400?text=Image+Load+Error';
+          }}
+        />
+      </div>
+
+    </div>
+  </div>
+)}
           {user?.userType !== 'customer' && (<GetCustomers
             open={showCustomerPopup}
             onClose={() => setShowCustomerPopup(false)}
@@ -1247,62 +1253,90 @@ const AddBankTransaction = () => {
   text-decoration: none;
   white-space: nowrap;
 }
-.image-popup-overlay {
+
+/* Dark, neutral overlay */
+.img-viewer-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.8);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  animation: fadeIn 0.2s ease-in-out;
+  z-index: 10000;
+  padding: 20px;
 }
 
-.image-popup-content {
-  position: relative;
-  max-width: 50%;
-  
-  background: #fff;
-  padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  animation: scaleIn 0.25s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.image-popup-content img {
-  width: 100%;
-  max-width: 400px;
-  max-height: 400px;
-  height: auto;
+/* White window with a simple border */
+.img-viewer-window {
+  background: #ffffff;
   border-radius: 8px;
-  object-fit: contain;
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  border: 1px solid #e2e8f0; /* Soft gray border */
+  overflow: hidden;
 }
 
-.image-popup-close {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: red;
-  color: white;
+/* Header: Simple white background with thin bottom border */
+.img-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.img-viewer-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.img-viewer-close {
+  background: transparent;
   border: none;
-  font-size: 20px;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  color: #a0aec0;
+  font-size: 28px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  transition: background 0.2s;
+  line-height: 1;
+  transition: color 0.2s;
 }
 
-.image-popup-close:hover {
-  background: #c00;
-},
+.img-viewer-close:hover {
+  color: #2d3748;
+}
+
+/* Content: Light gray background to make the image stand out */
+.img-viewer-body {
+  padding: 15px;
+  background: #f7fafc; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.img-viewer-element {
+  max-width: 100%;
+  max-height: 70vh; /* Keeps it within screen height */
+  object-fit: contain;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+  .img-viewer-window {
+    max-height: 95vh;
+  }
+  .img-viewer-body {
+    padding: 10px;
+  }
+}
 .submit-btn:hover{
   background: #004d43;
   color: #fff;

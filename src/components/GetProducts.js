@@ -13,25 +13,29 @@ function GetProducts({
   customerId,
   entity,
   category,
-  t = (x) => x, // fallback translation
-  machineMode // new prop, true or falsy
+  t = (x) => x,
+  machineMode
 }) {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
+
+  // Product states
   const [backendProducts, setBackendProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
-    pageSize: 10,
+    pageSize: 20,
     total: 0
   });
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  // Category and Subcategory filters
-  const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
+  // ✅ FIXED: All category/subcategory states properly defined
+  const [categoriesEn, setCategoriesEn] = useState([]);
+  const [categoriesAr, setCategoriesAr] = useState([]);
+  const [subcategoriesEn, setSubcategoriesEn] = useState([]);
+  const [subcategoriesAr, setSubcategoriesAr] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
@@ -43,17 +47,23 @@ function GetProducts({
   const categoryDropdownRef = useRef();
   const subcategoryDropdownRef = useRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // ✅ Dynamically select categories based on language
+  const categories = i18n.language === 'ar' ? categoriesAr : categoriesEn;
+  const subcategories = i18n.language === 'ar' ? subcategoriesAr : subcategoriesEn;
+
   // Clear selected products when modal closes
   useEffect(() => {
     if (!open) setSelectedProducts([]);
   }, [open]);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  // For single-selection mode (machineMode), only allow one selected product
+
+  // Product selection handlers
   const handleProductCheck = (product, isChecked) => {
     if (machineMode) {
       if (isChecked) {
@@ -70,7 +80,6 @@ function GetProducts({
     }
   };
 
-  // Normal select all for multi-select mode
   const handleSelectAll = (isChecked) => {
     if (isChecked) {
       setSelectedProducts(prev => {
@@ -140,17 +149,19 @@ function GetProducts({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch categories based on entity (disable in machineMode)
+  // ✅ UPDATED: Fetch categories using new API structure
   const fetchCategories = async () => {
     if (!entity || machineMode) {
-      setCategories([]); return;
+      setCategoriesEn([]);
+      setCategoriesAr([]);
+      return;
     }
     try {
       const params = new URLSearchParams({ entity });
       const apiParams = getApiParameters();
-      params.append("isCategory", true);
       if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
       if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
+
       const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
         method: "GET",
         headers: {
@@ -158,28 +169,46 @@ function GetProducts({
           "Authorization": `Bearer ${token}`,
         },
       });
+
+      if (!response.ok) throw new Error("Failed to fetch categories");
       const result = await response.json();
+
       if (result?.data && Array.isArray(result.data)) {
-        setCategories(result.data.map(cat => ({
-          name: cat.category || cat.name || cat,
-          value: cat.category || cat.name || cat,
-        })));
+        const optionsEn = result.data.map(cat => ({
+          name: cat.categoryCodeEn,
+          value: cat.sequenceId,
+          id: cat.id,
+        }));
+
+        const optionsAr = result.data.map(cat => ({
+          name: cat.categoryCodeAr,
+          value: cat.sequenceId,
+          id: cat.id,
+        }));
+
+        setCategoriesEn(optionsEn);
+        setCategoriesAr(optionsAr);
       }
-    } catch { setCategories([]); }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setCategoriesEn([]);
+      setCategoriesAr([]);
+    }
   };
 
-  // Fetch subcategories based on selected category and entity (disable in machineMode)
-  const fetchSubcategories = async (categoryValue) => {
-    if (!categoryValue || !entity || machineMode) {
-      setSubcategories([]); return;
+  // ✅ UPDATED: Fetch subcategories using new API endpoint
+  const fetchSubcategories = async (sequenceId) => {
+    if (!sequenceId || !entity || machineMode) {
+      setSubcategoriesEn([]);
+      setSubcategoriesAr([]);
+      return;
     }
     try {
       const params = new URLSearchParams({
-        entity: entity, category: categoryValue
+        entity,
+        sequenceId
       });
-      const apiParams = getApiParameters();
-      if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
-      if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
+
       const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
         method: "GET",
         headers: {
@@ -187,33 +216,43 @@ function GetProducts({
           "Authorization": `Bearer ${token}`,
         },
       });
+
+      if (!response.ok) throw new Error("Failed to fetch subcategories");
       const result = await response.json();
+
       if (result?.data && Array.isArray(result.data)) {
-        setSubcategories(result.data.map(sub => ({
-          name: sub.subCategory || sub.subcategory || sub.name || sub,
-          value: sub.subCategory || sub.subcategory || sub.name || sub,
-        })));
+        const optionsEn = result.data.map(sub => ({
+          name: sub.subCategoryCodeEn,
+          value: sub.id,
+          sequenceId: sub.sequenceId,
+        }));
+
+        const optionsAr = result.data.map(sub => ({
+          name: sub.subCategoryCodeAr,
+          value: sub.subCategoryCodeEn,
+          sequenceId: sub.sequenceId,
+        }));
+
+        setSubcategoriesEn(optionsEn);
+        setSubcategoriesAr(optionsAr);
       }
-    } catch { setSubcategories([]); }
+    } catch (error) {
+      console.error("Error fetching subcategories:", error);
+      setSubcategoriesEn([]);
+      setSubcategoriesAr([]);
+    }
   };
 
   const handleKeyDown = (e) => {
-    // These keys indicate user is done with keyboard
-    if (
-      e.key === "Enter" ||
-      e.key === "Go" ||
-      e.key === "Search" ||
-      e.key === "Done"
-    ) {
+    if (["Enter", "Go", "Search", "Done"].includes(e.key)) {
       if (window.innerWidth <= 768) {
-        // Blur the input to close keyboard
         e.target.blur();
-        // Remove keyboard class immediately
         document.body.classList.remove("keyboard-open");
       }
     }
   };
 
+  // Load categories when modal opens
   useEffect(() => {
     if (open && entity && !machineMode) {
       fetchCategories();
@@ -222,15 +261,17 @@ function GetProducts({
       setCategorySearch("");
       setSubcategorySearch("");
     }
-  }, [open, API_BASE_URL, token, entity, category, machineMode]);
+  }, [open, entity, machineMode]);
 
+  // Load subcategories when category changes
   useEffect(() => {
     if (selectedCategory && !machineMode) {
       fetchSubcategories(selectedCategory);
       setSelectedSubcategory("");
       setSubcategorySearch("");
     } else if (!machineMode) {
-      setSubcategories([]);
+      setSubcategoriesEn([]);
+      setSubcategoriesAr([]);
     }
   }, [selectedCategory, entity, machineMode]);
 
@@ -242,8 +283,10 @@ function GetProducts({
         customerId: parseInt(customerId),
         entity: entity
       };
-      if (selectedCategory && !machineMode) filters.categoryId = parseInt(selectedCategory);
-      if (selectedSubcategory && !machineMode) filters.subcategoryId = parseInt(selectedSubcategory);
+
+      if (selectedCategory && !machineMode) filters.category = selectedCategory;
+      if (selectedSubcategory && !machineMode) filters.subCategory = selectedSubcategory;
+
       const apiParams = getApiParameters();
       const params = new URLSearchParams({
         page: pagination.page,
@@ -253,12 +296,11 @@ function GetProducts({
         sortBy: "id",
         sortOrder: "asc"
       });
+
       if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
       if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
-      if (entity) params.append("entity", entity);
-      if (selectedCategory && !machineMode) params.append("category", selectedCategory);
-      if (selectedSubcategory && !machineMode) params.append("subCategory", selectedSubcategory);
       if (searchQuery) params.append("searchFields", "productName,product_name,product_name_lc,productNameLc");
+
       const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
         method: "GET",
         headers: {
@@ -266,9 +308,10 @@ function GetProducts({
           "Authorization": `Bearer ${token}`,
         },
       });
-      const result = await response.json();
 
+      const result = await response.json();
       let productsFromApi = [];
+
       if (result?.data?.data && Array.isArray(result.data.data)) {
         productsFromApi = result.data.data;
       }
@@ -279,12 +322,14 @@ function GetProducts({
           productsFromApi.push({ id: "others", productName: "Others" });
         }
       }
+
       setBackendProducts(productsFromApi);
       setPagination(prev => ({
         ...prev,
-        total: result.data.totalRecords || productsFromApi.length,
+        total: result.data?.totalRecords || productsFromApi.length,
       }));
     } catch (error) {
+      console.error("Error fetching products:", error);
       setBackendProducts([]);
       setPagination(prev => ({ ...prev, total: 0 }));
     } finally {
@@ -294,9 +339,9 @@ function GetProducts({
 
   useEffect(() => {
     fetchProducts();
-  }, [open, API_BASE_URL, token, pagination.page, pagination.pageSize, searchQuery, selectedCategory, selectedSubcategory, entity, category, machineMode]);
+  }, [open, pagination.page, pagination.pageSize, searchQuery, selectedCategory, selectedSubcategory, entity, category, machineMode]);
 
-  // Filter support:
+  // Filter support
   const filteredCategories = categories.filter(cat =>
     cat.name.toLowerCase().includes(categorySearch.toLowerCase())
   );
@@ -313,12 +358,14 @@ function GetProducts({
     setSubcategorySearch("");
     setPagination(prev => ({ ...prev, page: 1 }));
   };
+
   const handleSubcategorySelect = (subcat) => {
     setSelectedSubcategory(subcat.value);
     setSubcategorySearch(subcat.name);
     setSubcategoryDropdownOpen(false);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
+
   const clearCategoryFilter = () => {
     setSelectedCategory("");
     setCategorySearch("");
@@ -326,6 +373,7 @@ function GetProducts({
     setSubcategorySearch("");
     setPagination(prev => ({ ...prev, page: 1 }));
   };
+
   const clearSubcategoryFilter = () => {
     setSelectedSubcategory("");
     setSubcategorySearch("");
@@ -333,6 +381,7 @@ function GetProducts({
   };
 
   if (!open) return null;
+
   const { page, pageSize, total } = pagination;
   const totalPages = total > 0 ? Math.ceil(total / pageSize) : 1;
 
@@ -351,7 +400,8 @@ function GetProducts({
               onClick={handleSelectProducts}
               disabled={selectedProducts.length === 0}
               style={{
-                marginRight: isRTL ? '0' : '8px', marginLeft: isRTL ? '8px' : '0',
+                marginRight: isRTL ? '0' : '8px',
+                marginLeft: isRTL ? '8px' : '0',
                 opacity: selectedProducts.length === 0 ? 0.5 : 1,
                 cursor: selectedProducts.length === 0 ? 'not-allowed' : 'pointer'
               }}
@@ -361,25 +411,15 @@ function GetProducts({
           </div>
         </div>
 
-        {/* Hide category/subcategory/search if machineMode */}
-
         <div style={{ padding: "0 28px 10px 28px" }}>
           <input
             type="text"
             placeholder={t("Search products...")}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            onFocus={() => {
-              if (window.innerWidth <= 768) {
-                // This could trigger hiding the bottom menu
-                document.body.classList.add("keyboard-open");
-              }
-            }}
+            onFocus={() => window.innerWidth <= 768 && document.body.classList.add("keyboard-open")}
             onKeyDown={handleKeyDown}
-            onBlur={() => {
-              document.body.classList.remove("keyboard-open");
-              // 👈 show menu again (optional)
-            }}
+            onBlur={() => document.body.classList.remove("keyboard-open")}
             style={{
               width: "100%",
               padding: "8px 10px",
@@ -394,27 +434,30 @@ function GetProducts({
               <SearchableDropdown
                 id="category-filter"
                 name="categoryFilter"
-                options={categories}
+                options={filteredCategories}
                 className={isMobile ? "mobile-select-branch location-select" : "category-filter"}
                 placeholder={t("Category")}
                 value={selectedCategory}
-                onChange={e => {
+                onChange={(e) => {
                   const newCategoryValue = e.target.value;
                   setSelectedCategory(newCategoryValue);
                   setSelectedSubcategory("");
-                  if (!newCategoryValue) setSubcategories([]);
+                  if (!newCategoryValue) {
+                    setSubcategoriesEn([]);
+                    setSubcategoriesAr([]);
+                  }
                 }}
               />
 
               <SearchableDropdown
                 id="subcategory-filter"
                 name="subCategoryFilter"
-                options={subcategories}
+                options={filteredSubcategories}
                 className={isMobile ? "mobile-select-branch location-select" : "category-filter"}
                 placeholder={!selectedCategory ? t("Select category first") : t("Sub category")}
                 value={selectedSubcategory}
                 onChange={e => setSelectedSubcategory(e.target.value)}
-                disabled={!selectedCategory || subcategories.length === 0}
+                disabled={!selectedCategory || (subcategoriesEn.length === 0 && subcategoriesAr.length === 0)}
               />
             </div>
           )}
@@ -425,7 +468,6 @@ function GetProducts({
             <div style={{ padding: 24 }}>{t("Loading...")}</div>
           ) : (
             <>
-              {/* Select All Checkbox: hidden in machineMode */}
               {!machineMode && backendProducts.length > 0 && (
                 <div className="gp-select-all" style={{ padding: "8px 12px", borderBottom: "1px solid #eee" }}>
                   <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
@@ -434,17 +476,6 @@ function GetProducts({
                       checked={areAllSelected}
                       onChange={e => handleSelectAll(e.target.checked)}
                       style={{ marginRight: isRTL ? "0" : "8px", marginLeft: isRTL ? "8px" : "0" }}
-                      onFocus={() => {
-                        if (window.innerWidth <= 768) {
-                          // This could trigger hiding the bottom menu
-                          document.body.classList.add("keyboard-open");
-                        }
-                      }}
-                      onKeyDown={handleKeyDown}
-                      onBlur={() => {
-                        document.body.classList.remove("keyboard-open");
-                        // 👈 show menu again (optional)
-                      }}
                     />
                     <span style={{ fontWeight: "bold", fontSize: "14px" }}>
                       {t("Select All")} ({backendProducts.length})
@@ -476,17 +507,6 @@ function GetProducts({
                           cursor: "pointer"
                         }}
                         name={machineMode ? "singleSelectProduct" : undefined}
-                        onFocus={() => {
-                          if (window.innerWidth <= 768) {
-                            // This could trigger hiding the bottom menu
-                            document.body.classList.add("keyboard-open");
-                          }
-                        }}
-                        onKeyDown={handleKeyDown}
-                        onBlur={() => {
-                          document.body.classList.remove("keyboard-open");
-                          // 👈 show menu again (optional)
-                        }}
                       />
                       <span
                         style={{
@@ -497,7 +517,8 @@ function GetProducts({
                       >
                         {i18n.language === 'ar' ?
                           `${product.id} - ${product.productNameLc || product.productName}` :
-                          `${product.id} - ${product.productName}`}
+                          `${product.id} - ${product.productName}`
+                        }
                       </span>
                     </label>
                   </li>
@@ -512,7 +533,6 @@ function GetProducts({
           )}
         </div>
 
-        {/* Footer with Pagination */}
         <div className="gp-footer">
           {totalPages > 0 && (
             <Pagination
@@ -525,197 +545,26 @@ function GetProducts({
             />
           )}
         </div>
-      </div>
 
-      <style>{`
-        .gp-backdrop {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.15);
-          z-index: 1000;
-        }
-        .gp-modal {
-          position: fixed;
-          top: 50%; left: 50%;
-          transform: translate(-50%, -50%);
-          background: var(--bg-white);
-          border-radius: 12px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-          width: 600px;
-          max-width: 95vw;
-          z-index: 1001;
-          padding: 0;
-          animation: gp-fadein 0.2s;
-        }
-        @keyframes gp-fadein {
-          from { opacity: 0; transform: translate(-50%, -60%);}
-          to { opacity: 1; transform: translate(-50%, -50%);}
-        }
-        .gp-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 22px 28px 10px 28px;
-        }
-        .gp-title {
-          font-size: 1.25rem;
-          font-weight: light;
-        }
-        .gp-header-buttons {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .gp-select-btn {
-          padding: 7px 10px;
-          border-radius: 6px;
-          border: 1px solid var(--logo-deep-green);
-          background: var(--logo-deep-green);
-          color: white;
-          font-size: 0.8rem;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-        .gp-select-btn:hover:not(:disabled) {
-          background: var(--logo-light-green);
-        }
-        .gp-select-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .gp-filters-row {
-          display: flex;
-          justify-content: space-between;
-          gap: auto;
-        }
-        .gp-dropdown-container {
-          position: relative;
-          flex: 1;
-        }
-        .gp-dropdown-header {
-          position: relative;
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-        }
-        .gp-dropdown-input {
-          width: 100%;
-          padding: 8px 30px 8px 10px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
-          cursor: pointer;
-        }
-        .gp-dropdown-input:disabled {
-          background-color: #f5f5f5;
-          cursor: not-allowed;
-        }
-        .gp-dropdown-arrow {
-          position: absolute;
-          right: 8px;
-          font-size: 12px;
-          color: #666;
-          transition: transform 0.2s;
-        }
-        .gp-dropdown-arrow.open {
-          transform: rotate(180deg);
-        }
-        .gp-clear-btn {
-          position: absolute;
-          right: 25px;
-          background: none;
-          border: none;
-          font-size: 16px;
-          cursor: pointer;
-          color: #999;
-          padding: 0;
-          width: 16px;
-          height: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .gp-clear-btn:hover {
-          color: #666;
-        }
-        .gp-dropdown-list {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          background: white;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          max-height: 200px;
-          overflow-y: auto;
-          z-index: 1002;
-        }
-        .gp-dropdown-item {
-          padding: 8px 12px;
-          cursor: pointer;
-          font-size: 14px;
-          border-bottom: 1px solid #f0f0f0;
-        }
-        .gp-dropdown-item:last-child {
-          border-bottom: none;
-        }
-        .gp-dropdown-item:hover {
-          background-color: #f5f5f5;
-        }
-        .gp-dropdown-item.selected {
-          background-color: #e3f2fd;
-        }
-        .gp-dropdown-item.disabled {
-          color: #999;
-          cursor: default;
-        }
-        .gp-dropdown-item.disabled:hover {
-          background-color: transparent;
-        }
-        .gp-table-container {
-          margin: 10px 28px;
-          padding: 6px;
-          border: 1.9px solid #eee;
-          border-radius: 10px;
-          max-height: 300px;
-          overflow-y: auto;
-        }
-        .gp-product-item:hover {
-          background-color: #e8f4fd !important;
-        }
-        .gp-footer {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 0px 28px 22px 28px;
-          gap: 12px;
-        }
-        .gp-close-btn {
-          padding: 7px 10px;
-          border-radius: 6px;
-          border: 1px solid #bbb;
-          background: #fff;
-          color: #222;
-          font-size: 0.8rem;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-        .gp-close-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .gp-close-btn:hover:not(:disabled) {
-          background: #f2f2f2;
-        }
-        @media(max-width: 768px) {
-          .gp-filters-row {
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-          }
-        }
-      `}</style>
+        <style>{`
+          .gp-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.15); z-index: 1000; }
+          .gp-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-white); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); width: 600px; max-width: 95vw; z-index: 1001; padding: 0; animation: gp-fadein 0.2s; }
+          @keyframes gp-fadein { from { opacity: 0; transform: translate(-50%, -60%);} to { opacity: 1; transform: translate(-50%, -50%);} }
+          .gp-header { display: flex; justify-content: space-between; align-items: center; padding: 22px 28px 10px 28px; }
+          .gp-title { font-size: 1.25rem; font-weight: light; }
+          .gp-header-buttons { display: flex; align-items: center; gap: 8px; }
+          .gp-select-btn { padding: 7px 10px; border-radius: 6px; border: 1px solid var(--logo-deep-green); background: var(--logo-deep-green); color: white; font-size: 0.8rem; cursor: pointer; transition: background 0.15s; }
+          .gp-select-btn:hover:not(:disabled) { background: var(--logo-light-green); }
+          .gp-select-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+          .gp-filters-row { display: flex; justify-content: space-between; gap: auto; }
+          @media(max-width: 768px) { .gp-filters-row { flex-direction: column; gap: 10px; align-items: center; } }
+          .gp-table-container { margin: 10px 28px; padding: 6px; border: 1.9px solid #eee; border-radius: 10px; max-height: 300px; overflow-y: auto; }
+          .gp-product-item:hover { background-color: #e8f4fd !important; }
+          .gp-footer { display: flex; flex-direction: column; align-items: center; padding: 0px 28px 22px 28px; gap: 12px; }
+          .gp-close-btn { padding: 7px 10px; border-radius: 6px; border: 1px solid #bbb; background: #fff; color: #222; font-size: 0.8rem; cursor: pointer; transition: background 0.15s; }
+          .gp-close-btn:hover:not(:disabled) { background: #f2f2f2; }
+        `}</style>
+      </div>
     </div>
   );
 }

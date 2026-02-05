@@ -123,8 +123,11 @@ function Catalog() {
 
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [displayedProducts, setDisplayedProducts] = useState([]);
-  const [categoryOptions, setCategoryOptions] = useState([]);
-  const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+  const [categoryEnOptions, setCategoryEnOptions] = useState([]);
+  const [categoryArOptions, setCategoryArOptions] = useState([]);
+  const [sequenceId, setSequenceId] = useState([]);
+  const [subCategoryEnOptions, setSubCategoryEnOptions] = useState([]);
+  const [subCategoryArOptions, setSubCategoryArOptions] = useState([]);
   const [entityDescriptions, setEntityDescriptions] = useState([]);
   const [isAdding, setIsAdding] = useState(null);
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
@@ -829,7 +832,7 @@ function Catalog() {
             localStorage.setItem("cartItems", JSON.stringify(0));
             // Dispatch custom event to update cart badge
             window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: 0 }));
-            
+
             setSelectedLocation(newBranchId);
             if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
@@ -1092,7 +1095,8 @@ function Catalog() {
       const selectedCategory = categories.find((cat) => cat.value === activeCategory);
       const entity = selectedCategory?.entity;
       if (!entity) {
-        setCategoryOptions([]);
+        setCategoryEnOptions([]);
+        setCategoryArOptions([]);
         return;
       }
       try {
@@ -1116,28 +1120,53 @@ function Catalog() {
         );
         if (!response.ok) throw new Error("Failed to fetch categories");
         const result = await response.json();
-        const options = Array.isArray(result.data)
-          ? result.data.map(cat => ({ name: cat.category || cat.name || cat, value: cat.category || cat.name || cat }))
+        const optionsEn = Array.isArray(result.data)
+          ? result.data.map(cat => ({
+            name: cat.categoryCodeEn,
+            value: cat.sequenceId,
+            id: cat.id,
+            codeEn: cat.categoryCodeEn,
+            codeAr: cat.categoryCodeAr
+          }))
           : [];
-        setCategoryOptions(options);
+
+        const optionsAr = Array.isArray(result.data)
+          ? result.data.map(cat => ({
+            name: cat.categoryCodeAr,
+            value: cat.categoryCodeEn,
+            id: cat.id,
+            codeEn: cat.categoryCodeEn,
+            codeAr: cat.categoryCodeAr
+          }))
+          : [];
+
+
+        setCategoryEnOptions(optionsEn);
+        setCategoryArOptions(optionsAr);
       } catch (err) {
-        setCategoryOptions([]);
+        setCategoryEnOptions([]);
+        setCategoryArOptions([]);
         console.error("Error fetching categories:", err);
       }
     };
     fetchCategories();
-  }, [activeCategory, categories, API_BASE_URL]);
+  }, [activeCategory, categories, API_BASE_URL, token]);
 
   useEffect(() => {
     const fetchSubCategories = async () => {
       const selectedCategoryObj = categories.find((cat) => cat.value === activeCategory);
       const entity = selectedCategoryObj?.entity;
       if (!entity || !categoryFilter) {
-        setSubCategoryOptions([]);
+        setSubCategoryEnOptions([]);
+        setSubCategoryArOptions([]);
         return;
       }
       try {
-        const params = new URLSearchParams({ entity: entity, category: categoryFilter });
+        const params = new URLSearchParams({
+          entity: entity,
+          sequenceId: categoryFilter
+        });
+
         const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
           method: "GET",
           headers: {
@@ -1147,12 +1176,31 @@ function Catalog() {
         });
         if (!response.ok) throw new Error("Failed to fetch subcategories");
         const result = await response.json();
-        const options = Array.isArray(result.data)
-          ? result.data.map(sub => ({ name: sub.subCategory || sub.subcategory || sub.name || sub, value: sub.subCategory || sub.subcategory || sub.name || sub }))
+        const optionsEn = Array.isArray(result.data)
+          ? result.data.map(sub => ({
+            name: sub.subCategoryCodeEn,
+            value: sub.id,
+            sequenceId: sub.sequenceId,
+            codeEn: sub.subCategoryCodeEn,
+            codeAr: sub.subCategoryCodeAr
+          }))
           : [];
-        setSubCategoryOptions(options);
+
+        const optionsAr = Array.isArray(result.data)
+          ? result.data.map(sub => ({
+            name: sub.subCategoryCodeAr,
+            value: sub.id,
+            sequenceId: sub.sequenceId,
+            codeEn: sub.subCategoryCodeEn,
+            codeAr: sub.subCategoryCodeAr
+          }))
+          : [];
+
+        setSubCategoryEnOptions(optionsEn);
+        setSubCategoryArOptions(optionsAr);
       } catch (err) {
-        setSubCategoryOptions([]);
+        setSubCategoryEnOptions([]);
+        setSubCategoryArOptions([]);
         console.error("Error fetching subcategories:", err);
       }
     };
@@ -1162,7 +1210,8 @@ function Catalog() {
   useEffect(() => {
     if (!categoryFilter) {
       setSubCategoryFilter("");
-      setSubCategoryOptions([]);
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
     }
   }, [categoryFilter]);
 
@@ -1252,111 +1301,117 @@ function Catalog() {
   return (
     <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")} selectBranch={isV("selectBranch")} PaddingClass={true} MenuName={"catalog"} >
       <CatalogLayout
-          // Header section props
-          user={user}
-          isMobile={isMobile}
-          showHeader={showHeader}
-          selectedLocation={selectedLocation}
-          handleBranchSelect={handleBranchSelect}
-          branches={branches}
-          isBranchesLoading={isLoading}
-          catalogId={catalogId}
-          isV={isV}
-          handleGoToCart={handleGoToCart}
-          t={t}
-          // Filter section props
-          filteredCategoryTabs={filteredCategoryTabs}
-          activeCategory={activeCategory}
+        // Header section props
+        user={user}
+        isMobile={isMobile}
+        showHeader={showHeader}
+        selectedLocation={selectedLocation}
+        handleBranchSelect={handleBranchSelect}
+        branches={branches}
+        isBranchesLoading={isLoading}
+        catalogId={catalogId}
+        isV={isV}
+        handleGoToCart={handleGoToCart}
+        t={t}
+        // Filter section props
+        filteredCategoryTabs={filteredCategoryTabs}
+        activeCategory={activeCategory}
 
-          handleTabChange={(newCategory) => {
-            // Move the tab change logic here
-            const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
+        handleTabChange={(newCategory) => {
+          // Move the tab change logic here
+          const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
 
-            if (targetTab && targetTab.disabled) {
-              // Find entity for this category
-              const category = categories.find(cat => cat.value === newCategory);
-              const entity = category?.entity;
+          if (targetTab && targetTab.disabled) {
+            // Find entity for this category
+            const category = categories.find(cat => cat.value === newCategory);
+            const entity = category?.entity;
 
-              if (entity && disabledEntities.includes(entity)) {
-                const coolingInfo = coolingPeriodData.find(cp => cp.entity === entity);
+            if (entity && disabledEntities.includes(entity)) {
+              const coolingInfo = coolingPeriodData.find(cp => cp.entity === entity);
 
-                if (coolingInfo && coolingInfo.toTime) {
-                  const todayUTC = new Date().toISOString().split('T')[0];
-                  const utcDateTime = `${todayUTC}T${coolingInfo.toTime}Z`;
-                  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                  const localTime = new Date(utcDateTime).toLocaleTimeString('en-IN', {
-                    timeZone: timezone,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                  });
+              if (coolingInfo && coolingInfo.toTime) {
+                const todayUTC = new Date().toISOString().split('T')[0];
+                const utcDateTime = `${todayUTC}T${coolingInfo.toTime}Z`;
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const localTime = new Date(utcDateTime).toLocaleTimeString('en-IN', {
+                  timeZone: timezone,
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                });
 
-                  Swal.fire({
-                    icon: 'warning',
-                    title: t("Ordering Window Closed"),
-                    text: `${t("Ordering window is closed.")} ${t("You may place an order after")} ${localTime}`,
-                    confirmButtonText: t("OK"),
-                  });
-                } else {
-                  Swal.fire({
-                    icon: 'warning',
-                    title: t("Ordering Window Closed"),
-                    text: t("Ordering window is closed for this category."),
-                    confirmButtonText: t("OK"),
-                  });
-                }
+                Swal.fire({
+                  icon: 'warning',
+                  title: t("Ordering Window Closed"),
+                  text: `${t("Ordering window is closed.")} ${t("You may place an order after")} ${localTime}`,
+                  confirmButtonText: t("OK"),
+                });
+              } else {
+                Swal.fire({
+                  icon: 'warning',
+                  title: t("Ordering Window Closed"),
+                  text: t("Ordering window is closed for this category."),
+                  confirmButtonText: t("OK"),
+                });
               }
-              return;
             }
+            return;
+          }
 
-            // Normal tab change
-            console.log('Tab changing from', activeCategory, 'to', newCategory);
-            setActiveCategory(newCategory);
-            setSearchQuery('');
-            setCategoryFilter('');
-            setSubCategoryFilter('');
-            setSubCategoryOptions([]);
-          }}
-          coolingPeriodData={coolingPeriodData}
-          disabledEntities={disabledEntities}
-          categoriesTabImages={categories}
+          // Normal tab change
+          console.log('Tab changing from', activeCategory, 'to', newCategory);
+          setActiveCategory(newCategory);
+          setSearchQuery('');
+          setCategoryFilter('');
+          setSubCategoryFilter('');
+          setSubCategoryEnOptions([]);
+          setSubCategoryArOptions([]);
+        }}
+        coolingPeriodData={coolingPeriodData}
+        disabledEntities={disabledEntities}
+        categoriesTabImages={categories}
 
-          // Search section props
-          categoryFilter={categoryFilter}
-          handleCategoryFilterChange={(e) => {
-            setCategoryFilter(e.target.value);
-            setSubCategoryFilter("");
-            if (!e.target.value) setSubCategoryOptions([]);
-          }}
-          categoryOptions={categoryOptions}
-          subCategoryFilter={subCategoryFilter}
-          handleSubCategoryFilterChange={(e) => setSubCategoryFilter(e.target.value)}
-          subCategoryOptions={subCategoryOptions}
+        // Search section props
+        categoryFilter={categoryFilter}
+        handleCategoryFilterChange={(e) => {
+          setCategoryFilter(e.target.value);
+          setSubCategoryFilter("");
+          if (!e.target.value) {
+            setSubCategoryEnOptions([]);
+            setSubCategoryArOptions([]);
+          }
+        }}
+        categoryEnOptions={categoryEnOptions}
+        categoryArOptions={categoryArOptions}
+        subCategoryFilter={subCategoryFilter}
+        handleSubCategoryFilterChange={(e) => setSubCategoryFilter(e.target.value)}
+        subCategoryEnOptions={subCategoryEnOptions}
+        subCategoryArOptions={subCategoryArOptions}
 
-          // Products section props
-          displayedProducts={displayedProducts}
-          mapProductToCardProps={mapProductToCardProps}
-          quantities={quantities}
-          setQuantities={setQuantities}
-          handleQuantityChange={handleQuantityChange}
-          handleAddToCart={handleAddToCart}
-          handleProductClick={handleProductClick}
-          onToggleFavorite={handleToggleFavorite}
-          isLoading={isLoading}
-          isLoadingMore={isLoadingMore}
-          hasMore={hasMore}
-          searchQuery={searchQuery}
-          isAdding={isAdding}
+        // Products section props
+        displayedProducts={displayedProducts}
+        mapProductToCardProps={mapProductToCardProps}
+        quantities={quantities}
+        setQuantities={setQuantities}
+        handleQuantityChange={handleQuantityChange}
+        handleAddToCart={handleAddToCart}
+        handleProductClick={handleProductClick}
+        onToggleFavorite={handleToggleFavorite}
+        isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
+        hasMore={hasMore}
+        searchQuery={searchQuery}
+        isAdding={isAdding}
 
-          // Product popup props
-          selectedProduct={selectedProduct}
-          handleClosePopup={handleClosePopup}
+        // Product popup props
+        selectedProduct={selectedProduct}
+        handleClosePopup={handleClosePopup}
 
-          // Platform & RTL props
-          isRTL={isRTL}
-          dir={dir}
-          setSearchQuery={setSearchQuery}
-        />
+        // Platform & RTL props
+        isRTL={isRTL}
+        dir={dir}
+        setSearchQuery={setSearchQuery}
+      />
     </Sidebar>
   );
 }

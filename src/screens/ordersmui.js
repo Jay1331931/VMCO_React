@@ -745,13 +745,27 @@ function Orders() {
       startLoading();
       setError(null);
       const filtersCopy = { ...filters };
-      if (
-        filtersCopy.paymentMethod &&
-        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
-          filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
-      ) {
-        filtersCopy.paymentMethod = "Pre payment";
+
+      if (filtersCopy?.paymentMethod) {
+        const paymentMethodLower = filtersCopy?.paymentMethod.toLowerCase();
+        const normalized = paymentMethodLower.replace(/\s+/g, ""); // remove spaces etc.
+        const cardRegex = /card/; // case-insensitive not needed if already lower
+
+        // If user searches for FOC, send sampleOrder=true filter
+        if (["f", "fo", "foc"].includes(paymentMethodLower)) {
+          delete filtersCopy.paymentMethod;
+          filtersCopy.sampleOrder = true;
+        } else if (cardRegex.test(normalized)) {
+          filtersCopy.paymentMethod = "Pre Payment";
+        }
       }
+      // if (
+      //   filtersCopy.paymentMethod &&
+      //   (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
+      //     filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      // ) {
+      //   filtersCopy.paymentMethod = "Pre payment";
+      // }
       try {
         const params = new URLSearchParams({
           page,
@@ -774,9 +788,20 @@ function Orders() {
         );
 
         if (!response.ok) {
-          throw new Error(
-            `Export failed: ${response.status} ${response.statusText}`
-          );
+          // throw new Error(
+          //   `Export failed: ${response.status} ${response.statusText}`
+          // );
+          const errorData = await response.json().catch(() => ({}));
+      
+      Swal.fire({
+        icon: "error",
+        title: t("Export Error"),
+        text: errorData.message || t("the server is busy."),
+        confirmButtonText: t("OK"),
+      });
+      
+      stopLoading();
+      return; // Stop execution here
         }
 
         // Get the blob from the response
@@ -805,10 +830,25 @@ function Orders() {
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+        Swal.fire({
+      icon: 'success',
+      title: t('Download Started'),
+      text: t('Your file is being saved.'),
+      timer: 2000,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
         return;
       } catch (err) {
         setError(err.message);
         setFilteredOrders([]);
+        Swal.fire({
+      icon: 'error',
+      title: t('Export Failed'),
+      text: err.message || t('An unexpected error occurred during download.'),
+      confirmButtonText: t('Close')
+    });
       } finally {
         stopLoading();
       }
