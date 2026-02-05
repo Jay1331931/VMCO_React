@@ -247,7 +247,7 @@ const CatalogLayout = ({
                 )}
 
                 <div className="catalog-scrollable-content" ref={scrollableContentRef}>
-                    <SkeletonWrapper loading={isLoading} type="card" count={4}>
+                    <SkeletonWrapper loading={isLoading} type="card" count={8}>
                         <div className="products-grid">
                             {displayedProducts?.length > 0 ? (
                                 displayedProducts.map((product) => (
@@ -278,12 +278,13 @@ const CatalogLayout = ({
                         </div>
                     </SkeletonWrapper>
 
-                    {isLoadingMore && (
+                    {/* {isLoadingMore && (
                         <div className="loading-more-container">
                             <LoadingSpinner size="medium" />
                             <span className="loading-more-text">{t("Loading more products...")}</span>
                         </div>
-                    )}
+                    )} */}
+                    <SkeletonWrapper loading={isLoadingMore} type="card" count={8}></SkeletonWrapper>
 
                     {!hasMore && displayedProducts?.length > 0 && !isLoading && !isLoadingMore && (
                         <div className="end-of-catalog-message">
@@ -508,13 +509,13 @@ const CatalogLayout = ({
                     </div>
                 </SkeletonWrapper>
 
-                {isLoadingMore && (
+                {/* {isLoadingMore && (
                     <div className="loading-more-container">
                         <LoadingSpinner size="medium" />
                         <span className="loading-more-text">{t("Loading more products...")}</span>
                     </div>
-                )}
-
+                )} */}
+                <SkeletonWrapper loading={isLoadingMore} type="mobile_card" count={6}> </SkeletonWrapper>
                 {!hasMore && displayedProducts?.length > 0 && !isLoading && !isLoadingMore && (
                     <div className="end-of-catalog-message">
                         <p>{t("End of product catalog")}</p>

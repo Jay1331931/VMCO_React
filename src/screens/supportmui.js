@@ -410,7 +410,7 @@ function Support() {
         {
             field: "daysOpen",
             headerName: t("Days Open"),
-            include: isClosedMode === 'open',
+            include: isClosedMode === 'open' && isV("daysOpen"),
             searchable: false,
             width: columnDimensions["daysOpen"]?.width || 120,
             flex: 1,
