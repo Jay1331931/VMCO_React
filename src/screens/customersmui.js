@@ -1764,43 +1764,41 @@ function Customers() {
   // isApprovalMode: "Is Approval Mode",
   // workflowData: "Workflow Data",
 
-  // COD
-  "COD - limit": "COD Limit",
-  "COD - isAllowed": "COD Allowed",
+  /* ================= PAYMENT ================= */
 
-  // Credit – DAR
-  "credit - DAR - limit": "DAR Credit Limit",
-  "credit - DAR - period": "DAR Credit Period",
-  "credit - DAR - isAllowed": "DAR Credit Allowed",
+// COD
+codLimit: "COD Limit",
+codAllowed: "COD Allowed",
 
-  // Credit – SHC
-  "credit - SHC - limit": "SHC Credit Limit",
-  "credit - SHC - period": "SHC Credit Period",
-  "credit - SHC - isAllowed": "SHC Credit Allowed",
+// Prepayment / Partial
+prepaymentAllowed: "Prepayment Allowed",
+partialpaymentAllowed: "Partial Payment Allowed",
 
-  // Credit – GMTC
-  "credit - GMTC - limit": "GMTC Credit Limit",
-  "credit - GMTC - period": "GMTC Credit Period",
-  "credit - GMTC - isAllowed": "GMTC Credit Allowed",
+// Credit DAR
+creditDarLimit: "DAR Credit Limit",
+creditDarPeriod: "DAR Credit Period",
+creditDarAllowed: "DAR Credit Allowed",
 
-  // Credit – NAQI
-  "credit - NAQI - limit": "NAQI Credit Limit",
-  "credit - NAQI - period": "NAQI Credit Period",
-  "credit - NAQI - isAllowed": "NAQI Credit Allowed",
+// Credit SHC
+creditShcLimit: "SHC Credit Limit",
+creditShcPeriod: "SHC Credit Period",
+creditShcAllowed: "SHC Credit Allowed",
 
-  // Credit – VMCO
-  "credit - VMCO - limit": "VMCO Credit Limit",
-  "credit - VMCO - period": "VMCO Credit Period",
-  "credit - VMCO - isAllowed": "VMCO Credit Allowed",
+// Credit GMTC
+creditGmtcLimit: "GMTC Credit Limit",
+creditGmtcPeriod: "GMTC Credit Period",
+creditGmtcAllowed: "GMTC Credit Allowed",
 
-  // Credit summary
-  // creditLimit: "creditLimit",
-  // creditPeriod: "creditPeriod",
-  // creditBalance: "creditBalance",
+// Credit NAQI
+creditNaqiLimit: "NAQI Credit Limit",
+creditNaqiPeriod: "NAQI Credit Period",
+creditNaqiAllowed: "NAQI Credit Allowed",
 
-  // Payments
-  "prePayment - isAllowed": "Prepayment Allowed",
-  "partialPayment - isAllowed": "Partial Payment Allowed",
+// Credit VMCO
+creditVmcoLimit: "VMCO Credit Limit",
+creditVmcoPeriod: "VMCO Credit Period",
+creditVmcoAllowed: "VMCO Credit Allowed",
+
 
   // Geo
   "geolocation - x": "Latitude",
@@ -1808,8 +1806,12 @@ function Customers() {
 };
 
 const formatValue = (value) => {
-  if (typeof value === "boolean") {
-    return value ? "Yes" : "No";
+  if ((typeof value === "boolean")
+     || (typeof value === "string" && (value.toLowerCase() === "true" || value.toLowerCase() === "false"))) {
+    if(typeof value === "boolean")
+      return value ? "Yes" : "No";
+    else
+      return typeof value === "string" && value.toLowerCase() === "true" ? "Yes" : "No";
   }
   return value;
 };
@@ -1848,209 +1850,301 @@ const flattenObject = (obj, parentKey = "", result = {}) => {
   return result;
 };
 
-  const downloadCustomersAsExcel = async () => {
-    try {
-      setLoading(true);
+//   const downloadCustomersAsExcel = async () => {
+//     try {
+//       setLoading(true);
 
-      // Fetch all customers for download (without pagination)
-      const params = new URLSearchParams({
-        page: 1,
-        pageSize: 10000, // Large number to get all customers
-        search: searchQuery,
-        sortBy: "id",
-        sortOrder: "asc",
-        filters: JSON.stringify(filters),
-      });
+//       // Fetch all customers for download (without pagination)
+//       const params = new URLSearchParams({
+//         page: 1,
+//         pageSize: 10000, // Large number to get all customers
+//         search: searchQuery,
+//         sortBy: "id",
+//         sortOrder: "asc",
+//         filters: JSON.stringify(filters),
+//       });
 
-      const response = await fetch(
-        `${API_BASE_URL}/customers/pagination?${params.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+//       const response = await fetch(
+//         `${API_BASE_URL}/customers/pagination?${params.toString()}`,
+//         {
+//           method: "GET",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
 
-      const result = await response.json();
+//       const result = await response.json();
 
-      if (result.status === "Ok" && result.data.data.length > 0) {
-        // Show progress message
-        Swal.fire({
-          title: "Preparing Export",
-          text: "Fetching customer details, please wait...",
-          icon: "info",
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
-          },
-        });
+//       if (result.status === "Ok" && result.data.data.length > 0) {
+//         // Show progress message
+//         Swal.fire({
+//           title: "Preparing Export",
+//           text: "Fetching customer details, please wait...",
+//           icon: "info",
+//           allowOutsideClick: false,
+//           showConfirmButton: false,
+//           didOpen: () => {
+//             Swal.showLoading();
+//           },
+//         });
 
-        try {
-          // Fetch transformed data for each customer
-          const transformedCustomers = await Promise.all(
-            result.data.data.map(async (customer) => {
-              try {
-                const transformedCustomer = await fetchCustomerContacts(
-                  customer.id,
-                  customer
-                );
-                console.log("Transformed Customer:", transformedCustomer);
-                return transformedCustomer;
-              } catch (error) {
-                console.error(
-                  `Error fetching contacts for customer ${customer.id}:`,
-                  error
-                );
-                // Return original customer data if contact fetch fails
-                return customer;
-              }
-            })
-          );
-          console.log("Transformed Customers:", transformedCustomers);
-          // Prepare data for Excel export with transformed customer data
-          // const exportData = transformedCustomers.map((customer) => ({
-          //   "Registration ID": customer.id,
-          //   "ERP ID": customer.erpCustId || "",
-          //   "Company Name (EN)": customer.companyNameEn || "",
-          //   "Company Name (AR)": customer.companyNameAr || "",
-          //   "Company Type": customer.companyType || "",
-          //   "Type of Business": customer.typeOfBusiness || "",
-          //   "CR Number": customer.crNumber || "",
-          //   "VAT Number": customer.vatNumber || "",
-          //   "Government Registration #":
-          //     customer.governmentRegistrationNumber || "",
-          //   "Baladeah License #": customer.baladeahLicenseNumber || "",
-          //   "Brand Name (EN)": customer.brandNameEn || "",
-          //   "Brand Name (AR)": customer.brandNameAr || "",
-          //   "Delivery Locations": customer.deliveryLocations || "",
-          //   Status: customer.customerStatus || "",
-          //   Region: customer.region || "",
-          //   City: customer.city || "",
-          //   District: customer.district || "",
-          //   Street: customer.street || "",
-          //   "Building Name": customer.buildingName || "",
-          //   "Location Type": customer.locationType || "",
+//         try {
+//           // Fetch transformed data for each customer
+//           const transformedCustomers = await Promise.all(
+//             result.data.data.map(async (customer) => {
+//               try {
+//                 const transformedCustomer = await fetchCustomerContacts(
+//                   customer.id,
+//                   customer
+//                 );
+//                 console.log("Transformed Customer:", transformedCustomer);
+//                 return transformedCustomer;
+//               } catch (error) {
+//                 console.error(
+//                   `Error fetching contacts for customer ${customer.id}:`,
+//                   error
+//                 );
+//                 // Return original customer data if contact fetch fails
+//                 return customer;
+//               }
+//             })
+//           );
+//           console.log("Transformed Customers:", transformedCustomers);
+//           // Prepare data for Excel export with transformed customer data
+//           // const exportData = transformedCustomers.map((customer) => ({
+//           //   "Registration ID": customer.id,
+//           //   "ERP ID": customer.erpCustId || "",
+//           //   "Company Name (EN)": customer.companyNameEn || "",
+//           //   "Company Name (AR)": customer.companyNameAr || "",
+//           //   "Company Type": customer.companyType || "",
+//           //   "Type of Business": customer.typeOfBusiness || "",
+//           //   "CR Number": customer.crNumber || "",
+//           //   "VAT Number": customer.vatNumber || "",
+//           //   "Government Registration #":
+//           //     customer.governmentRegistrationNumber || "",
+//           //   "Baladeah License #": customer.baladeahLicenseNumber || "",
+//           //   "Brand Name (EN)": customer.brandNameEn || "",
+//           //   "Brand Name (AR)": customer.brandNameAr || "",
+//           //   "Delivery Locations": customer.deliveryLocations || "",
+//           //   Status: customer.customerStatus || "",
+//           //   Region: customer.region || "",
+//           //   City: customer.city || "",
+//           //   District: customer.district || "",
+//           //   Street: customer.street || "",
+//           //   "Building Name": customer.buildingName || "",
+//           //   "Location Type": customer.locationType || "",
 
-          //   // Primary Contact
-          //   "Primary Contact Name": customer.primaryContactName || "",
-          //   "Primary Contact Designation":
-          //     customer.primaryContactDesignation || "",
-          //   "Primary Contact Email": customer.primaryContactEmail || "",
-          //   "Primary Contact Mobile": customer.primaryContactMobile || "",
+//           //   // Primary Contact
+//           //   "Primary Contact Name": customer.primaryContactName || "",
+//           //   "Primary Contact Designation":
+//           //     customer.primaryContactDesignation || "",
+//           //   "Primary Contact Email": customer.primaryContactEmail || "",
+//           //   "Primary Contact Mobile": customer.primaryContactMobile || "",
 
-          //   // Business Head Contact
-          //   "Business Head Name": customer.businessHeadName || "",
-          //   "Business Head Designation": customer.businessHeadDesignation || "",
-          //   "Business Head Email": customer.businessHeadEmail || "",
-          //   "Business Head Mobile": customer.businessHeadMobile || "",
+//           //   // Business Head Contact
+//           //   "Business Head Name": customer.businessHeadName || "",
+//           //   "Business Head Designation": customer.businessHeadDesignation || "",
+//           //   "Business Head Email": customer.businessHeadEmail || "",
+//           //   "Business Head Mobile": customer.businessHeadMobile || "",
 
-          //   // Finance Head Contact
-          //   "Finance Head Name": customer.financeHeadName || "",
-          //   "Finance Head Designation": customer.financeHeadDesignation || "",
-          //   "Finance Head Email": customer.financeHeadEmail || "",
-          //   "Finance Head Mobile": customer.financeHeadMobile || "",
+//           //   // Finance Head Contact
+//           //   "Finance Head Name": customer.financeHeadName || "",
+//           //   "Finance Head Designation": customer.financeHeadDesignation || "",
+//           //   "Finance Head Email": customer.financeHeadEmail || "",
+//           //   "Finance Head Mobile": customer.financeHeadMobile || "",
 
-          //   // Purchasing Head Contact
-          //   "Purchasing Head Name": customer.purchasingHeadName || "",
-          //   "Purchasing Head Designation":
-          //     customer.purchasingHeadDesignation || "",
-          //   "Purchasing Head Email": customer.purchasingHeadEmail || "",
-          //   "Purchasing Head Mobile": customer.purchasingHeadMobile || "",
+//           //   // Purchasing Head Contact
+//           //   "Purchasing Head Name": customer.purchasingHeadName || "",
+//           //   "Purchasing Head Designation":
+//           //     customer.purchasingHeadDesignation || "",
+//           //   "Purchasing Head Email": customer.purchasingHeadEmail || "",
+//           //   "Purchasing Head Mobile": customer.purchasingHeadMobile || "",
 
-          //   // Geolocation
-          //   Latitude: customer.geolocation?.x || "",
-          //   Longitude: customer.geolocation?.y || "",
+//           //   // Geolocation
+//           //   Latitude: customer.geolocation?.x || "",
+//           //   Longitude: customer.geolocation?.y || "",
 
-          //   // Assignment Information
-          //   "Assigned To": customer.assignedTo || "",
-          //   "Branch Region": customer.branch || "",
-          //   Entity: customer.entity || "",
-          //   "Inter Company": customer.interCompany ? "Yes" : "No",
+//           //   // Assignment Information
+//           //   "Assigned To": customer.assignedTo || "",
+//           //   "Branch Region": customer.branch || "",
+//           //   Entity: customer.entity || "",
+//           //   "Inter Company": customer.interCompany ? "Yes" : "No",
 
-          //   "Created Date": customer.createdAt
-          //     ? new Date(customer.createdAt).toLocaleDateString()
-          //     : "",
-          // }));
-          const exportData = transformedCustomers.map((customer) => {
-  return prettifyHeaders(flattenObject(customer));
-});
+//           //   "Created Date": customer.createdAt
+//           //     ? new Date(customer.createdAt).toLocaleDateString()
+//           //     : "",
+//           // }));
+//           const exportData = transformedCustomers.map((customer) => {
+//   return prettifyHeaders(flattenObject(customer));
+// });
 
 
-          // Close the loading dialog
-          Swal.close();
+//           // Close the loading dialog
+//           Swal.close();
 
-          // Create Excel file
-          const XLSX = require("xlsx");
-          const ws = XLSX.utils.json_to_sheet(exportData);
+//           // Create Excel file
+//           const XLSX = require("xlsx");
+//           const ws = XLSX.utils.json_to_sheet(exportData);
 
-          // Auto-size columns
-          const colWidths = [];
-          exportData.forEach((row) => {
-            Object.keys(row).forEach((key, index) => {
-              const value = row[key] ? row[key].toString() : "";
-              const width = Math.max(key.length, value.length);
-              colWidths[index] = Math.max(
-                colWidths[index] || 0,
-                Math.min(width, 50)
-              );
-            });
-          });
-          ws["!cols"] = colWidths.map((w) => ({ width: w + 2 }));
+//           // Auto-size columns
+//           const colWidths = [];
+//           exportData.forEach((row) => {
+//             Object.keys(row).forEach((key, index) => {
+//               const value = row[key] ? row[key].toString() : "";
+//               const width = Math.max(key.length, value.length);
+//               colWidths[index] = Math.max(
+//                 colWidths[index] || 0,
+//                 Math.min(width, 50)
+//               );
+//             });
+//           });
+//           ws["!cols"] = colWidths.map((w) => ({ width: w + 2 }));
 
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, "Customers");
+//           const wb = XLSX.utils.book_new();
+//           XLSX.utils.book_append_sheet(wb, ws, "Customers");
 
-          // Generate filename with current date
-          const now = new Date();
-          const filename = `customers_export_${now.getFullYear()}-${String(
-            now.getMonth() + 1
-          ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.xlsx`;
+//           // Generate filename with current date
+//           const now = new Date();
+//           const filename = `customers_export_${now.getFullYear()}-${String(
+//             now.getMonth() + 1
+//           ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.xlsx`;
 
-          // Download file
-          XLSX.writeFile(wb, filename);
+//           // Download file
+//           XLSX.writeFile(wb, filename);
 
-          Swal.fire({
-            title: "Export Successful",
-            text: `${result.data.data.length} customers exported successfully with complete details.`,
-            icon: "success",
-            confirmButtonText: "OK",
-            confirmButtonColor: "#3085d6",
-          });
-        } catch (error) {
-          console.error("Error during export preparation:", error);
-          Swal.fire({
-            title: "Export Error",
-            text: "Failed to prepare customer details for export. Please try again.",
-            icon: "error",
-            confirmButtonText: "OK",
-            confirmButtonColor: "#dc3545",
-          });
-        }
-      } else {
-        Swal.fire({
-          title: t("No Data"),
-          text: t("No customers found to export."),
-          icon: "info",
-          confirmButtonText: t("OK"),
-          confirmButtonColor: "#3085d6",
-        });
+//           Swal.fire({
+//             title: "Export Successful",
+//             text: `${result.data.data.length} customers exported successfully with complete details.`,
+//             icon: "success",
+//             confirmButtonText: "OK",
+//             confirmButtonColor: "#3085d6",
+//           });
+//         } catch (error) {
+//           console.error("Error during export preparation:", error);
+//           Swal.fire({
+//             title: "Export Error",
+//             text: "Failed to prepare customer details for export. Please try again.",
+//             icon: "error",
+//             confirmButtonText: "OK",
+//             confirmButtonColor: "#dc3545",
+//           });
+//         }
+//       } else {
+//         Swal.fire({
+//           title: t("No Data"),
+//           text: t("No customers found to export."),
+//           icon: "info",
+//           confirmButtonText: t("OK"),
+//           confirmButtonColor: "#3085d6",
+//         });
+//       }
+//     } catch (error) {
+//       console.error("Error downloading customers:", error);
+//       Swal.fire({
+//         title: "Export Failed",
+//         text: "Failed to export customers. Please try again.",
+//         icon: "error",
+//         confirmButtonText: "OK",
+//         confirmButtonColor: "#dc3545",
+//       });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+const downloadCustomersAsExcel = async () => {
+  try {
+    setLoading(true);
+
+    Swal.fire({
+      title: "Preparing Export",
+      text: "Fetching customer details, please wait...",
+      icon: "info",
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    const params = new URLSearchParams({
+      search: searchQuery,
+      sortBy: "id",
+      sortOrder: "asc",
+      filters: JSON.stringify(filters),
+    });
+
+    const response = await fetch(
+      `${API_BASE_URL}/customers/export?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       }
-    } catch (error) {
-      console.error("Error downloading customers:", error);
+    );
+
+    const result = await response.json();
+
+    if (result.status !== "Ok" || !result.data?.data?.length) {
       Swal.fire({
-        title: "Export Failed",
-        text: "Failed to export customers. Please try again.",
-        icon: "error",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#dc3545",
+        title: "No Data",
+        text: "No customers found to export.",
+        icon: "info",
       });
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+
+    const customers = result.data.data;
+
+    /* -------- Prepare Excel Data -------- */
+    const exportData = customers.map((customer) =>
+      prettifyHeaders(flattenObject(customer))
+    );
+
+    Swal.close();
+
+    const XLSX = require("xlsx");
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    /* -------- Auto column width -------- */
+    const colWidths = [];
+    exportData.forEach((row) => {
+      Object.keys(row).forEach((key, index) => {
+        const value = row[key] ? row[key].toString() : "";
+        const width = Math.max(key.length, value.length);
+        colWidths[index] = Math.max(colWidths[index] || 0, Math.min(width, 50));
+      });
+    });
+    ws["!cols"] = colWidths.map((w) => ({ width: w + 2 }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Customers");
+
+    const now = new Date();
+    const filename = `customers_export_${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.xlsx`;
+
+    XLSX.writeFile(wb, filename);
+
+    Swal.fire({
+      title: "Export Successful",
+      text: `${customers.length} customers exported successfully.`,
+      icon: "success",
+    });
+  } catch (error) {
+    console.error(error);
+    Swal.fire({
+      title: "Export Failed",
+      text: "Failed to export customers.",
+      icon: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const customerMenuItems = [
     {
