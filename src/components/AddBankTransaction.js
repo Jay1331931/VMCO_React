@@ -687,6 +687,7 @@ const AddBankTransaction = () => {
               <input
                 id="transactionDate"
                 name="transactionDate"
+                className="custom-width"
                 type="date"
                 value={
                   formData?.transactionDate ||
@@ -701,7 +702,7 @@ const AddBankTransaction = () => {
                style={{ 
                 backgroundColor: "white", 
                 opacity: 1, 
-                color: "black" 
+                color: "black" ,
               }}
               />
               {fieldErrors.transactionDate && (
