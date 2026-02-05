@@ -1,0 +1,504 @@
+/* ============================================
+   PAGE TRANSITION STYLES
+   Production-ready iOS/Capacitor optimized
+   ============================================ */
+
+/* Main page transition container */
+.page-transition-wrapper {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  /* GPU acceleration for iOS */
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  /* Ensure animations work in production builds */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ============================================
+   FADE TRANSITION
+   ============================================ */
+.page-fade-enter {
+  opacity: 0;
+  animation: fadeIn 0.8s ease-in-out forwards;
+  -webkit-animation: fadeIn 0.8s ease-in-out forwards;
+}
+
+.page-fade-exit {
+  opacity: 1;
+  animation: fadeOut 0.7s ease-in-out forwards;
+  -webkit-animation: fadeOut 0.7s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@-webkit-keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   SLIDE UP TRANSITION
+   ============================================ */
+.page-slide-up-enter {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: slideUpIn 0.8s ease-out forwards;
+  -webkit-animation: slideUpIn 0.8s ease-out forwards;
+}
+
+.page-slide-up-exit {
+  opacity: 1;
+  transform: translateY(0);
+  animation: slideUpOut 0.7s ease-in forwards;
+  -webkit-animation: slideUpOut 0.7s ease-in forwards;
+}
+
+@keyframes slideUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@-webkit-keyframes slideUpIn {
+  from {
+    opacity: 0;
+    -webkit-transform: translateY(30px);
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUpOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+
+@-webkit-keyframes slideUpOut {
+  from {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: translateY(-30px);
+    transform: translateY(-30px);
+  }
+}
+
+/* ============================================
+   SLIDE RIGHT TRANSITION (Default for LTR)
+   ============================================ */
+.page-slide-right-enter {
+  opacity: 0;
+  transform: translateX(-40px);
+  animation: slideRightIn 0.8s ease-out forwards;
+  -webkit-animation: slideRightIn 0.8s ease-out forwards;
+}
+
+.page-slide-right-exit {
+  opacity: 1;
+  transform: translateX(0);
+  animation: slideRightOut 0.8s ease-in forwards;
+  -webkit-animation: slideRightOut 0.8s ease-in forwards;
+}
+
+@keyframes slideRightIn {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@-webkit-keyframes slideRightIn {
+  from {
+    opacity: 0;
+    -webkit-transform: translateX(-40px);
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateX(0);
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRightOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+
+@-webkit-keyframes slideRightOut {
+  from {
+    opacity: 1;
+    -webkit-transform: translateX(0);
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: translateX(40px);
+    transform: translateX(40px);
+  }
+}
+
+/* ============================================
+   SCALE TRANSITION
+   ============================================ */
+.page-scale-enter {
+  opacity: 0;
+  transform: scale(0.95);
+  animation: scaleIn 0.8s ease-out forwards;
+  -webkit-animation: scaleIn 0.8s ease-out forwards;
+}
+
+.page-scale-exit {
+  opacity: 1;
+  transform: scale(1);
+  animation: scaleOut 0.7s ease-in forwards;
+  -webkit-animation: scaleOut 0.7s ease-in forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@-webkit-keyframes scaleIn {
+  from {
+    opacity: 0;
+    -webkit-transform: scale(0.95);
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+@-webkit-keyframes scaleOut {
+  from {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: scale(1.05);
+    transform: scale(1.05);
+  }
+}
+
+/* ============================================
+   FLIP TRANSITION
+   ============================================ */
+.page-flip-enter {
+  opacity: 0;
+  transform: rotateY(90deg);
+  animation: flipIn 0.8s ease-out forwards;
+  -webkit-animation: flipIn 0.8s ease-out forwards;
+}
+
+.page-flip-exit {
+  opacity: 1;
+  transform: rotateY(0deg);
+  animation: flipOut 0.7s ease-in forwards;
+  -webkit-animation: flipOut 0.7s ease-in forwards;
+}
+
+@keyframes flipIn {
+  from {
+    opacity: 0;
+    transform: rotateY(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0deg);
+  }
+}
+
+@-webkit-keyframes flipIn {
+  from {
+    opacity: 0;
+    -webkit-transform: rotateY(90deg);
+    transform: rotateY(90deg);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: rotateY(0deg);
+    transform: rotateY(0deg);
+  }
+}
+
+@keyframes flipOut {
+  from {
+    opacity: 1;
+    transform: rotateY(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: rotateY(-90deg);
+  }
+}
+
+@-webkit-keyframes flipOut {
+  from {
+    opacity: 1;
+    -webkit-transform: rotateY(0deg);
+    transform: rotateY(0deg);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: rotateY(-90deg);
+    transform: rotateY(-90deg);
+  }
+}
+
+/* ============================================
+   ZOOM TRANSITION
+   ============================================ */
+.page-zoom-enter {
+  opacity: 0;
+  transform: scale(1.1);
+  animation: zoomIn 0.8s ease-out forwards;
+  -webkit-animation: zoomIn 0.8s ease-out forwards;
+}
+
+.page-zoom-exit {
+  opacity: 1;
+  transform: scale(1);
+  animation: zoomOut 0.7s ease-in forwards;
+  -webkit-animation: zoomOut 0.7s ease-in forwards;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@-webkit-keyframes zoomIn {
+  from {
+    opacity: 0;
+    -webkit-transform: scale(1.1);
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes zoomOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@-webkit-keyframes zoomOut {
+  from {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: scale(0.9);
+    transform: scale(0.9);
+  }
+}
+
+/* ============================================
+   COMBINED TRANSITIONS (RTL Support)
+   ============================================ */
+.page-transition-container {
+  position: relative;
+  width: 100%;
+}
+
+.page-transition-wrapper {
+  pointer-events: auto;
+}
+
+/* For RTL languages (Arabic), reverse the slide direction */
+[dir="rtl"] .page-slide-right-enter {
+  transform: translateX(40px);
+}
+
+[dir="rtl"] .page-slide-right-exit {
+  animation: slideLeftOut 0.8s ease-in forwards;
+}
+
+@keyframes slideLeftOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+}
+
+/* ============================================
+   MOBILE-SPECIFIC TRANSITIONS
+   ============================================ */
+@media (max-width: 768px) {
+  .page-transition-wrapper {
+    animation-duration: 0.8s;
+    will-change: opacity, transform;
+  }
+
+  .page-slide-right-enter {
+    animation-duration: 0.8s;
+    animation-timing-function: ease-out;
+  }
+
+  .page-slide-right-exit {
+    animation-duration: 0.7s;
+    animation-timing-function: ease-in;
+  }
+
+  .page-fade-enter {
+    animation-duration: 1.2s;
+  }
+
+  .page-fade-exit {
+    animation-duration: 1.2s;
+  }
+
+  .page-slide-up-enter {
+    animation-duration: 1.2s;
+  }
+
+  .page-slide-up-exit {
+    animation-duration: 1.2s;
+  }
+
+  .page-scale-enter {
+    animation-duration: 1.2s;
+  }
+
+  .page-scale-exit {
+    animation-duration: 1.2s;
+  }
+
+  .page-zoom-enter {
+    animation-duration: 1.2s;
+  }
+
+  .page-zoom-exit {
+    animation-duration: 1.2s;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY - Reduced Motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-wrapper,
+  .page-fade-enter,
+  .page-fade-exit,
+  .page-slide-up-enter,
+  .page-slide-up-exit,
+  .page-slide-right-enter,
+  .page-slide-right-exit,
+  .page-scale-enter,
+  .page-scale-exit,
+  .page-flip-enter,
+  .page-flip-exit,
+  .page-zoom-enter,
+  .page-zoom-exit {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

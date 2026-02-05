@@ -4,6 +4,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../i18n";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
+import PageTransition from "./PageTransition";
+import { getTransitionForRoute } from "../config/transitionConfig";
 import { useAuth } from "../context/AuthContext";
 import SaudiTime from "../components/Time";
 import RbacManager from "../utilities/rbac";
@@ -1238,7 +1240,12 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
               padding: isMobile ? (activeMenu ? "0 0px 0px" : "0 20px") : "20px",
             }}
           >
-            {children}
+            {
+                <PageTransition type={getTransitionForRoute(location.pathname)}>
+              {children}
+            </PageTransition> 
+            }
+           
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
           {isMobile && isMobile && (

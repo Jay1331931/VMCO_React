@@ -3074,10 +3074,153 @@ if (field === "methodDetails" &&
           }`}
         >
           <div className="customer-onboarding-details">
+
+            {isMobile &&     <div 
+  className={`${isMobile ? "tabs-fixed-mobile" : ""}`}
+  style={!isMobile ? { height: tabsHeight } : {}}
+> 
+                <div className="tabs-title">{t("Customer Details")}</div>
+
+                {isV("businessDetailsTab") && (
+                  <div
+                    key={"Business Details"}
+                    className={`tab ${
+                      activeTab === "Business Details" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("Business Details")}
+                  >
+                    {t("Business Details")}
+                    {businessDetailsUpdateCount > 0 && mode === "edit" && (
+                      <span className="update-badge" style={{ marginLeft: 8 }}>
+                        {businessDetailsUpdateCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {isV("contactDetailsTab") && (
+                  <div
+                    key={"Contact Details"}
+                    className={`tab ${
+                      activeTab === "Contact Details" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("Contact Details")}
+                  >
+                    {t("Contact Details")}
+                    {contactDetailsUpdateCount > 0 && mode === "edit" && (
+                      <span className="update-badge" style={{ marginLeft: 8 }}>
+                        {contactDetailsUpdateCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {isV("financialInformationTab") && (
+                  <div
+                    key={"Financial Information"}
+                    className={`tab ${
+                      activeTab === "Financial Information" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("Financial Information")}
+                  >
+                    {t("Financial Information")}
+                    {financialInformationUpdateCount > 0 && mode === "edit" && (
+                      <span className="update-badge" style={{ marginLeft: 8 }}>
+                        {financialInformationUpdateCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {isV("documentsTab") && (
+                  <div
+                    key={"Documents"}
+                    className={`tab ${
+                      activeTab === "Documents" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("Documents")}
+                  >
+                    {t("Documents")}
+                    {documentsUpdateCount > 0 && mode === "edit" && (
+                      <span className="update-badge" style={{ marginLeft: 8 }}>
+                        {documentsUpdateCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {(isV("finalSubmissionTab") ||
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() ===
+                    "pending") && (
+                  <div
+                    key={"Final Submission"}
+                    className={`tab ${
+                      activeTab === "Final Submission" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("Final Submission")}
+                  >
+                    {t("Final Submission")}
+                  </div>
+                )}
+
+                {isV("productsTab") &&
+                  customerData?.customerStatus?.toLowerCase() !== "new" &&
+                  customerData?.customerStatus?.toLowerCase() !== "pending" && (
+                    <div
+                      key={"Products"}
+                      className={`tab ${
+                        activeTab === "Products" ? "active" : ""
+                      }`}
+                      onClick={() => setActiveTab("Products")}
+                    >
+                      {t("Products")}
+                    </div>
+                  )}
+
+                {isV("branchesTab") &&
+                  customerData?.customerStatus?.toLowerCase() !== "new" &&
+                  customerData?.customerStatus?.toLowerCase() !== "pending" && (
+                    <div
+                      key={"Branches"}
+                      className={`tab ${
+                        activeTab === "Branches" ? "active" : ""
+                      }`}
+                      onClick={() => setActiveTab("Branches")}
+                    >
+                      {t("Branches")}
+                      {wfCustomerData?.branch?.customerId ===
+                        originalCustomerData?.id && mode === "edit" ? (
+                        <span
+                          className="update-badge"
+                          style={{ marginLeft: 8 }}
+                        >
+                          {1}
+                        </span>
+                      ) : (
+                        <span
+                          className="update-badge"
+                          style={{
+                            marginLeft: 8,
+                            background: isMobile ? "#0b4c45" : "blue",
+                            color: "white",
+                          }}
+                        >
+                          {branchTotal}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+               
+
+
+
+</div>}
             <div
               className="customer-onboarding-body"
               style={!isMobile ? { height: tabsHeight } : {}}
-            >
+            >{!isMobile && (
               <div
                 className="customer-onboarding-tabs-vertical"
                 style={!isMobile ? { height: tabsHeight } : {}}
@@ -3224,7 +3367,7 @@ if (field === "methodDetails" &&
                           </span>
                   )
                   } */}
-              </div>
+              </div>)}
 
               {activeTab === "Business Details" &&
                 isV("businessDetailsTab") && (

@@ -745,13 +745,27 @@ function Orders() {
       startLoading();
       setError(null);
       const filtersCopy = { ...filters };
-      if (
-        filtersCopy.paymentMethod &&
-        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
-          filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
-      ) {
-        filtersCopy.paymentMethod = "Pre payment";
+
+      if (filtersCopy?.paymentMethod) {
+        const paymentMethodLower = filtersCopy?.paymentMethod?.toLowerCase();
+        const normalized = paymentMethodLower.replace(/\s+/g, ""); // remove spaces etc.
+        const cardRegex = /card/; // case-insensitive not needed if already lower
+
+        // If user searches for FOC, send sampleOrder=true filter
+        if (["f", "fo", "foc"].includes(paymentMethodLower)) {
+          delete filtersCopy.paymentMethod;
+          filtersCopy.sampleOrder = true;
+        } else if (cardRegex.test(normalized)) {
+          filtersCopy.paymentMethod = "Pre Payment";
+        }
       }
+      // if (
+      //   filtersCopy.paymentMethod &&
+      //   (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
+      //     filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      // ) {
+      //   filtersCopy.paymentMethod = "Pre payment";
+      // }
       try {
         const params = new URLSearchParams({
           page,
