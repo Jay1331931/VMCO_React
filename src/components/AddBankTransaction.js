@@ -87,6 +87,7 @@ const AddBankTransaction = () => {
   const cookieToken = getCookie("token");
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+  const isIOSsMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   // const generateToken = async () => {
   //   try {
   //     const { data } = await axios.post(
@@ -542,7 +543,7 @@ const AddBankTransaction = () => {
   }, [])
   const renderTemplate = () => {
     return (
-      <div className="bank-add-container">
+      <div className={`bank-add-container  ${isIOSsMobile ? "ios-mobile-padding" : ""} ${isRTL ? "rtl" : ""}`}>
         <div className="bank-add-form">
           <div className="form-grid">
             <div className="form-group">
@@ -687,6 +688,7 @@ const AddBankTransaction = () => {
               <input
                 id="transactionDate"
                 name="transactionDate"
+                className="custom-width"
                 type="date"
                 value={
                   formData?.transactionDate ||
@@ -701,7 +703,7 @@ const AddBankTransaction = () => {
                style={{ 
                 backgroundColor: "white", 
                 opacity: 1, 
-                color: "black" 
+                color: "black" ,
               }}
               />
               {fieldErrors.transactionDate && (
