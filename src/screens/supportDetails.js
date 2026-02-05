@@ -87,7 +87,7 @@ function SupportDetails() {
   // State for departments dropdown
   const [departments, setDepartments] = useState([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState(ticket.assignedTeamMemberDept || "");
+  const [selectedDepartment, setSelectedDepartment] = useState("Sales");
 
   const [isEditing, setIsEditing] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
@@ -658,7 +658,6 @@ function SupportDetails() {
     e.preventDefault();
     setSaving(true); // Start saving
 
-    // Basic validation
     if (!ticket.branchId) {
       Swal.fire({
         title: t("Validation Error"),
@@ -670,8 +669,6 @@ function SupportDetails() {
       setSaving(false);
       return;
     }
-
-    // Add entity validation - make it mandatory
     if (!ticket.entity) {
       Swal.fire({
         title: t("Validation Error"),
@@ -683,7 +680,6 @@ function SupportDetails() {
       setSaving(false);
       return;
     }
-
     if (!ticket.grievanceType) {
       Swal.fire({
         title: t("Validation Error"),
@@ -695,7 +691,6 @@ function SupportDetails() {
       setSaving(false);
       return;
     }
-
     if (!ticket.grievanceName?.trim()) {
       Swal.fire({
         title: t("Validation Error"),
@@ -707,7 +702,6 @@ function SupportDetails() {
       setSaving(false);
       return;
     }
-
     if (!ticket.description?.trim()) {
       Swal.fire({
         title: t("Validation Error"),
@@ -756,22 +750,17 @@ function SupportDetails() {
 
       // Only send required fields
       const ticketData = {
-        customerId:
-          user?.userType === "customer" ? user.customerId : ticket.customerId,
+        customerId: user?.userType === "customer" ? user.customerId : ticket.customerId,
         branchId: ticket.branchId,
         entity: ticket.entity, // Include entity field
         grievanceType: ticket.grievanceType,
         grievanceName: ticket.grievanceName,
         description: ticket.description,
-        dateOfComplaint:
-          formMode === "add" ? new Date().toISOString() : dateOfComplaintValue,
-        assignedTeamMember: formMode === "add" ? selectedEmployee : ticket.assignedTeamMember || "",
-        assignedTeamMemberDept: formMode === "add" ? "Sales" : ticket.assignedTeamMemberDept || selectedDepartment || "",
+        dateOfComplaint: formMode === "add" ? new Date().toISOString() : dateOfComplaintValue,
+        assignedTeamMember: formMode === "add" ? user?.userType === "customer" ? user?.assignedTo : user?.employeeId : ticket.assignedTeamMember || "",
+        assignedTeamMemberDept: formMode === "add" ? selectedDepartment : ticket.assignedTeamMemberDept,
         status: formMode === "add" ? "In Progress" : ticket.status,
-        attachment:
-          formMode === "add"
-            ? { images: images || [], videos: videos || [] }
-            : ticket.attachment,
+        attachment: formMode === "add" ? { images: images || [], videos: videos || [] } : ticket.attachment,
         comments: commentsArray,
         branchRegion: ticket.branchRegion,
         isOpen: formMode === "add" ? true : ticket.isOpen,
