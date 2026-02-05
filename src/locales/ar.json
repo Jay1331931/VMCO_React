@@ -1010,7 +1010,14 @@
 "Order was deleted because there was an issue adding products.": "تم حذف الطلب بسبب وجود مشكلة في إضافة المنتجات.",
 "Please Enter Email or ErpId":"الرجاء إدخال البريد الإلكتروني أو معرف نظام إدارة الموارد البشرية (ErpId)",
 "UserName":"اسم المستخدم",
-"Erp Id does not exist or has no primary email":"معرف نظام تخطيط موارد المؤسسات غير موجود أو ليس له بريد إلكتروني أساسي"
+"Erp Id does not exist or has no primary email":"معرف نظام تخطيط موارد المؤسسات غير موجود أو ليس له بريد إلكتروني أساسي",
+"Export Error":"خطأ في التصدير",
+"the server is busy.":"الخادم مشغول.",
+"Download Started":"بدأ التنزيل",
+"Your file is being saved.":"يتم حفظ ملفك.",
+"Export Failed":"فشل التصدير",
+"An unexpected error occurred during download.":"حدث خطأ غير متوقع أثناء التنزيل."
+
 
 
 }
