@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 // import { faMessage } from '@fortawesome/free-regular-svg-icons';
-import { FaRegMessage } from "react-icons/fa6";
+import { FaRegMessage, FaComment, FaCommentSms, FaCommentCaptions, FaMessage } from "react-icons/fa6";
 import { FaCircleUser } from "react-icons/fa6";
 import '../i18n';
 import { useTranslation } from 'react-i18next';
@@ -90,7 +90,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
     <>
       <button onClick={() => setIsOpen(!isOpen)} className='comment-button'>
         <div className='icon-wrapper'>
-          {isV("commentIcon") && isE("commentIcon") && <FaRegMessage className='message-icon' />}
+          {isV("commentIcon") && isE("commentIcon") && <FaMessage className='message-icon' />}
           {count > 0 && <span className='badge'>{count}</span>}
         </div>
       </button>
@@ -351,18 +351,25 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
             transform: translateX(120%);
           }
           .comment-panel.open {
-            transform: translateX(20);
+            transform: translateX(-20px) !important;
           }
+            [dir="rtl"] .comment-panel.open {
+          transform: translateX(20px) !important;
+        }
+          [dir="rtl"] .comment-button {
+          right: auto;
+          left: -10px !important;
+        }
           .comment-button {
             top: 70px;
-            right: 10px;
+            right: -10px;
           }
           [dir = "rtl"] .comment-panel {
             width: 75%;
             height: 75%;
             top: 20;
             left: 0;
-            transform: translateX(-100%);
+            transform: translateX(-120%);
           }
             .close-btn {
             background-color: #f8f9fa;
