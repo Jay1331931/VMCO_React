@@ -1009,7 +1009,7 @@
 "Error Creating Order": "خطأ في إنشاء الطلب",
 "Order was deleted because there was an issue adding products.": "تم حذف الطلب بسبب وجود مشكلة في إضافة المنتجات.",
 "Please Enter Email or ErpId":"الرجاء إدخال البريد الإلكتروني أو معرف نظام إدارة الموارد البشرية (ErpId)",
-"UserName":"اسم المستخدم",
+"Username":"اسم المستخدم",
 "Erp Id does not exist or has no primary email":"معرف نظام تخطيط موارد المؤسسات غير موجود أو ليس له بريد إلكتروني أساسي",
 "Export Error":"خطأ في التصدير",
 "the server is busy.":"الخادم مشغول.",

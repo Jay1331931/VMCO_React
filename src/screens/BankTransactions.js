@@ -389,7 +389,7 @@ const BankTransactions = () => {
   };
 
   return (
-    <Sidebar title={t("Bank Transactions")}>
+    <Sidebar title={t("Bank Transactions")} CardPaddingClass={true}>
       {isV("BankContent") && (
         <div className="bank-transactions-container">
           {isMobile ? (

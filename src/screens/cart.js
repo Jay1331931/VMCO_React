@@ -3891,6 +3891,7 @@ function Cart() {
     <Sidebar
       title={t("Your Cart")}
       dir={t("direction")}
+       PaddingClass={true} 
       handleGoToCart={() => { }}
     >
       <div className="cart-header">

@@ -225,7 +225,7 @@ function Login({ title, userType }) {
           <div className="login-container">
 
             <div className="form-group">
-              <label htmlFor="email">{title === "Customer Login" ? t("UserName"): t("Email")}</label>
+              <label htmlFor="email">{title === "Customer Login" ? t("Username"): t("Email")}</label>
               <input
                 type="text"
                 id="email"
