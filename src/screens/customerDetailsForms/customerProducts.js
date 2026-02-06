@@ -20,10 +20,10 @@ import { useAuth } from "../../context/AuthContext";
 import { debounce, set } from "lodash";
 import Constants from "../../constants";
 import { getOptionsFromBasicsMaster } from "../../utilities/commonServices";
-import SearchableDropdown from "../../components/SearchableDropdown"; // Add this import
+import SearchableDropdown from "../../components/SearchableDropdown";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import SkeletonWrapper from "../../components/SkeletonWrapper";
-// --- Entities (Tabs) like catalog.js ---
+
 const initialEntities = [
   {
     value: Constants.ENTITY.VMCO,
@@ -65,8 +65,8 @@ const initialEntities = [
 
 function Products({ customerId, customer, setTabsHeight }) {
   const [isApprovalMode, setApprovalMode] = useState(false);
-  const [products, setProducts] = useState([]); // all products
-  const [currentItems, setCurrentItems] = useState([]); // products on current page
+  const [products, setProducts] = useState([]);
+  const [currentItems, setCurrentItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
@@ -75,23 +75,33 @@ function Products({ customerId, customer, setTabsHeight }) {
   const { t, i18n } = useTranslation();
   const [entities] = useState(initialEntities);
   const [activeEntity, setActiveEntity] = useState(initialEntities[0].value);
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // Debounced search
   const [selectedItems, setSelectedItems] = useState([]);
   const [editingMoq, setEditingMoq] = useState(null);
-
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  // const totalPages = Math.ceil(currentItems.length / itemsPerPage);
   const [totalPages, setTotalPages] = useState(0);
   const [pageInput, setPageInput] = useState("");
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
-  // const currentItems = products.slice(startIndex, endIndex);
+
+  // ✅ Category/Subcategory states (EXACTLY like GetProducts)
+  const [categoryEnOptions, setCategoryEnOptions] = useState([]);
+  const [categoryArOptions, setCategoryArOptions] = useState([]);
+  const [subCategoryEnOptions, setSubCategoryEnOptions] = useState([]);
+  const [subCategoryArOptions, setSubCategoryArOptions] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("");
+
+  // ✅ Refs for stale closure prevention (EXACTLY like GetProducts)
+  const categoryFilterRef = useRef(categoryFilter);
+  const subCategoryFilterRef = useRef(subCategoryFilter);
+  const searchQueryRef = useRef(searchQuery);
+  const debounceTimeout = useRef();
+
+  const itemsPerPage = 5;
+
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -100,12 +110,28 @@ function Products({ customerId, customer, setTabsHeight }) {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+
+  // ✅ Update refs when filters change (EXACTLY like GetProducts)
+  useEffect(() => {
+    categoryFilterRef.current = categoryFilter;
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    subCategoryFilterRef.current = subCategoryFilter;
+  }, [subCategoryFilter]);
+
+  useEffect(() => {
+    searchQueryRef.current = searchQuery;
+  }, [searchQuery]);
+
+  // Mobile resize handler
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Action menu click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -115,118 +141,325 @@ function Products({ customerId, customer, setTabsHeight }) {
         setActionMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === 'Go' || e.key === 'Search' || e.key === 'Done') {
-      if (isMobile) {
-        // Close keyboard
-        e.target.blur();
-        document.body.classList.remove('keyboard-open');
+
+  // ✅ Debounce search (EXACTLY like GetProducts)
+  useEffect(() => {
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(() => {
+      setSearchQuery(search);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(debounceTimeout.current);
+  }, [search]);
+
+  // ✅ FETCH CATEGORIES (EXACTLY like GetProducts)
+  const fetchCategories = async () => {
+    const selectedEntityObj = entities.find((cat) => cat.value === activeEntity);
+    const entity = selectedEntityObj?.entity || selectedEntityObj?.value;
+
+    if (!entity) {
+      setCategoryEnOptions([]);
+      setCategoryArOptions([]);
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({ entity: entity });
+
+      // Handle VMCO entity special cases (EXACTLY like GetProducts)
+      if (entity === Constants.ENTITY.VMCO) {
+        if (activeEntity === Constants.CATEGORY.VMCO_MACHINES || activeEntity === Constants.ENTITY.VMCO) {
+          params.append("isMachine", "true");
+        } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
+          params.append("isMachine", "false");
+        }
       }
+
+      const response = await fetch(
+        `${API_BASE_URL}/product-categories?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch categories");
+
+      const result = await response.json();
+
+      // English options (EXACTLY like GetProducts)
+      const optionsEn = Array.isArray(result.data)
+        ? result.data.map(cat => ({
+          name: cat.categoryCodeEn,
+          value: cat.categoryCodeEn,
+          sequenceId: cat.sequenceId,
+          id: cat.id,
+          codeEn: cat.categoryCodeEn,
+          codeAr: cat.categoryCodeAr
+        }))
+        : [];
+
+      // Arabic options (EXACTLY like GetProducts)
+      const optionsAr = Array.isArray(result.data)
+        ? result.data.map(cat => ({
+          name: cat.categoryCodeAr,
+          value: cat.categoryCodeEn, // value stays in English for API consistency
+          sequenceId: cat.sequenceId,
+          id: cat.id,
+          codeEn: cat.categoryCodeEn,
+          codeAr: cat.categoryCodeAr
+        }))
+        : [];
+
+      setCategoryEnOptions(optionsEn);
+      setCategoryArOptions(optionsAr);
+    } catch (err) {
+      setCategoryEnOptions([]);
+      setCategoryArOptions([]);
+      console.error("Error fetching categories:", err);
     }
   };
-  const fetchProducts = async (activeEntity) => {
+
+  // ✅ FETCH SUBCATEGORIES (EXACTLY like GetProducts)
+  const fetchSubCategories = async () => {
+    const selectedEntityObj = entities.find((cat) => cat.value === activeEntity);
+    const entity = selectedEntityObj?.entity || selectedEntityObj?.value;
+
+    if (!entity) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+      return;
+    }
+
+    const selectedCategory = [...categoryEnOptions, ...categoryArOptions].find(
+      (cat) => cat.value === categoryFilter
+    );
+    const sequenceId = selectedCategory?.sequenceId;
+
+    if (!sequenceId) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        entity: entity,
+        sequenceId: sequenceId.toString()
+      });
+
+      // Handle VMCO entity special cases
+      if (entity === Constants.ENTITY.VMCO) {
+        if (activeEntity === Constants.CATEGORY.VMCO_MACHINES || activeEntity === Constants.ENTITY.VMCO) {
+          params.append("isMachine", "true");
+        } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
+          params.append("isMachine", "false");
+        }
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/product-subcategories?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch subcategories");
+
+      const result = await response.json();
+
+      // English options
+      const optionsEn = Array.isArray(result.data)
+        ? result.data.map(sub => ({
+          name: sub.subCategoryCodeEn,
+          value: sub.subCategoryCodeEn,
+          sequenceId: sub.sequenceId,
+          codeEn: sub.subCategoryCodeEn,
+          codeAr: sub.subCategoryCodeAr
+        }))
+        : [];
+
+      // Arabic options
+      const optionsAr = Array.isArray(result.data)
+        ? result.data.map(sub => ({
+          name: sub.subCategoryCodeAr,
+          value: sub.subCategoryCodeEn,
+          sequenceId: sub.sequenceId,
+          codeEn: sub.subCategoryCodeEn,
+          codeAr: sub.subCategoryCodeAr
+        }))
+        : [];
+
+      setSubCategoryEnOptions(optionsEn);
+      setSubCategoryArOptions(optionsAr);
+    } catch (err) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+      console.error("Error fetching subcategories:", err);
+    }
+  };
+
+  // ✅ Load categories when entity changes (EXACTLY like GetProducts)
+  useEffect(() => {
+    setCategoryFilter("");
+    setSubCategoryFilter("");
+    setSubCategoryEnOptions([]);
+    setSubCategoryArOptions([]);
+    if (activeEntity) {
+      fetchCategories();
+    }
+  }, [activeEntity]);
+
+  // ✅ Load subcategories when category changes (EXACTLY like GetProducts)
+  useEffect(() => {
+    if (categoryFilter) {
+      fetchSubCategories();
+      setSubCategoryFilter("");
+    } else {
+      setSubCategoryFilter("");
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+    }
+  }, [categoryFilter, activeEntity]);
+
+  // ✅ FETCH PRODUCTS with server-side filtering (EXACTLY like GetProducts)
+  const fetchProducts = async () => {
     setLoading(true);
     setError(null);
 
-    const filters = {
-      customer_id: customerId,
-      entity: activeEntity,
-      active: true,
-      visible: isApprovalMode ? true : undefined, // Only show selected if in approval mode
-    };
-    if (categoryFilter) filters.category = categoryFilter;
-    if (subCategoryFilter) filters.subCategory = subCategoryFilter;
-    if (activeEntity?.toLowerCase() === "vmco") {
-      filters.is_machine = true;
-    }
-    if (activeEntity?.toLowerCase() === "vmco consumables") {
-      filters.entity = "VMCO";
-      filters.is_machine = false;
-    }
-    if (activeEntity?.toLowerCase() === "special products") {
-      filters.special_product = true;
-      filters.erp_cust_id = customer?.erpCustId;
-      // remove entity from filters
-      delete filters.customer_id;
-      delete filters.entity;
-    }
-    const query = new URLSearchParams({
-      page: currentPage,
-      pageSize: itemsPerPage,
-      sortBy: "product_id",
-      sortOrder: "asc",
-      filters: JSON.stringify(filters),
-      search: search,
-    });
-
     try {
+      // ✅ Use refs to avoid stale closure (EXACTLY like GetProducts)
+      const currentCategoryFilter = categoryFilterRef.current || "";
+      const currentSubCategoryFilter = subCategoryFilterRef.current || "";
+      const currentSearchQuery = searchQueryRef.current || "";
+
+      const selectedEntityObj = entities.find((cat) => cat.value === activeEntity);
+      let entity = selectedEntityObj?.entity || selectedEntityObj?.value;
+
+      const filters = {
+        customer_id: customerId,
+        entity: entity,
+        active: true,
+        visible: isApprovalMode ? true : undefined,
+      };
+
+      // VMCO special cases (EXACTLY like GetProducts)
+      if (entity === Constants.ENTITY.VMCO) {
+        if (activeEntity === Constants.CATEGORY.VMCO_MACHINES || activeEntity === Constants.ENTITY.VMCO) {
+          filters.is_machine = true;
+        } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
+          filters.is_machine = false;
+        }
+      }
+
+      // Special Products case
+      if (activeEntity?.toLowerCase() === "special products") {
+        filters.special_product = true;
+        filters.erp_cust_id = customer?.erpCustId;
+        delete filters.customer_id;
+        delete filters.entity;
+      }
+
+      // ✅ Add category filter with safe string check (EXACTLY like GetProducts)
+      if (currentCategoryFilter && typeof currentCategoryFilter === 'string' && currentCategoryFilter.trim()) {
+        filters.category = currentCategoryFilter.trim();
+        console.log('Category filter applied:', currentCategoryFilter.trim());
+      }
+
+      // ✅ Add subcategory filter with safe string check (EXACTLY like GetProducts)
+      if (currentSubCategoryFilter && typeof currentSubCategoryFilter === 'string' && currentSubCategoryFilter.trim()) {
+        filters.subCategory = currentSubCategoryFilter.trim();
+        console.log('Subcategory filter applied:', currentSubCategoryFilter.trim());
+      }
+
+      const query = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: itemsPerPage.toString(),
+        sortBy: "product_id",
+        sortOrder: "asc",
+        filters: JSON.stringify(filters),
+        ...(currentSearchQuery && typeof currentSearchQuery === 'string' && currentSearchQuery.trim() && {
+          search: currentSearchQuery.trim(),
+          searchFields: "productName,productname,productnamelc,productNameLc"
+        }),
+      });
+
+      console.log('Products API URL:', `${API_BASE_URL}/product-customer-mappings/pagination?${query.toString()}`);
+
       const response = await fetch(
         `${API_BASE_URL}/product-customer-mappings/pagination?${query.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch products");
-        return;
+        throw new Error(`Failed to fetch products: ${response.status}`);
       }
 
       const data = await response.json();
-      return data;
-      // setProducts(data.data);
-      // setCurrentItems(data.data);
-      // setTotalPages(data.totalPages);
+      console.log('Products API Response:', data);
+
+      setProducts(data?.data || []);
+      setCurrentItems(data?.data || []);
+      setTotalPages(data?.totalPages || 0);
+
     } catch (err) {
+      console.error("Error fetching products:", err);
       setError(err.message);
+      setProducts([]);
+      setCurrentItems([]);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Fetch products when dependencies change (EXACTLY like GetProducts)
   useEffect(() => {
     if (customerId && activeEntity) {
-      const fetchData = async () => {
-        const products = await fetchProducts(activeEntity);
-        setProducts(products?.data);
-        setCurrentItems(products?.data);
-        setTotalPages(products?.totalPages);
-      };
-      fetchData();
+      fetchProducts();
     }
     setTabsHeight("auto");
   }, [
-    customer,
+    customerId,
     activeEntity,
     currentPage,
     isApprovalMode,
-    search,
+    searchQuery, // Use debounced searchQuery
     categoryFilter,
     subCategoryFilter,
   ]);
-  useEffect(() => {
-    const activeEl = document.querySelector(".tabs .category-tab.active");
-    if (activeEl) {
-      activeEl.scrollIntoView({
-        behavior: "smooth",
-        inline: "center",
-        block: "nearest",
-      });
+
+  // Rest of your existing handlers remain the same...
+  const handleKeyDown = (e) => {
+    if (["Enter", "Go", "Search", "Done"].includes(e.key)) {
+      if (isMobile) {
+        e.target.blur();
+        document.body.classList.remove('keyboard-open');
+      }
     }
-  }, [activeEntity]);
+  };
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
     setCurrentPage(1);
-    // fetchProducts();
   };
 
   const handleSelectAll = (e) => {
@@ -261,12 +494,10 @@ function Products({ customerId, customer, setTabsHeight }) {
       )
     );
 
-    // Use the callback form to get the updated selectedItems
     setSelectedItems((prevSelected) => {
       const newSelected = prevSelected.includes(id)
         ? [...prevSelected.filter((itemId) => itemId !== id)]
         : [...prevSelected, id];
-      // Call API with the new selection
       callUpdateSelectedItemsAPI([id]);
       return newSelected;
     });
@@ -277,19 +508,16 @@ function Products({ customerId, customer, setTabsHeight }) {
       let updatedItems;
 
       if (selectedItems.length === 0) {
-        // When deselecting all, set all items to visible: false
         updatedItems = currentItems.map((item) => ({
           ...item,
           visible: false,
         }));
       } else if (state) {
-        // When selecting all with state=true (select all case)
         updatedItems = currentItems.map((item) => ({
           ...item,
           visible: true,
         }));
       } else {
-        // Toggle case for individual items
         updatedItems = currentItems.map((item) => ({
           ...item,
           visible: selectedItems.includes(item.id)
@@ -304,7 +532,6 @@ function Products({ customerId, customer, setTabsHeight }) {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify(updatedItems),
-
         }
       );
 
@@ -313,8 +540,10 @@ function Products({ customerId, customer, setTabsHeight }) {
       console.error("Failed to update selected items:", error);
     }
   };
+
   const isAllSelected =
     currentItems?.length > 0 && currentItems.every((item) => item.visible);
+
   const handleMoqChange = (id, value) => {
     setCurrentItems((prevItems) =>
       prevItems.map((item) => (item.id === id ? { ...item, moq: value } : item))
@@ -323,19 +552,14 @@ function Products({ customerId, customer, setTabsHeight }) {
 
   const handleSaveMoq = (id, value) => {
     const product = currentItems.find((item) => item.id === id);
-    try {
-      const response = fetch(
-        `${API_BASE_URL}/product-customer-mappings/${id}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ moq: value }),
-
-        }
-      );
-    } catch (error) {
-      console.error("Error saving MoQ:", error);
-    }
+    fetch(
+      `${API_BASE_URL}/product-customer-mappings/${id}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ moq: value }),
+      }
+    ).catch(error => console.error("Error saving MoQ:", error));
 
     setIsInputFocused(false);
     setEditingMoq(null);
@@ -350,7 +574,6 @@ function Products({ customerId, customer, setTabsHeight }) {
     setEditingMoq(null);
   };
 
-  // Apply All: only for current page
   const handleApplyAll = () => {
     const moqValue = document.querySelector(".product-text-input").value;
     if (!moqValue) return;
@@ -358,7 +581,6 @@ function Products({ customerId, customer, setTabsHeight }) {
     const numericValue = parseInt(moqValue);
     if (isNaN(numericValue)) return;
 
-    // Only update visible items on the current page
     currentItems
       .filter((item) => item.visible)
       .forEach((item) => {
@@ -367,158 +589,11 @@ function Products({ customerId, customer, setTabsHeight }) {
       });
   };
 
-  // Debounced search handler
-  const handleSearchChange = debounce((e) => {
-    setSearch(e.target.value);
-    setCurrentPage(1);
-  }, 400);
+  // ✅ Dynamic category/subcategory options based on language (EXACTLY like GetProducts)
+  const categories = i18n.language === 'ar' ? categoryArOptions : categoryEnOptions;
+  const subcategories = i18n.language === 'ar' ? subCategoryArOptions : subCategoryEnOptions;
 
-  // Filter products based on entity, category, subcategory, and search
-  const filteredProducts = products?.filter((product) => {
-    const matchesEntity = !activeEntity || product.entity === activeEntity;
-    const matchesCategory =
-      !categoryFilter || product.category === categoryFilter;
-    const matchesSubCategory =
-      !subCategoryFilter || product.subCategory === subCategoryFilter;
-    const matchesSearch =
-      !search ||
-      (product.productName &&
-        product.productName.toLowerCase().includes(search.toLowerCase()));
-    return (
-      matchesEntity && matchesCategory && matchesSubCategory && matchesSearch
-    );
-  });
-
-  // // Use filteredProducts for rendering and pagination
-  // useEffect(() => {
-  //   setCurrentItems(filteredProducts.slice(startIndex, endIndex));
-  //   setTotalPages(Math.ceil(filteredProducts.length / itemsPerPage));
-  // }, [filteredProducts, startIndex, endIndex, itemsPerPage]);
-
-  // Add state for category and subcategory options
-  const [categoryOptions, setCategoryOptions] = useState([]);
-  const [subCategoryOptions, setSubCategoryOptions] = useState([]);
-
-  // Fetch category options when products or activeEntity changes
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const selectedCategory = entities?.find(
-        (cat) => cat?.value === activeEntity
-      );
-      const entity = selectedCategory?.entity || selectedCategory?.value; // Use entity or value
-
-      if (!entity) {
-        setCategoryOptions([]);
-        return;
-      }
-
-      try {
-        // Build query parameters
-        const params = new URLSearchParams({
-          entity: entity,
-        });
-
-        // Add isMachine parameter for VMCO entity tabs
-        if (entity === Constants.ENTITY.VMCO) {
-          if (activeEntity.toLowerCase() === "vmco") {
-            params.append("isMachine", "true");
-          } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
-            params.append("isMachine", "false");
-          }
-        }
-
-        const response = await fetch(
-          `${API_BASE_URL}/product-categories?${params.toString()}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
-
-          }
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch categories");
-
-        const result = await response.json();
-
-        // Assuming result.data is an array of category names/objects
-        const options = Array.isArray(result.data)
-          ? result.data.map((cat) => ({
-            name: cat.category || cat.name || cat, // adapt as per API response
-            value: cat.category || cat.name || cat,
-          }))
-          : [];
-
-        setCategoryOptions(options);
-      } catch (err) {
-        setCategoryOptions([]);
-        console.error("Error fetching categories:", err);
-      }
-    };
-
-    fetchCategories();
-  }, [activeEntity, API_BASE_URL]);
-
-  // Fetch subcategory options when products, activeEntity, or categoryFilter changes
-  useEffect(() => {
-    const fetchSubCategories = async () => {
-      const selectedEntityObj = entities.find(
-        (cat) => cat.value === activeEntity
-      );
-      const entity = selectedEntityObj?.entity || selectedEntityObj?.value;
-
-      if (!entity || !categoryFilter) {
-        setSubCategoryOptions([]);
-        return;
-      }
-
-      try {
-        const params = new URLSearchParams({
-          entity: entity,
-          category: categoryFilter,
-        });
-
-        // Add isMachine parameter for VMCO entity tabs
-        if (entity === Constants.ENTITY.VMCO) {
-          if (activeEntity === Constants.CATEGORY.VMCO_MACHINES) {
-            params.append("isMachine", "true");
-          } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
-            params.append("isMachine", "false");
-          }
-        }
-
-        const response = await fetch(
-          `${API_BASE_URL}/product-subcategories?${params.toString()}`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-
-          }
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch subcategories");
-
-        const result = await response.json();
-
-        // Assuming result.data is an array of subcategory names/objects
-        const options = Array.isArray(result.data)
-          ? result.data.map((sub) => ({
-            name: sub.subCategory || sub.sub_category || sub.name || sub,
-            value: sub.subCategory || sub.sub_category || sub.name || sub,
-          }))
-          : [];
-
-        setSubCategoryOptions(options);
-      } catch (err) {
-        setSubCategoryOptions([]);
-        console.error("Error fetching subcategories:", err);
-      }
-    };
-
-    fetchSubCategories();
-  }, [activeEntity, categoryFilter, API_BASE_URL]);
+  if (!token || !customerId) return <div>{t("Loading...")}</div>;
 
   return (
     <div className="products-content">
@@ -659,7 +734,7 @@ function Products({ customerId, customer, setTabsHeight }) {
               <SearchableDropdown
                 id="category-filter"
                 name="categoryFilter"
-                options={categoryOptions}
+                options={i18n.language === "en" ? categoryEnOptions : categoryArOptions}
                 placeholder={t("All Categories")}
                 value={categoryFilter}
                 onChange={(e) => {
@@ -677,7 +752,7 @@ function Products({ customerId, customer, setTabsHeight }) {
               <SearchableDropdown
                 id="subcategory-filter"
                 name="subCategoryFilter"
-                options={subCategoryOptions}
+                options={i18n.language === "en" ? subCategoryEnOptions : subCategoryArOptions}
                 placeholder={t("All Subcategories")}
                 value={subCategoryFilter}
                 onChange={(e) => {
@@ -695,7 +770,7 @@ function Products({ customerId, customer, setTabsHeight }) {
           <SearchableDropdown
             id="category-filter"
             name="categoryFilter"
-            options={categoryOptions}
+            options={i18n.language === "en" ? categoryEnOptions : categoryArOptions}
             className={isMobile ? "category-filter-mobile" : ""}
             placeholder={t("All Categories")}
             value={categoryFilter}
@@ -709,7 +784,7 @@ function Products({ customerId, customer, setTabsHeight }) {
           <SearchableDropdown
             id="subcategory-filter"
             name="subCategoryFilter"
-            options={subCategoryOptions}
+                options={i18n.language === "en" ? subCategoryEnOptions : subCategoryArOptions}
             className={isMobile ? "subcategory-filter-mobile" : ""}
             placeholder={t("All Subcategories")}
             value={subCategoryFilter}
