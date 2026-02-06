@@ -125,7 +125,6 @@ function Catalog() {
   const [displayedProducts, setDisplayedProducts] = useState([]);
   const [categoryEnOptions, setCategoryEnOptions] = useState([]);
   const [categoryArOptions, setCategoryArOptions] = useState([]);
-  const [sequenceId, setSequenceId] = useState([]);
   const [subCategoryEnOptions, setSubCategoryEnOptions] = useState([]);
   const [subCategoryArOptions, setSubCategoryArOptions] = useState([]);
   const [entityDescriptions, setEntityDescriptions] = useState([]);

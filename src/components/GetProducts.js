@@ -31,26 +31,29 @@ function GetProducts({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  // ✅ FIXED: All category/subcategory states properly defined
-  const [categoriesEn, setCategoriesEn] = useState([]);
-  const [categoriesAr, setCategoriesAr] = useState([]);
-  const [subcategoriesEn, setSubcategoriesEn] = useState([]);
-  const [subcategoriesAr, setSubcategoriesAr] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState("");
-  const [categorySearch, setCategorySearch] = useState("");
-  const [subcategorySearch, setSubcategorySearch] = useState("");
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [subcategoryDropdownOpen, setSubcategoryDropdownOpen] = useState(false);
+  // Category/subcategory states (matching catalog)
+  const [categoryEnOptions, setCategoryEnOptions] = useState([]);
+  const [categoryArOptions, setCategoryArOptions] = useState([]);
+  const [subCategoryEnOptions, setSubCategoryEnOptions] = useState([]);
+  const [subCategoryArOptions, setSubCategoryArOptions] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("");
 
   const debounceTimeout = useRef();
-  const categoryDropdownRef = useRef();
-  const subcategoryDropdownRef = useRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // ✅ Dynamically select categories based on language
-  const categories = i18n.language === 'ar' ? categoriesAr : categoriesEn;
-  const subcategories = i18n.language === 'ar' ? subcategoriesAr : subcategoriesEn;
+  // Refs to track current values (matching catalog pattern)
+  const categoryFilterRef = useRef(categoryFilter);
+  const subCategoryFilterRef = useRef(subCategoryFilter);
+
+  // Update refs when filters change
+  useEffect(() => {
+    categoryFilterRef.current = categoryFilter;
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    subCategoryFilterRef.current = subCategoryFilter;
+  }, [subCategoryFilter]);
 
   // Clear selected products when modal closes
   useEffect(() => {
@@ -112,18 +115,6 @@ function GetProducts({
     return selectedProducts.some(p => p.id === productId);
   };
 
-  const getApiParameters = () => {
-    const params = {};
-    if (entity?.toLowerCase() === Constants.ENTITY.VMCO?.toLowerCase()) {
-      if (category?.toLowerCase() === "vmco machines") params.isMachine = true;
-      else if (category?.toLowerCase() === "vmco consumables") params.isMachine = false;
-    } else if (entity?.toLowerCase() === Constants.ENTITY.SHC?.toLowerCase()) {
-      if (category?.toLowerCase() === "shc - fresh") params.isFresh = true;
-      else if (category?.toLowerCase() === "shc - frozen") params.isFresh = false;
-    }
-    return params;
-  };
-
   // Debounce search input
   useEffect(() => {
     if (!open) return;
@@ -135,120 +126,141 @@ function GetProducts({
     return () => clearTimeout(debounceTimeout.current);
   }, [search, open]);
 
-  // Close dropdowns on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
-        setCategoryDropdownOpen(false);
-      }
-      if (subcategoryDropdownRef.current && !subcategoryDropdownRef.current.contains(event.target)) {
-        setSubcategoryDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // ✅ UPDATED: Fetch categories using new API structure
+  // ✅ FETCH CATEGORIES - Matching catalog logic exactly
   const fetchCategories = async () => {
-    if (!entity || machineMode) {
-      setCategoriesEn([]);
-      setCategoriesAr([]);
+    if (!entity) {
+      setCategoryEnOptions([]);
+      setCategoryArOptions([]);
       return;
     }
-    try {
-      const params = new URLSearchParams({ entity });
-      const apiParams = getApiParameters();
-      if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
-      if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
 
-      const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
+    try {
+      const params = new URLSearchParams({ entity: entity });
+
+      // Handle VMCO entity special cases (matching catalog)
+      if (entity === Constants.ENTITY.VMCO) {
+        if (category?.toLowerCase().includes('machine')) {
+          params.append("isMachine", true);
+        } else {
+          params.append("isMachine", false);
+        }
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/product-categories?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to fetch categories");
+
       const result = await response.json();
 
-      if (result?.data && Array.isArray(result.data)) {
-        const optionsEn = result.data.map(cat => ({
+      // English options
+      const optionsEn = Array.isArray(result.data)
+        ? result.data.map(cat => ({
           name: cat.categoryCodeEn,
-          value: cat.sequenceId,
+          value: cat.categoryCodeEn,
+          sequenceId: cat.sequenceId,
           id: cat.id,
-        }));
+          codeEn: cat.categoryCodeEn,
+          codeAr: cat.categoryCodeAr
+        }))
+        : [];
 
-        const optionsAr = result.data.map(cat => ({
+      // Arabic options
+      const optionsAr = Array.isArray(result.data)
+        ? result.data.map(cat => ({
           name: cat.categoryCodeAr,
-          value: cat.sequenceId,
+          value: cat.categoryCodeEn, // value stays in English for API consistency
+          sequenceId: cat.sequenceId,
           id: cat.id,
-        }));
+          codeEn: cat.categoryCodeEn,
+          codeAr: cat.categoryCodeAr
+        }))
+        : [];
 
-        setCategoriesEn(optionsEn);
-        setCategoriesAr(optionsAr);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setCategoriesEn([]);
-      setCategoriesAr([]);
+      setCategoryEnOptions(optionsEn);
+      setCategoryArOptions(optionsAr);
+    } catch (err) {
+      setCategoryEnOptions([]);
+      setCategoryArOptions([]);
+      console.error("Error fetching categories:", err);
     }
   };
 
-  // ✅ UPDATED: Fetch subcategories using new API endpoint
-  const fetchSubcategories = async (sequenceId) => {
-    if (!sequenceId || !entity || machineMode) {
-      setSubcategoriesEn([]);
-      setSubcategoriesAr([]);
+  // ✅ FETCH SUBCATEGORIES - Matching catalog logic exactly
+  const fetchSubCategories = async () => {
+    if (!entity) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
       return;
     }
+
+    // Find selected category to get sequenceId
+    const selectedCategory = categoryEnOptions.find((cat) => cat.value === categoryFilter);
+    const sequenceId = selectedCategory?.sequenceId;
+
+    if (!sequenceId) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+      return;
+    }
+
     try {
       const params = new URLSearchParams({
-        entity,
-        sequenceId
+        entity: entity,
+        sequenceId: sequenceId.toString() // Convert to string for URL params
       });
 
-      const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/product-subcategories?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to fetch subcategories");
+
       const result = await response.json();
 
-      if (result?.data && Array.isArray(result.data)) {
-        const optionsEn = result.data.map(sub => ({
+      // English options
+      const optionsEn = Array.isArray(result.data)
+        ? result.data.map(sub => ({
           name: sub.subCategoryCodeEn,
-          value: sub.id,
-          sequenceId: sub.sequenceId,
-        }));
-
-        const optionsAr = result.data.map(sub => ({
-          name: sub.subCategoryCodeAr,
           value: sub.subCategoryCodeEn,
           sequenceId: sub.sequenceId,
-        }));
+          codeEn: sub.subCategoryCodeEn,
+          codeAr: sub.subCategoryCodeAr
+        }))
+        : [];
 
-        setSubcategoriesEn(optionsEn);
-        setSubcategoriesAr(optionsAr);
-      }
-    } catch (error) {
-      console.error("Error fetching subcategories:", error);
-      setSubcategoriesEn([]);
-      setSubcategoriesAr([]);
-    }
-  };
+      // Arabic options
+      const optionsAr = Array.isArray(result.data)
+        ? result.data.map(sub => ({
+          name: sub.subCategoryCodeAr,
+          value: sub.subCategoryCodeEn, // value stays in English for API consistency
+          sequenceId: sub.sequenceId,
+          codeEn: sub.subCategoryCodeEn,
+          codeAr: sub.subCategoryCodeAr
+        }))
+        : [];
 
-  const handleKeyDown = (e) => {
-    if (["Enter", "Go", "Search", "Done"].includes(e.key)) {
-      if (window.innerWidth <= 768) {
-        e.target.blur();
-        document.body.classList.remove("keyboard-open");
-      }
+      setSubCategoryEnOptions(optionsEn);
+      setSubCategoryArOptions(optionsAr);
+    } catch (err) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+      console.error("Error fetching subcategories:", err);
     }
   };
 
@@ -256,50 +268,91 @@ function GetProducts({
   useEffect(() => {
     if (open && entity && !machineMode) {
       fetchCategories();
-      setSelectedCategory("");
-      setSelectedSubcategory("");
-      setCategorySearch("");
-      setSubcategorySearch("");
+      setCategoryFilter("");
+      setSubCategoryFilter("");
     }
   }, [open, entity, machineMode]);
 
-  // Load subcategories when category changes
+  // Load subcategories when category changes (matching catalog)
   useEffect(() => {
-    if (selectedCategory && !machineMode) {
-      fetchSubcategories(selectedCategory);
-      setSelectedSubcategory("");
-      setSubcategorySearch("");
+    if (categoryFilter && !machineMode) {
+      fetchSubCategories();
+      setSubCategoryFilter(""); // Reset subcategory when category changes
     } else if (!machineMode) {
-      setSubcategoriesEn([]);
-      setSubcategoriesAr([]);
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
     }
-  }, [selectedCategory, entity, machineMode]);
+  }, [categoryFilter, entity, machineMode, categoryEnOptions]);
 
+  // Clear subcategory when category is cleared (matching catalog)
+  useEffect(() => {
+    if (!categoryFilter) {
+      setSubCategoryFilter("");
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+    }
+  }, [categoryFilter]);
+
+  // ✅ FETCH PRODUCTS - Matching catalog filtering logic
   const fetchProducts = async () => {
     if (!open) return;
     setProductLoading(true);
+
     try {
-      const filters = {
-        customerId: parseInt(customerId),
-        entity: entity
-      };
+      // Get current filter values from refs (avoiding stale closure)
+      const currentCategoryFilter = categoryFilterRef.current || "";
+      const currentSubCategoryFilter = subCategoryFilterRef.current || "";
 
-      if (selectedCategory && !machineMode) filters.category = selectedCategory;
-      if (selectedSubcategory && !machineMode) filters.subCategory = selectedSubcategory;
-
-      const apiParams = getApiParameters();
       const params = new URLSearchParams({
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-        search: searchQuery,
-        filters: JSON.stringify(filters),
+        page: pagination.page.toString(),
+        pageSize: pagination.pageSize.toString(),
         sortBy: "id",
         sortOrder: "asc"
       });
 
-      if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
-      if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
-      if (searchQuery) params.append("searchFields", "productName,product_name,product_name_lc,productNameLc");
+      // Add entity filter
+      if (entity) {
+        params.append("entity", entity);
+      }
+
+      // Handle VMCO entity special cases (matching catalog)
+      if (entity === Constants.ENTITY.VMCO) {
+        if (category?.toLowerCase().includes('machine')) {
+          params.append("isMachine", true);
+        } else if (category?.toLowerCase().includes('consumable')) {
+          params.append("isMachine", false);
+        }
+      }
+
+      // Handle SHC entity special cases
+      if (entity === Constants.ENTITY.SHC) {
+        if (category?.toLowerCase().includes('fresh')) {
+          params.append("isFresh", true);
+        } else if (category?.toLowerCase().includes('frozen')) {
+          params.append("isFresh", false);
+        }
+      }
+
+      // ✅ Add category filter with safe string check (matching catalog)
+      if (currentCategoryFilter && typeof currentCategoryFilter === 'string' && currentCategoryFilter.trim()) {
+        params.append("category", currentCategoryFilter.trim());
+        console.log('Category filter applied:', currentCategoryFilter.trim());
+      }
+
+      // ✅ Add subcategory filter with safe string check (matching catalog)
+      if (currentSubCategoryFilter && typeof currentSubCategoryFilter === 'string' && currentSubCategoryFilter.trim()) {
+        params.append("subCategory", currentSubCategoryFilter.trim());
+        console.log('Subcategory filter applied:', currentSubCategoryFilter.trim());
+      }
+
+      // Add search query (matching catalog)
+      if (searchQuery && typeof searchQuery === 'string' && searchQuery.trim()) {
+        params.append("search", searchQuery.trim());
+        params.append("searchFields", "productName,productname,productnamelc,productNameLc");
+      }
+
+      console.log('API URL:', `${API_BASE_URL}/products?${params.toString()}`);
+      console.log('Filters:', { category: currentCategoryFilter, subCategory: currentSubCategoryFilter });
 
       const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
         method: "GET",
@@ -309,24 +362,38 @@ function GetProducts({
         },
       });
 
-      const result = await response.json();
-      let productsFromApi = [];
-
-      if (result?.data?.data && Array.isArray(result.data.data)) {
-        productsFromApi = result.data.data;
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.status}`);
       }
 
+      const result = await response.json();
+      console.log('API Response:', result);
+
+      // Parse response (matching catalog)
+      let productsFromApi = [];
+      let totalCount = 0;
+
+      if (result?.data) {
+        if (Array.isArray(result.data.data)) {
+          productsFromApi = result.data.data;
+          totalCount = result.data.totalRecords || result.data.total || 0;
+        } else if (Array.isArray(result.data)) {
+          productsFromApi = result.data;
+          totalCount = result.total || result.pagination?.total || productsFromApi.length;
+        }
+      }
+
+      // Add "Others" option for machine mode
       if (machineMode) {
-        productsFromApi = productsFromApi || [];
         if (!productsFromApi.some(p => p.id === "others")) {
-          productsFromApi.push({ id: "others", productName: "Others" });
+          productsFromApi.push({ id: "others", productName: "Others", productNameLc: "أخرى" });
         }
       }
 
       setBackendProducts(productsFromApi);
       setPagination(prev => ({
         ...prev,
-        total: result.data?.totalRecords || productsFromApi.length,
+        total: totalCount,
       }));
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -337,53 +404,28 @@ function GetProducts({
     }
   };
 
+  // Fetch products when dependencies change
   useEffect(() => {
     fetchProducts();
-  }, [open, pagination.page, pagination.pageSize, searchQuery, selectedCategory, selectedSubcategory, entity, category, machineMode]);
+  }, [open, pagination.page, pagination.pageSize, searchQuery, categoryFilter, subCategoryFilter, entity, category, machineMode]);
 
-  // Filter support
-  const filteredCategories = categories.filter(cat =>
-    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
-  );
-  const filteredSubcategories = subcategories.filter(subcat =>
-    subcat.name.toLowerCase().includes(subcategorySearch.toLowerCase())
-  );
-
-  // Handlers for dropdown
-  const handleCategorySelect = (cat) => {
-    setSelectedCategory(cat.value);
-    setCategorySearch(cat.name);
-    setCategoryDropdownOpen(false);
-    setSelectedSubcategory("");
-    setSubcategorySearch("");
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const handleSubcategorySelect = (subcat) => {
-    setSelectedSubcategory(subcat.value);
-    setSubcategorySearch(subcat.name);
-    setSubcategoryDropdownOpen(false);
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const clearCategoryFilter = () => {
-    setSelectedCategory("");
-    setCategorySearch("");
-    setSelectedSubcategory("");
-    setSubcategorySearch("");
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const clearSubcategoryFilter = () => {
-    setSelectedSubcategory("");
-    setSubcategorySearch("");
-    setPagination(prev => ({ ...prev, page: 1 }));
+  const handleKeyDown = (e) => {
+    if (["Enter", "Go", "Search", "Done"].includes(e.key)) {
+      if (window.innerWidth <= 768) {
+        e.target.blur();
+        document.body.classList.remove("keyboard-open");
+      }
+    }
   };
 
   if (!open) return null;
 
   const { page, pageSize, total } = pagination;
   const totalPages = total > 0 ? Math.ceil(total / pageSize) : 1;
+
+  // Dynamically select categories based on language (matching catalog)
+  const categories = i18n.language === 'ar' ? categoryArOptions : categoryEnOptions;
+  const subcategories = i18n.language === 'ar' ? subCategoryArOptions : subCategoryEnOptions;
 
   return (
     <div>
@@ -434,30 +476,37 @@ function GetProducts({
               <SearchableDropdown
                 id="category-filter"
                 name="categoryFilter"
-                options={filteredCategories}
+                options={categories}
                 className={isMobile ? "mobile-select-branch location-select" : "category-filter"}
                 placeholder={t("Category")}
-                value={selectedCategory}
+                value={categoryFilter}
                 onChange={(e) => {
-                  const newCategoryValue = e.target.value;
-                  setSelectedCategory(newCategoryValue);
-                  setSelectedSubcategory("");
-                  if (!newCategoryValue) {
-                    setSubcategoriesEn([]);
-                    setSubcategoriesAr([]);
+                  const value = e.target.value;
+                  console.log('Category selected:', value); // Debug
+                  setCategoryFilter(value);
+                  setSubCategoryFilter(""); // Reset subcategory
+                  if (!value) {
+                    setSubCategoryEnOptions([]);
+                    setSubCategoryArOptions([]);
                   }
+                  setPagination(prev => ({ ...prev, page: 1 }));
                 }}
               />
 
               <SearchableDropdown
                 id="subcategory-filter"
                 name="subCategoryFilter"
-                options={filteredSubcategories}
+                options={subcategories}
                 className={isMobile ? "mobile-select-branch location-select" : "category-filter"}
-                placeholder={!selectedCategory ? t("Select category first") : t("Sub category")}
-                value={selectedSubcategory}
-                onChange={e => setSelectedSubcategory(e.target.value)}
-                disabled={!selectedCategory || (subcategoriesEn.length === 0 && subcategoriesAr.length === 0)}
+                placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
+                value={subCategoryFilter}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  console.log('Subcategory selected:', value); // Debug
+                  setSubCategoryFilter(value);
+                  setPagination(prev => ({ ...prev, page: 1 }));
+                }}
+                disabled={!categoryFilter || (subCategoryEnOptions.length === 0 && subCategoryArOptions.length === 0)}
               />
             </div>
           )}
@@ -545,25 +594,195 @@ function GetProducts({
             />
           )}
         </div>
-
         <style>{`
-          .gp-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.15); z-index: 1000; }
-          .gp-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-white); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); width: 600px; max-width: 95vw; z-index: 1001; padding: 0; animation: gp-fadein 0.2s; }
-          @keyframes gp-fadein { from { opacity: 0; transform: translate(-50%, -60%);} to { opacity: 1; transform: translate(-50%, -50%);} }
-          .gp-header { display: flex; justify-content: space-between; align-items: center; padding: 22px 28px 10px 28px; }
-          .gp-title { font-size: 1.25rem; font-weight: light; }
-          .gp-header-buttons { display: flex; align-items: center; gap: 8px; }
-          .gp-select-btn { padding: 7px 10px; border-radius: 6px; border: 1px solid var(--logo-deep-green); background: var(--logo-deep-green); color: white; font-size: 0.8rem; cursor: pointer; transition: background 0.15s; }
-          .gp-select-btn:hover:not(:disabled) { background: var(--logo-light-green); }
-          .gp-select-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-          .gp-filters-row { display: flex; justify-content: space-between; gap: auto; }
-          @media(max-width: 768px) { .gp-filters-row { flex-direction: column; gap: 10px; align-items: center; } }
-          .gp-table-container { margin: 10px 28px; padding: 6px; border: 1.9px solid #eee; border-radius: 10px; max-height: 300px; overflow-y: auto; }
-          .gp-product-item:hover { background-color: #e8f4fd !important; }
-          .gp-footer { display: flex; flex-direction: column; align-items: center; padding: 0px 28px 22px 28px; gap: 12px; }
-          .gp-close-btn { padding: 7px 10px; border-radius: 6px; border: 1px solid #bbb; background: #fff; color: #222; font-size: 0.8rem; cursor: pointer; transition: background 0.15s; }
-          .gp-close-btn:hover:not(:disabled) { background: #f2f2f2; }
-        `}</style>
+        .gp-backdrop {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.15);
+          z-index: 1000;
+        }
+        .gp-modal {
+          position: fixed;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          background: var(--bg-white);
+          border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+          width: 600px;
+          max-width: 95vw;
+          z-index: 1001;
+          padding: 0;
+          animation: gp-fadein 0.2s;
+        }
+        @keyframes gp-fadein {
+          from { opacity: 0; transform: translate(-50%, -60%);}
+          to { opacity: 1; transform: translate(-50%, -50%);}
+        }
+        .gp-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 22px 28px 10px 28px;
+        }
+        .gp-title {
+          font-size: 1.25rem;
+          font-weight: light;
+        }
+        .gp-header-buttons {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .gp-select-btn {
+          padding: 7px 10px;
+          border-radius: 6px;
+          border: 1px solid var(--logo-deep-green);
+          background: var(--logo-deep-green);
+          color: white;
+          font-size: 0.8rem;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .gp-select-btn:hover:not(:disabled) {
+          background: var(--logo-light-green);
+        }
+        .gp-select-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .gp-filters-row {
+          display: flex;
+          justify-content: space-between;
+          gap: auto;
+        }
+        .gp-dropdown-container {
+          position: relative;
+          flex: 1;
+        }
+        .gp-dropdown-header {
+          position: relative;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+        }
+        .gp-dropdown-input {
+          width: 100%;
+          padding: 8px 30px 8px 10px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 14px;
+          cursor: pointer;
+        }
+        .gp-dropdown-input:disabled {
+          background-color: #f5f5f5;
+          cursor: not-allowed;
+        }
+        .gp-dropdown-arrow {
+          position: absolute;
+          right: 8px;
+          font-size: 12px;
+          color: #666;
+          transition: transform 0.2s;
+        }
+        .gp-dropdown-arrow.open {
+          transform: rotate(180deg);
+        }
+        .gp-clear-btn {
+          position: absolute;
+          right: 25px;
+          background: none;
+          border: none;
+          font-size: 16px;
+          cursor: pointer;
+          color: #999;
+          padding: 0;
+          width: 16px;
+          height: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .gp-clear-btn:hover {
+          color: #666;
+        }
+        .gp-dropdown-list {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          max-height: 200px;
+          overflow-y: auto;
+          z-index: 1002;
+        }
+        .gp-dropdown-item {
+          padding: 8px 12px;
+          cursor: pointer;
+          font-size: 14px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+        .gp-dropdown-item:last-child {
+          border-bottom: none;
+        }
+        .gp-dropdown-item:hover {
+          background-color: #f5f5f5;
+        }
+        .gp-dropdown-item.selected {
+          background-color: #e3f2fd;
+        }
+        .gp-dropdown-item.disabled {
+          color: #999;
+          cursor: default;
+        }
+        .gp-dropdown-item.disabled:hover {
+          background-color: transparent;
+        }
+        .gp-table-container {
+          margin: 10px 28px;
+          padding: 6px;
+          border: 1.9px solid #eee;
+          border-radius: 10px;
+          max-height: 300px;
+          overflow-y: auto;
+        }
+        .gp-product-item:hover {
+          background-color: #e8f4fd !important;
+        }
+        .gp-footer {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 0px 28px 22px 28px;
+          gap: 12px;
+        }
+        .gp-close-btn {
+          padding: 7px 10px;
+          border-radius: 6px;
+          border: 1px solid #bbb;
+          background: #fff;
+          color: #222;
+          font-size: 0.8rem;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .gp-close-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .gp-close-btn:hover:not(:disabled) {
+          background: #f2f2f2;
+        }
+        @media(max-width: 768px) {
+          .gp-filters-row {
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+          }
+        }
+      `}</style>
       </div>
     </div>
   );
