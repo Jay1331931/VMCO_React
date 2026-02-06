@@ -13,47 +13,60 @@ function GetProducts({
   customerId,
   entity,
   category,
-  t = (x) => x, // fallback translation
-  machineMode // new prop, true or falsy
+  t = (x) => x,
+  machineMode
 }) {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
+
+  // Product states
   const [backendProducts, setBackendProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
-    pageSize: 10,
+    pageSize: 20,
     total: 0
   });
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  // Category and Subcategory filters
-  const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState("");
-  const [categorySearch, setCategorySearch] = useState("");
-  const [subcategorySearch, setSubcategorySearch] = useState("");
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [subcategoryDropdownOpen, setSubcategoryDropdownOpen] = useState(false);
+  // Category/subcategory states (matching catalog)
+  const [categoryEnOptions, setCategoryEnOptions] = useState([]);
+  const [categoryArOptions, setCategoryArOptions] = useState([]);
+  const [subCategoryEnOptions, setSubCategoryEnOptions] = useState([]);
+  const [subCategoryArOptions, setSubCategoryArOptions] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("");
 
   const debounceTimeout = useRef();
-  const categoryDropdownRef = useRef();
-  const subcategoryDropdownRef = useRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Refs to track current values (matching catalog pattern)
+  const categoryFilterRef = useRef(categoryFilter);
+  const subCategoryFilterRef = useRef(subCategoryFilter);
+
+  // Update refs when filters change
+  useEffect(() => {
+    categoryFilterRef.current = categoryFilter;
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    subCategoryFilterRef.current = subCategoryFilter;
+  }, [subCategoryFilter]);
+
   // Clear selected products when modal closes
   useEffect(() => {
     if (!open) setSelectedProducts([]);
   }, [open]);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  // For single-selection mode (machineMode), only allow one selected product
+
+  // Product selection handlers
   const handleProductCheck = (product, isChecked) => {
     if (machineMode) {
       if (isChecked) {
@@ -70,7 +83,6 @@ function GetProducts({
     }
   };
 
-  // Normal select all for multi-select mode
   const handleSelectAll = (isChecked) => {
     if (isChecked) {
       setSelectedProducts(prev => {
@@ -103,18 +115,6 @@ function GetProducts({
     return selectedProducts.some(p => p.id === productId);
   };
 
-  const getApiParameters = () => {
-    const params = {};
-    if (entity?.toLowerCase() === Constants.ENTITY.VMCO?.toLowerCase()) {
-      if (category?.toLowerCase() === "vmco machines") params.isMachine = true;
-      else if (category?.toLowerCase() === "vmco consumables") params.isMachine = false;
-    } else if (entity?.toLowerCase() === Constants.ENTITY.SHC?.toLowerCase()) {
-      if (category?.toLowerCase() === "shc - fresh") params.isFresh = true;
-      else if (category?.toLowerCase() === "shc - frozen") params.isFresh = false;
-    }
-    return params;
-  };
-
   // Debounce search input
   useEffect(() => {
     if (!open) return;
@@ -126,139 +126,234 @@ function GetProducts({
     return () => clearTimeout(debounceTimeout.current);
   }, [search, open]);
 
-  // Close dropdowns on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
-        setCategoryDropdownOpen(false);
-      }
-      if (subcategoryDropdownRef.current && !subcategoryDropdownRef.current.contains(event.target)) {
-        setSubcategoryDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Fetch categories based on entity (disable in machineMode)
+  // ✅ FETCH CATEGORIES - Matching catalog logic exactly
   const fetchCategories = async () => {
-    if (!entity || machineMode) {
-      setCategories([]); return;
+    if (!entity) {
+      setCategoryEnOptions([]);
+      setCategoryArOptions([]);
+      return;
     }
+
     try {
-      const params = new URLSearchParams({ entity });
-      const apiParams = getApiParameters();
-      params.append("isCategory", true);
-      if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
-      if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
-      const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-      const result = await response.json();
-      if (result?.data && Array.isArray(result.data)) {
-        setCategories(result.data.map(cat => ({
-          name: cat.category || cat.name || cat,
-          value: cat.category || cat.name || cat,
-        })));
+      const params = new URLSearchParams({ entity: entity });
+
+      // Handle VMCO entity special cases (matching catalog)
+      if (entity === Constants.ENTITY.VMCO) {
+        if (category?.toLowerCase().includes('machine')) {
+          params.append("isMachine", true);
+        } else {
+          params.append("isMachine", false);
+        }
       }
-    } catch { setCategories([]); }
+
+      const response = await fetch(
+        `${API_BASE_URL}/product-categories?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch categories");
+
+      const result = await response.json();
+
+      // English options
+      const optionsEn = Array.isArray(result.data)
+        ? result.data.map(cat => ({
+          name: cat.categoryCodeEn,
+          value: cat.categoryCodeEn,
+          sequenceId: cat.sequenceId,
+          id: cat.id,
+          codeEn: cat.categoryCodeEn,
+          codeAr: cat.categoryCodeAr
+        }))
+        : [];
+
+      // Arabic options
+      const optionsAr = Array.isArray(result.data)
+        ? result.data.map(cat => ({
+          name: cat.categoryCodeAr,
+          value: cat.categoryCodeEn, // value stays in English for API consistency
+          sequenceId: cat.sequenceId,
+          id: cat.id,
+          codeEn: cat.categoryCodeEn,
+          codeAr: cat.categoryCodeAr
+        }))
+        : [];
+
+      setCategoryEnOptions(optionsEn);
+      setCategoryArOptions(optionsAr);
+    } catch (err) {
+      setCategoryEnOptions([]);
+      setCategoryArOptions([]);
+      console.error("Error fetching categories:", err);
+    }
   };
 
-  // Fetch subcategories based on selected category and entity (disable in machineMode)
-  const fetchSubcategories = async (categoryValue) => {
-    if (!categoryValue || !entity || machineMode) {
-      setSubcategories([]); return;
+  // ✅ FETCH SUBCATEGORIES - Matching catalog logic exactly
+  const fetchSubCategories = async () => {
+    if (!entity) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+      return;
     }
+
+    // Find selected category to get sequenceId
+    const selectedCategory = categoryEnOptions.find((cat) => cat.value === categoryFilter);
+    const sequenceId = selectedCategory?.sequenceId;
+
+    if (!sequenceId) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+      return;
+    }
+
     try {
       const params = new URLSearchParams({
-        entity: entity, category: categoryValue
+        entity: entity,
+        sequenceId: sequenceId.toString() // Convert to string for URL params
       });
-      const apiParams = getApiParameters();
-      if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
-      if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
-      const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-      const result = await response.json();
-      if (result?.data && Array.isArray(result.data)) {
-        setSubcategories(result.data.map(sub => ({
-          name: sub.subCategory || sub.subcategory || sub.name || sub,
-          value: sub.subCategory || sub.subcategory || sub.name || sub,
-        })));
-      }
-    } catch { setSubcategories([]); }
-  };
 
-  const handleKeyDown = (e) => {
-    // These keys indicate user is done with keyboard
-    if (
-      e.key === "Enter" ||
-      e.key === "Go" ||
-      e.key === "Search" ||
-      e.key === "Done"
-    ) {
-      if (window.innerWidth <= 768) {
-        // Blur the input to close keyboard
-        e.target.blur();
-        // Remove keyboard class immediately
-        document.body.classList.remove("keyboard-open");
-      }
+      const response = await fetch(
+        `${API_BASE_URL}/product-subcategories?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch subcategories");
+
+      const result = await response.json();
+
+      // English options
+      const optionsEn = Array.isArray(result.data)
+        ? result.data.map(sub => ({
+          name: sub.subCategoryCodeEn,
+          value: sub.subCategoryCodeEn,
+          sequenceId: sub.sequenceId,
+          codeEn: sub.subCategoryCodeEn,
+          codeAr: sub.subCategoryCodeAr
+        }))
+        : [];
+
+      // Arabic options
+      const optionsAr = Array.isArray(result.data)
+        ? result.data.map(sub => ({
+          name: sub.subCategoryCodeAr,
+          value: sub.subCategoryCodeEn, // value stays in English for API consistency
+          sequenceId: sub.sequenceId,
+          codeEn: sub.subCategoryCodeEn,
+          codeAr: sub.subCategoryCodeAr
+        }))
+        : [];
+
+      setSubCategoryEnOptions(optionsEn);
+      setSubCategoryArOptions(optionsAr);
+    } catch (err) {
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+      console.error("Error fetching subcategories:", err);
     }
   };
 
+  // Load categories when modal opens
   useEffect(() => {
     if (open && entity && !machineMode) {
       fetchCategories();
-      setSelectedCategory("");
-      setSelectedSubcategory("");
-      setCategorySearch("");
-      setSubcategorySearch("");
+      setCategoryFilter("");
+      setSubCategoryFilter("");
     }
-  }, [open, API_BASE_URL, token, entity, category, machineMode]);
+  }, [open, entity, machineMode]);
 
+  // Load subcategories when category changes (matching catalog)
   useEffect(() => {
-    if (selectedCategory && !machineMode) {
-      fetchSubcategories(selectedCategory);
-      setSelectedSubcategory("");
-      setSubcategorySearch("");
+    if (categoryFilter && !machineMode) {
+      fetchSubCategories();
+      setSubCategoryFilter(""); // Reset subcategory when category changes
     } else if (!machineMode) {
-      setSubcategories([]);
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
     }
-  }, [selectedCategory, entity, machineMode]);
+  }, [categoryFilter, entity, machineMode, categoryEnOptions]);
 
+  // Clear subcategory when category is cleared (matching catalog)
+  useEffect(() => {
+    if (!categoryFilter) {
+      setSubCategoryFilter("");
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
+    }
+  }, [categoryFilter]);
+
+  // ✅ FETCH PRODUCTS - Matching catalog filtering logic
   const fetchProducts = async () => {
     if (!open) return;
     setProductLoading(true);
+
     try {
-      const filters = {
-        customerId: parseInt(customerId),
-        entity: entity
-      };
-      if (selectedCategory && !machineMode) filters.categoryId = parseInt(selectedCategory);
-      if (selectedSubcategory && !machineMode) filters.subcategoryId = parseInt(selectedSubcategory);
-      const apiParams = getApiParameters();
+      // Get current filter values from refs (avoiding stale closure)
+      const currentCategoryFilter = categoryFilterRef.current || "";
+      const currentSubCategoryFilter = subCategoryFilterRef.current || "";
+
       const params = new URLSearchParams({
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-        search: searchQuery,
-        filters: JSON.stringify(filters),
+        page: pagination.page.toString(),
+        pageSize: pagination.pageSize.toString(),
         sortBy: "id",
         sortOrder: "asc"
       });
-      if (apiParams.isMachine !== undefined) params.append("isMachine", apiParams.isMachine);
-      if (apiParams.isFresh !== undefined) params.append("isFresh", apiParams.isFresh);
-      if (entity) params.append("entity", entity);
-      if (selectedCategory && !machineMode) params.append("category", selectedCategory);
-      if (selectedSubcategory && !machineMode) params.append("subCategory", selectedSubcategory);
-      if (searchQuery) params.append("searchFields", "productName,product_name,product_name_lc,productNameLc");
+
+      // Add entity filter
+      if (entity) {
+        params.append("entity", entity);
+      }
+
+      // Handle VMCO entity special cases (matching catalog)
+      if (entity === Constants.ENTITY.VMCO) {
+        if (category?.toLowerCase().includes('machine')) {
+          params.append("isMachine", true);
+        } else if (category?.toLowerCase().includes('consumable')) {
+          params.append("isMachine", false);
+        }
+      }
+
+      // Handle SHC entity special cases
+      if (entity === Constants.ENTITY.SHC) {
+        if (category?.toLowerCase().includes('fresh')) {
+          params.append("isFresh", true);
+        } else if (category?.toLowerCase().includes('frozen')) {
+          params.append("isFresh", false);
+        }
+      }
+
+      // ✅ Add category filter with safe string check (matching catalog)
+      if (currentCategoryFilter && typeof currentCategoryFilter === 'string' && currentCategoryFilter.trim()) {
+        params.append("category", currentCategoryFilter.trim());
+        console.log('Category filter applied:', currentCategoryFilter.trim());
+      }
+
+      // ✅ Add subcategory filter with safe string check (matching catalog)
+      if (currentSubCategoryFilter && typeof currentSubCategoryFilter === 'string' && currentSubCategoryFilter.trim()) {
+        params.append("subCategory", currentSubCategoryFilter.trim());
+        console.log('Subcategory filter applied:', currentSubCategoryFilter.trim());
+      }
+
+      // Add search query (matching catalog)
+      if (searchQuery && typeof searchQuery === 'string' && searchQuery.trim()) {
+        params.append("search", searchQuery.trim());
+        params.append("searchFields", "productName,productname,productnamelc,productNameLc");
+      }
+
+      console.log('API URL:', `${API_BASE_URL}/products?${params.toString()}`);
+      console.log('Filters:', { category: currentCategoryFilter, subCategory: currentSubCategoryFilter });
+
       const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
         method: "GET",
         headers: {
@@ -266,25 +361,42 @@ function GetProducts({
           "Authorization": `Bearer ${token}`,
         },
       });
-      const result = await response.json();
 
-      let productsFromApi = [];
-      if (result?.data?.data && Array.isArray(result.data.data)) {
-        productsFromApi = result.data.data;
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.status}`);
       }
 
-      if (machineMode) {
-        productsFromApi = productsFromApi || [];
-        if (!productsFromApi.some(p => p.id === "others")) {
-          productsFromApi.push({ id: "others", productName: "Others" });
+      const result = await response.json();
+      console.log('API Response:', result);
+
+      // Parse response (matching catalog)
+      let productsFromApi = [];
+      let totalCount = 0;
+
+      if (result?.data) {
+        if (Array.isArray(result.data.data)) {
+          productsFromApi = result.data.data;
+          totalCount = result.data.totalRecords || result.data.total || 0;
+        } else if (Array.isArray(result.data)) {
+          productsFromApi = result.data;
+          totalCount = result.total || result.pagination?.total || productsFromApi.length;
         }
       }
+
+      // Add "Others" option for machine mode
+      if (machineMode) {
+        if (!productsFromApi.some(p => p.id === "others")) {
+          productsFromApi.push({ id: "others", productName: "Others", productNameLc: "أخرى" });
+        }
+      }
+
       setBackendProducts(productsFromApi);
       setPagination(prev => ({
         ...prev,
-        total: result.data.totalRecords || productsFromApi.length,
+        total: totalCount,
       }));
     } catch (error) {
+      console.error("Error fetching products:", error);
       setBackendProducts([]);
       setPagination(prev => ({ ...prev, total: 0 }));
     } finally {
@@ -292,49 +404,28 @@ function GetProducts({
     }
   };
 
+  // Fetch products when dependencies change
   useEffect(() => {
     fetchProducts();
-  }, [open, API_BASE_URL, token, pagination.page, pagination.pageSize, searchQuery, selectedCategory, selectedSubcategory, entity, category, machineMode]);
+  }, [open, pagination.page, pagination.pageSize, searchQuery, categoryFilter, subCategoryFilter, entity, category, machineMode]);
 
-  // Filter support:
-  const filteredCategories = categories.filter(cat =>
-    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
-  );
-  const filteredSubcategories = subcategories.filter(subcat =>
-    subcat.name.toLowerCase().includes(subcategorySearch.toLowerCase())
-  );
-
-  // Handlers for dropdown
-  const handleCategorySelect = (cat) => {
-    setSelectedCategory(cat.value);
-    setCategorySearch(cat.name);
-    setCategoryDropdownOpen(false);
-    setSelectedSubcategory("");
-    setSubcategorySearch("");
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-  const handleSubcategorySelect = (subcat) => {
-    setSelectedSubcategory(subcat.value);
-    setSubcategorySearch(subcat.name);
-    setSubcategoryDropdownOpen(false);
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-  const clearCategoryFilter = () => {
-    setSelectedCategory("");
-    setCategorySearch("");
-    setSelectedSubcategory("");
-    setSubcategorySearch("");
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-  const clearSubcategoryFilter = () => {
-    setSelectedSubcategory("");
-    setSubcategorySearch("");
-    setPagination(prev => ({ ...prev, page: 1 }));
+  const handleKeyDown = (e) => {
+    if (["Enter", "Go", "Search", "Done"].includes(e.key)) {
+      if (window.innerWidth <= 768) {
+        e.target.blur();
+        document.body.classList.remove("keyboard-open");
+      }
+    }
   };
 
   if (!open) return null;
+
   const { page, pageSize, total } = pagination;
   const totalPages = total > 0 ? Math.ceil(total / pageSize) : 1;
+
+  // Dynamically select categories based on language (matching catalog)
+  const categories = i18n.language === 'ar' ? categoryArOptions : categoryEnOptions;
+  const subcategories = i18n.language === 'ar' ? subCategoryArOptions : subCategoryEnOptions;
 
   return (
     <div>
@@ -351,7 +442,8 @@ function GetProducts({
               onClick={handleSelectProducts}
               disabled={selectedProducts.length === 0}
               style={{
-                marginRight: isRTL ? '0' : '8px', marginLeft: isRTL ? '8px' : '0',
+                marginRight: isRTL ? '0' : '8px',
+                marginLeft: isRTL ? '8px' : '0',
                 opacity: selectedProducts.length === 0 ? 0.5 : 1,
                 cursor: selectedProducts.length === 0 ? 'not-allowed' : 'pointer'
               }}
@@ -361,25 +453,15 @@ function GetProducts({
           </div>
         </div>
 
-        {/* Hide category/subcategory/search if machineMode */}
-
         <div style={{ padding: "0 28px 10px 28px" }}>
           <input
             type="text"
             placeholder={t("Search products...")}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            onFocus={() => {
-              if (window.innerWidth <= 768) {
-                // This could trigger hiding the bottom menu
-                document.body.classList.add("keyboard-open");
-              }
-            }}
+            onFocus={() => window.innerWidth <= 768 && document.body.classList.add("keyboard-open")}
             onKeyDown={handleKeyDown}
-            onBlur={() => {
-              document.body.classList.remove("keyboard-open");
-              // 👈 show menu again (optional)
-            }}
+            onBlur={() => document.body.classList.remove("keyboard-open")}
             style={{
               width: "100%",
               padding: "8px 10px",
@@ -397,12 +479,17 @@ function GetProducts({
                 options={categories}
                 className={isMobile ? "mobile-select-branch location-select" : "category-filter"}
                 placeholder={t("Category")}
-                value={selectedCategory}
-                onChange={e => {
-                  const newCategoryValue = e.target.value;
-                  setSelectedCategory(newCategoryValue);
-                  setSelectedSubcategory("");
-                  if (!newCategoryValue) setSubcategories([]);
+                value={categoryFilter}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  console.log('Category selected:', value); // Debug
+                  setCategoryFilter(value);
+                  setSubCategoryFilter(""); // Reset subcategory
+                  if (!value) {
+                    setSubCategoryEnOptions([]);
+                    setSubCategoryArOptions([]);
+                  }
+                  setPagination(prev => ({ ...prev, page: 1 }));
                 }}
               />
 
@@ -411,10 +498,15 @@ function GetProducts({
                 name="subCategoryFilter"
                 options={subcategories}
                 className={isMobile ? "mobile-select-branch location-select" : "category-filter"}
-                placeholder={!selectedCategory ? t("Select category first") : t("Sub category")}
-                value={selectedSubcategory}
-                onChange={e => setSelectedSubcategory(e.target.value)}
-                disabled={!selectedCategory || subcategories.length === 0}
+                placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
+                value={subCategoryFilter}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  console.log('Subcategory selected:', value); // Debug
+                  setSubCategoryFilter(value);
+                  setPagination(prev => ({ ...prev, page: 1 }));
+                }}
+                disabled={!categoryFilter || (subCategoryEnOptions.length === 0 && subCategoryArOptions.length === 0)}
               />
             </div>
           )}
@@ -425,7 +517,6 @@ function GetProducts({
             <div style={{ padding: 24 }}>{t("Loading...")}</div>
           ) : (
             <>
-              {/* Select All Checkbox: hidden in machineMode */}
               {!machineMode && backendProducts.length > 0 && (
                 <div className="gp-select-all" style={{ padding: "8px 12px", borderBottom: "1px solid #eee" }}>
                   <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
@@ -434,17 +525,6 @@ function GetProducts({
                       checked={areAllSelected}
                       onChange={e => handleSelectAll(e.target.checked)}
                       style={{ marginRight: isRTL ? "0" : "8px", marginLeft: isRTL ? "8px" : "0" }}
-                      onFocus={() => {
-                        if (window.innerWidth <= 768) {
-                          // This could trigger hiding the bottom menu
-                          document.body.classList.add("keyboard-open");
-                        }
-                      }}
-                      onKeyDown={handleKeyDown}
-                      onBlur={() => {
-                        document.body.classList.remove("keyboard-open");
-                        // 👈 show menu again (optional)
-                      }}
                     />
                     <span style={{ fontWeight: "bold", fontSize: "14px" }}>
                       {t("Select All")} ({backendProducts.length})
@@ -476,17 +556,6 @@ function GetProducts({
                           cursor: "pointer"
                         }}
                         name={machineMode ? "singleSelectProduct" : undefined}
-                        onFocus={() => {
-                          if (window.innerWidth <= 768) {
-                            // This could trigger hiding the bottom menu
-                            document.body.classList.add("keyboard-open");
-                          }
-                        }}
-                        onKeyDown={handleKeyDown}
-                        onBlur={() => {
-                          document.body.classList.remove("keyboard-open");
-                          // 👈 show menu again (optional)
-                        }}
                       />
                       <span
                         style={{
@@ -497,7 +566,8 @@ function GetProducts({
                       >
                         {i18n.language === 'ar' ?
                           `${product.id} - ${product.productNameLc || product.productName}` :
-                          `${product.id} - ${product.productName}`}
+                          `${product.id} - ${product.productName}`
+                        }
                       </span>
                     </label>
                   </li>
@@ -512,7 +582,6 @@ function GetProducts({
           )}
         </div>
 
-        {/* Footer with Pagination */}
         <div className="gp-footer">
           {totalPages > 0 && (
             <Pagination
@@ -525,9 +594,7 @@ function GetProducts({
             />
           )}
         </div>
-      </div>
-
-      <style>{`
+        <style>{`
         .gp-backdrop {
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
@@ -716,6 +783,7 @@ function GetProducts({
           }
         }
       `}</style>
+      </div>
     </div>
   );
 }

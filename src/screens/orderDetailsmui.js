@@ -184,6 +184,9 @@ function OrderDetails() {
   const [warehousesLoading, setWarehousesLoading] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState(i18n.language === 'ar' ? formData.warehouseNameAr : formData.warehouseNameEn);
   const [editingDiscount, setEditingDiscount] = useState({});
+  const [pricingPolicyEnOptions, setPricingPolicyEnOptions] = useState([]);
+  const [pricingPolicyArOptions, setPricingPolicyArOptions] = useState([]);
+
 
   // Use VMCO categories from constants
   const VMCO_CATEGORIES = [
@@ -200,7 +203,6 @@ function OrderDetails() {
     { label: "100%", value: "100%" },
     { label: "30%", value: "30%" },
   ];
-  const pricingPolicyOptions = ["Price A", "Price B", "Price C", "Price D"];
 
   useEffect(() => {
     const fetchWarehouseOptions = async () => {
@@ -2840,10 +2842,18 @@ function OrderDetails() {
 
     // Ensure the pricing policy is one of the allowed options and never undefined
     let customerPricingPolicy = customer.pricingPolicy;
-    if (!pricingPolicyOptions.includes(customerPricingPolicy)) {
-      customerPricingPolicy = "";
-    }
 
+    // Check if customer.pricingPolicy exists in ENGLISH options (by ID)
+    const englishPricingPolicyIds = pricingPolicyEnOptions.map(option => option.value);
+
+    if (
+      !customerPricingPolicy ||
+      customerPricingPolicy === "" ||
+      !englishPricingPolicyIds.includes(customerPricingPolicy)
+    ) {
+      customerPricingPolicy = "";
+      console.log(`Invalid pricing policy for customer: ${customer.pricingPolicy}. Reset to empty.`);
+    }
     setCompanyType(
       customer.companyType || (customer.data && customer.data.companyType) || ""
     );
@@ -3531,6 +3541,62 @@ function OrderDetails() {
       fetchOrderProducts();
     }
   }, [orderId]);
+
+  useEffect(() => {
+    const fetchPricingPolicyOptions = async () => {
+      if (!formData.entity) {
+        setPricingPolicyEnOptions([]);
+        setPricingPolicyArOptions([]);
+        return;
+      }
+
+      try {
+        // Fix the URL - use proper query parameter format
+        const response = await fetch(
+          `${API_BASE_URL}/pricing-policy/pagination?entity=${formData.entity}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch pricing policies');
+        }
+
+        const result = await response.json();
+
+        if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
+          // Separate English and Arabic options
+          const enOptions = result.data.data.map(item => ({
+            value: item.name,
+            label: item.name
+          }));
+
+          const arOptions = result.data.data.map(item => ({
+            value: item.name,
+            label: item.nameLc
+          }));
+
+          setPricingPolicyEnOptions(enOptions);
+          setPricingPolicyArOptions(arOptions);
+        } else {
+          console.warn('Unexpected pricing policy response format:', result);
+          setPricingPolicyEnOptions([]);
+          setPricingPolicyArOptions([]);
+        }
+      } catch (error) {
+        console.error('Error fetching pricing policies:', error);
+        setPricingPolicyEnOptions([]);
+        setPricingPolicyArOptions([]);
+      }
+    };
+
+    fetchPricingPolicyOptions();
+  }, [formData.entity, token]);
 
   // Function to get order details by ID
   const getOrderById = async (id) => {
@@ -4694,7 +4760,6 @@ function OrderDetails() {
                           />
                         ) : fromApproval ? (
                           <input
-                            type="text"
                             name="expectedDeliveryDate"
                             value={
                               formData.expectedDeliveryDate
@@ -4716,7 +4781,6 @@ function OrderDetails() {
                           />
                         ) : formData.expectedDeliveryDate ? (
                           <input
-                            type="date"
                             name="expectedDeliveryDate"
                             value={convertToTimezone(
                               formData.expectedDeliveryDate,
@@ -4728,7 +4792,6 @@ function OrderDetails() {
                           />
                         ) : (
                           <input
-                            type="text"
                             name="expectedDeliveryDate"
                             value={t("Delivery date will update soon")}
                             disabled
@@ -4748,18 +4811,23 @@ function OrderDetails() {
                           <label>{t("Pricing Policy")}</label>
                           <select
                             name="pricingPolicy"
-                            value={formData.pricingPolicy || ""}
+                            value={formData.pricingPolicy || ''}
                             onChange={handleInputChange}
-                            className="entity-dropdown"
-                            disabled={!isE("pricingPolicy") || !formData?.isMachine}
+                            disabled={!isE('pricingPolicy')}
                           >
-                            {pricingPolicyOptions.map(
-                              (pricingPolicy, index) => (
-                                <option key={index} value={pricingPolicy}>
-                                  {pricingPolicy}
+                            <option value="">{t('Select Pricing Policy')}</option>
+                            {i18n.language === 'ar'
+                              ? pricingPolicyArOptions.map(option => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
                                 </option>
-                              )
-                            )}
+                              ))
+                              : pricingPolicyEnOptions.map(option => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))
+                            }
                           </select>
                         </div>
                       )}
@@ -5373,43 +5441,43 @@ function OrderDetails() {
                                       {formData.entity.toLocaleLowerCase() === Constants.ENTITY.VMCO.toLocaleLowerCase() &&
                                         <span className="line-discount-row" style={{ fontSize: 13 }} >
                                           {t("Discount: ")}
-                                          
-                                          {fromApproval ? (<>
-                                          <input
-      type="number"
-      min="0"
-      max="100"
-      step="0.01"
-      value={editingDiscount[item.id] !== undefined
-            ? editingDiscount[item.id]
-            : item?.lineDiscount}
-      onChange={(e) =>{
-        const idx = formData.products.findIndex(
-          (p) => (p.id || p.productid) === (item.id || item.productid)
-        );
-              setEditingDiscount((prev) => ({
-                ...prev,
-                [item.id]: e.target.value,
-              }));
-        handleLineDiscountChange(idx, parseFloat(e.target.value))
-      }
-      }
-      style={{
-        width: 40,
-        fontSize: 13,
-        borderRadius: 4,
-        marginRight: 4,
-        border: "1px solid black",
-        textAlign: "center"
-      }}
-    />
 
-    %
+                                          {fromApproval ? (<>
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              max="100"
+                                              step="0.01"
+                                              value={editingDiscount[item.id] !== undefined
+                                                ? editingDiscount[item.id]
+                                                : item?.lineDiscount}
+                                              onChange={(e) => {
+                                                const idx = formData.products.findIndex(
+                                                  (p) => (p.id || p.productid) === (item.id || item.productid)
+                                                );
+                                                setEditingDiscount((prev) => ({
+                                                  ...prev,
+                                                  [item.id]: e.target.value,
+                                                }));
+                                                handleLineDiscountChange(idx, parseFloat(e.target.value))
+                                              }
+                                              }
+                                              style={{
+                                                width: 40,
+                                                fontSize: 13,
+                                                borderRadius: 4,
+                                                marginRight: 4,
+                                                border: "1px solid black",
+                                                textAlign: "center"
+                                              }}
+                                            />
+
+                                            %
                                           </>) : <>
-                                          {Number(item.lineDiscount)}%
+                                            {Number(item.lineDiscount)}%
                                           </>}
                                         </span>}
-{/* {formData.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && (
+                                      {/* {formData.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && (
   <span className="line-discount-row" style={{ fontSize: 13 }}>
     <>
     {t("Discount:")}

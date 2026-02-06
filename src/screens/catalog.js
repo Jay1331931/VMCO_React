@@ -123,8 +123,10 @@ function Catalog() {
 
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [displayedProducts, setDisplayedProducts] = useState([]);
-  const [categoryOptions, setCategoryOptions] = useState([]);
-  const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+  const [categoryEnOptions, setCategoryEnOptions] = useState([]);
+  const [categoryArOptions, setCategoryArOptions] = useState([]);
+  const [subCategoryEnOptions, setSubCategoryEnOptions] = useState([]);
+  const [subCategoryArOptions, setSubCategoryArOptions] = useState([]);
   const [entityDescriptions, setEntityDescriptions] = useState([]);
   const [isAdding, setIsAdding] = useState(null);
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
@@ -257,11 +259,11 @@ function Catalog() {
     }
   }, []);
 
-  const fetchProducts = async (page = 1, reset = false) => {
+  const fetchProducts = useCallback(async (page = 1, reset = false) => {
     const currentActiveCategory = activeCategoryRef.current;
-    const currentCategoryFilter = categoryFilterRef.current;
-    const currentSubCategoryFilter = subCategoryFilterRef.current;
-    const currentSearchQuery = searchQueryRef.current;
+    const currentCategoryFilter = categoryFilterRef.current || '';  // Fix: default to empty string
+    const currentSubCategoryFilter = subCategoryFilterRef.current || '';  // Fix: default to empty string
+    const currentSearchQuery = searchQueryRef.current || '';
 
     if (reset) {
       startLoading();
@@ -273,56 +275,60 @@ function Catalog() {
 
     try {
       const params = new URLSearchParams({
-        page: page,
+        page,
         pageSize: productsPerPage,
-        sortBy: "id",
-        sortOrder: "asc",
+        sortBy: 'id',
+        sortOrder: 'asc',
       });
 
-      if (currentActiveCategory === "SPECIAL_PRODUCTS") {
-        params.append("filters", JSON.stringify({ "specialProduct": true }));
-      } else if (currentActiveCategory === "FAVORITES") {
-        params.append("favorite", "true");
+      if (currentActiveCategory === 'SPECIAL_PRODUCTS') {
+        params.append('filters', JSON.stringify({ specialProduct: true }));
+      } else if (currentActiveCategory === 'FAVORITES') {
+        params.append('favorite', 'true');
       } else {
         const selectedCategory = categories.find(cat => cat.value === currentActiveCategory);
         const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+        if (entityToFilter) params.append('entity', entityToFilter);
 
-        if (entityToFilter) {
-          params.append("entity", entityToFilter);
-          if (entityToFilter === Constants.ENTITY.VMCO) {
-            if (currentActiveCategory === Constants.CATEGORY.VMCO_MACHINES) {
-              params.append("isMachine", "true");
-            } else if (currentActiveCategory === Constants.CATEGORY.VMCO_CONSUMABLES) {
-              params.append("isMachine", "false");
-            }
+        if (entityToFilter === Constants.ENTITY.VMCO) {
+          if (currentActiveCategory === Constants.CATEGORY.VMCO_MACHINES) {
+            params.append('isMachine', 'true');
+          } else if (currentActiveCategory === Constants.CATEGORY.VMCO_CONSUMABLES) {
+            params.append('isMachine', 'false');
           }
+        }
+
+        // Fixed: Safe string check before trim()
+        if (currentCategoryFilter && typeof currentCategoryFilter === 'string' && currentCategoryFilter.trim()) {
+          params.append('category', currentCategoryFilter.trim());
+          console.log('Category filter applied:', currentCategoryFilter.trim());  // Debug
+        }
+        if (currentSubCategoryFilter && typeof currentSubCategoryFilter === 'string' && currentSubCategoryFilter.trim()) {
+          params.append('subCategory', currentSubCategoryFilter.trim());
+          console.log('Subcategory filter applied:', currentSubCategoryFilter.trim());  // Debug
         }
       }
 
-      if (currentCategoryFilter && currentCategoryFilter.trim() !== "") {
-        params.append("category", currentCategoryFilter);
-      }
-      if (currentSubCategoryFilter && currentSubCategoryFilter.trim() !== "") {
-        params.append("subCategory", currentSubCategoryFilter);
-      }
-      if (currentSearchQuery) {
-        params.append("search", currentSearchQuery);
-        params.append("searchFields", "productName,product_name,product_name_lc,productNameLc");
+      if (currentSearchQuery && typeof currentSearchQuery === 'string' && currentSearchQuery.trim()) {
+        params.append('search', currentSearchQuery.trim());
+        params.append('searchFields', 'productName,productname,productnamelc,productNameLc');
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/products?${params.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          }
-        }
-      );
+      console.log('API URL:', `${API_BASE_URL}/products?${params.toString()}`);  // Debug full URL
+      console.log('Filters:', { category: currentCategoryFilter, subCategory: currentSubCategoryFilter });
+
+      const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
       const result = await response.json();
+      console.log('API Response:', result);  // Debug response
 
+      // Stale closure check
       if (currentActiveCategory !== activeCategoryRef.current ||
         currentCategoryFilter !== categoryFilterRef.current ||
         currentSubCategoryFilter !== subCategoryFilterRef.current ||
@@ -333,21 +339,16 @@ function Catalog() {
       let pageProducts = [];
       let totalCount = 0;
 
-      if (result && result.data) {
+      if (result?.data) {
         if (Array.isArray(result.data.data)) {
           pageProducts = result.data.data;
         } else if (Array.isArray(result.data)) {
           pageProducts = result.data;
         }
-
-        totalCount = result.data.totalRecords ||
-          result.data.total ||
-          result.total ||
-          (result.pagination && result.pagination.total) ||
-          pageProducts.length;
+        totalCount = result.data.totalRecords || result.data.total || result.total || result.pagination?.total || pageProducts.length;
       }
 
-      if (reset || page === 1) {
+      if (reset) {
         setProducts(pageProducts);
         setCurrentPage(1);
         currentPageRef.current = 1;
@@ -356,7 +357,6 @@ function Catalog() {
         setCurrentPage(page);
         currentPageRef.current = page;
       }
-
       setTotalProducts(totalCount);
 
       const currentProductsCount = reset ? pageProducts.length : products.length + pageProducts.length;
@@ -364,14 +364,14 @@ function Catalog() {
       setHasMore(hasMoreProducts);
 
     } catch (err) {
-      console.error("❌ Error fetching products:", err);
+      console.error('Error fetching products:', err);
       setHasMore(false);
     } finally {
       stopLoading();
       setIsLoadingMore(false);
       isLoadingRef.current = false;
     }
-  };
+  }, [categories, productsPerPage, API_BASE_URL, token, products.length, startLoading, stopLoading]);
 
   const loadMoreProducts = useCallback(() => {
     if (isLoadingRef.current) return;
@@ -829,7 +829,7 @@ function Catalog() {
             localStorage.setItem("cartItems", JSON.stringify(0));
             // Dispatch custom event to update cart badge
             window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: 0 }));
-            
+
             setSelectedLocation(newBranchId);
             if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
@@ -1092,7 +1092,8 @@ function Catalog() {
       const selectedCategory = categories.find((cat) => cat.value === activeCategory);
       const entity = selectedCategory?.entity;
       if (!entity) {
-        setCategoryOptions([]);
+        setCategoryEnOptions([]);
+        setCategoryArOptions([]);
         return;
       }
       try {
@@ -1116,28 +1117,58 @@ function Catalog() {
         );
         if (!response.ok) throw new Error("Failed to fetch categories");
         const result = await response.json();
-        const options = Array.isArray(result.data)
-          ? result.data.map(cat => ({ name: cat.category || cat.name || cat, value: cat.category || cat.name || cat }))
+        const optionsEn = Array.isArray(result.data)
+          ? result.data.map(cat => ({
+            name: cat.categoryCodeEn,
+            value: cat.categoryCodeEn,
+            sequenceId: cat.sequenceId,
+            id: cat.id,
+            codeEn: cat.categoryCodeEn,
+            codeAr: cat.categoryCodeAr
+          }))
           : [];
-        setCategoryOptions(options);
+
+        const optionsAr = Array.isArray(result.data)
+          ? result.data.map(cat => ({
+            name: cat.categoryCodeAr,
+            value: cat.categoryCodeEn,
+            sequenceId: cat.sequenceId,
+            id: cat.id,
+            codeEn: cat.categoryCodeEn,
+            codeAr: cat.categoryCodeAr
+          }))
+          : [];
+
+
+        setCategoryEnOptions(optionsEn);
+        setCategoryArOptions(optionsAr);
       } catch (err) {
-        setCategoryOptions([]);
+        setCategoryEnOptions([]);
+        setCategoryArOptions([]);
         console.error("Error fetching categories:", err);
       }
     };
     fetchCategories();
-  }, [activeCategory, categories, API_BASE_URL]);
+  }, [activeCategory, categories, API_BASE_URL, token]);
 
   useEffect(() => {
     const fetchSubCategories = async () => {
       const selectedCategoryObj = categories.find((cat) => cat.value === activeCategory);
       const entity = selectedCategoryObj?.entity;
-      if (!entity || !categoryFilter) {
-        setSubCategoryOptions([]);
+      const selectedCategory = categoryEnOptions.find((cat) => cat.value === categoryFilter);
+      const sequenceId = selectedCategory?.sequenceId;
+      if (!entity || !sequenceId) {
+        setSubCategoryEnOptions([]);
+        setSubCategoryArOptions([]);
         return;
       }
+
       try {
-        const params = new URLSearchParams({ entity: entity, category: categoryFilter });
+        const params = new URLSearchParams({
+          entity: entity,
+          sequenceId: sequenceId.toString() // Convert to string for URL params
+        });
+
         const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
           method: "GET",
           headers: {
@@ -1145,24 +1176,48 @@ function Catalog() {
             "Authorization": `Bearer ${token}`
           },
         });
+
         if (!response.ok) throw new Error("Failed to fetch subcategories");
+
         const result = await response.json();
-        const options = Array.isArray(result.data)
-          ? result.data.map(sub => ({ name: sub.subCategory || sub.subcategory || sub.name || sub, value: sub.subCategory || sub.subcategory || sub.name || sub }))
+
+        const optionsEn = Array.isArray(result.data)
+          ? result.data.map(sub => ({
+            name: sub.subCategoryCodeEn,
+            value: sub.subCategoryCodeEn,
+            sequenceId: sub.sequenceId,
+            codeEn: sub.subCategoryCodeEn,
+            codeAr: sub.subCategoryCodeAr
+          }))
           : [];
-        setSubCategoryOptions(options);
+
+        const optionsAr = Array.isArray(result.data)
+          ? result.data.map(sub => ({
+            name: sub.subCategoryCodeAr,
+            value: sub.subCategoryCodeEn,
+            sequenceId: sub.sequenceId,
+            codeEn: sub.subCategoryCodeEn,
+            codeAr: sub.subCategoryCodeAr
+          }))
+          : [];
+
+        setSubCategoryEnOptions(optionsEn);
+        setSubCategoryArOptions(optionsAr);
       } catch (err) {
-        setSubCategoryOptions([]);
+        setSubCategoryEnOptions([]);
+        setSubCategoryArOptions([]);
         console.error("Error fetching subcategories:", err);
       }
     };
+
     fetchSubCategories();
-  }, [activeCategory, categoryFilter, categories, API_BASE_URL, token]);
+  }, [activeCategory, categoryFilter, categories, categoryEnOptions, API_BASE_URL, token]);
 
   useEffect(() => {
     if (!categoryFilter) {
       setSubCategoryFilter("");
-      setSubCategoryOptions([]);
+      setSubCategoryEnOptions([]);
+      setSubCategoryArOptions([]);
     }
   }, [categoryFilter]);
 
@@ -1252,111 +1307,127 @@ function Catalog() {
   return (
     <Sidebar title={t("Catalog")} handleGoToCart={handleGoToCart} searchable={true} setSelectedBranchLocation={setSelectedLocation} goToCart={isV("goToCart")} selectBranch={isV("selectBranch")} PaddingClass={true} MenuName={"catalog"} >
       <CatalogLayout
-          // Header section props
-          user={user}
-          isMobile={isMobile}
-          showHeader={showHeader}
-          selectedLocation={selectedLocation}
-          handleBranchSelect={handleBranchSelect}
-          branches={branches}
-          isBranchesLoading={isLoading}
-          catalogId={catalogId}
-          isV={isV}
-          handleGoToCart={handleGoToCart}
-          t={t}
-          // Filter section props
-          filteredCategoryTabs={filteredCategoryTabs}
-          activeCategory={activeCategory}
+        // Header section props
+        user={user}
+        isMobile={isMobile}
+        showHeader={showHeader}
+        selectedLocation={selectedLocation}
+        handleBranchSelect={handleBranchSelect}
+        branches={branches}
+        isBranchesLoading={isLoading}
+        catalogId={catalogId}
+        isV={isV}
+        handleGoToCart={handleGoToCart}
+        t={t}
+        // Filter section props
+        filteredCategoryTabs={filteredCategoryTabs}
+        activeCategory={activeCategory}
 
-          handleTabChange={(newCategory) => {
-            // Move the tab change logic here
-            const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
+        handleTabChange={(newCategory) => {
+          // Move the tab change logic here
+          const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
 
-            if (targetTab && targetTab.disabled) {
-              // Find entity for this category
-              const category = categories.find(cat => cat.value === newCategory);
-              const entity = category?.entity;
+          if (targetTab && targetTab.disabled) {
+            // Find entity for this category
+            const category = categories.find(cat => cat.value === newCategory);
+            const entity = category?.entity;
 
-              if (entity && disabledEntities.includes(entity)) {
-                const coolingInfo = coolingPeriodData.find(cp => cp.entity === entity);
+            if (entity && disabledEntities.includes(entity)) {
+              const coolingInfo = coolingPeriodData.find(cp => cp.entity === entity);
 
-                if (coolingInfo && coolingInfo.toTime) {
-                  const todayUTC = new Date().toISOString().split('T')[0];
-                  const utcDateTime = `${todayUTC}T${coolingInfo.toTime}Z`;
-                  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                  const localTime = new Date(utcDateTime).toLocaleTimeString('en-IN', {
-                    timeZone: timezone,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                  });
+              if (coolingInfo && coolingInfo.toTime) {
+                const todayUTC = new Date().toISOString().split('T')[0];
+                const utcDateTime = `${todayUTC}T${coolingInfo.toTime}Z`;
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const localTime = new Date(utcDateTime).toLocaleTimeString('en-IN', {
+                  timeZone: timezone,
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                });
 
-                  Swal.fire({
-                    icon: 'warning',
-                    title: t("Ordering Window Closed"),
-                    text: `${t("Ordering window is closed.")} ${t("You may place an order after")} ${localTime}`,
-                    confirmButtonText: t("OK"),
-                  });
-                } else {
-                  Swal.fire({
-                    icon: 'warning',
-                    title: t("Ordering Window Closed"),
-                    text: t("Ordering window is closed for this category."),
-                    confirmButtonText: t("OK"),
-                  });
-                }
+                Swal.fire({
+                  icon: 'warning',
+                  title: t("Ordering Window Closed"),
+                  text: `${t("Ordering window is closed.")} ${t("You may place an order after")} ${localTime}`,
+                  confirmButtonText: t("OK"),
+                });
+              } else {
+                Swal.fire({
+                  icon: 'warning',
+                  title: t("Ordering Window Closed"),
+                  text: t("Ordering window is closed for this category."),
+                  confirmButtonText: t("OK"),
+                });
               }
-              return;
             }
+            return;
+          }
 
-            // Normal tab change
-            console.log('Tab changing from', activeCategory, 'to', newCategory);
-            setActiveCategory(newCategory);
-            setSearchQuery('');
-            setCategoryFilter('');
-            setSubCategoryFilter('');
-            setSubCategoryOptions([]);
-          }}
-          coolingPeriodData={coolingPeriodData}
-          disabledEntities={disabledEntities}
-          categoriesTabImages={categories}
+          // Normal tab change
+          console.log('Tab changing from', location, 'to', newCategory);
 
-          // Search section props
-          categoryFilter={categoryFilter}
-          handleCategoryFilterChange={(e) => {
-            setCategoryFilter(e.target.value);
-            setSubCategoryFilter("");
-            if (!e.target.value) setSubCategoryOptions([]);
-          }}
-          categoryOptions={categoryOptions}
-          subCategoryFilter={subCategoryFilter}
-          handleSubCategoryFilterChange={(e) => setSubCategoryFilter(e.target.value)}
-          subCategoryOptions={subCategoryOptions}
+          setActiveCategory(newCategory);
+          setSearchQuery('');
+          setCategoryFilter('');
+          setSubCategoryFilter('');
+          setSubCategoryEnOptions([]);
+          setSubCategoryArOptions([]);
+          navigate(`/catalog/${newCategory}`, { replace: true })
+        }}
+        coolingPeriodData={coolingPeriodData}
+        disabledEntities={disabledEntities}
+        categoriesTabImages={categories}
 
-          // Products section props
-          displayedProducts={displayedProducts}
-          mapProductToCardProps={mapProductToCardProps}
-          quantities={quantities}
-          setQuantities={setQuantities}
-          handleQuantityChange={handleQuantityChange}
-          handleAddToCart={handleAddToCart}
-          handleProductClick={handleProductClick}
-          onToggleFavorite={handleToggleFavorite}
-          isLoading={isLoading}
-          isLoadingMore={isLoadingMore}
-          hasMore={hasMore}
-          searchQuery={searchQuery}
-          isAdding={isAdding}
+        // Search section props
+        categoryFilter={categoryFilter}
+        handleCategoryFilterChange={(e) => {
+          const value = e.target.value || '';  // Ensure string
+          console.log('Category selected:', value);  // Debug
+          setCategoryFilter(value);
+          setSubCategoryFilter('');
+          if (!value) {
+            setSubCategoryEnOptions([]);
+            setSubCategoryArOptions([]);
+          }
+        }}
 
-          // Product popup props
-          selectedProduct={selectedProduct}
-          handleClosePopup={handleClosePopup}
 
-          // Platform & RTL props
-          isRTL={isRTL}
-          dir={dir}
-          setSearchQuery={setSearchQuery}
-        />
+        categoryEnOptions={categoryEnOptions}
+        categoryArOptions={categoryArOptions}
+        subCategoryFilter={subCategoryFilter}
+        handleSubCategoryFilterChange={(e) => {
+          const value = e.target.value || '';  // Ensure string
+          console.log('Subcategory selected:', value);  // Debug
+          setSubCategoryFilter(value);
+        }}
+        subCategoryEnOptions={subCategoryEnOptions}
+        subCategoryArOptions={subCategoryArOptions}
+
+        // Products section props
+        displayedProducts={displayedProducts}
+        mapProductToCardProps={mapProductToCardProps}
+        quantities={quantities}
+        setQuantities={setQuantities}
+        handleQuantityChange={handleQuantityChange}
+        handleAddToCart={handleAddToCart}
+        handleProductClick={handleProductClick}
+        onToggleFavorite={handleToggleFavorite}
+        isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
+        hasMore={hasMore}
+        searchQuery={searchQuery}
+        isAdding={isAdding}
+
+        // Product popup props
+        selectedProduct={selectedProduct}
+        handleClosePopup={handleClosePopup}
+
+        // Platform & RTL props
+        isRTL={isRTL}
+        dir={dir}
+        setSearchQuery={setSearchQuery}
+      />
     </Sidebar>
   );
 }
