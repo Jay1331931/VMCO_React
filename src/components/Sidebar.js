@@ -49,7 +49,7 @@ const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile = /iPhone/i.test(navigator.userAgent);
 const isAndroidMobile = /Android/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null, searchable = false, setSelectedBranchLocation, goToCart = false, selectBranch = false, homePage = "", PaddingClass = false, CardPaddingClass = false, hideMobileBottomMenu = false }) {
+function Sidebar({ children, title = null, MenuName = null, searchable = false, setSelectedBranchLocation, goToCart = false, selectBranch = false, homePage = "", PaddingClass = false, CardPaddingClass = false,CustomerPaddingClass=false, hideMobileBottomMenu = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -1235,9 +1235,9 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
             </div>
           </header>
           <div
-            className={`content ${homePage ? homePage : ""} ${PaddingClass ? "catalog-padding-removing" : ""} ${CardPaddingClass ? "card-padding-removing" : ""}`}
+            className={`content ${homePage ? homePage : ""} ${PaddingClass ? "catalog-padding-removing" : ""} ${CardPaddingClass ? "card-padding-removing" : ""} ${CustomerPaddingClass ? "customer-details-padding":"" }`}
             style={{
-              padding: isMobile ? (activeMenu ? "0 0px 0px" : "0 20px") : "20px",
+              padding:  "20px", //isMobile ? (activeMenu ? "0 0px 0px" : "020px") :
             }}
           >
             {

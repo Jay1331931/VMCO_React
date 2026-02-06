@@ -538,7 +538,7 @@ function Maintenance() {
   };
 
   return (
-    <Sidebar title={t("Maintenance")} isV={isV("maintenanceContent")} CardPaddingClass={isMobile}>
+    <Sidebar title={t("Maintenance")} isV={isV("maintenanceContent")} CardPaddingClass={true}>
       <div className="maintenance-content">
         {isMobile ? (
           <div className="orders-content">

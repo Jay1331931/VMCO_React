@@ -771,7 +771,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             id="category-filter"
             name="categoryFilter"
             options={i18n.language === "en" ? categoryEnOptions : categoryArOptions}
-            className={isMobile ? "category-filter-mobile" : ""}
+            className={isMobile ? "category-filter-mobile" : "category-filter-desktop"}
             placeholder={t("All Categories")}
             value={categoryFilter}
             onChange={(e) => {
@@ -779,19 +779,22 @@ function Products({ customerId, customer, setTabsHeight }) {
               setSubCategoryFilter(""); // Reset subcategory when category changes
               setCurrentPage(1);
             }}
+           style={{ width: '250px !important'}}
+
           />
           {/* Subcategory Filter - use SearchableDropdown */}
           <SearchableDropdown
             id="subcategory-filter"
             name="subCategoryFilter"
                 options={i18n.language === "en" ? subCategoryEnOptions : subCategoryArOptions}
-            className={isMobile ? "subcategory-filter-mobile" : ""}
+            className={isMobile ? "subcategory-filter-mobile" : "subcategory-filter-desktop"}
             placeholder={t("All Subcategories")}
             value={subCategoryFilter}
             onChange={(e) => {
               setSubCategoryFilter(e.target.value);
               setCurrentPage(1);
             }}
+             style={{ width: '250px !important'}}
             disabled={!categoryFilter}
           /></>)}
 

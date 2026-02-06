@@ -543,7 +543,7 @@ const AddBankTransaction = () => {
   }, [])
   const renderTemplate = () => {
     return (
-      <div className={`bank-add-container  ${isIOSsMobile ? "ios-mobile-padding" : ""} ${isRTL ? "rtl" : ""}`}>
+      <div className={`bank-add-container  ${isRTL ? "rtl" : ""}`}>
         <div className="bank-add-form">
           <div className="form-grid">
             <div className="form-group">
@@ -839,88 +839,6 @@ const AddBankTransaction = () => {
                 </div>
               </>
             ) : null}
-            {/* {Object.keys(updateTransaction).length === 0  &&
-              <div className="form-group">
-                <label htmlFor="bankDocuments">
-                  {t("Upload Bank Documents *")}
-                </label>
-                <input
-                  id="bankDocuments"
-                  type="file"
-                  multiple
-                  onChange={handleFileChange}
-                  disabled={!!updateTransaction?.bankDocuments}
-                />
-              </div>}
-              <div className="form-group">
-                <div className="image-grid">
-                  {fileData?.map((file, index) => {
-                    const fileUrl = file.url;
-                    const extension = file.fileName
-                      .split(".")
-                      .pop()
-                      .toLowerCase();
-                    const isImage = [
-                      "png",
-                      "jpg",
-                      "jpeg",
-                      "gif",
-                      "webp",
-                    ].includes(extension);
-                    const isPdf = extension === "pdf";
-                    const isExcel = ["xls", "xlsx", "csv"].includes(extension);
-
-                    return (
-                      <div key={index} className="image-item">
-                        {isImage ? (
-                          <img
-                            src={fileUrl}
-                            alt={file.fileName}
-                            className="preview-image"
-                          />
-                        ) : isPdf ? (
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="file-link-button"
-                          >
-                            📄 View PDF
-                          </a>
-                        ) : isExcel ? (
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="file-link-button"
-                          >
-                            📊 Open Excel File
-                          </a>
-                        ) : (
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="file-link-button"
-                          >
-                            📁 Download File
-                          </a>
-                        )}
-
-                        {Object.keys(updateTransaction).length === 0 && (
-                          <button
-                            type="button"
-                            className="remove-image-btn"
-                            onClick={() => handleRemoveImage(file.fileName)}
-                          >
-                            ✖
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div> */}
             <div className="form-group full-width">
               <label htmlFor="bankDocuments">
                 {t("Upload Bank Documents")}
