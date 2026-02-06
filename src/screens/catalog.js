@@ -1121,7 +1121,8 @@ function Catalog() {
         const optionsEn = Array.isArray(result.data)
           ? result.data.map(cat => ({
             name: cat.categoryCodeEn,
-            value: cat.sequenceId,
+            value: cat.categoryCodeEn,
+            sequenceId: cat.sequenceId,
             id: cat.id,
             codeEn: cat.categoryCodeEn,
             codeAr: cat.categoryCodeAr
@@ -1132,6 +1133,7 @@ function Catalog() {
           ? result.data.map(cat => ({
             name: cat.categoryCodeAr,
             value: cat.categoryCodeEn,
+            sequenceId: cat.sequenceId,
             id: cat.id,
             codeEn: cat.categoryCodeEn,
             codeAr: cat.categoryCodeAr
@@ -1154,15 +1156,18 @@ function Catalog() {
     const fetchSubCategories = async () => {
       const selectedCategoryObj = categories.find((cat) => cat.value === activeCategory);
       const entity = selectedCategoryObj?.entity;
-      if (!entity || !categoryFilter) {
+      const selectedCategory = categoryEnOptions.find((cat) => cat.value === categoryFilter);
+      const sequenceId = selectedCategory?.sequenceId;
+      if (!entity || !sequenceId) {
         setSubCategoryEnOptions([]);
         setSubCategoryArOptions([]);
         return;
       }
+
       try {
         const params = new URLSearchParams({
           entity: entity,
-          sequenceId: categoryFilter
+          sequenceId: sequenceId.toString() // Convert to string for URL params
         });
 
         const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
@@ -1172,12 +1177,15 @@ function Catalog() {
             "Authorization": `Bearer ${token}`
           },
         });
+
         if (!response.ok) throw new Error("Failed to fetch subcategories");
+
         const result = await response.json();
+
         const optionsEn = Array.isArray(result.data)
           ? result.data.map(sub => ({
             name: sub.subCategoryCodeEn,
-            value: sub.id,
+            value: sub.subCategoryCodeEn,
             sequenceId: sub.sequenceId,
             codeEn: sub.subCategoryCodeEn,
             codeAr: sub.subCategoryCodeAr
@@ -1187,7 +1195,7 @@ function Catalog() {
         const optionsAr = Array.isArray(result.data)
           ? result.data.map(sub => ({
             name: sub.subCategoryCodeAr,
-            value: sub.id,
+            value: sub.subCategoryCodeEn,
             sequenceId: sub.sequenceId,
             codeEn: sub.subCategoryCodeEn,
             codeAr: sub.subCategoryCodeAr
@@ -1202,8 +1210,9 @@ function Catalog() {
         console.error("Error fetching subcategories:", err);
       }
     };
+
     fetchSubCategories();
-  }, [activeCategory, categoryFilter, categories, API_BASE_URL, token]);
+  }, [activeCategory, categoryFilter, categories, categoryEnOptions, API_BASE_URL, token]);
 
   useEffect(() => {
     if (!categoryFilter) {
