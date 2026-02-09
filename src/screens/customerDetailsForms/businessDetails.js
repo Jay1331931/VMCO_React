@@ -1441,7 +1441,7 @@ onKeyDown={handleKeyDown}
           accept="image/*"
           style={{ display: "none" }}
           ref={companyLogoInputRef}
-          onChange={(e) => handleLogoChange(e, "companyLogo")}
+          onChange={(e) => {e.preventDefault(); handleLogoChange(e, "companyLogo")}}
           disabled={
             mode === "edit" && customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
