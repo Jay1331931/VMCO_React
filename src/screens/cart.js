@@ -1673,7 +1673,7 @@ function Cart() {
         // Show appropriate message
         Swal.fire({
           icon: "success",
-          title: t("Request Sent"),
+          title: t("Your Request has been sent for Approval"),
           text: t("Request sent with orders", {
             orders: orderIds.map((id) => `${id}`).join(", "),
             method: selectedPaymentMethod,
@@ -1889,8 +1889,7 @@ function Cart() {
                   const reason = entityCreditData?.Reason || "Credit is not available";
                   Swal.fire({
                     icon: "warning",
-                    title: t("Credit Not Available"),
-                    text: t(reason),
+                    title: t(reason)
                   });
                   return;
                 } else {
@@ -1977,7 +1976,7 @@ function Cart() {
 
             Swal.fire({
               icon: "success",
-              title: t("Request Sent"),
+              title: t("Your Request has been sent for Approval"),
               text: t("Request sent with order", { orders: machineOrderId }),
               confirmButtonText: t("OK"),
             }).then(() => {
@@ -2059,8 +2058,7 @@ function Cart() {
               const reason = entityCreditData?.Reason || "Credit is not available";
               Swal.fire({
                 icon: "warning",
-                title: t("Credit Not Available"),
-                text: t(reason),
+                title: t(reason),
               });
               return;
             } else {
@@ -2171,8 +2169,7 @@ function Cart() {
                   const reason = entityCreditData?.Reason || "Credit is not available";
                   Swal.fire({
                     icon: "warning",
-                    title: t("Credit Not Available"),
-                    text: t(reason),
+                    title: t(reason)
                   });
                   return;
                 } else {
@@ -2271,8 +2268,7 @@ function Cart() {
                 const reason = entityCreditData?.Reason || "Credit is not available";
                 Swal.fire({
                   icon: "warning",
-                  title: t("Credit Not Available"),
-                  text: t(reason),
+                  title: t(reason),
                 });
                 return;
               } else {
