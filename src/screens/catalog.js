@@ -277,8 +277,8 @@ function Catalog() {
       const params = new URLSearchParams({
         page,
         pageSize: productsPerPage,
-        sortBy: 'id',
-        sortOrder: 'asc',
+        sortBy: 'erp_prod_id',
+        sortOrder: 'desc',
       });
 
       if (currentActiveCategory === 'SPECIAL_PRODUCTS') {
