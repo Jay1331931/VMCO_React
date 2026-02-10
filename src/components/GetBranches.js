@@ -14,9 +14,10 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [pagination, setPagination] = useState({
     page: 1,
-    pageSize: 10,
+    pageSize: isMobile ? 5 : 10,
     total: 0
   });
   const debounceTimeout = useRef();
