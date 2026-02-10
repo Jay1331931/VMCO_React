@@ -571,8 +571,7 @@ function OrderDetails() {
               const reason = entityCreditData?.Reason || "Credit is not available";
               Swal.fire({
                 icon: "warning",
-                title: t("Credit Not Available"),
-                text: t(reason),
+                title: t(reason),
               });
               setSaving(false);
               return { allowed: false };
