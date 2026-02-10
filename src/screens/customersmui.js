@@ -1596,7 +1596,7 @@ function Customers() {
         state: {
           customerId: customer.customerId,
           workflowId: transformedCustomer?.workflowData?.id,
-          workflowInstanceId: transformedCustomer?.id,
+          workflowInstanceId: transformedCustomer?.workflowInstanceId,
           mode: isApprovalMode ? "edit" : "add",
         },
       });
