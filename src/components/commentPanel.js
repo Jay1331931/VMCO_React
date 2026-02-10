@@ -168,6 +168,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
         }
           
         .comment-panel {
+          display: none !important;
           position: fixed;
           top: 70px;
           right: 0;
@@ -183,9 +184,11 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
           border: lightgrey solid 1px;
         }
         .comment-panel.open {
+          display: block !important;
           transform: translateX(-40px);
         }
         [dir="rtl"] .comment-panel {
+          display: none !important;
           position: fixed;
           top: 70px;
           left: 0;
@@ -200,6 +203,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
           flex-direction: column;
         }
         [dir="rtl"] .comment-panel.open {
+          display: block !important;
           transform: translateX(40px);
         }
         .comment-panel-header {
