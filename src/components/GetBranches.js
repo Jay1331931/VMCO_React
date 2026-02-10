@@ -260,11 +260,8 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
           padding: 0;
           animation: gb-fadein 0.2s;
         }
-          @media (max-width: 768px) {
-          .gb-modal {
-          top: 25% !important;
-          }
-      }
+          
+      
         @keyframes gb-fadein {
           from { opacity: 0; transform: translate(-50%, -60%);}
           to { opacity: 1; transform: translate(-50%, -50%);}

@@ -15,10 +15,6 @@
         "usageDescription": "This app needs access to the camera to take photos"
       }
     }
-    ,
-     "Keyboard": {
-      "resize": "body",
-    "resizeOnFullScreen": true
-  }
+    
   }
 }

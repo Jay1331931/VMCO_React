@@ -14,7 +14,7 @@ import {
   SkeletonGrid,
   SkeletonSearchInput,
 } from './SkeletonLoaders';
-import '../styles/skeleton-loader.css';
+// import '../styles/skeleton-loader.css';
 
 /**
  * SkeletonWrapper Component
