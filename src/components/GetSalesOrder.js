@@ -268,6 +268,11 @@ function GetSalesOrder({ open, onClose, formData, API_BASE_URL, setFormData, t =
   display: flex;
   flex-direction: column;
 }
+  @media (max-width: 768px) {
+          .gp-modal {
+          top: 25% !important;
+          }
+      }
 
 @keyframes gp-fadein {
   from { opacity: 0; transform: translate(-50%, -60%);}

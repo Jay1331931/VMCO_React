@@ -70,6 +70,11 @@ function GetInventory({ open, onClose, InventoryData, productName }) {
           padding: 0;
           animation: gi-fadein 0.2s;
         }
+          @media (max-width: 768px) {
+          .gi-modal {
+          top: 25% !important;
+          }
+      }
         @keyframes gi-fadein {
           from { opacity: 0; transform: translate(-50%, -60%);}
           to { opacity: 1; transform: translate(-50%, -50%);}
