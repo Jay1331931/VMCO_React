@@ -1406,7 +1406,7 @@ function MaintenanceDetails() {
                   placeholder={t("Select Issue Type")}
                   style={{
                     color: ticket.issueType ? "inherit" : "#999",
-                    width:"100%"
+                    width: "100%"
                   }}
                   className="issue-type-dropdown"
                 />
@@ -1639,13 +1639,11 @@ function MaintenanceDetails() {
             (
               <div style={{ marginTop: "16px", marginBottom: "16px" }}>
                 <div>
-                  <h4 style={{ display: "flex", flexDirection: "column", marginBottom: "8px" }}>
-                    {t("Spare Parts")}
-                    {/* <div className='support-details-container-right'>
-                <div className="support-details-actions"> */}
-                    {isV('btnAddSpareParts') &&
-                      user.userType.toLowerCase() === "employee" &&
-                      ticket.status.toLowerCase() === "in progress" && (
+                  {isV('btnAddSpareParts') &&
+                    user.userType.toLowerCase() === "employee" &&
+                    ticket.status.toLowerCase() === "in progress" && (
+                      <h4 style={{ display: "flex", flexDirection: "column", marginBottom: "8px" }}>
+                        {t("Spare Parts")}
                         <button
                           className="support-action-btn AddSpareParts"
                           onClick={() => setShowSparePartsPopup(true)}
@@ -1653,11 +1651,8 @@ function MaintenanceDetails() {
                         >
                           {t('Add Spare Parts')}
                         </button>
-                      )}
-                    {/* </div>
-                </div> */}
-                  </h4>
 
+                      </h4>)}
                 </div>
                 {
                   selectedSpareParts && selectedSpareParts.length > 0 && (<table
@@ -1787,7 +1782,7 @@ function MaintenanceDetails() {
         <div className='support-details-container-right'>
           {isV('assignedTo') && (
             <div className="support-assign">
-              <span style={{fontWeight: isMobile ? 'bold' : ''}}>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
+              <span style={{ fontWeight: isMobile ? 'bold' : '' }}>{formMode === "add" ? t("Assign to") : t("Assigned to")}:</span>
               <SearchableDropdown
                 id="assignedTeamMember"
                 name="assignedTeamMember"
