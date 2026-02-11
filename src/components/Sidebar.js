@@ -1240,11 +1240,11 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
               padding:  "20px", //isMobile ? (activeMenu ? "0 0px 0px" : "020px") :
             }}
           >
-            {
-                <PageTransition type={getTransitionForRoute(location.pathname)}>
+            {/* {
+                <PageTransition type={getTransitionForRoute(location.pathname)}> */}
               {children}
-            </PageTransition> 
-            }
+            {/* </PageTransition> 
+            } */}
            
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}

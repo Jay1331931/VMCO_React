@@ -237,11 +237,7 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
           padding: 0;
           animation: gp-fadein 0.2s;
         }
-          @media (max-width: 768px) {
-          .gp-modal {
-          top: 25% !important;
-          }
-      }
+          
         @keyframes gp-fadein {
           from { opacity: 0; transform: translate(-50%, -60%);}
           to { opacity: 1; transform: translate(-50%, -50%);}
