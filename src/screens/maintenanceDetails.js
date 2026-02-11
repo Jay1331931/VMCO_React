@@ -93,6 +93,32 @@ function MaintenanceDetails() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  // Prevent reload during file upload on Capacitor
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        if (uploadingImage || uploadingVideo) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    const handleBeforeUnload = (e) => {
+      if (uploadingImage || uploadingVideo) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [uploadingImage, uploadingVideo]);
   // Images state (allow dynamic add) - store both data URL and original filename
   const [images, setImages] = useState([]);
   const fileInputRef = useRef(null);
