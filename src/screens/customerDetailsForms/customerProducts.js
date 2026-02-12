@@ -228,7 +228,6 @@ function Products({ customerId, customer, setTabsHeight }) {
     }
   };
 
-  // ✅ FETCH SUBCATEGORIES (EXACTLY like GetProducts)
   const fetchSubCategories = async () => {
     const selectedEntityObj = entities.find((cat) => cat.value === activeEntity);
     const entity = selectedEntityObj?.entity || selectedEntityObj?.value;
@@ -242,9 +241,9 @@ function Products({ customerId, customer, setTabsHeight }) {
     const selectedCategory = [...categoryEnOptions, ...categoryArOptions].find(
       (cat) => cat.value === categoryFilter
     );
-    const sequenceId = selectedCategory?.sequenceId;
+    const categoryCodeEn = selectedCategory?.codeEn;
 
-    if (!sequenceId) {
+    if (!categoryCodeEn) {
       setSubCategoryEnOptions([]);
       setSubCategoryArOptions([]);
       return;
@@ -253,7 +252,7 @@ function Products({ customerId, customer, setTabsHeight }) {
     try {
       const params = new URLSearchParams({
         entity: entity,
-        sequenceId: sequenceId.toString()
+        categoryCodeEn: categoryCodeEn
       });
 
       // Handle VMCO entity special cases
@@ -735,7 +734,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                 id="category-filter"
                 name="categoryFilter"
                 options={i18n.language === "en" ? categoryEnOptions : categoryArOptions}
-                placeholder={t("All Categories")}
+                placeholder={t("Categories")}
                 value={categoryFilter}
                 onChange={(e) => {
                   setCategoryFilter(e.target.value);
@@ -753,7 +752,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                 id="subcategory-filter"
                 name="subCategoryFilter"
                 options={i18n.language === "en" ? subCategoryEnOptions : subCategoryArOptions}
-                placeholder={t("All Subcategories")}
+                placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
                 value={subCategoryFilter}
                 onChange={(e) => {
                   setSubCategoryFilter(e.target.value);
@@ -779,14 +778,14 @@ function Products({ customerId, customer, setTabsHeight }) {
               setSubCategoryFilter(""); // Reset subcategory when category changes
               setCurrentPage(1);
             }}
-           style={{ width: '250px !important'}}
+            style={{ width: '250px !important' }}
 
           />
           {/* Subcategory Filter - use SearchableDropdown */}
           <SearchableDropdown
             id="subcategory-filter"
             name="subCategoryFilter"
-                options={i18n.language === "en" ? subCategoryEnOptions : subCategoryArOptions}
+            options={i18n.language === "en" ? subCategoryEnOptions : subCategoryArOptions}
             className={isMobile ? "subcategory-filter-mobile" : "subcategory-filter-desktop"}
             placeholder={t("All Subcategories")}
             value={subCategoryFilter}
@@ -794,7 +793,7 @@ function Products({ customerId, customer, setTabsHeight }) {
               setSubCategoryFilter(e.target.value);
               setCurrentPage(1);
             }}
-             style={{ width: '250px !important'}}
+            style={{ width: '250px !important' }}
             disabled={!categoryFilter}
           /></>)}
 
