@@ -204,9 +204,9 @@ function GetProducts({
 
     // Find selected category to get sequenceId
     const selectedCategory = categoryEnOptions.find((cat) => cat.value === categoryFilter);
-    const sequenceId = selectedCategory?.sequenceId;
+    const categoryCodeEn = selectedCategory?.codeEn;
 
-    if (!sequenceId) {
+    if (!categoryCodeEn) {
       setSubCategoryEnOptions([]);
       setSubCategoryArOptions([]);
       return;
@@ -215,7 +215,7 @@ function GetProducts({
     try {
       const params = new URLSearchParams({
         entity: entity,
-        sequenceId: sequenceId.toString() // Convert to string for URL params
+        categoryCodeEn: categoryCodeEn
       });
 
       const response = await fetch(
@@ -248,7 +248,7 @@ function GetProducts({
       const optionsAr = Array.isArray(result.data)
         ? result.data.map(sub => ({
           name: sub.subCategoryCodeAr,
-          value: sub.subCategoryCodeEn, // value stays in English for API consistency
+          value: sub.subCategoryCodeEn,
           sequenceId: sub.sequenceId,
           codeEn: sub.subCategoryCodeEn,
           codeAr: sub.subCategoryCodeAr
