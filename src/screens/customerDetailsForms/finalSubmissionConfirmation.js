@@ -44,6 +44,7 @@ const FinalSubmissionConfirmation = ({
   const [signaturePreviews, setSignaturePreviews] = useState({
     declarationSignature: null,
   });
+  const [isTermsAndConditionOpened, setIsTermsAndConditionOpened] = useState(false);
   const [popupUrl, setPopupUrl] = useState(null);
   useEffect(() => {
     setTabsHeight("auto");
@@ -562,7 +563,7 @@ const FinalSubmissionConfirmation = ({
               name="consentCheckbox"
               checked={consentCheckbox || customerData?.customerStatus?.toLowerCase() === "pending" || customerData?.customerStatus?.toLowerCase() === "approved"}
               onChange={onChangeConsentCheckbox}
-              disabled={customerData?.customerStatus?.toLowerCase() === "approved"}
+              disabled={customerData?.customerStatus?.toLowerCase() === "approved" || !isTermsAndConditionOpened}
             />
           </label>
           {t(" I confirm my acceptance of the ")}
@@ -596,6 +597,7 @@ const FinalSubmissionConfirmation = ({
                   if (res.status === "Ok") {
                     // window.open(res.data.url, "_blank", "noopener,noreferrer");
                     openUrlSmart(res.data.url);
+                    setIsTermsAndConditionOpened(true);
                   } else {
                     throw new Error("Failed to fetch file URL");
                   }
@@ -646,6 +648,7 @@ const FinalSubmissionConfirmation = ({
                 if (res.status === "Ok") {
                   // window.open(res.data.url, "_blank", "noopener,noreferrer");
                   openUrlSmart(res.data.url);
+                  setIsTermsAndConditionOpened(true);
                 } else {
                   throw new Error("Failed to fetch file URL");
                 }
