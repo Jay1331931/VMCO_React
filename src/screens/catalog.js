@@ -277,8 +277,8 @@ function Catalog() {
       const params = new URLSearchParams({
         page,
         pageSize: productsPerPage,
-        sortBy: 'erp_prod_id',
-        sortOrder: 'desc',
+        sortBy: 'sequence_id',
+        sortOrder: 'asc',
       });
 
       if (currentActiveCategory === 'SPECIAL_PRODUCTS') {
@@ -1156,8 +1156,9 @@ function Catalog() {
       const selectedCategoryObj = categories.find((cat) => cat.value === activeCategory);
       const entity = selectedCategoryObj?.entity;
       const selectedCategory = categoryEnOptions.find((cat) => cat.value === categoryFilter);
-      const sequenceId = selectedCategory?.sequenceId;
-      if (!entity || !sequenceId) {
+      const categoryCodeEn = selectedCategory?.value;
+
+      if (!entity || !categoryCodeEn) {
         setSubCategoryEnOptions([]);
         setSubCategoryArOptions([]);
         return;
@@ -1166,7 +1167,7 @@ function Catalog() {
       try {
         const params = new URLSearchParams({
           entity: entity,
-          sequenceId: sequenceId.toString() // Convert to string for URL params
+          categoryCodeEn: categoryCodeEn
         });
 
         const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
@@ -1209,7 +1210,6 @@ function Catalog() {
         console.error("Error fetching subcategories:", err);
       }
     };
-
     fetchSubCategories();
   }, [activeCategory, categoryFilter, categories, categoryEnOptions, API_BASE_URL, token]);
 
