@@ -809,7 +809,7 @@ const openUrlSmart = (url) => {
                 >
                   {tradingFilePreviews?.bankLetter && (
                     <a
-                      href="#"
+                      href={tradingFilePreviews?.bankLetter}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="file-link"
@@ -4824,7 +4824,7 @@ const openUrlSmart = (url) => {
                 >
                   {tradingFilePreviews?.creditApplicationVmco && (
                     <a
-                      href="#"
+                      href={tradingFilePreviews?.creditApplicationVmco}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="file-link"
@@ -5025,7 +5025,7 @@ onKeyDown={handleKeyDown}
                     {nonTradingFilesToUpload["others"].map((file, index) => (
                       <li key={index} className="uploaded-file-item">
                         <a
-                          href="#"
+                          href={file}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="file-link"
