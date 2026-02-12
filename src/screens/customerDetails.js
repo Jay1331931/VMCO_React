@@ -2345,7 +2345,7 @@ if (field === "methodDetails" &&
       Swal.fire({
         icon: "error",
         title: t("Error"),
-        text: t("Please provide your consent to proceed using checkbox."),
+        text: t("Please read the Terms and Conditions and provide consent by selecting the checkbox to proceed."),
         confirmButtonText: t("OK"),
       });
       return false;
