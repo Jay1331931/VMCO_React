@@ -76,6 +76,7 @@ const AddBankTransaction = () => {
   const [isSubmitting, setisSubmitting] = useState(null);
   const [isUploading, setIsUploading] = useState(null)
   const [maxDate, setMaxDate] = useState('');
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
   const isMobile = usePlatform()
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
@@ -125,38 +126,358 @@ const AddBankTransaction = () => {
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  
 
-  const handleFileChange = async (e) => {
-    const files = e.target.files;
+ // ========== ENHANCED: State Recovery System ==========
+const DRAFT_STATE_KEY = "bank_transaction_draft_data";
+const FILE_QUEUE_KEY = "bank_transaction_file_queue";
+const STATE_TIMESTAMP_KEY = "bank_transaction_timestamp";
 
-    setIsUploading(true)
-    for (let file of files) {
-      //file Size less than 30MB
-      if (file.size > 10 * 1024 * 1024) {
-        setError(t("File size exceeds 10MB limit"));
-        continue;
-      }
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
-      formDataUpload.append("containerType", "transactions");
+// Enhanced save state function
+const saveStateToStorage = useCallback(() => {
+  try {
+    const state = {
+      formData,
+      imageUrls,
+      timestamp: Date.now(),
+    };
+     if(!updateTransaction?.status){
+      console.log("Saving state to storage111", formData,formData?.status);
+ localStorage.setItem(DRAFT_STATE_KEY, JSON.stringify(state));
+    localStorage.setItem(STATE_TIMESTAMP_KEY, Date.now().toString());
+    };
+  } catch (e) {
+    console.error("Failed to save state:", e);
+  }
+}, [formData, imageUrls]);
 
-      try {
-        const { data } = await api.post(`/upload-files`, formDataUpload, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${cookieToken}`,
-          },
-        });
-
-        if (data.success) {
-          setImageUrls((prev) => [...prev, data.files]);
+// Enhanced restore state function
+const restoreStateFromStorage = useCallback(() => {
+  try {
+    const stateStr = localStorage.getItem(DRAFT_STATE_KEY);
+    const timestamp = localStorage.getItem(STATE_TIMESTAMP_KEY);
+    
+    if (stateStr && timestamp) {
+      const state = JSON.parse(stateStr);
+      const timeDiff = Date.now() - parseInt(timestamp, 10);
+      
+      // Restore if state is recent (within 30 minutes) or if we're recovering from a crash
+      if (timeDiff < 30 * 60 * 1000) {
+        console.log("Restoring saved state from storage");
+        
+        // Restore form data
+        if (state.formData) {
+          setFormData(state.formData);
         }
-      } catch (error) {
-        console.error("Upload failed", error);
+        
+        // Restore image URLs
+        if (state.imageUrls && state.imageUrls.length > 0) {
+          setImageUrls(state.imageUrls);
+        }
+        
+        // Clear the storage after restoring
+        localStorage.removeItem(DRAFT_STATE_KEY);
+        localStorage.removeItem(STATE_TIMESTAMP_KEY);
+      } else {
+        // State is too old, clear it
+        localStorage.removeItem(DRAFT_STATE_KEY);
+        localStorage.removeItem(STATE_TIMESTAMP_KEY);
+        localStorage.removeItem(FILE_QUEUE_KEY);
       }
     }
-    setIsUploading(false)
+  } catch (e) {
+    console.error("Failed to restore state:", e);
+    // Clear corrupted data
+    localStorage.removeItem(DRAFT_STATE_KEY);
+    localStorage.removeItem(STATE_TIMESTAMP_KEY);
+    localStorage.removeItem(FILE_QUEUE_KEY);
+  }
+}, []);
+
+// Save file to queue before upload
+const saveFilesToQueue = useCallback(async (files) => {
+  try {
+    const fileDataArray = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Check file size
+      if (file.size > 10 * 1024 * 1024) {
+        console.warn(`File ${file.name} exceeds size limit`);
+        continue;
+      }
+      
+      // Convert file to base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      fileDataArray.push({
+        name: file.name,
+        type: file.type,
+        data: base64,
+        size: file.size,
+        timestamp: Date.now(),
+      });
+    }
+    
+    if (fileDataArray.length > 0) {
+      localStorage.setItem(FILE_QUEUE_KEY, JSON.stringify(fileDataArray));
+      return fileDataArray;
+    }
+  } catch (error) {
+    console.error("Failed to save files to queue:", error);
+  }
+  return [];
+}, []);
+
+// Process queued files
+const processQueuedFiles = useCallback(async () => {
+  try {
+    const queueStr = localStorage.getItem(FILE_QUEUE_KEY);
+    if (!queueStr) return;
+    
+    const queue = JSON.parse(queueStr);
+    if (!queue || queue.length === 0) return;
+    
+    console.log(`Processing ${queue.length} queued files`);
+    
+    // Show notification if not already uploading
+    // if (!isUploading) {
+    //   Swal.fire({
+    //     title: t("Recovering Files"),
+    //     text: t(`Found ${queue.length} file(s) that need to be uploaded.`),
+    //     icon: "info",
+    //     showConfirmButton: false,
+    //     timer: 2000,
+    //   });
+    // }
+    
+    setIsUploading(true);
+    
+    // Upload each file
+    const uploadedFiles = [];
+    const errors = [];
+    
+    for (const fileData of queue) {
+      try {
+        const result = await uploadFileFromData(fileData);
+        if (result) {
+          uploadedFiles.push(result);
+        }
+      } catch (error) {
+        console.error(`Failed to upload ${fileData.name}:`, error);
+        errors.push(fileData.name);
+      }
+    }
+    
+    // Clear queue after processing
+    localStorage.removeItem(FILE_QUEUE_KEY);
+    
+    // Show results
+    // if (errors.length > 0) {
+    //   Swal.fire({
+    //     title: t("Partial Success"),
+    //     html: t(`Uploaded ${uploadedFiles.length} file(s).<br/>Failed: ${errors.join(', ')}`),
+    //     icon: "warning",
+    //     confirmButtonText: t("OK"),
+    //   });
+    // } else if (uploadedFiles.length > 0) {
+    //   Swal.fire({
+    //     title: t("Success"),
+    //     text: t(`Successfully uploaded ${uploadedFiles.length} file(s)`),
+    //     icon: "success",
+    //     confirmButtonText: t("OK"),
+    //   });
+    // }
+    
+  } catch (error) {
+    console.error("Failed to process queued files:", error);
+  } finally {
+    setIsUploading(false);
+  }
+}, [isUploading, t]);
+
+// Enhanced file upload handler
+const handleFileChange = async (e) => {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+  
+  // Save current state immediately
+  saveStateToStorage();
+  
+  // Save files to queue before processing
+  const fileDataArray = await saveFilesToQueue(Array.from(files));
+  
+  if (fileDataArray.length === 0) {
+    Swal.fire({
+      title: t("No Valid Files"),
+      text: t("No files were selected or all files exceed size limit"),
+      icon: "warning",
+      confirmButtonText: t("OK"),
+    });
+    return;
+  }
+  
+  // Start processing
+  setIsUploading(true);
+  
+  try {
+    // Process files immediately
+    for (const fileData of fileDataArray) {
+      await uploadFileFromData(fileData);
+    }
+    
+    // Clear queue after successful upload
+    localStorage.removeItem(FILE_QUEUE_KEY);
+    
+  } catch (error) {
+    console.error("Upload process failed:", error);
+    setError(t("Failed to upload files. Files are saved for retry."));
+    
+    // Keep files in queue for retry
+    Swal.fire({
+      title: t("Upload Failed"),
+      text: t("Files were saved. Please try uploading again."),
+      icon: "error",
+      confirmButtonText: t("OK"),
+    });
+  } finally {
+    setIsUploading(false);
+    
+    // Reset file input
+    if (e.target) {
+      e.target.value = "";
+    }
+    
+    // Force re-render for Android
+    setFileInputKey(Date.now());
+    
+    // Save state after upload attempt
+    saveStateToStorage();
+  }
+};
+
+// Upload file from base64 data
+const uploadFileFromData = async (fileData) => {
+  try {
+    // Convert base64 to blob
+    const base64Response = await fetch(fileData.data);
+    const blob = await base64Response.blob();
+    
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", blob, fileData.name);
+    formDataUpload.append("containerType", "transactions");
+    
+    const { data } = await api.post(`/upload-files`, formDataUpload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${cookieToken}`,
+      },
+    });
+    
+    if (data.success) {
+      // Add to image URLs
+      setImageUrls((prev) => [...prev, data.files]);
+      return data.files;
+    }
+  } catch (error) {
+    console.error("Upload failed:", error);
+    throw error;
+  }
+};
+
+// Enhanced useEffect for state recovery
+// Enhanced useEffect for state recovery - NO WARNINGS
+useEffect(() => {
+  // Check if we're recovering from a page reload
+  const isRecovering = sessionStorage.getItem("is_recovering");
+  
+  if (!isRecovering) {
+    // First load, set recovery flag
+    sessionStorage.setItem("is_recovering", "true");
+    
+    // Check for queued files
+    const hasQueuedFiles = localStorage.getItem(FILE_QUEUE_KEY);
+    
+    if (hasQueuedFiles) {
+      // We have pending files - automatically recover them
+      restoreStateFromStorage();
+      setTimeout(() => {
+        processQueuedFiles();
+      }, 1000);
+    } else {
+      // No queued files, just restore form state if available
+      restoreStateFromStorage();
+    }
+    
+    // Clear recovery flag after a delay
+    setTimeout(() => {
+      sessionStorage.removeItem("is_recovering");
+    }, 3000);
+  } else {
+    // We're in the middle of recovery, just restore state
+    restoreStateFromStorage();
+  }
+  
+  // Set up periodic state saving
+  const saveInterval = setInterval(saveStateToStorage, 15000); // Every 15 seconds
+  
+  // Set up beforeunload handler - NO WARNING
+  const handleBeforeUnload = () => {
+    // Save state silently without showing warning
+    saveStateToStorage();
   };
+  
+  window.addEventListener("beforeunload", handleBeforeUnload);
+  
+  // Set up pagehide for mobile browsers
+  window.addEventListener("pagehide", saveStateToStorage);
+  
+  return () => {
+    clearInterval(saveInterval);
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.removeEventListener("pagehide", saveStateToStorage);
+  };
+}, []);
+
+// Save state on form changes
+useEffect(() => {
+  const timer = setTimeout(() => {
+    saveStateToStorage();
+  }, 1000);
+  
+  return () => clearTimeout(timer);
+}, [formData, imageUrls]);
+useEffect(() => {
+  // Check if file picker was open before reload
+  const wasFilePickerOpen = sessionStorage.getItem("file_picker_open");
+  
+  if (wasFilePickerOpen) {
+    sessionStorage.removeItem("file_picker_open");
+    
+    // Check for queued files
+    const queueStr = localStorage.getItem(FILE_QUEUE_KEY);
+    if (queueStr) {
+      // Auto-process queued files after file picker reload
+      setTimeout(() => {
+        processQueuedFiles();
+      }, 1500);
+    }
+  }
+}, []);
+// Add this function to clear all recovery data when form is successfully submitted
+const clearRecoveryData = () => {
+  localStorage.removeItem(DRAFT_STATE_KEY);
+  localStorage.removeItem(FILE_QUEUE_KEY);
+  localStorage.removeItem(STATE_TIMESTAMP_KEY);
+  sessionStorage.removeItem("is_recovering");
+};
+
 
   useEffect(() => {
     const fetchCurrentDate = async () => {
@@ -225,6 +546,7 @@ const AddBankTransaction = () => {
       });
 
       if (response.data.status === "success") {
+        clearRecoveryData();
         Swal.fire({
           title: t("Success"),
           text: t("Transaction created successfully"),
@@ -488,6 +810,7 @@ const AddBankTransaction = () => {
   };
 
   const handleCancel = () => {
+      clearRecoveryData();
     for (let fileName of imageUrls) {
       handleRemoveImage(fileName);
     }
@@ -859,7 +1182,16 @@ const AddBankTransaction = () => {
                       <button
                         type="button"
                         className="maintenance-add-image-btn"
-                        onClick={() => fileInputRef.current.click()}
+                        onClick={() => {
+    // Save state before opening file picker
+    saveStateToStorage();
+    sessionStorage.setItem("file_picker_open", "true");
+    
+    // Add a small delay to ensure state is saved
+    setTimeout(() => {
+      fileInputRef.current.click();
+    }, 100);
+  }}
                         title="Upload Documents"
                       >
                         +
@@ -1127,7 +1459,14 @@ const AddBankTransaction = () => {
  scrollbar-width: none; 
   -ms-overflow-style: none;
 }
-
+@media (max-width: 500px) {
+.scrollable-preview-container {
+width:150px}
+}
+@media (max-width: 350px) {
+.scrollable-preview-container {
+width:100px}
+}
 .scrollable-preview-container::-webkit-scrollbar {
   display: none;
 }

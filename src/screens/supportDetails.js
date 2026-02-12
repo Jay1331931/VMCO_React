@@ -140,8 +140,44 @@ function SupportDetails() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  
+  // Prevent reload during file upload on Capacitor
+  // Prevent reload during file upload on Capacitor
+  
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Block refresh shortcuts during upload
+      if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        if (uploadingImage || uploadingVideo) {
+          e.preventDefault();
+        }
+      }
+    };
+    
+    const handleBeforeUnload = (e) => {
+      if (uploadingImage || uploadingVideo) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [uploadingImage, uploadingVideo]);
+  
   // Handle image add
   const handleFileUpload = async (e, type) => {
+   sessionStorage.removeItem("file_picker_open");
+  
+  e.preventDefault();
+  e.stopPropagation();
+    
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
@@ -197,12 +233,10 @@ function SupportDetails() {
         confirmButtonColor: "#dc3545"
       });
     } finally {
-      // Reset loading state
-      if (type === "image") {
-        setUploadingImage(false);
-      } else if (type === "video") {
-        setUploadingVideo(false);
-      }
+      
+    if (type === "image") setUploadingImage(false);
+    else if (type === "video") setUploadingVideo(false);
+    e.target.value = "";
     }
 
     e.target.value = "";
@@ -576,14 +610,17 @@ function SupportDetails() {
 
 
   // Open file dialog
-  const openFileDialog = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
-  };
+ const openFileDialog = () => {
+  // Set flag immediately before opening the system dialog
+  sessionStorage.setItem("file_picker_open", "true");
+  if (fileInputRef.current) fileInputRef.current.click();
+};
 
   // Open file dialog for videos
   const openVideoDialog = () => {
-    if (videoInputRef.current) videoInputRef.current.click();
-  };
+  sessionStorage.setItem("file_picker_open", "true");
+  if (videoInputRef.current) videoInputRef.current.click();
+};
 
   // Handle customer selection
   const handleSelectCustomer = (customer) => {

@@ -1774,8 +1774,8 @@ function Cart() {
     if (selectedCustomerStatus.toLowerCase() !== "approved") {
       Swal.fire({
         icon: "warning",
-        title: t("Order Blocked"),
-        text: t("The Customer is not approved to place order."),
+        title: t("Account Blocked"),
+        text: t("Please contact the Sales Executive"),
         confirmButtonText: t("OK"),
       });
       return;
@@ -1787,8 +1787,8 @@ function Cart() {
     ) {
       Swal.fire({
         icon: "warning",
-        title: t("Order Blocked"),
-        text: t("The branch is not approved to place order."),
+        title: t("Account Blocked"),
+        text: t("Please contact the Sales Executive"),
         confirmButtonText: t("OK"),
       });
       return;
