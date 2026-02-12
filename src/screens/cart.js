@@ -1674,7 +1674,7 @@ function Cart() {
         Swal.fire({
           icon: "success",
           title: t("Your Request has been sent for Approval"),
-          text: t("Request sent with orders", {
+          text: t("Request sent with orders" + "#{{orders}}", {
             orders: orderIds.map((id) => `${id}`).join(", "),
             method: selectedPaymentMethod,
           }),
@@ -1774,8 +1774,8 @@ function Cart() {
     if (selectedCustomerStatus.toLowerCase() !== "approved") {
       Swal.fire({
         icon: "warning",
-        title: t("Order Blocked"),
-        text: t("The Customer is not approved to place order."),
+        title: t("Account Blocked"),
+        text: t("Please contact the Sales Executive"),
         confirmButtonText: t("OK"),
       });
       return;
@@ -1787,8 +1787,8 @@ function Cart() {
     ) {
       Swal.fire({
         icon: "warning",
-        title: t("Order Blocked"),
-        text: t("The branch is not approved to place order."),
+        title: t("Account Blocked"),
+        text: t("Please contact the Sales Executive"),
         confirmButtonText: t("OK"),
       });
       return;
@@ -1977,7 +1977,7 @@ function Cart() {
             Swal.fire({
               icon: "success",
               title: t("Your Request has been sent for Approval"),
-              text: t("Request sent with order", { orders: machineOrderId }),
+              text: t("Request sent with order #{{orderId}}", { orderId: machineOrderId }),
               confirmButtonText: t("OK"),
             }).then(() => {
               fetchCartItems();

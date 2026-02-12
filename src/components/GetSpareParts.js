@@ -395,6 +395,7 @@ function GetSpareparts({
           padding: 0;
           animation: gp-fadein 0.2s;
         }
+          
         @keyframes gp-fadein {
           from { opacity: 0; transform: translate(-50%, -60%);}
           to { opacity: 1; transform: translate(-50%, -50%);}

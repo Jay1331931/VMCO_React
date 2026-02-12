@@ -3113,7 +3113,7 @@ renderCell: (params) => {
                     apiEndpoint="/customers/pagination"
                     apiParams={{
                       page: 1,
-                      pageSize: 10,
+                      pageSize: isMobile ? 5 : 10,
                       sortBy: "id",
                       sortOrder: "asc",
                       purpose: "order creation",

@@ -168,13 +168,14 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
         }
           
         .comment-panel {
+          display: none !important;
           position: fixed;
           top: 70px;
           right: 0;
           width: 340px;
           height: 90%;
           background-color: white;
-          z-index: 999;
+          z-index: 1000;
           transform: translateX(100%);
           transition: transform 0.3s ease-in-out;
           display: flex;
@@ -183,9 +184,11 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
           border: lightgrey solid 1px;
         }
         .comment-panel.open {
+          display: block !important;
           transform: translateX(-40px);
         }
         [dir="rtl"] .comment-panel {
+          display: none !important;
           position: fixed;
           top: 70px;
           left: 0;
@@ -193,13 +196,14 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
           width: 340px;
           height: 90%;
           background-color: white;
-          z-index: 999;
+          z-index: 1000;
           transform: translateX(-100%);
           transition: transform 0.3s ease-in-out;
           display: flex;
           flex-direction: column;
         }
         [dir="rtl"] .comment-panel.open {
+          display: block !important;
           transform: translateX(40px);
         }
         .comment-panel-header {
@@ -358,11 +362,11 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
         }
           [dir="rtl"] .comment-button {
           right: auto;
-          left: -10px !important;
+          left: 10px !important;
         }
           .comment-button {
-            top: 70px;
-            right: -10px;
+            top: 100px;
+            right: 10px;
           }
           [dir = "rtl"] .comment-panel {
             width: 75%;

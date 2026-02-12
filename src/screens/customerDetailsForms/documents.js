@@ -136,7 +136,18 @@ const openUrlSmart = (url) => {
   // const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   if (isMobile) {
-    if (window.cordova && window.cordova.InAppBrowser) {
+    // if (window.cordova && window.cordova.InAppBrowser) {
+    // const options = "location=no,toolbar=yes,clearcache=yes,clearsessioncache=yes";
+    
+    // // For Android, standard InAppBrowser cannot show PDFs. 
+    // // We often wrap the URL in Google Docs Viewer to force rendering.
+    // const finalUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
+      
+    //  window.cordova.InAppBrowser.open(finalUrl, '_blank', options);
+    // } else {
+    //   // iOS Safari fallback
+    //   window.open(url, '_blank');
+    // }
     const options = "location=no,toolbar=yes,clearcache=yes,clearsessioncache=yes";
     
     // For Android, standard InAppBrowser cannot show PDFs. 
@@ -144,10 +155,6 @@ const openUrlSmart = (url) => {
     const finalUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
       
      window.cordova.InAppBrowser.open(finalUrl, '_blank', options);
-    } else {
-      // iOS Safari fallback
-      window.open(url, '_blank');
-    }
     // setPopupUrl(url);
     // window.open(url, '_blank');
   } else {

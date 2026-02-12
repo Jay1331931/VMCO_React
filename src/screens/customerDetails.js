@@ -1677,11 +1677,15 @@ const getClientIp = async () => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
 
+  // const isEnglishText = (text) => {
+  //   return /^[\u0000-\u007F\u0080-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\u2C60-\u2C7F\uA720-\uA7FF]+$/.test(
+  //     text
+  //   );
+  // };
   const isEnglishText = (text) => {
-    return /^[\u0000-\u007F\u0080-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\u2C60-\u2C7F\uA720-\uA7FF]+$/.test(
-      text
-    );
-  };
+  return /^[\p{Script=Latin}\p{P}\p{Zs}0-9]+$/u.test(text);
+};
+
 
   const validateData = async (
     dataToValidate,

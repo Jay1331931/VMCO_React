@@ -15,13 +15,54 @@ function Login({ title, userType }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setLogin] = useState(false)
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  
+  // Detect autofill/saved password
+  useEffect(() => {
+    const handleAutofill = () => {
+      console.log("📝 Autofill detected - saved password being filled");
+      sessionStorage.setItem("pageReloadReason", "Autofill/saved password triggered");
+    };
+
+    const emailInput = document.querySelector("input[type='email']");
+    const passwordInput = document.querySelector("input[type='password']");
+
+    if (emailInput) {
+      emailInput.addEventListener("input", (e) => {
+        if (e.target.value && !email) {
+          handleAutofill();
+        }
+      });
+      emailInput.addEventListener("change", handleAutofill);
+    }
+
+    if (passwordInput) {
+      passwordInput.addEventListener("input", (e) => {
+        if (e.target.value && !password) {
+          handleAutofill();
+        }
+      });
+      passwordInput.addEventListener("change", handleAutofill);
+    }
+
+    return () => {
+      if (emailInput) {
+        emailInput.removeEventListener("input", handleAutofill);
+        emailInput.removeEventListener("change", handleAutofill);
+      }
+      if (passwordInput) {
+        passwordInput.removeEventListener("input", handleAutofill);
+        passwordInput.removeEventListener("change", handleAutofill);
+      }
+    };
+  }, [email, password]);
 
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const navigate = useNavigate();
   const API_SERVER_URL = process.env.REACT_APP_API_BASE_URL;
@@ -34,6 +75,9 @@ function Login({ title, userType }) {
   const handleSubmit = async (e) => {
     setLogin(false)
     e.preventDefault();
+    console.log("🔐 Login form submitted");
+    sessionStorage.setItem("pageReloadReason", "Login form submitted");
+    
     if (email === "" || password === "") {
       setError(t("Please fill in all fields"));
     } else {

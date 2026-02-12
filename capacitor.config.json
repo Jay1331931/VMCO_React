@@ -4,21 +4,22 @@
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "build",
-  "server": {
-    "url": "https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
-    "errorPath": "offline.html"
-  },
-  "cordova": {},
   "plugins": {
-    "Camera": {
-      "ios": {
-        "usageDescription": "This app needs access to the camera to take photos"
-      }
+    "Keyboard": {
+      "resize": "none",
+      "resizeOnFullScreen": false,
+      "hideFormAccessoryBar": true,
+      "keyboardDisplayRequiresUserAction": true
     }
-    ,
-     "Keyboard": {
-      "resize": "body",
-    "resizeOnFullScreen": true
-  }
+  },
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "*.azurewebsites.net"
+    ]
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true
   }
 }
