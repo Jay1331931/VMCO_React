@@ -41,7 +41,7 @@
     "Invite": "دعوة",
     "Home": "الرئيسية",
     "Support - tickets": "الدعم - التذاكر",
-    "Ticket #": "رقم التذك#",
+    "Ticket #": "ةرﻛذﺗﻟا  مﻗر",
     "Order#": "رقم الطلب",
     "Order Details": "تفاصيل الطلب",
     "Order Status :": ": حالة الطلب:",
@@ -138,7 +138,7 @@
     "Quantity": "الكمية",
     "Unit": "الوحدة",
     "Paid Amount": "المبلغ المدفوع",
-    "Open": "فتحطلب مفتوح",
+    "Open": "طلب مفتوح",
     "VAT: ": ": ضريبة القيمة المضافة:",
     "Actions": "الإجراءات",
     "Payment Status": "حالة الدفع",
@@ -1037,7 +1037,8 @@
 "Download Started":"بدأ التنزيل",
 "Your file is being saved.":"يتم حفظ ملفك.",
 "Export Failed":"فشل التصدير",
-"An unexpected error occurred during download.":"حدث خطأ غير متوقع أثناء التنزيل."
+"An unexpected error occurred during download.":"حدث خطأ غير متوقع أثناء التنزيل.",
+"Select Business Unit": "نﺎﯾﻛﻟا  رﺗﺧا"
 
 
 
