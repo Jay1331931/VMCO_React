@@ -125,6 +125,12 @@ function GetInventory({ open, onClose, InventoryData, productName }) {
         .gi-close-btn:hover {
           background: #f2f2f2;
         }
+          @media(max-width:768px) {
+          .gi-table-container {
+          overflow-y: auto;
+          max-height: 300px;
+          }
+          }
       `}</style>
     </div>
   );

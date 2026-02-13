@@ -644,8 +644,8 @@ function Orders() {
         page,
         pageSize,
         search: searchTerm,
-        sortBy: sortedModel?.[0]?.field || "id",
-        sortOrder: sortedModel?.[0]?.sort || "asc",
+        sortBy: sortedModel?.[0]?.field || "createdAt",
+        sortOrder: sortedModel?.[0]?.sort || "desc",
         filters: JSON.stringify(filtersCopy),
       });
 
