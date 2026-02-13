@@ -556,12 +556,12 @@ function FinancialInformation({
       return;
     }
     const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "If you have already submitted, please wait 15 minutes to receive the email.",
+      title: t("Are you sure?"),
+      text: t("If you have already submitted, please wait 15 minutes to receive the email."),
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Continue",
-      cancelButtonText: "Cancel",
+      confirmButtonText: t("Continue"),
+      cancelButtonText: t("Cancel"),
       confirmButtonColor: "#1976d2",
       cancelButtonColor: "#d33",
     });
