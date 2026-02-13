@@ -1494,7 +1494,7 @@ onKeyDown={handleKeyDown}
                   disabled={customerFormMode === "custDetailsAdd" && inApproval}
                 >
                   <FontAwesomeIcon icon={faMap} />
-                  <span>Pick Location</span>
+                  <span>{t("Pick Location")}</span>
                 </button>
               </div>
             ) : (
