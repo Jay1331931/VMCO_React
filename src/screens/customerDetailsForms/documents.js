@@ -809,15 +809,15 @@ const openUrlSmart = (url) => {
                 >
                   {tradingFilePreviews?.bankLetter && (
                     <a
-                      href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                      href={tradingFilePreviews?.bankLetter}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.bankLetter);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.bankLetter);
+  // }}
                     >
                       {tradingFilesToUpload.bankLetter.name}
                     </a>
@@ -973,14 +973,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.nationalAddress && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.nationalAddress);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.nationalAddress);
+  // }}
                     >
                       {tradingFilesToUpload.nationalAddress.name}
                     </a>
@@ -1138,14 +1138,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.nationalId && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.nationalId);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.nationalId);
+  // }}
                     >
                       {tradingFilesToUpload.nationalId.name}
                     </a>
@@ -1303,14 +1303,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.crCertificate && (
                     <a
                      href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.crCertificate);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.crCertificate);
+  // }}
                     >
                       {tradingFilesToUpload.crCertificate.name}
                     </a>
@@ -1471,14 +1471,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.vatCertificate && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.vatCertificate);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.vatCertificate);
+  // }}
                     >
                       {tradingFilesToUpload.vatCertificate.name}
                     </a>
@@ -1643,14 +1643,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementShc && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementShc);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementShc);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementShc.name}
                     </a>
@@ -1810,14 +1810,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementNaqi && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementNaqi);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementNaqi);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementNaqi.name}
                     </a>
@@ -1977,14 +1977,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementGmtc && (
                     <a
                      href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementGmtc);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementGmtc);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementGmtc.name}
                     </a>
@@ -2144,14 +2144,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementDar && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementDar);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementDar);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementDar.name}
                     </a>
@@ -2311,14 +2311,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementVmco && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementVmco);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementVmco);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementVmco.name}
                     </a>
@@ -2478,14 +2478,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationShc && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationShc);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationShc);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationShc.name}
                     </a>
@@ -2645,14 +2645,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationNaqi && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationNaqi);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationNaqi);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationNaqi.name}
                     </a>
@@ -2812,14 +2812,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationGmtc && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationGmtc);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationGmtc);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationGmtc.name}
                     </a>
@@ -2979,14 +2979,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationDar && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationDar);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationDar);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationDar.name}
                     </a>
@@ -3146,14 +3146,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationVmco && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationVmco);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationVmco);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationVmco.name}
                     </a>
@@ -3322,14 +3322,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementShc && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementShc);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementShc);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementShc.name}
                     </a>
@@ -3489,14 +3489,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementNaqi && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementNaqi);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementNaqi);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementNaqi.name}
                     </a>
@@ -3656,14 +3656,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementGmtc && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementGmtc);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementGmtc);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementGmtc.name}
                     </a>
@@ -3823,14 +3823,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementDar && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementDar);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementDar);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementDar.name}
                     </a>
@@ -3990,14 +3990,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.contractAgreementVmco && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.contractAgreementVmco);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.contractAgreementVmco);
+  // }}
                     >
                       {tradingFilesToUpload.contractAgreementVmco.name}
                     </a>
@@ -4157,14 +4157,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationShc && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationShc);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationShc);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationShc.name}
                     </a>
@@ -4324,14 +4324,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationNaqi && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationNaqi);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationNaqi);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationNaqi.name}
                     </a>
@@ -4491,14 +4491,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationGmtc && (
                     <a
                      href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationGmtc);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationGmtc);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationGmtc.name}
                     </a>
@@ -4658,14 +4658,14 @@ const openUrlSmart = (url) => {
                   {tradingFilePreviews?.creditApplicationDar && (
                     <a
                       href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationDar);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationDar);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationDar.name}
                     </a>
@@ -4824,15 +4824,15 @@ const openUrlSmart = (url) => {
                 >
                   {tradingFilePreviews?.creditApplicationVmco && (
                     <a
-                      href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                      href={tradingFilePreviews?.creditApplicationVmco}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(tradingFilePreviews.creditApplicationVmco);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(tradingFilePreviews.creditApplicationVmco);
+  // }}
                     >
                       {tradingFilesToUpload.creditApplicationVmco.name}
                     </a>
@@ -5025,15 +5025,15 @@ onKeyDown={handleKeyDown}
                     {nonTradingFilesToUpload["others"].map((file, index) => (
                       <li key={index} className="uploaded-file-item">
                         <a
-                          href="#"
-                  // target="_blank"
-                  // rel="noopener noreferrer"
+                          href={file}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-                  onClick={(e) => {
-    e.preventDefault();
-    openUrlSmart(nonTradingFilePreviews[file.name]);
-  }}
+  //                 onClick={(e) => {
+  //   e.preventDefault();
+  //   openUrlSmart(nonTradingFilePreviews[file.name]);
+  // }}
                         >
                           {file.name}
                         </a>

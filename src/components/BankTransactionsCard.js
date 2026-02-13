@@ -286,7 +286,7 @@ function BankTransactionsCard({ transactions, setSelectedRow, handleAddClick }) 
                     wordBreak: "break-word",
                   }}
                 >
-                  {`${t("Business Unit")}: ${txn?.entity || "-"}`}
+                  {`${t("Business Unit")}: ${t(txn?.entity) || "-"}`}
                 </Typography>
                 <Typography
                   fontSize={12}
@@ -299,7 +299,7 @@ function BankTransactionsCard({ transactions, setSelectedRow, handleAddClick }) 
                 >
                   {`${t("Region")}: ${
                     txn?.salesPersonRegion && txn.salesPersonRegion.length > 0 
-                      ? txn.salesPersonRegion[0] 
+                      ? txn.salesPersonRegion[0].toUpperCase() + txn.salesPersonRegion.slice(1) 
                       : "-"
                   }`}
                 </Typography>

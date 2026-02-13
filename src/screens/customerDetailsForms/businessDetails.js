@@ -426,7 +426,7 @@ onKeyDown={handleKeyDown}
     originalCustomerData?.companyNameEn != customerData?.companyNameEn &&
     mode === "edit" && (
       <div className="current-value">
-        Previous: {originalCustomerData?.companyNameEn || "(empty)"}
+        {t("Previous")}{":"} {originalCustomerData?.companyNameEn || "(empty)"}
       </div>
     )} */}
   {/* {formErrors.companyNameEn && (
@@ -494,7 +494,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.companyType != customerData?.companyType &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.companyType || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.companyType || "(empty)"}
             </div>
           )}
         {formErrors.companyType && (
@@ -560,7 +560,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.companyNameEn != customerData?.companyNameEn &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.companyNameEn || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.companyNameEn || "(empty)"}
             </div>
           )}
         {formErrors.companyNameEn && (
@@ -639,7 +639,7 @@ onKeyDown={handleKeyDown}
     originalCustomerData?.companyNameEn != customerData?.companyNameEn &&
     mode === "edit" && (
       <div className="current-value">
-        Previous: {originalCustomerData?.companyNameEn || "(empty)"}
+        {t("Previous")}{":"} {originalCustomerData?.companyNameEn || "(empty)"}
       </div>
     )}
   {formErrors.companyNameEn && (
@@ -718,7 +718,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.companyNameAr != customerData?.companyNameAr &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.companyNameAr || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.companyNameAr || "(empty)"}
             </div>
           )}
         {formErrors.companyNameAr && (
@@ -798,7 +798,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.crNumber != customerData?.crNumber &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.crNumber || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.crNumber || "(empty)"}
             </div>
           )}
         {formErrors.crNumber && (
@@ -878,7 +878,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.vatNumber != customerData?.vatNumber &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.vatNumber || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.vatNumber || "(empty)"}
             </div>
           )}
         {formErrors.vatNumber && (
@@ -959,7 +959,7 @@ onKeyDown={handleKeyDown}
             customerData?.governmentRegistrationNumber &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerData?.governmentRegistrationNumber || "(empty)"}
             </div>
           )}
@@ -1043,7 +1043,7 @@ onKeyDown={handleKeyDown}
             customerData?.baladeahLicenseNumber &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerData?.baladeahLicenseNumber || "(empty)"}
             </div>
           )}
@@ -1117,7 +1117,7 @@ onKeyDown={handleKeyDown}
             customerData?.deliveryLocations &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.deliveryLocations || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.deliveryLocations || "(empty)"}
             </div>
           )}
         {formErrors.deliveryLocations && (
@@ -1185,7 +1185,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.typeOfBusiness != typeOfBusiness &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.typeOfBusiness || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.typeOfBusiness || "(empty)"}
             </div>
           )}
         {formErrors.typeOfBusiness && (
@@ -1266,7 +1266,7 @@ onKeyDown={handleKeyDown}
               customerData?.typeOfBusinessOther &&
             mode === "edit" && (
               <div className="current-value">
-                Previous:{" "}
+                {t("Previous")}{":"}
                 {originalCustomerData?.typeOfBusinessOther || "(empty)"}
               </div>
             )}
@@ -1346,7 +1346,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.brandNameEn != customerData?.brandNameEn &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.brandNameEn || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.brandNameEn || "(empty)"}
             </div>
           )}
       </div>
@@ -1419,7 +1419,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.brandNameAr != customerData?.brandNameAr &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.brandNameAr || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.brandNameAr || "(empty)"}
             </div>
           )}
       </div>
@@ -1740,7 +1740,7 @@ onKeyDown={handleKeyDown}
               customerData?.customerSource &&
             mode === "edit" && (
               <div className="current-value">
-                Previous: {originalCustomerData?.customerSource || "(empty)"}
+                {t("Previous")}{":"} {originalCustomerData?.customerSource || "(empty)"}
               </div>
             )}
         </div>
@@ -1851,7 +1851,7 @@ onKeyDown={handleKeyDown}
                 originalCustomerData?.entity != customerData?.entity &&
                 mode === "edit" && (
                   <div className="current-value">
-                    Previous: {originalCustomerData?.entity || "(empty)"}
+                    {t("Previous")}{":"} {originalCustomerData?.entity || "(empty)"}
                   </div>
                 )}
               {formErrors.entity && (
@@ -1918,7 +1918,7 @@ onKeyDown={handleKeyDown}
                   customerData?.primaryBusinessUnit &&
                 mode === "edit" && (
                   <div className="current-value">
-                    Previous:{" "}
+                    {t("Previous")}{":"}
                     {originalCustomerData?.primaryBusinessUnit || "(empty)"}
                   </div>
                 )}
@@ -1993,7 +1993,7 @@ onKeyDown={handleKeyDown}
                 originalCustomerData?.branch != customerData?.branch &&
                 mode === "edit" && (
                   <div className="current-value">
-                    Previous: {originalCustomerData?.branch || "(empty)"}
+                    {t("Previous")}{":"} {originalCustomerData?.branch || "(empty)"}
                   </div>
                 )}
               {formErrors.branch && (
@@ -2070,7 +2070,7 @@ onKeyDown={handleKeyDown}
                 originalCustomerData?.assignedTo != customerData?.assignedTo &&
                 mode === "edit" && (
                   <div className="current-value">
-                    Previous: {originalCustomerData?.assignedTo || "(empty)"}
+                    {t("Previous")}{":"} {originalCustomerData?.assignedTo || "(empty)"}
                   </div>
                 )}
               {formErrors.assignedTo && (
@@ -2132,7 +2132,7 @@ onKeyDown={handleKeyDown}
                 customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.assignedToEntityWise?.[
                     Constants.ENTITY.DAR
                   ] || "(empty)"}
@@ -2198,7 +2198,7 @@ onKeyDown={handleKeyDown}
                 customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.assignedToEntityWise?.[
                     Constants.ENTITY.VMCO
                   ] || "(empty)"}
@@ -2263,7 +2263,7 @@ onKeyDown={handleKeyDown}
                 customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.assignedToEntityWise?.[
                     Constants.ENTITY.SHC
                   ] || "(empty)"}
@@ -2328,7 +2328,7 @@ onKeyDown={handleKeyDown}
                 customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.assignedToEntityWise?.[
                     Constants.ENTITY.NAQI
                   ] || "(empty)"}
@@ -2394,7 +2394,7 @@ onKeyDown={handleKeyDown}
                 customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.assignedToEntityWise?.[
                     Constants.ENTITY.GMTC
                   ] || "(empty)"}
