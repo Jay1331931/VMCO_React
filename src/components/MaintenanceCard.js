@@ -16,15 +16,15 @@ function MaintenanceCard({
   const handleTicketClick = (ticket) => setSelectedRow(ticket);
   const { token, user, isAuthenticated, logout } = useAuth();
   const rbacMgr = new RbacManager(
-        user?.userType === "employee"
-            ? user?.roles[0] !== "admin"
-                ? user?.designation
-                : user?.roles[0]
-            : "",
-        "maintList"
-    );
-    const isV = rbacMgr.isV.bind(rbacMgr);
-    const isE = rbacMgr.isE.bind(rbacMgr);
+    user?.userType === "employee"
+      ? user?.roles[0] !== "admin"
+        ? user?.designation
+        : user?.roles[0]
+      : "",
+    "maintList"
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
   // 🎨 Status-based colors
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -56,11 +56,15 @@ function MaintenanceCard({
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+
+    // Force LTR direction using Unicode character
+    return `\u202A${day} ${month} ${year}\u202C`;
   };
 
   const formatTime = (dateString) => {
@@ -74,14 +78,14 @@ function MaintenanceCard({
   };
 
   return (
-    
+
     <div
       style={{
         fontSize: "12px",
         color: "#545454",
         height: "92%",
         position: "relative",
-        padding:"10px"
+        padding: "10px"
       }}
     >
       <Grid
@@ -172,20 +176,36 @@ function MaintenanceCard({
                         ? ticket?.companyNameAr || "Unknown Customer"
                         : ticket?.companyNameEn || "Unknown Customer"}
                     </Typography>
+                    <Typography
+                      fontSize={12}
+                      fontWeight={600}
+                      noWrap
+                      title={ticket?.companyNameEn || ticket?.companyNameAr}
+                      sx={{
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        width: "100%",
+                      }}
+                    >
+                      {i18n.language === "ar"
+                        ? ticket?.branchNameLc || "Unknown Customer"
+                        : ticket?.branchNameEn || "Unknown Customer"}
+                    </Typography>
                     {ticket?.isOpen && isV("daysOpen") && (<Typography
-                                          fontSize={11}
-                                          // fontWeight={500}
-                                          color="white"
-                                          // sx={{
-                                          //   lineHeight: 1.2,
-                                          //   textAlign: "right",
-                                          // }}
-                                        >
-                                                                    <Typography component="span" fontWeight={600} fontSize={11} color="white">
-                                                                      {t("Days Open")}
-                                                                    </Typography>
-                                                                    {`: ${ticket?.daysOpen || 0}`}
-                                                                  </Typography>)}
+                      fontSize={11}
+                      // fontWeight={500}
+                      color="white"
+                    // sx={{
+                    //   lineHeight: 1.2,
+                    //   textAlign: "right",
+                    // }}
+                    >
+                      <Typography component="span" fontWeight={600} fontSize={11} color="white">
+                        {t("Days Open")}
+                      </Typography>
+                      {`: ${ticket?.daysOpen || 0}`}
+                    </Typography>)}
                     {/* <Typography
                       fontSize={12}
                       color="white"
@@ -287,9 +307,17 @@ function MaintenanceCard({
                       color="textSecondary"
                       sx={{ mt: 0.3 }}
                     >
-                      {`${t("Urgency Level")}: ${
-                        ticket?.urgencyLevel || t("Normal")
-                      }`}
+                      {`${t("Urgency Level")}: ${ticket?.urgencyLevel || t("Normal")
+                        }`}
+                    </Typography>
+                    <Typography
+                      fontSize={12}
+                      fontWeight={500}
+                      color="textSecondary"
+                      sx={{ mt: 0.3 }}
+                    >
+                      {t("assignedTo")}: {ticket?.assignedTo || "-"}
+
                     </Typography>
                   </div>
 
