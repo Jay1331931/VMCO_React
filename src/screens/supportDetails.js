@@ -1198,7 +1198,7 @@ function SupportDetails() {
           <div className='support-details-grid'>
             {isV('customerName') && (
               <div className='support-details-field'>
-                <label>{t("Customer Name")} *</label>
+                <label>{t("Customer Name")}<span className="required-field">*</span></label>
                 <input
                   value={companyNameToShow || ""}
                   readOnly
@@ -1210,7 +1210,7 @@ function SupportDetails() {
             )}
             {isV('branchName') && (
               <div className='support-details-field'>
-                <label htmlFor='branchId'>{t("Branch")} *</label>
+                <label htmlFor='branchId'>{t("Branch")}<span className="required-field">*</span></label>
                 <input
                   value={currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || "")}
                   readOnly
@@ -1227,59 +1227,9 @@ function SupportDetails() {
                 />
               </div>
             )}
-            {/* {isV('entity') && (
-              <div className='support-details-field'>
-                <label>{t("Business Unit")} *</label>
-                <select
-                  id='entity'
-                  name='entity'
-                  value={ticket.entity || ""}
-                  onChange={handleInputChange}
-                  disabled={!isE("entity") || isReadOnly}
-                  style={{
-                    color: '#999',
-                  }}
-                >
-                  <option value="" style={{ color: '#000000ff' }}>
-                    {t("Select Business Unit")}
-                  </option>
-                  {entityOptions.map((entity, index) => (
-                    <option
-                      key={index}
-                      value={entity.value || entity}
-                      style={{ color: '#000' }}
-                    >
-                      {entity.displayText || entity}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {isV('issueType') && (
-              <div className='support-details-field'>
-                <label>{t("Issue Type")} *</label>
-                <select
-                  id='grievanceType'
-                  name='grievanceType'
-                  value={ticket.grievanceType || ""}
-                  onChange={handleInputChange}
-                  disabled={!isE("issueType") || isReadOnly}
-                  style={{
-                    color: '#999',
-                  }}
-                >
-                  <option value="" style={{ color: '#000000ff' }}>{t("Select Issue Type")}</option>
-                  {issueTypeOptions.map((issueType, index) => (
-                    <option key={index} value={issueType.value || issueType} style={{ color: '#000' }}>
-                      {issueType.displayText || issueType}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )} */}
             {isV("entity") && (
               <div className="support-details-field">
-                <label>{t("Business Unit")} *</label>
+                <label>{t("Business Unit")}<span className="required-field">*</span></label>
 
                 <SearchableDropdown
                   name="entity"
@@ -1299,7 +1249,7 @@ function SupportDetails() {
             )}
             {isV("issueType") && (
               <div className="support-details-field">
-                <label>{t("Issue Type")} *</label>
+                <label>{t("Issue Type")}<span className="required-field">*</span></label>
 
                 <SearchableDropdown
                   name="grievanceType"
@@ -1320,7 +1270,7 @@ function SupportDetails() {
 
             {isV('issueName') && (
               <div className='support-details-field'>
-                <label>{t("Issue Name")} *</label>
+                <label>{t("Issue Name")}<span className="required-field">*</span></label>
                 <input id='grievanceName' name='grievanceName' onChange={handleInputChange} value={ticket.grievanceName || ""} disabled={!isE("issueName") || isReadOnly} />
               </div>
             )}
@@ -1333,7 +1283,7 @@ function SupportDetails() {
           </div>
           {isV('issueDetails') && (
             <div className='support-details-field support-details-textarea'>
-              <label>{t("Issue Details")} *</label>
+              <label>{t("Issue Details")}<span className="required-field">*</span></label>
               <textarea
                 id='description'
                 name='description'
@@ -1367,7 +1317,6 @@ function SupportDetails() {
                     )}
                     {images.length <= 6 && <input type='file' accept='image/png,image/jpg,image/jpeg' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
                     <div className="scrollable-image-row">
-                      {/* Loading spinner for image upload */}
                       {uploadingImage && (
                         <div className='maintenance-image-placeholder upload-loading'>
                           <LoadingSpinner size="small" />
@@ -1410,7 +1359,6 @@ function SupportDetails() {
                 <div className='maintenance-details-videos'>
                   <label>{t("Videos")}</label>
                   <div className='maintenance-images-list'>
-                    {/* Add Video Button */}
                     {isE('addVideo') && !isReadOnly && videos?.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
                         +
@@ -1418,7 +1366,6 @@ function SupportDetails() {
                     )}
                     {videos?.length <= 6 && <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "video")} />}
                     <div className="scrollable-image-row">
-                      {/* Loading spinner for video upload */}
                       {uploadingVideo && (
                         <div className='maintenance-video-placeholder upload-loading'>
                           <LoadingSpinner size="small" />
@@ -1479,7 +1426,6 @@ function SupportDetails() {
                   cursor: "pointer",
                   marginTop: "10px",
                   marginLeft: "auto",
-                  /* Default for LTR */
                   marginRight: "10px"
                 }} onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment}>
                   {t("Submit Feedback")}
@@ -1503,10 +1449,7 @@ function SupportDetails() {
               <div style={{
                 display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '6px'
               }}>
-                {/* Assigned to Label */}
                 <span style={{ fontWeight: isMobile ? 'bold' : '' }}>{formMode === "add" ? t("Assign To:") : t("Assigned To:")}</span>
-
-                {/* Department Selection */}
                 <div>
                   <span>{t("Department:")}</span>
                   <SearchableDropdown
@@ -1521,7 +1464,6 @@ function SupportDetails() {
                   />
                 </div>
 
-                {/* Assignee Selection */}
                 <div>
                   <span>{t("Employee:")}</span>
                   <SearchableDropdown
@@ -1552,7 +1494,6 @@ function SupportDetails() {
                     {saving ? t("Saving...") : t("Save")}
                   </button>
                 )}
-                {/* Close Ticket Button - only show for existing tickets that are not already closed */}
                 {formMode === "edit" && !isReadOnly && isV('btnCloseTicket') && isE('btnCloseTicket') && (
                   <button
                     className="support-action-btn close"
@@ -1568,7 +1509,6 @@ function SupportDetails() {
                   </button>
                 )}
 
-                {/* Reject Ticket Button - for edit mode */}
                 {formMode === "edit" && !isReadOnly && isV('btnReject') && isE('btnReject') && (
                   <button
                     className="support-action-btn reject"
@@ -1580,7 +1520,6 @@ function SupportDetails() {
                   </button>
                 )}
 
-                {/* Cancel Button */}
                 {isV('btnCancel') && isE('btnCancel') && (
                   <button
                     className="support-action-btn cancel"
@@ -1635,8 +1574,6 @@ function SupportDetails() {
           isVisible={user?.userType === 'employee' && formMode === 'edit' && isV('commentPanel')}
         />
       )}
-
-      {/* Customer Selection Popup */}
       <GetCustomers
         open={showCustomerPopup}
         onClose={() => setShowCustomerPopup(false)}
@@ -1651,8 +1588,6 @@ function SupportDetails() {
           sortOrder: 'asc'
         }}
       />
-
-      {/* Branch Selection Popup */}
       <GetBranches
         open={showBranchPopup}
         onClose={() => setShowBranchPopup(false)}
@@ -1661,8 +1596,6 @@ function SupportDetails() {
         API_BASE_URL={API_BASE_URL}
         t={t}
       />
-
-      {/* Approval Dialog box Popup */}
       <ApprovalDialog
         action={approvalAction}
         isOpen={isApprovalDialogOpen}

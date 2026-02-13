@@ -16,15 +16,15 @@ function SupportCard({
   const handleTicketClick = (ticket) => setSelectedRow(ticket);
   const { token, user, isAuthenticated, logout } = useAuth();
   const rbacMgr = new RbacManager(
-        user?.userType === "employee"
-            ? user?.roles[0] !== "admin"
-                ? user?.designation
-                : user?.roles[0]
-            : "",
-        "supList"
-    );
-    const isV = rbacMgr.isV.bind(rbacMgr);
-    const isE = rbacMgr.isE.bind(rbacMgr);
+    user?.userType === "employee"
+      ? user?.roles[0] !== "admin"
+        ? user?.designation
+        : user?.roles[0]
+      : "",
+    "supList"
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
   // 🎨 Status-based colors
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -56,11 +56,15 @@ function SupportCard({
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+
+    // Force LTR direction using Unicode character
+    return `\u202A${day} ${month} ${year}\u202C`;
   };
 
   return (
@@ -169,16 +173,16 @@ function SupportCard({
                       fontSize={11}
                       // fontWeight={500}
                       color="white"
-                      // sx={{
-                      //   lineHeight: 1.2,
-                      //   textAlign: "right",
-                      // }}
+                    // sx={{
+                    //   lineHeight: 1.2,
+                    //   textAlign: "right",
+                    // }}
                     >
-                                                <Typography component="span" fontWeight={600} fontSize={11} color="white">
-                                                  {t("Days Open")}
-                                                </Typography>
-                                                {`: ${ticket?.daysOpen || 0}`}
-                                              </Typography>)}
+                      <Typography component="span" fontWeight={600} fontSize={11} color="white">
+                        {t("Days Open")}
+                      </Typography>
+                      {`: ${ticket?.daysOpen || 0}`}
+                    </Typography>)}
                   </div>
 
                   {/* Right Side - Status & Date */}
@@ -255,8 +259,8 @@ function SupportCard({
                       flex: 1,
                       marginRight: "8px",
                       minWidth: 0,
-                      gap:"6px"
-                      
+                      gap: "6px"
+
                     }}
                   >
                     <Typography
@@ -273,7 +277,7 @@ function SupportCard({
                       color="textSecondary"
                       sx={{ lineHeight: 1.2 }}
                     >
-                      {`${t("ERP ID")}:${ticket?.erpCustId || "-"}`}
+                      {user.userType.toLowerCase() === "employee" && `${t("ERP ID")}:${ticket?.erpCustId || "-"}`}
                     </Typography>
                     <Typography
                       fontSize={12}
@@ -285,13 +289,13 @@ function SupportCard({
                         width: "100%",
                         display: "flex",
                         alignItems: "flex-start",
-                         flex: 1,
-                          wordBreak: "break-word",
+                        flex: 1,
+                        wordBreak: "break-word",
                       }}
                     >
-                      
-                        {t("Issue Name")}:{ticket?.grievanceName || "-"}
-                    
+
+                      {t("Issue Name")}:{ticket?.grievanceName || "-"}
+
                     </Typography>
                   </div>
 
@@ -302,7 +306,7 @@ function SupportCard({
                       flexDirection: "column",
                       width: "50%", // Fixed width instead of minWidth
                       flexShrink: 0,
-                       gap:"6px"
+                      gap: "6px"
                     }}
                   >
                     <Typography
@@ -316,43 +320,43 @@ function SupportCard({
                         display: "flex",
                         alignItems: "flex-start",
                         flex: 1,
-                          // wordBreak: "break-word",
+                        // wordBreak: "break-word",
                       }}
                     >
-                     
-                        {t("assignedTo")}: {ticket?.assignedTo || "-"}
-                   
+
+                      {t("assignedTo")}: {ticket?.assignedTo || "-"}
+
                     </Typography>
                     <Typography
                       fontSize={12}
-                         fontWeight={500}
+                      fontWeight={500}
                       color="textSecondary"
                       sx={{ lineHeight: 1.2 }}
                     >
-                      {`${t("Business Unit")}: ${ticket?.entity || "-"}`}
+                      {`${t("Business Unit")}: ${t(ticket?.entity || "-")}`}
                     </Typography>
 
                     <Typography
                       fontSize={12}
-                         fontWeight={500}
+                      fontWeight={500}
                       color="textSecondary"
                       sx={{
                         width: "100%",
                         display: "flex",
                         alignItems: "flex-start",
                         flex: 1,
-                          lineHeight: 1.2,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          // wordBreak: "break-word",
+                        lineHeight: 1.2,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        // wordBreak: "break-word",
                       }}
                     >
-                     
-                        {t("Issue Type")}:{ticket?.grievanceType || "-"}
-                    
+
+                      {t("Issue Type")}:{ticket?.grievanceType || "-"}
+
                     </Typography>
                   </div>
                 </Grid>
