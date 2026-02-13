@@ -783,7 +783,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.bankName != customerData?.bankName &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.bankName || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.bankName || "(empty)"}
             </div>
           )}
         {formErrors.bankName && (
@@ -853,7 +853,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.bankName != bankName &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.bankName || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.bankName || "(empty)"}
             </div>
           )}
         {formErrors.bankName && (
@@ -935,7 +935,7 @@ onKeyDown={handleKeyDown}
             customerData?.bankNameOther &&
             mode === "edit" && (
               <div className="current-value">
-                Previous: {originalCustomerData?.bankNameOther || "(empty)"}
+                {t("Previous")}{":"} {originalCustomerData?.bankNameOther || "(empty)"}
               </div>
             )}
           {formErrors.bankNameOther && (
@@ -1019,7 +1019,7 @@ onKeyDown={handleKeyDown}
           customerData?.bankAccountNumber &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.bankAccountNumber || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.bankAccountNumber || "(empty)"}
             </div>
           )}
         {formErrors.bankAccountNumber && (
@@ -1097,7 +1097,7 @@ onKeyDown={handleKeyDown}
           originalCustomerData?.iban != customerData?.iban &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.iban || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.iban || "(empty)"}
             </div>
           )}
         {formErrors.iban && <div className="error">{t(formErrors.iban)}</div>}
@@ -1158,7 +1158,7 @@ onKeyDown={handleKeyDown}
               customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.pricingPolicy?.[
                     Constants.ENTITY.DAR
                   ] || "(empty)"}
@@ -1215,7 +1215,7 @@ onKeyDown={handleKeyDown}
               customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.pricingPolicy?.[
                     Constants.ENTITY.VMCO
                   ] || "(empty)"}
@@ -1272,7 +1272,7 @@ onKeyDown={handleKeyDown}
               customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.pricingPolicy?.[
                     Constants.ENTITY.SHC
                   ] || "(empty)"}
@@ -1330,7 +1330,7 @@ onKeyDown={handleKeyDown}
               customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.pricingPolicy?.[
                     Constants.ENTITY.NAQI
                   ] || "(empty)"}
@@ -1388,7 +1388,7 @@ onKeyDown={handleKeyDown}
               customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
               mode === "edit" && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {originalCustomerData?.pricingPolicy?.[
                     Constants.ENTITY.GMTC
                   ] || "(empty)"}
@@ -1614,7 +1614,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.DAR]?.limit || "(empty)"}
                       </div>
@@ -1685,7 +1685,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.DAR]?.period || "(empty)"}
                       </div>
@@ -1783,7 +1783,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.VMCO]?.limit || "(empty)"}
                       </div>
@@ -1854,7 +1854,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.VMCO]?.period || "(empty)"}
                       </div>
@@ -1952,7 +1952,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.SHC]?.limit || "(empty)"}
                       </div>
@@ -2023,7 +2023,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.SHC]?.period || "(empty)"}
                       </div>
@@ -2121,7 +2121,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.NAQI]?.limit || "(empty)"}
                       </div>
@@ -2192,7 +2192,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.NAQI]?.period || "(empty)"}
                       </div>
@@ -2290,7 +2290,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.limit &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.GMTC]?.limit || "(empty)"}
                       </div>
@@ -2361,7 +2361,7 @@ onKeyDown={handleKeyDown}
                     paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
                     mode === "edit" && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalCustomerPaymentMethodsData?.methodDetails
                           ?.credit?.[Constants.ENTITY.GMTC]?.period || "(empty)"}
                       </div>
