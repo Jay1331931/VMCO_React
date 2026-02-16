@@ -12,6 +12,8 @@ import Constants from "../../constants";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import i18n from "../../i18n";
 import usePlatform from "../../utilities/platform";
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { FileOpener } from '@capawesome-team/capacitor-file-opener';
 // import { Document, Page, pdfjs } from 'react-pdf';
 // import PDFWorker from "pdfjs-dist/webpack";
 // import { WorkerMessageHandler } from "pdfjs-dist/build/pdf.worker.min.mjs";
@@ -81,6 +83,7 @@ const isMobile=usePlatform()
     creditApplication: null,
   });
   const [tradingFilePreviews, setTradingFilePreviews] = useState({});
+   const [tradingFilesToNativeUpload, setTradingFilesToNativeUpload] = useState({})
   const [nonTradingFilePreviews, setNonTradingFilePreviews] = useState({});
   const [popupUrl, setPopupUrl] = useState(null);
   const fileInputRefs = {
@@ -132,37 +135,68 @@ const [customDocName, setCustomDocName] = useState("");
     top: Math.round(top)
   };
 }
-const openUrlSmart = (url) => {
-  // const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+const openPdfInNativeApp = async (file) => {
+  try {
+    // 1. Convert File to Base64
+    const reader = new FileReader();
+    const base64Data = await new Promise((resolve, reject) => {
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
-  if (isMobile) {
-    // if (window.cordova && window.cordova.InAppBrowser) {
-    // const options = "location=no,toolbar=yes,clearcache=yes,clearsessioncache=yes";
+    // 2. Save file to Cache (Temporary storage)
+    const fileName = `preview_${Date.now()}.pdf`;
     
-    // // For Android, standard InAppBrowser cannot show PDFs. 
-    // // We often wrap the URL in Google Docs Viewer to force rendering.
-    // const finalUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
-      
-    //  window.cordova.InAppBrowser.open(finalUrl, '_blank', options);
-    // } else {
-    //   // iOS Safari fallback
-    //   window.open(url, '_blank');
-    // }
-    const options = "location=no,toolbar=yes,clearcache=yes,clearsessioncache=yes";
+    const savedFile = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Cache,
+    });
+
+    // 3. Open the file using FileOpener (This is the fix)
+    // We use savedFile.uri which points to the actual physical path
+    await FileOpener.openFile({
+      path: savedFile.uri,
+      mimeType: 'application/pdf',
+    });
+    
+  } catch (error) {
+    console.error('Detailed Error:', error);
+    alert('Could not open PDF. Make sure a PDF viewer is installed.');
+  }
+};
+const openUrlSmart = (url, documentType=null) => {
+  const isCapacitor = window.Capacitor?.isNativePlatform();
+  
+  // Handle Blob/Local Files in Native App
+  if (isCapacitor && documentType&& (url?.startsWith('blob:') || url?.startsWith('data:'))) {
+    // Assuming tradingFilesToNativeUpload is accessible in this scope
+    const file = tradingFilesToNativeUpload[documentType]; 
+    if (file) {
+      openPdfInNativeApp(file);
+      return;
+    }
+  }
+  
+  // Standard Web/Remote URL handling
+  if (isCapacitor) {
+     const options = "location=no,toolbar=yes,clearcache=yes,clearsessioncache=yes";
     
     // For Android, standard InAppBrowser cannot show PDFs. 
     // We often wrap the URL in Google Docs Viewer to force rendering.
     const finalUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
       
      window.cordova.InAppBrowser.open(finalUrl, '_blank', options);
-    // setPopupUrl(url);
-    // window.open(url, '_blank');
   } else {
-    // Desktop
-    window.open(url, '_blank');
-    // setPopupUrl(url);
+    // Standard Desktop Web
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 };
+
 
   // Handle file upload for specific document types
   const handleTradingDocumentChange = (e, documentType) => {
@@ -205,17 +239,22 @@ const openUrlSmart = (url) => {
     }
 
       // Update the specific document in state
+      
       setTradingDocuments((prevDocs) => ({
         ...prevDocs,
         [documentType]: file,
       }));
-      docListToUpload[documentType] = file; // Update the passed object
+          docListToUpload[documentType] = file; // Update the passed object
       tradingFilesToUpload[documentType] = file; // Update the local state
       // Generate preview URL
       const previewUrl = URL.createObjectURL(file);
       setTradingFilePreviews((prev) => ({
         ...prev,
         [documentType]: previewUrl,
+      }));
+      setTradingFilesToNativeUpload((prev) => ({
+        ...prev,
+        [documentType]: file,
       }));
     }
   };
@@ -808,17 +847,17 @@ const openUrlSmart = (url) => {
                   className="uploaded-file-item"
                 >
                   {tradingFilePreviews?.bankLetter && (
-                    <a
-                      href={tradingFilePreviews?.bankLetter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="file-link"
-                  style={{ marginLeft: 8 }}
-  //                 onClick={(e) => {
-  //   e.preventDefault();
-  //   openUrlSmart(tradingFilePreviews.bankLetter);
-  // }}
-                    >
+  <a
+    href={tradingFilePreviews?.bankLetter}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="file-link"
+    style={{ marginLeft: 8 }}
+    onClick={(e) => {
+      e.preventDefault();
+      openUrlSmart(tradingFilePreviews.bankLetter,"bankLetter");
+    }}
+  >
                       {tradingFilesToUpload.bankLetter.name}
                     </a>
                   )}
