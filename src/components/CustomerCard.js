@@ -123,7 +123,7 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                       <Typography component="span" fontWeight={600} fontSize={12}>
                         {t("Workflow")}
                       </Typography>
-                    {`: ${customer?.workflowName}`}
+                    {`: ${t(customer?.workflowName)}`}
                   </Typography>)}
                 </div>
 

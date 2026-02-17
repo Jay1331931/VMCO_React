@@ -2899,6 +2899,8 @@ if (field === "methodDetails" &&
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
         declarationDate: customerData.declarationDate,
+        brandNameEn: customerData.brandNameEn || customerData.companyNameEn,
+        brandNameAr: customerData.brandNameAr || customerData.companyNameAr,
       };
       const saved = await handleSave("submit");
       if(!saved) {

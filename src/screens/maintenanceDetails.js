@@ -1342,7 +1342,7 @@ function MaintenanceDetails() {
           <div className='maintenance-details-grid'>
             {isV('customerName') && (
               <div className='maintenance-details-field'>
-                <label>{t("Customer Name")} *</label>
+                <label>{t("Customer Name")}<span className="required-field">*</span></label>
                 <input
                   value={companyNameToShow || ""}
                   readOnly
@@ -1365,7 +1365,7 @@ function MaintenanceDetails() {
             )}
             {isV('branchName') && (
               <div className='maintenance-details-field'>
-                <label htmlFor='branchId'>{t("Branch")} *</label>
+                <label htmlFor='branchId'>{t("Branch")}<span className="required-field">*</span></label>
                 <input
                   value={currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || "")}
                   readOnly
@@ -1417,7 +1417,7 @@ function MaintenanceDetails() {
             )} */}
             {isV("issueType") && (
               <div className="maintenance-details-field">
-                <label>{t("Issue Type")} *</label>
+                <label>{t("Issue Type")}<span className="required-field">*</span></label>
 
                 <SearchableDropdown
                   name="issueType"
@@ -1441,7 +1441,7 @@ function MaintenanceDetails() {
 
             {isV('machine') && (
               <div className='maintenance-details-field'>
-                <label>{t("Machine")} *</label>
+                <label>{t("Machine")}<span className="required-field">*</span></label>
                 <input
                   id="machineInput"
                   type="text"
@@ -1490,7 +1490,7 @@ function MaintenanceDetails() {
             )}
             {isV('machineSerialNumber') && (
               <div className='maintenance-details-field'>
-                <label>{t("Machine Serial Number")} *</label>
+                <label>{t("Machine Serial Number")}<span className="required-field">*</span></label>
                 <input
                   id="machineSerialNumber"
                   name="machineSerialNumber"
@@ -1563,7 +1563,7 @@ function MaintenanceDetails() {
           </div>
           {isV('issueDetails') && (
             <div className='maintenance-details-field maintenance-details-textarea'>
-              <label>{t("Issue Details")} *</label>
+              <label>{t("Issue Details")}<span className="required-field">*</span></label>
               <textarea
                 id='issueDetails'
                 name='issueDetails'
@@ -1941,6 +1941,7 @@ function MaintenanceDetails() {
           customerId={user?.userType === 'customer' ? user.customerId : ticket.customerId}
           entity={Constants.ENTITY.VMCO}
           category={Constants.CATEGORY.VMCO_MACHINES}
+          t={t}
           machineMode={true}
         />
       )}

@@ -1295,7 +1295,7 @@ onKeyDown={handleKeyDown}
               )}
               {hasUpdate && (
                 <div className="current-value">
-                  Previous:{" "}
+                  {t("Previous")}{":"}
                   {field.isLocation
                     ? getLocationDisplay(currentValue)
                     : originalBranch?.[field.name] || "(empty)"}
@@ -1494,7 +1494,7 @@ onKeyDown={handleKeyDown}
                   disabled={customerFormMode === "custDetailsAdd" && inApproval}
                 >
                   <FontAwesomeIcon icon={faMap} />
-                  <span>Pick Location</span>
+                  <span>{t("Pick Location")}</span>
                 </button>
               </div>
             ) : (
@@ -1572,7 +1572,7 @@ onKeyDown={handleKeyDown}
           {hasUpdate && (
             <div className="current-value-mobile">
               <FontAwesomeIcon icon={faHistory} />
-              <span className="previous-label">Previous:</span>
+              <span className="previous-label">{t("Previous")}{":"}</span>
               <span className="previous-value">
                 {field.isLocation
                   ? getLocationDisplay(currentValue)

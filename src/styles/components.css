@@ -2385,9 +2385,6 @@ body.catalog-page {
   margin-bottom: 12px;
 }
 
-/* .support-details-field {
-  margin-bottom: 16px;
-} */
 
 .support-details-field label {
   font-size: 0.95rem;
@@ -2402,7 +2399,7 @@ body.catalog-page {
   padding: 7px 10px;
   border: 1px solid #d9d9d6;
   border-radius: var(--border-radius);
-  background: #f7f8fa;
+  background: #ffffff;
   font-size: 1rem;
   color: #222;
 }
@@ -2417,7 +2414,7 @@ body.catalog-page {
   min-height: 100px;
   border: 1px solid #d9d9d6;
   border-radius: var(--border-radius);
-  background: #f7f8fa;
+  background: #ffffff;
   font-size: 1rem;
   color: #222;
   padding: 10px;
@@ -2753,7 +2750,7 @@ body.catalog-page {
   padding: 7px 10px;
   border: 1px solid #d9d9d6;
   border-radius: var(--border-radius);
-  background: #f7f8fa;
+  background: #ffffff;
   font-size: 1rem;
   color: #222;
 }
@@ -2797,7 +2794,6 @@ body.catalog-page {
   /* Change from center to flex-start for better wrapping */
   border: 1px solid #d9d9d6;
   border-radius: var(--border-radius);
-  background-color: #f7f8fa;
   overflow-y: auto;
   /* Add scroll if content gets too tall */
   max-height: 300px;
@@ -2837,7 +2833,6 @@ body.catalog-page {
   /* Change from center to flex-start for better wrapping */
   border: 1px solid #d9d9d6;
   border-radius: var(--border-radius);
-  background-color: #f7f8fa;
   overflow-y: auto;
   /* Add scroll if content gets too tall */
   max-height: 300px;

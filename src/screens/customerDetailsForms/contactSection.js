@@ -752,7 +752,7 @@ onKeyDown={handleKeyDown}
       <h3 className="section-title-mobile">{t("Personal Details")}</h3>
     </div>
     <div className="section-subtitle-mobile">
-      Contact information for branch personnel
+      {t("Contact information for branch personnel")}
     </div>
   </div>
 
@@ -808,7 +808,7 @@ onKeyDown={handleKeyDown}
                   {hasUpdate && (
                     <span className="update-indicator-mobile">
                       <span className="update-dot"></span>
-                      <span className="update-text">Updated</span>
+                      <span className="update-text">{t("Updated")}</span>
                     </span>
                   )}
                 </div>
@@ -969,7 +969,7 @@ onKeyDown={handleKeyDown}
                 {hasUpdate && originalBranchContacts?.[field] && (
                   <div className="previous-value-mobile">
                     <FontAwesomeIcon icon={faHistory} />
-                    <span className="previous-label">Previous:</span>
+                    <span className="previous-label">{t("Previous")}{":"}</span>
                     <span className="previous-text">{originalBranchContacts[field]}</span>
                   </div>
                 )}

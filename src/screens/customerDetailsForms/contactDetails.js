@@ -946,7 +946,7 @@ function ContactDetails({
           customerContactsData?.primaryContactName &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.primaryContactName || "(empty)"}
             </div>
           )}
@@ -1037,7 +1037,7 @@ function ContactDetails({
           customerContactsData?.primaryContactDesignation &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.primaryContactDesignation ||
                 "(empty)"}
             </div>
@@ -1141,7 +1141,7 @@ function ContactDetails({
           customerContactsData?.primaryContactEmail &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.primaryContactEmail || "(empty)"}
             </div>
           )}
@@ -1224,7 +1224,7 @@ function ContactDetails({
           customerContactsData?.primaryContactMobile &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.primaryContactMobile || "(empty)"}
             </div>
           )}
@@ -1337,7 +1337,7 @@ function ContactDetails({
           customerContactsData?.businessHeadName &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.businessHeadName || "(empty)"}
             </div>
           )}
@@ -1430,7 +1430,7 @@ function ContactDetails({
           customerContactsData?.businessHeadDesignation &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.businessHeadDesignation ||
                 "(empty)"}
             </div>
@@ -1520,7 +1520,7 @@ function ContactDetails({
           customerContactsData?.businessHeadEmail &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.businessHeadEmail || "(empty)"}
             </div>
           )}
@@ -1604,7 +1604,7 @@ function ContactDetails({
           customerContactsData?.businessHeadMobile &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.businessHeadMobile || "(empty)"}
             </div>
           )}
@@ -1704,7 +1704,7 @@ function ContactDetails({
           customerContactsData?.financeHeadName &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.financeHeadName || "(empty)"}
             </div>
           )}
@@ -1804,7 +1804,7 @@ function ContactDetails({
           customerContactsData?.financeHeadDesignation &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.financeHeadDesignation ||
                 "(empty)"}
             </div>
@@ -1903,7 +1903,7 @@ function ContactDetails({
           customerContactsData?.financeHeadEmail &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.financeHeadEmail || "(empty)"}
             </div>
           )}
@@ -1995,7 +1995,7 @@ function ContactDetails({
           customerContactsData?.financeHeadMobile &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.financeHeadMobile || "(empty)"}
             </div>
           )}
@@ -2095,7 +2095,7 @@ function ContactDetails({
           customerContactsData?.purchasingHeadName &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.purchasingHeadName || "(empty)"}
             </div>
           )}
@@ -2197,7 +2197,7 @@ function ContactDetails({
           customerContactsData?.purchasingHeadDesignation &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.purchasingHeadDesignation ||
                 "(empty)"}
             </div>
@@ -2296,7 +2296,7 @@ function ContactDetails({
           customerContactsData?.purchasingHeadEmail &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.purchasingHeadEmail || "(empty)"}
             </div>
           )}
@@ -2388,7 +2388,7 @@ function ContactDetails({
           customerContactsData?.purchasingHeadMobile &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {originalCustomerContactsData?.purchasingHeadMobile || "(empty)"}
             </div>
           )}
@@ -2477,7 +2477,7 @@ function ContactDetails({
           originalCustomerData?.buildingName != customerData?.buildingName &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.buildingName || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.buildingName || "(empty)"}
             </div>
           )}
         {formErrors.buildingName && (
@@ -2561,7 +2561,7 @@ function ContactDetails({
           originalCustomerData?.street != customerData?.street &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.street || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.street || "(empty)"}
             </div>
           )}
         {formErrors.street && (
@@ -2641,7 +2641,7 @@ function ContactDetails({
           originalCustomerData?.region != customerData?.region &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.region || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.region || "(empty)"}
             </div>
           )}
         {formErrors.region && (
@@ -2712,7 +2712,7 @@ function ContactDetails({
           originalCustomerData?.city != customerData?.city &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.city || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.city || "(empty)"}
             </div>
           )}
         {formErrors.city && <div className="error">{t(formErrors.city)}</div>}
@@ -2795,7 +2795,7 @@ function ContactDetails({
             originalCustomerData?.cityOther != customerData?.cityOther &&
             mode === "edit" && (
               <div className="current-value">
-                Previous: {originalCustomerData?.cityOther || "(empty)"}
+                {t("Previous")}{":"} {originalCustomerData?.cityOther || "(empty)"}
               </div>
             )}
           {formErrors.cityOther && (
@@ -2867,7 +2867,7 @@ function ContactDetails({
           originalCustomerData?.district != customerData?.district &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.district || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.district || "(empty)"}
             </div>
           )}
         {formErrors.district && (
@@ -2955,7 +2955,7 @@ function ContactDetails({
             customerData?.districtOther &&
             mode === "edit" && (
               <div className="current-value">
-                Previous: {originalCustomerData?.districtOther || "(empty)"}
+                {t("Previous")}{":"} {originalCustomerData?.districtOther || "(empty)"}
               </div>
             )}
           {formErrors.districtOther && (
@@ -3035,7 +3035,7 @@ function ContactDetails({
             originalCustomerData?.zone != customerData?.zone &&
             mode === "edit" && (
               <div className="current-value">
-                Previous: {originalCustomerData?.zone || "(empty)"}
+                {t("Previous")}{":"} {originalCustomerData?.zone || "(empty)"}
               </div>
             )}
           {formErrors.zone && <div className="error">{t(formErrors.zone)}</div>}
@@ -3117,7 +3117,7 @@ function ContactDetails({
           originalCustomerData?.pincode != customerData?.pincode &&
           mode === "edit" && (
             <div className="current-value">
-              Previous: {originalCustomerData?.pincode || "(empty)"}
+              {t("Previous")}{":"} {originalCustomerData?.pincode || "(empty)"}
             </div>
           )}
         {formErrors.pincode && (
@@ -3211,7 +3211,7 @@ function ContactDetails({
           originalCustomerData?.geolocation != customerData?.geolocation &&
           mode === "edit" && (
             <div className="current-value">
-              Previous:{" "}
+              {t("Previous")}{":"}
               {typeof originalCustomerData?.geolocation === "object"
                 ? JSON.stringify(originalCustomerData?.geolocation)
                 : originalCustomerData?.geolocation || "(empty)"}

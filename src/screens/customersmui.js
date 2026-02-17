@@ -1578,6 +1578,7 @@ function Customers() {
         workflowId: transformedCustomer?.workflowData?.id,
         workflowInstanceId: transformedCustomer?.workflowInstanceId,
         mode: isApprovalMode ? "edit" : "add",
+        activeTabRequired: isApprovalMode && (transformedCustomer?.workflowId === 2 || transformedCustomer?.workflowId === 4 || transformedCustomer?.workflowId === 6) ? "Branches" : ""
       },
     });
   };
@@ -1598,6 +1599,7 @@ function Customers() {
           workflowId: transformedCustomer?.workflowData?.id,
           workflowInstanceId: transformedCustomer?.workflowInstanceId,
           mode: isApprovalMode ? "edit" : "add",
+          activeTabRequired: isApprovalMode && (transformedCustomer?.workflowId === 2 || transformedCustomer?.workflowId === 4 || transformedCustomer?.workflowId === 6) ? "Branches" : ""
         },
       });
 

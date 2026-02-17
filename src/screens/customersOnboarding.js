@@ -398,18 +398,20 @@ function CustomersOnboarding() {
     e.preventDefault();
 
     //with out otp email verified
-    // if (!isOtpVerify) {
-    //   // Swal.fire({
-    //   //   title: t("Please verify the Email"),
-    //   //     text: t("Please verify the email by clicking on the Verify Otp button."),
-    //   //     icon: "warning",
-    //   //     confirmButtonText: t("OK"),
-    //   // });
-    //   setErrors(
-    //     t("Please verify the email by clicking on the Verify Otp button.")
-    //   );
-    //   return;
-    // }
+    if (!isOtpVerify) {
+      // Swal.fire({
+      //   title: t("Please verify the Email"),
+      //     text: t("Please verify the email by clicking on the Verify Otp button."),
+      //     icon: "warning",
+      //     confirmButtonText: t("OK"),
+      // });
+
+     setErrors({
+       
+        otp: t("Please verify the email by clicking on the Verify Otp button.")
+      });
+      return;
+    }
     // Validate form only on submit
     let isValid = await validateForm();
     if (isValid) {
@@ -687,7 +689,7 @@ function CustomersOnboarding() {
       } else if (otpType === "resendotp") {
         path = `${API_BASE_URL}/auth/registration/resend-otp`;
       }
-      path=`${API_BASE_URL}/auth/registration/send-with-out-otp`
+      // path=`${API_BASE_URL}/auth/registration/send-with-out-otp`
 
       const { data } = await axios.post(path, Reqbody);
 
@@ -868,7 +870,7 @@ function CustomersOnboarding() {
                                     isOtpVerify) // Only disable if verified and has ID
                                 }
                               />
-                              {/* {field.name === "companyEmail" &&
+                              {field.name === "companyEmail" &&
                                 formData?.companyEmail &&
                                 !isOtpVerify && (
                                   <button
@@ -903,7 +905,7 @@ function CustomersOnboarding() {
                                       ? t("Send Otp")
                                       : t("Resend Otp")}
                                   </button>
-                                )} */}
+                                )}
                               {field.name === "otp" && !isOtpVerify && (
                                 <button
                                   type="button"

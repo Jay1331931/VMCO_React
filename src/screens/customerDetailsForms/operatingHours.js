@@ -271,7 +271,7 @@ const OperatingHours = ({
                         originalHoursData[day]?.operating?.to ||
                       branchDetails?.branchStatus === "pending") && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalHoursData[day]?.operating?.from || "09:00"} -{" "}
                         {originalHoursData[day]?.operating?.to || "18:00"}
                       </div>
@@ -314,7 +314,7 @@ const OperatingHours = ({
                         originalHoursData[day]?.delivery?.to ||
                       branchDetails?.branchStatus === "pending") && (
                       <div className="current-value">
-                        Previous:{" "}
+                        {t("Previous")}{":"}
                         {originalHoursData[day]?.delivery?.from || "09:00"} -{" "}
                         {originalHoursData[day]?.delivery?.to || "18:00"}
                       </div>
@@ -380,7 +380,7 @@ const OperatingHours = ({
                 branchDetails?.branchStatus === "pending" ? (
                 <span className="modified-badge">
                   <span className="modified-dot"></span>
-                  Modified
+                  {t("Updated")}
                 </span>
               ) : null}
             </div>
@@ -421,7 +421,7 @@ const OperatingHours = ({
                 branchDetails?.branchStatus === "pending") && (
                 <div className="previous-value-mobile">
                   <FontAwesomeIcon icon={faHistory} className="previous-icon" />
-                  <span className="previous-label">Previous:</span>
+                  <span className="previous-label">{t("Previous")}{":"}</span>
                   <span className="previous-time">
                     {originalHoursData[day]?.operating?.from || "09:00"} -{" "}
                     {originalHoursData[day]?.operating?.to || "18:00"}
@@ -444,7 +444,7 @@ const OperatingHours = ({
                 branchDetails?.branchStatus === "pending" ? (
                 <span className="modified-badge">
                   <span className="modified-dot"></span>
-                  Modified
+                  {t("Updated")}
                 </span>
               ) : null}
             </div>
@@ -485,7 +485,7 @@ const OperatingHours = ({
                 branchDetails?.branchStatus === "pending") && (
                 <div className="previous-value-mobile">
                   <FontAwesomeIcon icon={faHistory} className="previous-icon" />
-                  <span className="previous-label">Previous:</span>
+                  <span className="previous-label">{t("Previous")}{":"}</span>
                   <span className="previous-time">
                     {originalHoursData[day]?.delivery?.from || "09:00"} -{" "}
                     {originalHoursData[day]?.delivery?.to || "18:00"}
