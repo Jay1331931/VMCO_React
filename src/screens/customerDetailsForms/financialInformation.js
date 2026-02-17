@@ -628,15 +628,15 @@ function FinancialInformation({
 
         Swal.fire({
           icon: "success",
-          title: "Request Submitted",
-          text: "Please wait up to 15 minutes to receive the email.",
+          title: t("Request Submitted"),
+          text: t("Please wait up to 15 minutes to receive the email."),
           confirmButtonColor: "#1976d2",
         });
       } else {
         Swal.fire({
           icon: "error",
-          title: "Submission Failed",
-          text: data.message || "Something went wrong. Please try again.",
+          title: t("Submission Failed"),
+          text: data.message || t("Something went wrong. Please try again."),
         });
       }
     } catch (error) {
@@ -649,8 +649,8 @@ function FinancialInformation({
 
       Swal.fire({
         icon: "error",
-        title: "Submission Failed",
-        text: errorMessage,
+        title: t("Submission Failed"),
+        text: t(errorMessage),
       });
     }
   };
