@@ -429,6 +429,43 @@ function OrderDetails() {
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode, salesOrderLinesFromNav?.length]);
 
+  // 🔥 REAL-TIME TOTAL CALCULATION
+  useEffect(() => {
+    if (sampleMode) {
+      setFormData(prev => ({
+        ...prev,
+        totalAmount: "0.00"
+      }));
+      return;
+    }
+
+    if (!Array.isArray(formData.products) || formData.products.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        totalAmount: "0.00"
+      }));
+      return;
+    }
+
+    // Calculate TOTAL AMOUNT from all product netAmounts (includes discounts)
+    const totalNetAmount = formData.products.reduce((sum, product) => {
+      return sum + parseFloat(product.netAmount || 0);
+    }, 0).toFixed(2);
+
+    // Update formData with new totals
+    setFormData(prev => ({
+      ...prev,
+      totalAmount: totalNetAmount
+    }));
+
+    console.log("🔥 Real-time totals updated:", {
+      totalNetAmount,
+      productsCount: formData.products.length
+    });
+
+  }, [formData.products, sampleMode]);
+
+
   // Refactored isCreditPaymentAllowed to include COD limit logic
   const isCreditPaymentAllowed = async (
     customerId,
@@ -4657,44 +4694,18 @@ function OrderDetails() {
                       fromApproval && (
                         <div className="order-details-field">
                           <label>{t("Payment Percentage")}</label>
-                          {formMode === "add" ? (
-                            <select
-                              name="paymentPercentage"
-                              value={formData.paymentPercentage ?? ""}
-                              onChange={handleInputChange}
-                              disabled={
-                                fromApproval
-                                  ? false
-                                  : formData.category !==
-                                  Constants.CATEGORY.VMCO_MACHINES
-                              }
-                            >
-                              <option value="">
-                                {t("Select Payment Percentage")}
-                              </option>
-                              {paymentPercentageOptions.map((option, index) => (
-                                <option key={index} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <select
-                              name="paymentPercentage"
-                              value={formData.paymentPercentage ?? ""}
-                              onChange={handleInputChange}
-                              disabled={fromApproval ? false : true}
-                            >
-                              <option value="">
-                                {t("Select Payment Percentage")}
-                              </option>
-                              {paymentPercentageOptions.map((option, index) => (
-                                <option key={index} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          )}
+                          <select
+                            name="paymentPercentage"
+                            value={formData.paymentPercentage || "100%"} // ✅ Always defaults to 100%
+                            onChange={handleInputChange}
+                            disabled={
+                              !fromApproval &&
+                              formData.category !== Constants.CATEGORY.VMCO_MACHINES
+                            }
+                          >
+                            <option value="100%">100%</option>
+                            <option value="30%">30%</option>
+                          </select>
                         </div>
                       )}
                     {isV("paidAmount") && (
@@ -4741,6 +4752,7 @@ function OrderDetails() {
                         )}
                       </div>
                     )}
+
                     {isV("expectedDeliveryDate") && (
                       <div className="order-details-field">
                         <label>{t("Delivery Date")}</label>
@@ -4814,7 +4826,7 @@ function OrderDetails() {
                             onChange={handleInputChange}
                             disabled={!isE('pricingPolicy')}
                           >
-                            <option value="">{t('Select Pricing Policy')}</option>
+                            <option value="">{t(formData.pricingPolicy)}</option>
                             {i18n.language === 'ar'
                               ? pricingPolicyArOptions.map(option => (
                                 <option key={option.value} value={option.value}>
