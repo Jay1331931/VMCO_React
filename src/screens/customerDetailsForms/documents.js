@@ -84,7 +84,7 @@ const isMobile=usePlatform()
   });
   const [tradingFilePreviews, setTradingFilePreviews] = useState({});
    const [tradingFilesToNativeUpload, setTradingFilesToNativeUpload] = useState({})
-   const [nonTradingFilesToNativeUpload, setNonTradingFilesToNativeUpload] = useState({})
+   const [nonTradingFilesToNativeUpload, setNonTradingFilesToNativeUpload] = useState([])
   const [nonTradingFilePreviews, setNonTradingFilePreviews] = useState({});
   const [popupUrl, setPopupUrl] = useState(null);
   const fileInputRefs = {
