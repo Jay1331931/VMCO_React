@@ -429,6 +429,43 @@ function OrderDetails() {
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode, salesOrderLinesFromNav?.length]);
 
+  // 🔥 REAL-TIME TOTAL CALCULATION
+  useEffect(() => {
+    if (sampleMode) {
+      setFormData(prev => ({
+        ...prev,
+        totalAmount: "0.00"
+      }));
+      return;
+    }
+
+    if (!Array.isArray(formData.products) || formData.products.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        totalAmount: "0.00"
+      }));
+      return;
+    }
+
+    // Calculate TOTAL AMOUNT from all product netAmounts (includes discounts)
+    const totalNetAmount = formData.products.reduce((sum, product) => {
+      return sum + parseFloat(product.netAmount || 0);
+    }, 0).toFixed(2);
+
+    // Update formData with new totals
+    setFormData(prev => ({
+      ...prev,
+      totalAmount: totalNetAmount
+    }));
+
+    console.log("🔥 Real-time totals updated:", {
+      totalNetAmount,
+      productsCount: formData.products.length
+    });
+
+  }, [formData.products, sampleMode]);
+
+
   // Refactored isCreditPaymentAllowed to include COD limit logic
   const isCreditPaymentAllowed = async (
     customerId,
@@ -4715,6 +4752,7 @@ function OrderDetails() {
                         )}
                       </div>
                     )}
+
                     {isV("expectedDeliveryDate") && (
                       <div className="order-details-field">
                         <label>{t("Delivery Date")}</label>
