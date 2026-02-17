@@ -109,6 +109,7 @@ function ForgotPassword() {
       setError("Passwords do not match");
       return;
     }
+   
 
     setIsSubmitLoading(true); // Start loading
 
@@ -408,7 +409,7 @@ function ForgotPassword() {
                     }}
                   >
                     {isVerifyLoading ? t("Verifying...") : t("Verify OTP")}
-                  </button> */}
+                  </button>*/}
                 </>
               )}
             </div>
