@@ -3727,6 +3727,9 @@ input:focus {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding-top: 13px !important;
   }
+  .card-fixed-header-order-mobile{
+    margin: 0 -15px;
+  }
 
 
 
