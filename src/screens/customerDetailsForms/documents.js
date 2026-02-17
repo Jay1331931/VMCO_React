@@ -170,6 +170,34 @@ const openPdfInNativeApp = async (file) => {
     alert('Could not open PDF. Make sure a PDF viewer is installed.');
   }
 };
+const openUrlSmartNonTrading = (url) => {
+  const isCapacitor = window.Capacitor?.isNativePlatform();
+
+  // Handle Blob/Data URL in Native
+  if (isCapacitor && (url?.startsWith('blob:') || url?.startsWith('data:'))) {
+    const mapping = nonTradingFilesToNativeUpload.find(
+      (item) => item.url === url
+    );
+
+    if (mapping?.file) {
+      openPdfInNativeApp(mapping.file);
+      return;
+    }
+  }
+
+  // Remote / Web handling
+  if (isCapacitor) {
+    const options = "location=no,toolbar=yes,clearcache=yes,clearsessioncache=yes";
+
+    const finalUrl =
+      `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
+
+    window.cordova?.InAppBrowser?.open(finalUrl, "_blank", options);
+  } else {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+};
+
 const openUrlSmart = (url, documentType=null) => {
   const isCapacitor = window.Capacitor?.isNativePlatform();
   
@@ -325,18 +353,27 @@ const openUrlSmart = (url, documentType=null) => {
       nonTradingFilesToUpload["others"] = [...newFiles, ...previousOthers];
       // Generate previews for each file
       const newPreviews = {};
-      newFiles.forEach((file) => {
-        const previewUrl = URL.createObjectURL(file);
-        newPreviews[file.name] = previewUrl;
-      });
-      setNonTradingFilePreviews((prev) => ({
-        ...prev,
-        ...newPreviews,
-      }));
-      setNonTradingFilesToNativeUpload((prev) => 
-        [...prev,
-        ...newFiles,]
-      );
+const fileMappings = [];
+
+newFiles.forEach((file) => {
+  const blobUrl = URL.createObjectURL(file);
+  newPreviews[file.name] = blobUrl;
+
+  fileMappings.push({
+    url: blobUrl,
+    file: file
+  });
+});
+
+setNonTradingFilePreviews((prev) => ({
+  ...prev,
+  ...newPreviews,
+}));
+
+setNonTradingFilesToNativeUpload((prev) => [
+  ...prev,
+  ...fileMappings
+]);
     }
   };
 
@@ -5073,10 +5110,10 @@ onKeyDown={handleKeyDown}
                   rel="noopener noreferrer"
                   className="file-link"
                   style={{ marginLeft: 8 }}
-  //                 onClick={(e) => {
-  //   e.preventDefault();
-  //   openUrlSmart(nonTradingFilePreviews[file.name]);
-  // }}
+                  onClick={(e) => {
+    e.preventDefault();
+    openUrlSmartNonTrading(nonTradingFilePreviews[file.name]);
+  }}
                         >
                           {file.name}
                         </a>
