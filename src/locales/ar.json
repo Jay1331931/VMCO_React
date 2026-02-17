@@ -1039,8 +1039,11 @@
 "Export Failed":"فشل التصدير",
 "An unexpected error occurred during download.":"حدث خطأ غير متوقع أثناء التنزيل.",
 "Select Business Unit": "نﺎﯾﻛﻟا  رﺗﺧا",
-"Maintenance request cancelled successfully!": "تم إلغاء طلب الصيانة بنجاح!"
-
+"Maintenance request cancelled successfully!": "تم إلغاء طلب الصيانة بنجاح!",
+"Please wait up to 15 minutes to receive the email.":"يرجى الانتظار لمدة تصل إلى 15 دقيقة لتلقي البريد الإلكتروني.",
+"Request Submitted":"تم تقديم الطلب",
+"Something went wrong. Please try again.":"حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+"Submission Failed":"فشل الإرسال"
 
 
 }
