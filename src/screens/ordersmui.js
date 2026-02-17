@@ -2616,7 +2616,7 @@ renderCell: (params) => {
           ) : (
             <>
               <div>
-                <div className={`card-fixed-header ${showHeader ? "show" : "show"}`}>
+                <div className={`card-fixed-header card-fixed-header-order-mobile  ${showHeader ? "show" : "show"}`} >
                   {(user?.userType.toLowerCase() === "employee" || (user?.userType.toLowerCase() === "customer" && isMobile)) && (
                     <div className="filter-section">
                       <div
