@@ -2605,7 +2605,7 @@ renderCell: (params) => {
   };
 
   return (
-    <Sidebar title={t("Orders")} CardPaddingClass={isMobile}>
+    <Sidebar title={t("Orders")} >
 
       <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin") ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
@@ -2840,7 +2840,7 @@ renderCell: (params) => {
                       disableSelectionOnClick
                       disableColumnMenu
                       hideFooter={true}
-                      getRowId={(row) => row?.workflowInstanceId | row?.id}
+                      getRowId={(row) => row?.workflowInstanceId || row?.id}
                       hideFooterPagination={true}
                       pagination={false}
                       rowHeight={55}
