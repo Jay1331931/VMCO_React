@@ -1119,7 +1119,9 @@
 "Something went wrong during payment.": "حدث خطأ أثناء عملية الدفع",
 "Failed to view checklist.": "فشل في عرض قائمة التحقق",
 "Please provide a signature first": "يرجى تقديم التوقيع أولاً",
-"Failed to fetch credit balance": "فشل في جلب رصيد ال"
+"Failed to fetch credit balance": "فشل في جلب رصيد ال",
+"Your order has been placed successfully!":"تم تقديم طلبك بنجاح!",
+"Your request has been sent for approval!":"تم إرسال طلبك للموافقة عليه!"
 
 
 

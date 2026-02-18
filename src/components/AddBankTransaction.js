@@ -864,6 +864,19 @@ const clearRecoveryData = () => {
   useEffect(() => {
     fetchSystemDate()
   }, [])
+  const handlePdf=(url)=>{
+
+      if (isMobile) {
+    const options = "location=no,toolbar=yes,clearcache=yes,clearsessioncache=yes";
+
+    const finalUrl =
+      `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
+
+    window.cordova?.InAppBrowser?.open(finalUrl, "_blank", options);
+  } else {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+  }
   const renderTemplate = () => {
     return (
       <div className={`bank-add-container  ${isRTL ? "rtl" : ""}`}>
@@ -1241,14 +1254,14 @@ const clearRecoveryData = () => {
                               className="preview-image"
                             />
                           ) : isPdf ? (
-                            <a
-                              href={fileUrl}
-                              target="_blank"
+                            <button
+                              // target="_blank"
+                              onClick={() => handlePdf(fileUrl)}
                               rel="noopener noreferrer"
                               className="file-link-button"
                             >
                               📄 {t("View PDF")}
-                            </a>
+                            </button>
                           ) : isExcel ? (
                             <a
                               href={fileUrl}

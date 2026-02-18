@@ -12,7 +12,7 @@ function GetPaymentMethods({
   t = (x) => x,
   isSimpleMode = false // New prop to indicate simple mode for SHC, NAQI, GMTC, DAR
 }) {
-  const { i18n } = useTranslation();
+  const {t: TT, i18n } = useTranslation();
   const { token } = useAuth();
   const isRTL = i18n.language === 'ar';
   const [methods, setMethods] = useState([]);
@@ -67,25 +67,25 @@ function GetPaymentMethods({
       <div className="gp-backdrop" onClick={onClose} />
       <div className="gp-modal">
         <div className="gp-header">
-          <span className="gp-title">{t("Select Payment Method")}</span>
+          <span className="gp-title">{TT("Select Payment Method")}</span>
           <button 
             className="gp-close-btn" 
             onClick={onClose} 
             style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
           >
-            {t("Close")}
+            {TT("Close")}
           </button>
         </div>
         <div className="gp-table-container">
           {loading ? (
-            <div style={{ padding: 24 }}>{t("Loading...")}</div>
+            <div style={{ padding: 24 }}>{TT("Loading...")}</div>
           ) : error ? (
             <div style={{ padding: 24, color: 'red' }}>{error}</div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Payment Method')}</th>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{TT('Payment Method')}</th>
                   <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}></th>
                 </tr>
               </thead>
@@ -93,7 +93,7 @@ function GetPaymentMethods({
   {methods.length === 0 ? (
     <tr>
       <td colSpan={2} style={{ padding: '10px', textAlign: 'center' }}>
-        {t('No payment methods found')}
+        {TT('No payment methods found')}
       </td>
     </tr>
   ) : (
@@ -105,14 +105,14 @@ function GetPaymentMethods({
       return (
         <tr key={idx}>
           <td style={{ padding: '10px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid #ddd'  }}>
-            {displayName}
+            {TT(displayName)}
           </td>
           <td style={{ padding: '10px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid #ddd'  }}>
             <button
               className="gp-product-btn"
               onClick={() => onSelectPaymentMethod(method)} // sends actual backend value
             >
-              {t('Select')}
+              {TT('Select')}
             </button>
           </td>
         </tr>

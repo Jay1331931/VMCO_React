@@ -4,6 +4,7 @@
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "build",
+
   "plugins": {
     "Keyboard": {
       "resize": "none",
@@ -13,6 +14,8 @@
     }
   },
   "server": {
+    "url":"https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
+    "errorPath": "offline.html",
     "androidScheme": "https",
     "allowNavigation": [
       "*.azurewebsites.net"

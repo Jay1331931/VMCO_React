@@ -14,6 +14,7 @@ import Constants from "../constants";
 import axios from "axios";
 import { Capacitor } from "@capacitor/core";
 import SkeletonWrapper from "../components/SkeletonWrapper";
+import usePlatform from "../utilities/platform";
 const isMobileDevice = Capacitor.isNativePlatform();
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -95,6 +96,7 @@ function Cart() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
   const [disabledEntities, setDisabledEntities] = useState([]);
+  const isCapacitorApp=usePlatform()
   useEffect(() => {
     if (location.state) {
       if (location.state.selectedUserId)
@@ -1439,13 +1441,13 @@ function Cart() {
         const orderText =
           orderIds.length === 1
             ? t(
-              `Your order has been placed successfully! Order #${orderIds[0]}`
-            )
+              `Your order has been placed successfully! Order #`) + `${orderIds[0]}`
+            
             : t(
-              `Your orders have been placed successfully! Orders: ${orderIds
+              `Your orders have been placed successfully! Orders: `) + `${orderIds
                 .map((id) => `#${id}`)
                 .join(" and ")}`
-            );
+            ;
       }
     } catch (err) {
       console.error("Error in SHC order splitting:", err);
@@ -3076,7 +3078,7 @@ function Cart() {
               entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
               ? t("Request Sent")
               : t("Order Placed"),
-          text: `${orderStatusMessage} ${t("Order #")}${orderId}. ${t("Payment Method")}: ${selectedPaymentMethod}`,
+          text: `${orderStatusMessage} ${t("Order #")}${orderId}. ${t("Payment Method")}: ${t(selectedPaymentMethod)}`,
           confirmButtonText: t("OK"),
         }).then(() => {
           // Update cart items state to remove ordered items
@@ -3887,7 +3889,7 @@ function Cart() {
     <Sidebar
       title={t("Your Cart")}
       dir={t("direction")}
-       PaddingClass={true} 
+       PaddingClass={isCapacitorApp} 
       handleGoToCart={() => { }}
     >
       <div className="cart-header">
