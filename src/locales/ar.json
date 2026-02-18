@@ -1046,7 +1046,16 @@
 "Submission Failed":"فشل الإرسال",
 "Please wait":"انتظر من فضلك",
 "Invalid CC Email":"بريد إلكتروني غير صالح لبطاقة الائتمان",
-"Please enter valid comma-separated emails.":"يرجى إدخال عناوين بريد إلكتروني صحيحة مفصولة بفواصل."
+"Please enter valid comma-separated emails.":"يرجى إدخال عناوين بريد إلكتروني صحيحة مفصولة بفواصل.",
+"Are you sure you want to cancel this maintenance request? This action cannot be undone.":"هل أنت متأكد من رغبتك في إلغاء طلب الصيانة هذا؟ لا يمكن التراجع عن هذا الإجراء.",
+"Cancel Ticket?":"إلغاء التذكرة؟",
+"Yes, Cancel Request":"نعم، إلغاء الطلب",
+"No, Go Back":"لا، العودة",
+"Failed to cancel maintenance request. Please try again.":"فشل إلغاء طلب الصيانة. يرجى المحاولة مرة أخرى.",
+"Please add a comment.":"يرجى إضافة تعليق.",
+"Failed to update ticket. Please try again.":"فشل تحديث التذكرة. يرجى المحاولة مرة أخرى."
+
+
 
 
 }
