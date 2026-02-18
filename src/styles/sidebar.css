@@ -793,6 +793,11 @@
   /* transform: translateY(100%) !important;
   transition: transform 0.3s ease !important; */
 }
+body.keyboard-open .orders-bottom-bar {
+  display: none !important;
+  /* transform: translateY(100%) !important;
+  transition: transform 0.3s ease !important; */
+}
   .orders-bottom-bar {
     bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   }
