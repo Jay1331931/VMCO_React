@@ -5157,11 +5157,14 @@ onKeyDown={handleKeyDown}
             </td>
             {
             // mode !== "edit" && 
+            
             (<td
               className="label-cell"
               style={{
-                width: "500px",
-                paddingRight: "500px",
+                width: customerData?.nonTradingDocuments?.length !==
+                  originalCustomerData?.nonTradingDocuments?.length && mode === "edit" ? "300px":"500px",
+                paddingRight: customerData?.nonTradingDocuments?.length !==
+                  originalCustomerData?.nonTradingDocuments?.length && mode === "edit" ? "300px":"640px",
                 verticalAlign: "top",
               }}
             >
