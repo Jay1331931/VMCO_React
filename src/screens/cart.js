@@ -1439,13 +1439,13 @@ function Cart() {
         const orderText =
           orderIds.length === 1
             ? t(
-              `Your order has been placed successfully! Order #${orderIds[0]}`
-            )
+              `Your order has been placed successfully! Order #`) + `${orderIds[0]}`
+            
             : t(
-              `Your orders have been placed successfully! Orders: ${orderIds
+              `Your orders have been placed successfully! Orders: `) + `${orderIds
                 .map((id) => `#${id}`)
                 .join(" and ")}`
-            );
+            ;
       }
     } catch (err) {
       console.error("Error in SHC order splitting:", err);
@@ -3076,7 +3076,7 @@ function Cart() {
               entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
               ? t("Request Sent")
               : t("Order Placed"),
-          text: `${orderStatusMessage} ${t("Order #")}${orderId}. ${t("Payment Method")}: ${selectedPaymentMethod}`,
+          text: `${orderStatusMessage} ${t("Order #")}${orderId}. ${t("Payment Method")}: ${t(selectedPaymentMethod)}`,
           confirmButtonText: t("OK"),
         }).then(() => {
           // Update cart items state to remove ordered items
