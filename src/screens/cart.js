@@ -14,6 +14,7 @@ import Constants from "../constants";
 import axios from "axios";
 import { Capacitor } from "@capacitor/core";
 import SkeletonWrapper from "../components/SkeletonWrapper";
+import usePlatform from "../utilities/platform";
 const isMobileDevice = Capacitor.isNativePlatform();
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -95,6 +96,7 @@ function Cart() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
   const [disabledEntities, setDisabledEntities] = useState([]);
+  const isCapacitorApp=usePlatform()
   useEffect(() => {
     if (location.state) {
       if (location.state.selectedUserId)
@@ -3887,7 +3889,7 @@ function Cart() {
     <Sidebar
       title={t("Your Cart")}
       dir={t("direction")}
-       PaddingClass={true} 
+       PaddingClass={isCapacitorApp} 
       handleGoToCart={() => { }}
     >
       <div className="cart-header">
