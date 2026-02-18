@@ -100,10 +100,10 @@ function PriceListEditor() {
             // Only show error if it's not a 401 (which would be handled by logout)
             if (err.response?.status !== 401) {
                 Swal.fire({
-                    title: "Error",
-                    text: err.response?.data?.message || "Failed to fetch price list data",
+                    title: t("Error"),
+                    text: err.response?.data?.message || t("Failed to fetch price list data"),
                     icon: "error",
-                    confirmButtonText: "OK",
+                    confirmButtonText: t("OK"),
                 });
             }
         } finally {

@@ -1333,28 +1333,28 @@ const CustomerBranches = ({
       if (data?.success) {
         fetchBranches();
         Swal.fire({
-          title: "Success",
+          title: t("Success"),
           text: data.message,
           icon: "success",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#3085d6",
         });
       } else {
         Swal.fire({
-          title: "Error",
-          text: data.message || "Failed to Sync with FandO.",
+          title: t("Error"),
+          text: data.message || t("Failed to Sync with FandO."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#dc3545",
         });
       }
     } catch (error) {
       console.error("Error handling FandO fail branch:", error);
       Swal.fire({
-        title: "Error",
-        text: error.message || "Failed to Sync with FandO.",
+        title: t("Error"),
+        text: error.message || t("Failed to Sync with FandO."),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
         confirmButtonColor: "#dc3545",
       });
     } finally {
@@ -1379,10 +1379,10 @@ const CustomerBranches = ({
         window.open(res.data.url, "_blank", "noopener,noreferrer");
       } else {
         Swal.fire({
-          title: "Error",
-          text: res.message || "Failed to view checklist.",
+          title: t("Error"),
+          text: res.message || t("Failed to view checklist."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#dc3545",
         });
       }

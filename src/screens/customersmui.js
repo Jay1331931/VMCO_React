@@ -1854,12 +1854,12 @@ const flattenObject = (obj, parentKey = "", result = {}) => {
 
 const downloadCustomersAsExcel = async () => {
   const confirm = await Swal.fire({
-    title: "Confirm Download?",
-    text: "Are you sure you want to download customers?",
+    title: t("Confirm Download?"),
+    text: t("Are you sure you want to download customers?"),
     icon: "warning",
     showCancelButton: true,
-    confirmButtonText: "Yes, download",
-    cancelButtonText: "No, cancel",
+    confirmButtonText: t("Yes, download"),
+    cancelButtonText: t("No, cancel"),
   });
 
   if (!confirm.isConfirmed) return;
@@ -1869,8 +1869,8 @@ const downloadCustomersAsExcel = async () => {
 
     /* -------- Show same loading message -------- */
     Swal.fire({
-      title: "Preparing Export",
-      text: "Fetching customer details, please wait...",
+      title: t("Preparing Export"),
+      text: t("Fetching customer details, please wait..."),
       icon: "info",
       allowOutsideClick: false,
       showConfirmButton: false,
@@ -1936,15 +1936,15 @@ if (contentDisposition) {
     window.URL.revokeObjectURL(url);
 
     Swal.fire({
-      title: "Export Successful",
-      text: "Customers exported successfully.",
+      title: t("Export Successful"),
+      text: t("Customers exported successfully."),
       icon: "success",
     });
   } catch (error) {
     console.error(error);
     Swal.fire({
-      title: "Export Failed",
-      text: error.message || "Failed to export customers.",
+      title: t("Export Failed"),
+      text: error.message || t("Failed to export customers."),
       icon: "error",
     });
   } finally {
@@ -2583,28 +2583,28 @@ if (contentDisposition) {
       if (data?.success) {
         fetchCustomers();
         Swal.fire({
-          title: "Success",
+          title: t("Success"),
           text: data.message,
           icon: "success",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#3085d6",
         });
       } else {
         Swal.fire({
-          title: "Error",
-          text: data.message || "Failed to Sync with FandO.",
+          title: t("Error"),
+          text: data.message || t("Failed to Sync with FandO."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#dc3545",
         });
       }
     } catch (error) {
       console.error("Error handling FandO fail customer:", error);
       Swal.fire({
-        title: "Error",
-        text: error.message || "Failed to Sync with FandO.",
+        title: t("Error"),
+        text: error.message || t("Failed to Sync with FandO."),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
         confirmButtonColor: "#dc3545",
       });
     } finally {

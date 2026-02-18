@@ -186,18 +186,18 @@ const OptionsPage = () => {
     if (paidOrders.length > 0) {
       const paidIds = paidOrders.map((order) => order.id).join(", ");
       Swal.fire({
-        title: "Payment Already Done",
+        title: t("Payment Already Done"),
         text: `The following sales order(s) are already paid: ${paidIds}`,
         icon: "info",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       }).then(() => window.close());
       return;
     } else if (allPaid) {
       Swal.fire({
-        title: "Payment Already Done",
-        text: "All selected orders have already been paid.",
+        title: t("Payment Already Done"),
+        text: t("All selected orders have already been paid."),
         icon: "info",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       }).then(() => window.close());
       return;
     } else if (allZeroPaidAndFullPayment) {
@@ -208,10 +208,10 @@ const OptionsPage = () => {
       setAmount(totalAmount - paidAmount);
     } else {
       Swal.fire({
-        title: "Payment Amount Error",
-        text: "Could not process the payment amount for all orders.",
+        title: t("Payment Amount Error"),
+        text: t("Could not process the payment amount for all orders."),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       }).then(() => window.close());
       return;
     }
@@ -235,10 +235,10 @@ const OptionsPage = () => {
 
       if (!data || !data.details) {
         Swal.fire({
-          title: "Error",
-          text: "Failed to generate payment link.",
+          title: t("Error"),
+          text: t("Failed to generate payment link."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
         }).then(() => {
           window.close();
         });
@@ -255,12 +255,12 @@ const OptionsPage = () => {
 
       if (error?.response?.status === 401) {
         Swal.fire({
-          title: "Session Expired",
-          text: "Please refresh the page to continue.",
+          title: t("Session Expired"),
+          text: t("Please refresh the page to continue."),
           icon: "info",
           showCancelButton: true,
-          confirmButtonText: "Reload Page",
-          cancelButtonText: "Close",
+          confirmButtonText: t("Reload Page"),
+          cancelButtonText: t("Close"),
         }).then(async (result) => {
           if (result.isConfirmed) {
           } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -269,10 +269,10 @@ const OptionsPage = () => {
         });
       } else {
         Swal.fire({
-          title: "Error",
-          text: "Something went wrong. Please try again later.",
+          title: t("Error"),
+          text: t("Something went wrong. Please try again later."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
         }).then(() => {
           window.close(); // Close the current window/tab after OK
         });
@@ -283,10 +283,10 @@ const OptionsPage = () => {
     console.log("paymentType", amount);
     if (amount <= 0) {
       Swal.fire({
-        title: "Invalid Amount",
-        text: "The amount must be greater than zero.",
+        title: t("Invalid Amount"),
+        text: t("The amount must be greater than zero."),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       }).then(() => {
         window.close(); // Close the current window/tab after OK
       });
@@ -328,23 +328,23 @@ const OptionsPage = () => {
       console.error("Error generating payment link:", error);
       if (error.response && error.response.status === 401) {
         Swal.fire({
-          title: "Session Expired",
-          text: "Please refresh the page to continue.",
+          title: t("Session Expired"),
+          text: t("Please refresh the page to continue."),
           icon: "info",
           showCancelButton: true,
-          confirmButtonText: "Reload Page",
-          cancelButtonText: "Close",
+          confirmButtonText: t("Reload Page"),
+          cancelButtonText: t("Close"),
         }).then(async (result) => {
           if (result.isConfirmed) {
             try {
               // await generateToken(); // Call your API to get new token
             } catch (error) {
               console.error("Token regeneration failed:", error);
-              Swal.fire(
-                "Error",
-                "Unable to refresh session. Please try again.",
-                "error"
-              );
+              Swal.fire({
+                title: t("Error"),
+                text: t("Unable to refresh session. Please try again."),
+                icon: "error",
+              });
               window.close();
             }
           } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -353,10 +353,10 @@ const OptionsPage = () => {
         });
       } else {
         Swal.fire({
-          title: "Error",
-          text: "Failed to generate payment link. Please try again later.",
+          title: t("Error"),
+          text: t("Failed to generate payment link. Please try again later."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
         }).then(() => {
           window.close(); // Close the current window/tab after OK
         });

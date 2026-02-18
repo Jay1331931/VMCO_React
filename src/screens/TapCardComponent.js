@@ -246,8 +246,8 @@ const TapCardPayment = () => {
 
         Swal.fire({
           icon: "error",
-          title: "Payment Error",
-          text: errorMessage || "Something went wrong during payment.",
+          title: t("Payment Error"),
+          text: errorMessage || t("Something went wrong during payment."),
           confirmButtonColor: "#0b4c45",
         });
  setShowCardForm(true)
@@ -299,8 +299,8 @@ const TapCardPayment = () => {
 
         Swal.fire({
           icon: "error",
-          title: "Payment Error",
-          text: errorMessage || "Something went wrong during payment.",
+          title: t("Payment Error"),
+          text: errorMessage || t("Something went wrong during payment."),
           confirmButtonColor: "#0b4c45",
         });
   setShowCardForm(true)

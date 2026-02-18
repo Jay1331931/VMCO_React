@@ -350,8 +350,8 @@ function FinancialInformation({
       console.error("Error fetching credit balance:", error);
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: error.message || "Failed to fetch credit balance",
+        title: t("Error"),
+        text: error.message || t("Failed to fetch credit balance"),
       });
     }
   };

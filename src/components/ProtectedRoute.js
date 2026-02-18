@@ -5,13 +5,13 @@ import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import { isTokenValid } from '../utilities/authUtils';
 import Swal from "sweetalert2";
-
+import { useTranslation } from 'react-i18next';
 const ProtectedRoute = ({ children, page }) => {
   const { user, isAuthenticated, logout, token, buttonClicked } = useAuth();
   const [isValid, setIsValid] = useState(true);
   const isCheckingRef = useRef(false);
   const backButtonPressedRef = useRef(false);
-
+const { t, i18n } = useTranslation();
   useEffect(() => {
     // Check if back button was recently pressed
     if (backButtonPressedRef.current) {
@@ -29,9 +29,9 @@ const ProtectedRoute = ({ children, page }) => {
         setIsValid(false);
         Swal.fire({
           icon: 'error',
-          title: 'Session Expired',
-          text: 'Your session has expired. Please log in again.',
-          confirmButtonText: 'OK'
+          title: t("Session Expired"),
+          text: t("Your session has expired. Please log in again."),
+          confirmButtonText: t("OK")
         }).then(() => {
           logout();
         });

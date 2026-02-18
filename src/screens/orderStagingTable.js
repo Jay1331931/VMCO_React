@@ -169,10 +169,10 @@ function OrderStagingTable() {
                     navigate(user?.userType === "customer" ? "/login" : "/login-employee");
                 } else {
                     Swal.fire({
-                        title: "Error",
-                        text: err.response?.data?.message || "Failed to fetch order staging data",
+                        title: t("Error"),
+                        text: err.response?.data?.message || t("Failed to fetch order staging data"),
                         icon: "error",
-                        confirmButtonText: "OK",
+                        confirmButtonText: t("OK"),
                     });
                 }
             } finally {
@@ -316,10 +316,10 @@ function OrderStagingTable() {
         } catch (err) {
             console.error("Error fetching order details:", err);
             Swal.fire({
-                title: "Error",
-                text: err.message || "Failed to fetch order details. Please try again.",
+                title: t("Error"),
+                text: err.message || t("Failed to fetch order details. Please try again."),
                 icon: "error",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
             });
         }
     };
@@ -376,8 +376,8 @@ function OrderStagingTable() {
   } catch (err) {
     console.error("Export error:", err);
     Swal.fire({
-      title: "Error",
-      text: "Failed to export data",
+      title: t("Error"),
+      text: t("Failed to export data"),
       icon: "error",
     });
   }
