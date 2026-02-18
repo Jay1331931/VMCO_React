@@ -579,16 +579,16 @@ function FinancialInformation({
     setIsSubmited(false);
     if (ccEmail && !validateEmails(ccEmail)) {
       Swal.fire({
-        icon: "error",
-        title: "Invalid CC Email",
-        text: "Please enter valid comma-separated emails.",
+        icon: t("error"),
+        title: t("Invalid CC Email"),
+        text: t("Please enter valid comma-separated emails."),
       });
       return;
     }
 
     Swal.fire({
-      title: "Submitting...",
-      text: "Please wait",
+      title: t("Submitting..."),
+      text: t("Please wait"),
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -636,7 +636,7 @@ function FinancialInformation({
         Swal.fire({
           icon: "error",
           title: t("Submission Failed"),
-          text: data.message || t("Something went wrong. Please try again."),
+          text: t(data.message) || t("Something went wrong. Please try again."),
         });
       }
     } catch (error) {

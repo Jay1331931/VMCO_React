@@ -1043,7 +1043,10 @@
 "Please wait up to 15 minutes to receive the email.":"يرجى الانتظار لمدة تصل إلى 15 دقيقة لتلقي البريد الإلكتروني.",
 "Request Submitted":"تم تقديم الطلب",
 "Something went wrong. Please try again.":"حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-"Submission Failed":"فشل الإرسال"
+"Submission Failed":"فشل الإرسال",
+"Please wait":"انتظر من فضلك",
+"Invalid CC Email":"بريد إلكتروني غير صالح لبطاقة الائتمان",
+"Please enter valid comma-separated emails.":"يرجى إدخال عناوين بريد إلكتروني صحيحة مفصولة بفواصل."
 
 
 }
