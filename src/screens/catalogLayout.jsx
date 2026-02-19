@@ -226,7 +226,7 @@ const CatalogLayout = ({
                                         name="categoryFilter"
                                         options={isRTL ? categoryArOptions : categoryEnOptions}
                                         className={window.innerWidth <= 375 ? "category-filter-double" : "category-filter"}
-                                        placeholder={t("Category")}
+                                        placeholder={t("All Categories")}
                                         value={categoryFilter}
                                         onChange={handleCategoryFilterChange}
                                     />
@@ -235,7 +235,7 @@ const CatalogLayout = ({
                                         name="subCategoryFilter"
                                         options={isRTL ? subCategoryArOptions : subCategoryEnOptions}
                                         className={window.innerWidth <= 375 ? "category-filter-double" : "category-filter"}
-                                        placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
+                                        placeholder={!categoryFilter ? t("Select category first") : t("All Sub Categories")}
                                         value={subCategoryFilter}
                                         onChange={handleSubCategoryFilterChange}
                                         disabled={!categoryFilter}
@@ -445,7 +445,7 @@ const CatalogLayout = ({
                                 options={isRTL ? categoryArOptions : categoryEnOptions}
                                 className="category-filter-mobile"
                                 style={{ width: '100%', borderRadius: '16px' }}
-                                placeholder={t("Category")}
+                                placeholder={t("All Categories")}
                                 value={categoryFilter}
                                 onChange={handleCategoryFilterChange}
                             />
@@ -457,7 +457,7 @@ const CatalogLayout = ({
                                 options={isRTL ? subCategoryArOptions : subCategoryEnOptions}
                                 className="subcategory-filter-mobile"
                                 style={{ width: '100%', borderRadius: '16px' }}
-                                placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
+                                placeholder={!categoryFilter ? t("Select category first") : t("All Sub Categories")}
                                 value={subCategoryFilter}
                                 onChange={handleSubCategoryFilterChange}
                                 disabled={!categoryFilter}
@@ -468,7 +468,7 @@ const CatalogLayout = ({
             )}
 
             {/* Rest of your component remains exactly the same */}
-            <div className="catalog-scrollable-content" ref={scrollableContentRef} style={{ height: 'calc(100vh - ' + headerHeight + 'px)' }}>
+            <div className="catalog-scrollable-content" ref={scrollableContentRef} style={{ height: 'calc(100vh - ' + '100px)' }}>
                 <SkeletonWrapper loading={isLoading} type="mobile_card" count={6}>
                     <div
                         className="products-grid"
@@ -515,7 +515,7 @@ const CatalogLayout = ({
                         <span className="loading-more-text">{t("Loading more products...")}</span>
                     </div>
                 )} */}
-                <SkeletonWrapper loading={isLoadingMore} type="mobile_card" count={6}> </SkeletonWrapper>
+                <SkeletonWrapper loading={isLoadingMore} type="mobile_card" count={1}> </SkeletonWrapper>
                 {!hasMore && displayedProducts?.length > 0 && !isLoading && !isLoadingMore && (
                     <div className="end-of-catalog-message">
                         <p>{t("End of product catalog")}</p>
