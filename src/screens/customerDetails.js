@@ -2441,6 +2441,10 @@ if (field === "methodDetails" &&
         icon: "error",
         title: t("Error"),
         text: t(`Error updating customer data. ${error.message}`),
+        html: `
+            <textarea style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px; resize: none; overflow-y: auto;" readonly>${error.message}</textarea>
+          `,
+
         confirmButtonText: t("OK"),
       });
       // alert("Error updating customer data:", error.message);
@@ -2471,6 +2475,10 @@ if (field === "methodDetails" &&
         icon: "error",
         title: t("Error"),
         text: t(`Error updating customer data. ${error.message}`),
+        html: `
+            <textarea style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px; resize: none; overflow-y: auto;" readonly>${error.message}</textarea>
+          `,
+
         confirmButtonText: t("OK"),
       });
       // alert("Error updating customer data:", error.message);
@@ -2499,6 +2507,10 @@ if (field === "methodDetails" &&
         icon: "error",
         title: t("Error"),
         text: t(`Error updating customer data. ${error.message}`),
+        html: `
+            <textarea style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px; resize: none; overflow-y: auto;" readonly>${error.message}</textarea>
+          `,
+
         confirmButtonText: t("OK"),
       });
       // alert("Error updating customer data:", error.message);
@@ -2602,6 +2614,10 @@ if (field === "methodDetails" &&
         icon: "error",
         title: t("Error"),
         text: t(`Error updating customer data. ${error.message}`),
+        html: `
+            <textarea style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px; resize: none; overflow-y: auto;" readonly>${error.message}</textarea>
+          `,
+
         confirmButtonText: t("OK"),
       });
       // alert("Error updating customer data:", error.message);
@@ -2629,6 +2645,10 @@ if (field === "methodDetails" &&
         icon: "error",
         title: t("Error"),
         text: t(`Error updating customer data. ${error.message}`),
+        html: `
+            <textarea style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px; resize: none; overflow-y: auto;" readonly>${error.message}</textarea>
+          `,
+
         confirmButtonText: t("OK"),
       });
       // alert("Error updating customer data:", error.message);
@@ -3004,6 +3024,10 @@ if (field === "methodDetails" &&
         icon: "error",
         title: t("Error"),
         text: t(`Error updating customer data. ${error.message}`),
+        html: `
+            <textarea style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px; resize: none; overflow-y: auto;" readonly>${error.message}</textarea>
+          `,
+
         confirmButtonText: t("OK"),
       });
       // alert("Error updating customer data:", error.message);
