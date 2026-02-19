@@ -1926,6 +1926,9 @@ td.file-display-cell {
     left: auto;
     margin-top: 10px;
   }
+  .support-department-dropdown{
+    width: 250px !important;
+  }
 
   .dropdown-header {
     position: relative;
