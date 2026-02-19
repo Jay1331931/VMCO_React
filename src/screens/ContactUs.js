@@ -228,6 +228,10 @@ const ContactUs = () => {
   .form-row {
     flex-direction: column;
   }
+    .contact-container {
+   
+    padding: 20% 9%;
+        }
 }
 
 

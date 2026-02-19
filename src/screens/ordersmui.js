@@ -1043,9 +1043,9 @@ function Orders() {
       const { data } = await axios.post(
         `${API_BASE_URL}/generatePayment-link`,
         {
-          id: order.id,
+          id: order?.id?.toString(),
           endPoint: "payment-options/order",
-          IsEmail: email,
+          IsEmail: email
         },
         {
           headers: {
