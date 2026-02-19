@@ -515,7 +515,7 @@ const CatalogLayout = ({
                         <span className="loading-more-text">{t("Loading more products...")}</span>
                     </div>
                 )} */}
-                <SkeletonWrapper loading={isLoadingMore} type="mobile_card" count={1}> </SkeletonWrapper>
+                <SkeletonWrapper loading={isLoadingMore} type="mobile_card" count={1} style={{marginTop:"10px"}}> </SkeletonWrapper>
                 {!hasMore && displayedProducts?.length > 0 && !isLoading && !isLoadingMore && (
                     <div className="end-of-catalog-message">
                         <p>{t("End of product catalog")}</p>
