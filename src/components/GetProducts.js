@@ -308,7 +308,7 @@ function GetProducts({
         pageSize: pagination.pageSize.toString(),
         sortBy: "id",
         sortOrder: "asc",
-        customerId: customerId || ""
+        filters: JSON.stringify({ customerId: customerId?.toString() })
       });
 
       // Add entity filter
