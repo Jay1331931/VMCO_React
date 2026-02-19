@@ -131,7 +131,7 @@ function Catalog() {
   const [isAdding, setIsAdding] = useState(null);
   const [coolingPeriodData, setCoolingPeriodData] = useState([]);
   const [disabledEntities, setDisabledEntities] = useState([]);
-  const [branch,setBranch]=useState({})
+  const [branch, setBranch] = useState({})
   // Refs for pagination and observer
   const currentPageRef = useRef(1);
   const isLoadingRef = useRef(false);
@@ -790,9 +790,9 @@ function Catalog() {
 
       if (cartBranchIds.length === 0 || (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId)) {
         setSelectedLocation(newBranchId);
-      
+
         if (selectedBranch) {
-            setBranch(selectedBranch)
+          setBranch(selectedBranch)
           setSelectedBranchRegion(selectedBranch.branchRegion || "");
           setSelectedBranchCity(selectedBranch.branchCity || "");
         }
@@ -834,7 +834,7 @@ function Catalog() {
             window.dispatchEvent(new CustomEvent("cartItemsUpdated", { detail: 0 }));
 
             setSelectedLocation(newBranchId);
-  
+
             if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
               setSelectedBranchCity(selectedBranch.branchCity || "");
@@ -842,7 +842,7 @@ function Catalog() {
             await Swal.fire({
               icon: "success",
               title: t("Success"),
-              text: t(`Items discarded from the cart for branch ${otherBranchLabel}`),
+              text: t(`Items discarded from the cart for branch`) + `${otherBranchLabel}`,
               confirmButtonText: t("OK"),
             });
           } catch (deleteError) {

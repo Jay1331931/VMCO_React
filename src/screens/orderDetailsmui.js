@@ -2314,7 +2314,7 @@ function OrderDetails() {
                 setTimeout(() => {
                   copyIcon.className = "fas fa-copy";
                   copyIcon.style.color = "#666";
-                  copyText.textContent = "Copy";
+                  copyText.textContent = t("Copy");
                   copyText.style.color = "#666";
                   copyBtn.style.background = "#fff";
                   copyBtn.style.borderLeftColor = "#ddd";
@@ -5743,7 +5743,7 @@ function OrderDetails() {
                     border: "none",
                     cursor: "pointer",
                   }}
-                  aria-label="Close"
+                  aria-label={t("Close")}
                 >
                   &times;
                 </button>

@@ -777,7 +777,7 @@ function Cart() {
       }
       if (existingOrders.length > 0) {
         messageParts.push(
-          `An open order #${existingOrders[0].existingOrderId} already exists. Please update instead of creating new one`
+          t(`An open order #`)+`${existingOrders[0].existingOrderId}`+t(` already exists. Please update instead of creating new one`)
         );
       }
     } else if (
@@ -1676,10 +1676,7 @@ function Cart() {
         Swal.fire({
           icon: "success",
           title: t("Your Request has been sent for Approval"),
-          text: t("Request sent with orders" + "#{{orders}}", {
-            orders: orderIds.map((id) => `${id}`).join(", "),
-            method: selectedPaymentMethod,
-          }),
+          text: t("Request sent with orders") + orderIds.map((id) => `${id}`).join(", "),
           confirmButtonText: t("OK"),
         })
           .then(async () => {
