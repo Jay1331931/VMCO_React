@@ -1121,8 +1121,16 @@
 "Please provide a signature first": "يرجى تقديم التوقيع أولاً",
 "Failed to fetch credit balance": "فشل في جلب رصيد ال",
 "Your order has been placed successfully!":"تم تقديم طلبك بنجاح!",
-"Your request has been sent for approval!":"تم إرسال طلبك للموافقة عليه!"
-
+"Your request has been sent for approval!":"تم إرسال طلبك للموافقة عليه!",
+"Add New Pricing Policy": "إضافة سياسة تسعير جديدة",
+"Close Form": "إغلاق النموذج",
+"Add New Pricing Policy for": "إضافة سياسة تسعير جديدة لـ",
+"Pricing Policy Name": "اسم سياسة التسعير",
+"Enter pricing policy name": "أدخل اسم سياسة التسعير",
+"Pricing Policy Name (Arabic)": "اسم سياسة التسعير (بالعربية)",
+"Enter pricing policy name (Arabic)": "أدخل اسم سياسة التسعير (بالعربية)",
+"Save Pricing Policy": "حفظ سياسة التسعير",
+"Adding...": "جارٍ الإضافة..."
 
 
 
