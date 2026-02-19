@@ -365,7 +365,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
           left: 10px !important;
         }
           .comment-button {
-            top: 100px;
+            top: 22%;
             right: 10px;
           }
           [dir = "rtl"] .comment-panel {
