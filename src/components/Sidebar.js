@@ -49,7 +49,7 @@ const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile = /iPhone/i.test(navigator.userAgent);
 const isAndroidMobile = /Android/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null, searchable = false, setSelectedBranchLocation, goToCart = false, selectBranch = false, homePage = "", PaddingClass = false, CardPaddingClass = false,CustomerPaddingClass=false, hideMobileBottomMenu = false }) {
+function Sidebar({ children, title = null, MenuName = null, searchable = false, setSelectedBranchLocation, goToCart = false, selectBranch = false, homePage = "", PaddingClass = false, CardPaddingClass = false,CustomerPaddingClass=false, hideMobileBottomMenu = false,selectedBranch=null }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -81,7 +81,7 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
   const custSequenceId = user?.sequenceId;
   const userId = user?.userId;
   const isRTL = i18n.language === "ar";
-
+console.log("selectedLocation",selectedLocation)
   const toggleLanguage = () => {
     const newLang = isRTL ? "en" : "ar";
     i18n.changeLanguage(newLang);
@@ -369,7 +369,25 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
         },
       });
     } else {
-      navigate("/Cart");
+       navigate("/Cart", {
+        state: {
+          selectedCustomerId: user?.customerId,
+          selectedCustomerStatus: user?.customerStatus,
+          selectedBranchId: selectedBranch?.value || selectBranch?.value || null,
+          selectedBranchName:
+            i18n.language === "en"
+              ? selectedBranch?.branch_name_en
+              : selectedBranch?.branch_name_lc,
+          selectedBranchNameLc: selectedBranch?.branch_name_lc || "",
+          selectedBranchNameEn: selectedBranch?.branch_name_en || "",
+          selectedBranchErpId: selectedBranch?.erpBranchId || "",
+          selectedBranchRegion: selectedBranch?.branchRegion || selectedBranch?.region
+            || "",
+          selectedBranchCity: selectedBranch?.city || "",
+          selectedBranchStatus: selectedBranch?.status || "",
+          selectedCustSequenceId: user?.sequenceId || "",
+          selectedBranchSequenceId: selectedBranch?.sequenceId || "",
+        },})
     }
   };
 

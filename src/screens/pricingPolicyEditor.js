@@ -395,6 +395,30 @@ function PricingPolicyEditor() {
               onTabChange={handleTabChange}
             />
           </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "10px",
+              margin: "10px",
+            }}
+          >
+            <button
+              className="add-btn"
+              onClick={() => setShowAddForm(!showAddForm)}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#0B4C45",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {showAddForm ? t("Close Form") : t("Add New Pricing Policy")}
+            </button>
+          </div>
         </div>
 
         {/* Loading Spinner */}

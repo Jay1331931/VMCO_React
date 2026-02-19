@@ -569,7 +569,12 @@ body.catalog-page {
   background-color: #f9f9f9;
   border-radius: var(--border-radius);
 }
+@media(max-width:500px){
+  .end-of-catalog-message {
+    margin: 20px 0;
 
+  }
+}
 .loading-more-container {
   display: flex;
   flex-direction: column;
