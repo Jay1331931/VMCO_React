@@ -146,10 +146,10 @@ function PricingPolicyEditor() {
     } catch (err) {
       console.error("Error fetching pricing policies:", err);
       Swal.fire({
-        title: "Error",
-        text: "Failed to fetch pricing policies",
+        title: t("Error"),
+        text: t("Failed to fetch pricing policies"),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       });
     } finally {
       setLoading(false);
@@ -180,12 +180,12 @@ function PricingPolicyEditor() {
 
   const handleAddSubmit = async () => {
     if (!policyName || !policyNameLc) {
-      Swal.fire("Error", "Please fill all required fields", "error");
+      Swal.fire(t("Error"), t("Please fill all required fields"), "error");
       return;
     }
 
     if (!isArabicText(policyNameLc)) {
-      Swal.fire("Error", "Please enter valid Arabic text for Pricing Policy Name (Arabic)", "error");
+      Swal.fire(t("Error"), t("Please enter valid Arabic text for Pricing Policy Name (Arabic)"), "error");
       return;
     }
 
@@ -212,7 +212,7 @@ function PricingPolicyEditor() {
         response.data?.status?.toLowerCase() === "ok" ||
         response.status === 201
       ) {
-        Swal.fire("Success", "Pricing policy added successfully", "success");
+        Swal.fire(t("Success"), t("Pricing policy added successfully"), "success");
         setShowAddForm(false);
         setPolicyName("");
         setPolicyNameLc("");
@@ -221,10 +221,10 @@ function PricingPolicyEditor() {
     } catch (err) {
       console.error("Error adding pricing policy:", err);
       Swal.fire({
-        title: "Error",
-        text: err.response?.data?.message || "Failed to add pricing policy",
+        title: t("Error"),
+        text: err.response?.data?.message || t("Failed to add pricing policy"),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       });
     } finally {
       setLoading(false);
@@ -234,13 +234,13 @@ function PricingPolicyEditor() {
   const handleDeleteClick = async (row) => {
     console.log("Delete clicked for row:", row);
     Swal.fire({
-      title: "Are you sure?",
+      title: t("Are you sure?"),
       text: `This will delete pricing policy ${row?.name} for entity ${row?.entity}.`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#C01823",
       cancelButtonColor: "#0B4C45",
-      confirmButtonText: "Yes, delete!",
+      confirmButtonText: t("Yes, delete!"),
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
@@ -255,8 +255,8 @@ function PricingPolicyEditor() {
 
           if (response.data?.status?.toLowerCase() === "ok") {
             Swal.fire(
-              "Deleted!",
-              "Pricing policy has been deleted.",
+              t("Deleted!"),
+              t("Pricing policy has been deleted."),
               "success"
             );
             fetchPricingPolicies();
@@ -264,8 +264,8 @@ function PricingPolicyEditor() {
         } catch (err) {
           console.error("Error deleting pricing policy:", err);
           Swal.fire(
-            "Error",
-            err.response?.data?.message || "Failed to delete",
+            t("Error"),
+            err.response?.data?.message || t("Failed to delete pricing policy"),
             "error"
           );
         }
@@ -394,6 +394,30 @@ function PricingPolicyEditor() {
               activeTab={activeCategory}
               onTabChange={handleTabChange}
             />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "10px",
+              margin: "10px",
+            }}
+          >
+            <button
+              className="add-btn"
+              onClick={() => setShowAddForm(!showAddForm)}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#0B4C45",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {showAddForm ? t("Close Form") : t("Add New Pricing Policy")}
+            </button>
           </div>
         </div>
 

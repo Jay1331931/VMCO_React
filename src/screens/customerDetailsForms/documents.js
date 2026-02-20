@@ -4980,13 +4980,52 @@ onClick={(e) => {
         
           )}
           {/* Non-Trading Documents */}
-          <div className="form-header full-width">
-                {t("Non-Trading Documents")}
+                <tr className="document-upload full-width">
+                
+                <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              {t("Non-Trading Documents")}
                 {customerData?.nonTradingDocuments?.length !==
                   originalCustomerData?.nonTradingDocuments?.length && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
-                </div>
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("nonTradingDocumentsVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nonTradingDocumentsVerified"
+        name="nonTradingDocumentsVerified"
+        checked={verifiedData?.nonTradingDocumentsVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nonTradingDocumentsVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+                </tr>
+                
           <tr className="document-upload full-width"
             key={"nonTradingDocuments"}>
   <td className="label-cell"
@@ -5035,34 +5074,7 @@ onKeyDown={handleKeyDown}
       />
     )}
   </td>
-              <div className="input-with-verification">
-          {/* <td
-          className="upload-cell"
-          style={{
-            whiteSpace: "nowrap",
-            paddingRight: "16px",
-            verticalAlign: "top",
-          }}
-        > */}
-          {isV("nonTradingDocumentsVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="nonTradingDocumentsVerified"
-        name="nonTradingDocumentsVerified"
-        checked={verifiedData?.nonTradingDocumentsVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="nonTradingDocumentsVerified">Verified</label>
-      </div>)}
-        {/* </td> */}
-        </div>
+              
             {mode !== "edit" && (<td
               className="upload-cell"
               style={{
@@ -5143,11 +5155,16 @@ onKeyDown={handleKeyDown}
             >
               {" "}
             </td>
-            {mode !== "edit" && (<td
+            {
+            // mode !== "edit" && 
+            
+            (<td
               className="label-cell"
               style={{
-                width: "500px",
-                paddingRight: "500px",
+                width: customerData?.nonTradingDocuments?.length !==
+                  originalCustomerData?.nonTradingDocuments?.length && mode === "edit" ? "300px":"500px",
+                paddingRight: customerData?.nonTradingDocuments?.length !==
+                  originalCustomerData?.nonTradingDocuments?.length && mode === "edit" ? "300px":"640px",
                 verticalAlign: "top",
               }}
             >

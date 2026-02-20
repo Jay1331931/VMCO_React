@@ -163,9 +163,9 @@ const FinalSubmissionConfirmation = ({
       // alert(t("Please provide a signature first"));
       Swal.fire({
         // title: "Error",
-        text: "Please provide a signature first",
+        text: t("Please provide a signature first"),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
         confirmButtonColor: "#3085d6",
       });
       return;

@@ -1043,9 +1043,9 @@ function Orders() {
       const { data } = await axios.post(
         `${API_BASE_URL}/generatePayment-link`,
         {
-          id: order.id,
+          id: order?.id?.toString(),
           endPoint: "payment-options/order",
-          IsEmail: email,
+          IsEmail: email
         },
         {
           headers: {
@@ -2605,7 +2605,7 @@ renderCell: (params) => {
   };
 
   return (
-    <Sidebar title={t("Orders")} CardPaddingClass={isMobile}>
+    <Sidebar title={t("Orders")} >
 
       <div className={`orders-content ${user?.userType.toLowerCase() === ("employee" || "admin") ? "has-filter" : ""}`}
         style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
@@ -2616,7 +2616,7 @@ renderCell: (params) => {
           ) : (
             <>
               <div>
-                <div className={`card-fixed-header ${showHeader ? "show" : "show"}`}>
+                <div className={`card-fixed-header card-fixed-header-order-mobile  ${showHeader ? "show" : "show"}`} >
                   {(user?.userType.toLowerCase() === "employee" || (user?.userType.toLowerCase() === "customer" && isMobile)) && (
                     <div className="filter-section">
                       <div
@@ -2840,7 +2840,7 @@ renderCell: (params) => {
                       disableSelectionOnClick
                       disableColumnMenu
                       hideFooter={true}
-                      getRowId={(row) => row?.workflowInstanceId | row?.id}
+                      getRowId={(row) => row?.workflowInstanceId || row?.id}
                       hideFooterPagination={true}
                       pagination={false}
                       rowHeight={55}

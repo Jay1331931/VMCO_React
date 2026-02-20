@@ -33,6 +33,43 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
     }
   };
 
+  // 📅 Formatters
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+
+    // Force LTR direction using Unicode character
+    return `\u202A${day} ${month} ${year}\u202C`;
+  };
+
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    // Get time parts
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    // Convert to 12-hour format
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Handle midnight (0 hours)
+
+    // Pad with leading zeros
+    const hoursStr = String(hours).padStart(2, '0');
+    const minutesStr = String(minutes).padStart(2, '0');
+
+    // Force LTR direction using Unicode character
+    return `\u202A${hoursStr}:${minutesStr} ${ampm}\u202C`;
+  };
+
   return (
     <Grid
       container
@@ -150,13 +187,28 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                   >
                     {t(customer?.customerStatus) || t("Unknown")}
                   </Typography>
-                  <Typography fontSize={13} fontWeight={600} color="white">
+                  {/* <Typography
+                                        fontSize={11}
+                                        fontWeight={500}
+                                        sx={{ color: "white", mt: 0.3 }}
+                                      >
+                                        {formatTime(customer?.createdAt)}
+                                      </Typography> */}
+                                      {!isApprovalMode && (<Typography
+                                        fontSize={11}
+                                        fontWeight={500}
+                                        color="white"
+                                        sx={{  mt: 0.3 }}
+                                      >
+                                        {formatDate(customer?.createdAt)}
+                                      </Typography>)}
+                                      {isApprovalMode && (<Typography fontSize={13} fontWeight={600} color="white">
                     {/* <BusinessIcon
                       fontSize="small"
                       sx={{ mr: 0.5, verticalAlign: "middle" }}
                     />{" "} */}
                     {t(customer?.companyType) || "—"}
-                  </Typography>
+                  </Typography>)}
                 </div>
               </Grid>
 
@@ -196,7 +248,9 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                       </Typography>
                     {`: ${customer?.branchCount ?? 0}`}
                   </Typography>
-                  {isApprovalMode && (<>
+                  {
+                  // isApprovalMode && 
+                  (<>
                     <Typography fontSize={12} color="#666">
                       <Typography component="span" fontWeight={600} fontSize={12}>
                           {t("Sales Executive")}
@@ -218,6 +272,13 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                     minWidth: "90px",
                   }}
                 >
+                  {!isApprovalMode && (<Typography fontSize={13} fontWeight={600} color="black">
+                    {/* <BusinessIcon
+                      fontSize="small"
+                      sx={{ mr: 0.5, verticalAlign: "middle" }}
+                    />{" "} */}
+                    {t(customer?.companyType) || "—"}
+                  </Typography>)}
                   {customer?.erpCustId ? (
                     <Tooltip title="View Customer Details" arrow>
                       {/* <Button

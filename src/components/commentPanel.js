@@ -356,6 +356,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
           }
           .comment-panel.open {
             transform: translateX(-20px) !important;
+            top: 15%;
           }
             [dir="rtl"] .comment-panel.open {
           transform: translateX(20px) !important;
@@ -365,7 +366,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
           left: 10px !important;
         }
           .comment-button {
-            top: 100px;
+            top: 22%;
             right: 10px;
           }
           [dir = "rtl"] .comment-panel {

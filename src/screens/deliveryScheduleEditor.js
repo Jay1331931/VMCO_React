@@ -143,10 +143,10 @@ function DeliveryScheduleEditor() {
         } catch (err) {
             console.error("Error toggling delivery schedule status:", err);
             Swal.fire({
-                title: "Error",
-                text: err.response?.data?.message || "Failed to update delivery schedule status",
+                title: t("Error"),
+                text: err.response?.data?.message || t("Failed to update delivery schedule status"),
                 icon: "error",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
             });
         } finally {
             setSwitchLoading(prev => ({ ...prev, [scheduleKey]: false }));
@@ -334,10 +334,10 @@ function DeliveryScheduleEditor() {
         } catch (err) {
             console.error("Error fetching delivery schedules:", err);
             Swal.fire({
-                title: "Error",
-                text: "Failed to fetch delivery schedules",
+                title: t("Error"),
+                text: t("Failed to fetch delivery schedules"),
                 icon: "error",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
             });
         } finally {
             setLoading(false);
@@ -439,10 +439,10 @@ function DeliveryScheduleEditor() {
 
         if (missingFields.length > 0) {
             Swal.fire({
-                title: "Validation Error",
+                title: t("Validation Error"),
                 text: `Please fill in all required fields: ${missingFields.join(", ")}`,
                 icon: "warning",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
             });
             return;
         }
@@ -471,8 +471,8 @@ function DeliveryScheduleEditor() {
 
             if (response.data?.status?.toLowerCase() === "ok") {
                 Swal.fire({
-                    title: "Success",
-                    text: "Delivery schedule created successfully",
+                    title: t("Success"),
+                    text: t("Delivery schedule created successfully"),
                     icon: "success",
                     showConfirmButton: false,
                     timer: 800
@@ -494,10 +494,10 @@ function DeliveryScheduleEditor() {
         } catch (err) {
             console.error("Error creating delivery schedule:", err);
             Swal.fire({
-                title: "Error",
-                text: err.response?.data?.message || "Failed to create delivery schedule",
+                title: t("Error"),
+                text: err.response?.data?.message || t("Failed to create delivery schedule"),
                 icon: "error",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
             });
         } finally {
             setLoading(false);
@@ -518,10 +518,10 @@ function DeliveryScheduleEditor() {
     const handleEditSubmit = async () => {
         if (!editData.pickupDay?.trim() || !editData.deliveryDay?.trim()) {
             Swal.fire({
-                title: "Validation Error",
-                text: "Please fill in both pickup day and delivery day",
+                title: t("Validation Error"),
+                text: t("Please fill in both pickup day and delivery day"),
                 icon: "warning",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
             });
             return;
         }
@@ -544,10 +544,10 @@ function DeliveryScheduleEditor() {
 
             if (response.data?.status?.toLowerCase() === "ok") {
                 Swal.fire({
-                    title: "Success",
-                    text: "Delivery schedule updated successfully",
+                    title: t("Success"),
+                    text: t("Delivery schedule updated successfully"),
                     icon: "success",
-                    confirmButtonText: "OK",
+                    confirmButtonText: t("OK"),
                 });
 
                 setShowEditModal(false);
@@ -556,10 +556,10 @@ function DeliveryScheduleEditor() {
         } catch (err) {
             console.error("Error updating delivery schedule:", err);
             Swal.fire({
-                title: "Error",
-                text: err.response?.data?.message || "Failed to update delivery schedule",
+                title: t("Error"),
+                text: err.response?.data?.message || t("Failed to update delivery schedule"),
                 icon: "error",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
             });
         } finally {
             setLoading(false);
@@ -568,13 +568,13 @@ function DeliveryScheduleEditor() {
 
     const handleDeleteClick = async (schedule) => {
         const result = await Swal.fire({
-            title: "Are you sure?",
+            title: t("Are you sure?"),
             text: `Delete delivery schedule for ${schedule.region} - ${schedule.city} - ${schedule.cutoffDay}?`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#d33",
             cancelButtonColor: "#3085d6",
-            confirmButtonText: "Yes, delete it!",
+            confirmButtonText: t("Yes, delete it!"),
         });
 
         if (result.isConfirmed) {
@@ -590,8 +590,8 @@ function DeliveryScheduleEditor() {
 
                 if (response.data?.status?.toLowerCase() === "ok") {
                     Swal.fire({
-                        title: "Deleted!",
-                        text: "Delivery schedule has been deleted.",
+                        title: t("Deleted!"),
+                        text: t("Delivery schedule has been deleted."),
                         icon: "success",
                     });
                     fetchDeliverySchedules(page, searchQuery, filters);
@@ -599,10 +599,10 @@ function DeliveryScheduleEditor() {
             } catch (err) {
                 console.error("Error deleting delivery schedule:", err);
                 Swal.fire({
-                    title: "Error",
-                    text: err.response?.data?.message || "Failed to delete delivery schedule",
+                    title: t("Error"),
+                    text: err.response?.data?.message || t("Failed to delete delivery schedule"),
                     icon: "error",
-                    confirmButtonText: "OK",
+                    confirmButtonText: t("OK"),
                 });
             } finally {
                 setLoading(false);

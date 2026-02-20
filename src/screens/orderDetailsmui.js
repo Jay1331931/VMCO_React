@@ -429,6 +429,73 @@ function OrderDetails() {
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode, salesOrderLinesFromNav?.length]);
 
+  // 🔥 REAL-TIME TOTAL CALCULATION (with BREAKDOWN)
+  useEffect(() => {
+    if (sampleMode) {
+      setFormData(prev => ({
+        ...prev,
+        totalAmount: "0.00"
+      }));
+      return;
+    }
+
+    if (!Array.isArray(formData.products) || formData.products.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        totalAmount: "0.00"
+      }));
+      return;
+    }
+
+    // 📊 DETAILED BREAKDOWN
+    const productBreakdown = formData.products.map((product, index) => ({
+      index,
+      productName: product.productName?.substring(0, 20) + '...',
+      netAmount: parseFloat(product.netAmount || 0),
+      quantity: product.quantity
+    }));
+
+    // 1️⃣ Sum of ALL product netAmounts
+    const subtotalProducts = formData.products.reduce((sum, product) => {
+      return sum + parseFloat(product.netAmount || 0);
+    }, 0);
+
+    // 2️⃣ Delivery Charges
+    const deliveryChargesAmount = parseFloat(formData.deliveryCharges || 0);
+
+    // 3️⃣ FINAL TOTAL
+    const totalNetAmount = (subtotalProducts + deliveryChargesAmount).toFixed(2);
+
+    // Update formData
+    setFormData(prev => ({
+      ...prev,
+      totalAmount: totalNetAmount
+    }));
+
+    // 🔥 DETAILED CONSOLE LOG
+    console.log("🔥 TOTAL BREAKDOWN:", {
+      timestamp: new Date().toLocaleTimeString(),
+      productsCount: formData.products.length,
+
+      // 📈 BREAKDOWN
+      subtotalProducts: subtotalProducts.toFixed(2),
+      deliveryCharges: deliveryChargesAmount.toFixed(2),
+      totalNetAmount,
+
+      // 📋 Individual Products
+      productBreakdown: productBreakdown,
+
+      // 🔍 Raw Values Check
+      rawDeliveryCharges: formData.deliveryCharges,
+      sampleMode
+    });
+
+    // 🧮 Quick Summary Table (console)
+    console.table(productBreakdown);
+    console.log(`📊 SUMMARY: Products=${subtotalProducts.toFixed(2)} + Delivery=${deliveryChargesAmount.toFixed(2)} = TOTAL=${totalNetAmount}`);
+
+  }, [formData.products, formData.deliveryCharges, sampleMode]);
+
   // Refactored isCreditPaymentAllowed to include COD limit logic
   const isCreditPaymentAllowed = async (
     customerId,
@@ -2247,7 +2314,7 @@ function OrderDetails() {
                 setTimeout(() => {
                   copyIcon.className = "fas fa-copy";
                   copyIcon.style.color = "#666";
-                  copyText.textContent = "Copy";
+                  copyText.textContent = t("Copy");
                   copyText.style.color = "#666";
                   copyBtn.style.background = "#fff";
                   copyBtn.style.borderLeftColor = "#ddd";
@@ -4715,6 +4782,7 @@ function OrderDetails() {
                         )}
                       </div>
                     )}
+
                     {isV("expectedDeliveryDate") && (
                       <div className="order-details-field">
                         <label>{t("Delivery Date")}</label>
@@ -5675,7 +5743,7 @@ function OrderDetails() {
                     border: "none",
                     cursor: "pointer",
                   }}
-                  aria-label="Close"
+                  aria-label={t("Close")}
                 >
                   &times;
                 </button>

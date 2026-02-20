@@ -137,10 +137,10 @@ function CoolingPeriodEditor() {
     } catch (err) {
       console.error("Error fetching cooling periods:", err);
       Swal.fire({
-        title: "Error",
-        text: "Failed to fetch cooling periods",
+        title: t("Error"),
+        text: t("Failed to fetch cooling periods"),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       });
     } finally {
       setLoading(false);
@@ -202,10 +202,10 @@ function CoolingPeriodEditor() {
     } catch (err) {
       console.error("Error toggling status:", err);
       Swal.fire({
-        title: "Error",
-        text: err.response?.data?.message || "Failed to update status",
+        title: t("Error"),
+        text: err.response?.data?.message || t("Failed to update status"),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       });
     } finally {
       setSwitchLoading((prev) => ({ ...prev, [periodKey]: false }));
@@ -219,7 +219,7 @@ function CoolingPeriodEditor() {
 
   const handleAddSubmit = async () => {
     if (!newPeriod.fromTime || !newPeriod.toTime) {
-      Swal.fire("Error", "Please fill all required fields", "error");
+      Swal.fire(t("Error"), t("Please fill all required fields"), "error");
       return;
     }
 
@@ -247,7 +247,7 @@ function CoolingPeriodEditor() {
         response.data?.status?.toLowerCase() === "ok" ||
         response.status === 201
       ) {
-        Swal.fire("Success", "Cooling period added successfully", "success");
+        Swal.fire(t("Success"), t("Cooling period added successfully"), "success");
         setShowAddForm(false);
         setNewPeriod({ fromTime: "", toTime: "", isActive: true });
         fetchCoolingPeriods();
@@ -255,10 +255,10 @@ function CoolingPeriodEditor() {
     } catch (err) {
       console.error("Error adding cooling period:", err);
       Swal.fire({
-        title: "Error",
-        text: err.response?.data?.message || "Failed to add cooling period",
+        title: t("Error"),
+        text: err.response?.data?.message || t("Failed to add cooling period"),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       });
     } finally {
       setLoading(false);
@@ -301,17 +301,17 @@ function CoolingPeriodEditor() {
       });
 
       if (response.data?.status?.toLowerCase() === "ok") {
-        Swal.fire("Success", "Cooling period updated successfully", "success");
+        Swal.fire(t("Success"), t("Cooling period updated successfully"), "success");
         setShowEditModal(false);
         fetchCoolingPeriods();
       }
     } catch (err) {
       console.error("Error updating cooling period:", err);
       Swal.fire({
-        title: "Error",
-        text: err.response?.data?.message || "Failed to update cooling period",
+        title: t("Error"),
+        text: err.response?.data?.message || t("Failed to update cooling period"),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       });
     } finally {
       setLoading(false);
@@ -320,13 +320,13 @@ function CoolingPeriodEditor() {
 
   const handleDeleteClick = async (activeCategory) => {
     Swal.fire({
-      title: "Are you sure?",
+      title: t("Are you sure?"),
       text: `This will delete ALL cooling periods for ${activeCategory}.`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#C01823",
       cancelButtonColor: "#0B4C45",
-      confirmButtonText: "Yes, delete all!",
+      confirmButtonText: t("Yes, delete all!"),
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
@@ -341,8 +341,8 @@ function CoolingPeriodEditor() {
 
           if (response.data?.status?.toLowerCase() === "ok") {
             Swal.fire(
-              "Deleted!",
-              "Cooling periods have been deleted.",
+              t("Deleted!"),
+              t("Cooling periods have been deleted."),
               "success"
             );
             fetchCoolingPeriods();
@@ -350,8 +350,8 @@ function CoolingPeriodEditor() {
         } catch (err) {
           console.error("Error deleting cooling period:", err);
           Swal.fire(
-            "Error",
-            err.response?.data?.message || "Failed to delete",
+            t("Error"),
+            err.response?.data?.message || t("Failed to delete cooling period"),
             "error"
           );
         }

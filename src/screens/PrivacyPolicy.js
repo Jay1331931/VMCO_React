@@ -196,7 +196,7 @@ navigate("/login")
 
 @media (max-width: 600px) {
   .privacy-card {
-    padding: 20px;
+    padding: 41px 20px;
   }
 
   .policy-title {

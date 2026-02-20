@@ -221,10 +221,10 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
       if (Object.keys(errors).length > 0) {
         // setIsInviteLoading(false);
         Swal.fire({
-          title: "Error",
+          title: t("Error"),
           text: t("Please fix the errors before sending invite."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
         });
         return;
       }
@@ -237,10 +237,10 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
       );
       if (emailExists) {
         Swal.fire({
-          title: "Error",
+          title: t("Error"),
           text: t("This email is already invited. Please use a different email."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
         });
         // setIsInviteLoading(false); // Stop loading
         return;
@@ -256,10 +256,10 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
         !inviteData.primaryBusinessUnit
       ) {
         Swal.fire({
-          title: "Error",
+          title: t("Error"),
           text: t("Please fill in all fields"),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
         });
         // setIsInviteLoading(false); // Stop loading
         return;
@@ -334,10 +334,10 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
             } catch (err) {
               console.error("Error generating invite link:", err);
               Swal.fire({
-                title: "Error",
-                text: "Failed to generate invite link. Please try again later.",
+                title: t("Error"),
+                text: t("Failed to generate invite link. Please try again later."),
                 icon: "error",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
                 confirmButtonColor: "#dc3545",
               });
               return;
@@ -439,10 +439,10 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
             // console.error('Error resending invite:', err);
             console.log("Error sending invite:", err.message);
             Swal.fire({
-              title: "Error",
+              title: t("Error"),
               text: t("Failed to send invite. Please try again later."),
               icon: "error",
-              confirmButtonText: "OK",
+              confirmButtonText: t("OK"),
             });
             // alert('Failed to send invite. Please try again later.');
             return;

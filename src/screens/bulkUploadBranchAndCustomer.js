@@ -284,12 +284,12 @@ function BulkUploadBranchAndCustomer() {
       console.error("Error fetching primary customers:", error);
 
       Swal.fire({
-        title: "Failed to Send email",
+        title: t("Failed to Send email"),
         text:
           error.response?.data?.message ||
-          "An error occurred while sending email.",
+          t("An error occurred while sending email."),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
       });
     } finally {
       setEmailLoading(false);

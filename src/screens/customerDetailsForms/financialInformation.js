@@ -350,8 +350,8 @@ function FinancialInformation({
       console.error("Error fetching credit balance:", error);
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: error.message || "Failed to fetch credit balance",
+        title: t("Error"),
+        text: error.message || t("Failed to fetch credit balance"),
       });
     }
   };
@@ -579,16 +579,16 @@ function FinancialInformation({
     setIsSubmited(false);
     if (ccEmail && !validateEmails(ccEmail)) {
       Swal.fire({
-        icon: "error",
-        title: "Invalid CC Email",
-        text: "Please enter valid comma-separated emails.",
+        icon: t("error"),
+        title: t("Invalid CC Email"),
+        text: t("Please enter valid comma-separated emails."),
       });
       return;
     }
 
     Swal.fire({
-      title: "Submitting...",
-      text: "Please wait",
+      title: t("Submitting..."),
+      text: t("Please wait"),
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -628,15 +628,15 @@ function FinancialInformation({
 
         Swal.fire({
           icon: "success",
-          title: "Request Submitted",
-          text: "Please wait up to 15 minutes to receive the email.",
+          title: t("Request Submitted"),
+          text: t("Please wait up to 15 minutes to receive the email."),
           confirmButtonColor: "#1976d2",
         });
       } else {
         Swal.fire({
           icon: "error",
-          title: "Submission Failed",
-          text: data.message || "Something went wrong. Please try again.",
+          title: t("Submission Failed"),
+          text: t(data.message) || t("Something went wrong. Please try again."),
         });
       }
     } catch (error) {
@@ -649,8 +649,8 @@ function FinancialInformation({
 
       Swal.fire({
         icon: "error",
-        title: "Submission Failed",
-        text: errorMessage,
+        title: t("Submission Failed"),
+        text: t(errorMessage),
       });
     }
   };

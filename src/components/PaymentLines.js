@@ -44,10 +44,10 @@ const PaymentLines = () => {
         setPayment(response.data.details);
       } else {
         Swal.fire({
-          title: "Error",
-          text: response?.data?.message ||  "Something went wrong while fetching payment lines",
+          title: t("Error"),
+          text: response?.data?.message ||  t("Something went wrong while fetching payment lines"),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#dc3545",
         });
        
@@ -56,10 +56,10 @@ const PaymentLines = () => {
       console.error(error);
      
        Swal.fire({
-          title: "Error",
-          text: error?.response?.data?.message ||  "Something went wrong while fetching payment lines",
+          title: t("Error"),
+          text: error?.response?.data?.message ||  t("Something went wrong while fetching payment lines"),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#dc3545",
         });
     } finally {
@@ -89,24 +89,24 @@ const PaymentLines = () => {
         setSyncLoading(false);
 
         Swal.fire({
-          title: "Success",
-          text: data.message || "payment synce Successfully",
+          title: t("Success"),
+          text: data.message || t("Payment synced successfully"),
           icon: "success",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#3085d6",
         });
       } else {
         setSyncLoading(false);
         Swal.fire({
-          title: "Error",
-          text: data.message || "Failed to Sync with FandO.",
+          title: t("Error"),
+          text: data.message || t("Failed to Sync with FandO."),
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#dc3545",
         });
       }
     } catch (error) {
-      Swal.fire("Error", "Sync failed. Please try again.", "error");
+      Swal.fire(t("Error"), t("Sync failed. Please try again."), "error");
     }
   };
 

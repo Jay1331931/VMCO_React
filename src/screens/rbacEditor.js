@@ -364,10 +364,10 @@ function RbacEditor() {
       (showFieldInput || showPageInput)
     ) {
       Swal.fire({
-        title: "Validation Error",
-        text: "Please enter a page name and at least one field",
+        title: t("Validation Error"),
+        text: t("Please enter a page name and at least one field"),
         icon: "warning",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
         confirmButtonColor: "#f0ad4e", // Bootstrap warning color
       });
       return;
@@ -400,28 +400,28 @@ function RbacEditor() {
         setShowDeletePageInput(false);
         setShowDeleteFieldInput(false);
         Swal.fire({
-          title: "Success",
+          title: t("Success"),
           text: res.data?.message,
           icon: "success",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#28a745", // Bootstrap success green
         });
       } else {
         Swal.fire({
-          title: "Error",
+          title: t("Error"),
           text: res.data?.message,
           icon: "error",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#dc3545", // Bootstrap danger red
         });
       }
     } catch (err) {
       console.error(err);
       Swal.fire({
-        title: "Error",
-        text: err.response?.data?.message || "Internal Server Error",
+        title: t("Error"),
+        text: err.response?.data?.message || t("Internal Server Error"),
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonText: t("OK"),
         confirmButtonColor: "#dc3545",
       });
     }

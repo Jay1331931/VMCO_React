@@ -124,10 +124,10 @@ function DataManagement() {
                     .map(([error, count]) => `• ${error}: ${count} order(s)`)
                     .join("\n");
                 Swal.fire({
-                    title: "Cut-off Failed",
+                    title: t("Cut-off Failed"),
                     text:
                         t(failedMessage) ||
-                        "Some orders failed during the cut-off process.",
+                        t("Some orders failed during the cut-off process."),
                     icon: "error",
                     confirmButtonText: t("OK"),
                 });
@@ -136,12 +136,12 @@ function DataManagement() {
             console.error("An error occurred while running Cut-off:", error);
 
             Swal.fire({
-                title: "Cut-off Failed",
+                title: t("Cut-off Failed"),
                 text:
                     error.response?.data?.message ||
-                    "An error occurred while running Cut-off:",
+                    t("An error occurred while running Cut-off."),
                 icon: "error",
-                confirmButtonText: "OK",
+                confirmButtonText: t("OK"),
             });
         } finally {
             setcutOffLoading(false);
