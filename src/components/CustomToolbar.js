@@ -353,7 +353,7 @@ const handleKeyDown = (e) => {
             // right: '10px',
             width: 'calc(100% - 20px) !important',
             // zIndex: 99999,
-            backgroundColor: 'white',
+            // backgroundColor: 'white',
             // boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           },
         },
