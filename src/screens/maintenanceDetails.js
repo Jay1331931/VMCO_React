@@ -1800,7 +1800,7 @@ function MaintenanceDetails() {
         <div className='support-status '>
           {isV('ticketStatus') && (
             <div className='support-status'>
-              <span>{t("Ticket Status")}:</span>
+              <span>{t("Ticket Status:")}</span>
               <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
             </div>
           )}

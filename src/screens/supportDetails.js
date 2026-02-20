@@ -1459,7 +1459,7 @@ function SupportDetails() {
                     onChange={(e) => handleDepartmentChange({ target: { value: e.target.value } })}
                     disabled={!isEditing || loadingDepartments || isReadOnly || !isE('assignedTo')}
                     placeholder={t('Select Department')}
-                    className={!isMobile ? "" : "mobile-select-branch location-select"}
+                    className={!isMobile ? "" : "mobile-select-branch location-select support-department-dropdown"}
                     openUpwards={true}
                   />
                 </div>
@@ -1473,7 +1473,7 @@ function SupportDetails() {
                     onChange={handleInputChange}
                     disabled={!isEditing || !selectedDepartment || isReadOnly || !isE('assignedTo')}
                     placeholder={!selectedDepartment ? t('Select department first') : t('Select Assignee')}
-                    className={!isMobile ? "" : "mobile-select-branch location-select"}
+                    className={!isMobile ? "" : "mobile-select-branch location-select support-department-dropdown"}
                     openUpwards={true}
                   />
                 </div>

@@ -796,6 +796,7 @@
     "Delivered": "تم التوصيل",
     "Invoiced": "تم إصدار الفاتورة",
     "Rejected": "رفض",
+    "rejected": "رفض",
     "Pending": "قيد الانتظار",
     "Paid": "مدفوع",
     "Under Review": "قيد المراجعة",
@@ -969,7 +970,7 @@
 "Days Open": "أيام مفتوحة",
 "Request Sent":"تم إرسال الطلب",
 "Please read the Terms and Conditions and provide consent by selecting the checkbox to proceed.": "يرجى قراءة الشروط والأحكام والموافقة عليها عن طريق تحديد خانة الاختيار للمتابعة.",
-"Your request has been sent for approval! Order #":"تم إرسال طلبك للموافقة! الطلب #",
+"Your Request has been sent for Approval":"تم إرسال طلبك للموافقة عليه",
 "Request sent with orders": "تم إرسال طلبك للموافقة! الطلب #{{orders}} - طريقة الدفع: {{method}}",
 "Request sent with order": "تم إرسال طلبك للموافقة! الطلب #{{order}}",
 "Processing Order": "جاري معالجة الطلب",
@@ -1133,7 +1134,29 @@
 "Adding...": "جارٍ الإضافة...",
 "Employee":"موظف",
 "All Categories":"جميع الفئات",
-"All Sub Categories":"جميع الفئات الفرعية"
+"All Sub Categories":"جميع الفئات الفرعية",
+"Items discarded from the cart for branch": "العناصر التي تم التخلص منها من السلة للفرع",
+"An open order #": "طلب مفتوح #",
+" already exists. Please update instead of creating new one": " موجود بالفعل. يرجى التحديث بدلاً من إنشاء طلب جديد",
+"Add your comment here...": "أضف تعليقك هنا...",
+"Add Comment": "أضف تعليق",
+"Please select an entity first": "يرجى تحديد جهة أولاً",
+"Payment Percentage": "نسبة الدفع",
+"Payment Link": "رابط الدفع",
+"Customer Feedback": "ملاحظات العملاء",
+"Please select a business unit": "يرجى تحديد وحدة الأعمال",
+"Cancel Ticket": "إلغاء التذكرة",
+"Are you sure you want to cancel this ticket? Please provide a reason.": "هل أنت متأكد من رغبتك في إلغاء هذه التذكرة؟ يرجى تقديم سبب.",
+"Enter cancellation reason": "أدخل سبب الإلغاء",
+"Ticket cancelled successfully!": "تم إلغاء التذكرة بنجاح!",
+"Reject Ticket": "رفض التذكرة",
+"Do you want to reject this ticket? Please provide a reason.": "هل تريد رفض هذه التذكرة؟ يرجى تقديم سبب.",
+"Ticket rejected successfully!": "تم رفض التذكرة بنجاح!",
+"Remove spare parts": "إزالة قطع الغيار",
+"Request sent successfully!": "تم إرسال الطلب بنجاح!",
+"Transaction created successfully": "تم إنشاء المعاملة بنجاح",
+"Transaction updated successfully": "تم تحديث المعاملة بنجاح"
+
 
 
 

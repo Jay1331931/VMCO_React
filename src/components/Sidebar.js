@@ -49,7 +49,7 @@ const isMobileResponsive = /iPhone|Android/i.test(navigator.userAgent)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const isIOSsMobile = /iPhone/i.test(navigator.userAgent);
 const isAndroidMobile = /Android/i.test(navigator.userAgent);
-function Sidebar({ children, title = null, MenuName = null, searchable = false, setSelectedBranchLocation, goToCart = false, selectBranch = false, homePage = "", PaddingClass = false, CardPaddingClass = false,CustomerPaddingClass=false, hideMobileBottomMenu = false,selectedBranch=null }) {
+function Sidebar({ children, title = null, MenuName = null, searchable = false, setSelectedBranchLocation, goToCart = false, selectBranch = false, homePage = "", PaddingClass = false, CardPaddingClass = false, CustomerPaddingClass = false, hideMobileBottomMenu = false, selectedBranch = null }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
@@ -81,7 +81,7 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
   const custSequenceId = user?.sequenceId;
   const userId = user?.userId;
   const isRTL = i18n.language === "ar";
-console.log("selectedLocation",selectedLocation)
+  console.log("selectedLocation", selectedLocation)
   const toggleLanguage = () => {
     const newLang = isRTL ? "en" : "ar";
     i18n.changeLanguage(newLang);
@@ -369,7 +369,7 @@ console.log("selectedLocation",selectedLocation)
         },
       });
     } else {
-       navigate("/Cart", {
+      navigate("/Cart", {
         state: {
           selectedCustomerId: user?.customerId,
           selectedCustomerStatus: user?.customerStatus,
@@ -387,7 +387,8 @@ console.log("selectedLocation",selectedLocation)
           selectedBranchStatus: selectedBranch?.status || "",
           selectedCustSequenceId: user?.sequenceId || "",
           selectedBranchSequenceId: selectedBranch?.sequenceId || "",
-        },})
+        },
+      })
     }
   };
 
@@ -674,7 +675,7 @@ console.log("selectedLocation",selectedLocation)
       case "/customers":
         setActiveMenu("Customers");
         break;
-        case "/customerDetails":
+      case "/customerDetails":
         setActiveMenu("Company");
         break;
       case "/catalog":
@@ -797,9 +798,7 @@ console.log("selectedLocation",selectedLocation)
             await Swal.fire({
               icon: "success",
               title: t("Success"),
-              text: t(
-                `Items discarded from the cart for branch ${otherBranchLabel}`
-              ),
+              text: t(`Items discarded from the cart for branch`) + `${otherBranchLabel}`,
               confirmButtonText: t("OK"),
             });
           } catch (deleteError) {
@@ -1242,7 +1241,7 @@ console.log("selectedLocation",selectedLocation)
                       </div>
                     </div>
                   )}
-               
+
                 </div>
               )}
 
@@ -1253,17 +1252,17 @@ console.log("selectedLocation",selectedLocation)
             </div>
           </header>
           <div
-            className={`content ${homePage ? homePage : ""} ${PaddingClass ? "catalog-padding-removing" : ""} ${CardPaddingClass ? "card-padding-removing" : ""} ${CustomerPaddingClass ? "customer-details-padding":"" }`}
+            className={`content ${homePage ? homePage : ""} ${PaddingClass ? "catalog-padding-removing" : ""} ${CardPaddingClass ? "card-padding-removing" : ""} ${CustomerPaddingClass ? "customer-details-padding" : ""}`}
             style={{
-              padding:  "20px", //isMobile ? (activeMenu ? "0 0px 0px" : "020px") :
+              padding: "20px", //isMobile ? (activeMenu ? "0 0px 0px" : "020px") :
             }}
           >
             {/* {
                 <PageTransition type={getTransitionForRoute(location.pathname)}> */}
-              {children}
+            {children}
             {/* </PageTransition> 
             } */}
-           
+
           </div>
           {/* UPDATED: Only show bottom menu on mobile (isMobile check) */}
           {isMobile && isMobile && (
