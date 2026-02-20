@@ -242,12 +242,7 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                   <Typography fontSize={12} color="#666">
                     {t(customer?.typeOfBusiness) || t("Type N/A")}
                   </Typography>
-                  <Typography fontSize={12} color="#666">
-                    <Typography component="span" fontWeight={600} fontSize={12}>
-                        {t("Branches")}
-                      </Typography>
-                    {`: ${customer?.branchCount ?? 0}`}
-                  </Typography>
+                  
                   {
                   // isApprovalMode && 
                   (<>
@@ -279,6 +274,12 @@ function CustomerCard({ customers, isApprovalMode, handleViewDetails, handleSync
                     />{" "} */}
                     {t(customer?.companyType) || "—"}
                   </Typography>)}
+                  <Typography fontSize={12} color="#666">
+                    <Typography component="span" fontWeight={600} fontSize={12}>
+                        {t("Branches")}
+                      </Typography>
+                    {`: ${customer?.branchCount ?? 0}`}
+                  </Typography>
                   {customer?.erpCustId ? (
                     <Tooltip title="View Customer Details" arrow>
                       {/* <Button

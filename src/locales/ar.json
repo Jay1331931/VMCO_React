@@ -1155,7 +1155,11 @@
 "Remove spare parts": "إزالة قطع الغيار",
 "Request sent successfully!": "تم إرسال الطلب بنجاح!",
 "Transaction created successfully": "تم إنشاء المعاملة بنجاح",
-"Transaction updated successfully": "تم تحديث المعاملة بنجاح"
+"Transaction updated successfully": "تم تحديث المعاملة بنجاح",
+"Primary Business Unit":"وحدة الأعمال الأساسية",
+"Delivery Charges":"رسوم التوصيل",
+"Set working hours for each day of the week":"حدد ساعات العمل لكل يوم من أيام الأسبوع",
+"Special Hours":"ساعات خاصة"
 
 
 

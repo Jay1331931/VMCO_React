@@ -734,7 +734,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                 id="category-filter"
                 name="categoryFilter"
                 options={i18n.language === "en" ? categoryEnOptions : categoryArOptions}
-                placeholder={t("Categories")}
+                placeholder={t("All Categories")}
                 value={categoryFilter}
                 onChange={(e) => {
                   setCategoryFilter(e.target.value);
@@ -752,7 +752,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                 id="subcategory-filter"
                 name="subCategoryFilter"
                 options={i18n.language === "en" ? subCategoryEnOptions : subCategoryArOptions}
-                placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
+                placeholder={!categoryFilter ? t("Select category first") : t("All Sub Categories")}
                 value={subCategoryFilter}
                 onChange={(e) => {
                   setSubCategoryFilter(e.target.value);

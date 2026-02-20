@@ -336,7 +336,7 @@ const OperatingHours = ({
         </h3>
       </div>
       <div className="section-subtitle-mobile">
-        Set working hours for each day of the week
+        {t("Set working hours for each day of the week")}
       </div>
     </div>
 
@@ -360,7 +360,7 @@ const OperatingHours = ({
               {day === "friday" && (
                 <span className="special-day-badge">
                   <FontAwesomeIcon icon={faMosque} />
-                  Special Hours
+                  {t("Special Hours")}
                 </span>
               )}
             </div>

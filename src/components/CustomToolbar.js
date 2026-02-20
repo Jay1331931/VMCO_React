@@ -347,14 +347,14 @@ const handleKeyDown = (e) => {
         ...commonStyles.autocompleteRoot,
         '&.Mui-focused': {
           '@media (max-width: 768px)': {
-            position: 'fixed',
-            top: '10px',
-            left: '10px',
-            right: '10px',
+            // position: 'fixed',
+            // top: '10px',
+            // left: '10px',
+            // right: '10px',
             width: 'calc(100% - 20px) !important',
-            zIndex: 99999,
-            backgroundColor: 'white',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            // zIndex: 99999,
+            // backgroundColor: 'white',
+            // boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           },
         },
       }}
