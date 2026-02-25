@@ -10,7 +10,7 @@ import "../styles/addInvites.css";
 import { useNavigate } from "react-router-dom";
 
 const AddInvites = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { token, user } = useAuth();
   const cookieToken = localStorage.getItem("token");
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -538,7 +538,9 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
                 geoData
                   ? Object.keys(geoData).map((region) => ({
                       value: region,
-                      name: region,
+                      name: i18n.language === "ar"
+                      ? geoData[region].ar
+                      : geoData[region].en,
                     }))
                   : []
               }
