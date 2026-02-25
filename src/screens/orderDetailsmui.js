@@ -4469,6 +4469,7 @@ function OrderDetails() {
                             <input
                               id="customerField"
                               name="selectedCustomerName"
+                              readOnly
                               defaultValue={
                                 i18n.language === "ar"
                                   ? formData.companyNameAr ||
@@ -4568,6 +4569,7 @@ function OrderDetails() {
                         <label>{t("Order By")}</label>
                         <input
                           name="orderBy"
+                          readOnly
                           value={orderFromNav.createdByUsername || ""}
                           onChange={handleInputChange}
                           disabled={!isE("orderBy")}
@@ -4579,6 +4581,7 @@ function OrderDetails() {
                         <label>{t("Last Modified By")}</label>
                         <input
                           name="lastModifiedBy"
+                          readOnly
                           value={orderFromNav.modifiedByUsername || ""}
                           disabled={true}
                         />
@@ -4595,6 +4598,7 @@ function OrderDetails() {
                               ? formData.erpOrderId
                               : ""
                           }
+                          readOnly
                           onChange={handleInputChange}
                           disabled={!isE("erpOrderId")}
                           placeholder={t("ERP#")}
@@ -4608,6 +4612,7 @@ function OrderDetails() {
                           <select
                             name="entity"
                             value={formData.entity || ""}
+                            readOnly
                             onClick={handleEntityChange}
                             onChange={handleInputChange}
                             className="entity-dropdown"
@@ -4632,6 +4637,7 @@ function OrderDetails() {
                                 <option
                                   key={index}
                                   value={entity}
+                                  readOnly
                                   disabled={!isEntityAllowed}
                                   style={
                                     !isEntityAllowed
@@ -4651,6 +4657,7 @@ function OrderDetails() {
                           <input
                             name="entity"
                             value={formData.entity || ""}
+                            readOnly
                             disabled
                           />
                         )}
@@ -4663,6 +4670,7 @@ function OrderDetails() {
                           <Dropdown
                             name="category"
                             value={formData.category || ""}
+                            readOnly
                             onChange={handleInputChange}
                             options={
                               formData?.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
@@ -4691,6 +4699,7 @@ function OrderDetails() {
                           <input
                             name="category"
                             value={formData.category || ""}
+                            readOnly
                             disabled
                           />
                         )}
