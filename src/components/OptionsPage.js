@@ -19,6 +19,7 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AppleIcon from "@mui/icons-material/Apple";
 import LoadingSpiner from "./LoadingSpinner"
+import { useTranslation } from "react-i18next";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
   return localStorage.getItem(name);
@@ -31,7 +32,7 @@ const OptionsPage = () => {
   const [tempdecodedOrderID, setTempDecodedOrderID] = useState(null);
   const [DecodedorderTpe, setDecodedOrderType] = useState(null);
   const [amount, setAmount] = useState(0);
-
+const {t} = useTranslation();
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const cookieToken = getCookie("token");
@@ -395,7 +396,7 @@ const OptionsPage = () => {
     isMatch;
 
   return (
-    <Sidebar title={t("Payment Options")}>
+    <Sidebar title={t("Payment Options")} >
       { (isVMCO || isNAQI || showApplePay  ) ?  <Box
         sx={{
           display: "flex",
@@ -438,7 +439,7 @@ const OptionsPage = () => {
                   )
                 }
               >
-                Bank Transaction
+                {t("Bank Transaction")}
               </Button>
             )}
 
@@ -456,7 +457,7 @@ const OptionsPage = () => {
               }}
               onClick={() => handlePayment("CardPay")}
             >
-              Cards Pay
+              {t("Cards Pay")}
             </Button>
 
             {showApplePay && (isMobile || isDesktop) && (
@@ -475,7 +476,7 @@ const OptionsPage = () => {
                 }}
                 onClick={() => handlePayment("Apple Pay")}
               >
-                Apple Pay
+                {t("Apple Pay")}
               </Button>
             )}
           </Stack>
