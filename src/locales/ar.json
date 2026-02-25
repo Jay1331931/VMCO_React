@@ -1165,6 +1165,20 @@
 "Primary Business Unit":"وحدة الأعمال الأساسية",
 "Delivery Charges":"رسوم التوصيل",
 "Set working hours for each day of the week":"حدد ساعات العمل لكل يوم من أيام الأسبوع",
+"Add New Card":"إضافة بطاقة جديدة",
+"Preparing your payment form...":"جارٍ تحضير نموذج الدفع الخاص بك...",
+"Processing your payment...":"جارٍ معالجة الدفع الخاص بك...",
+"Please wait while we process your payment":"يرجى الانتظار بينما نقوم بمعالجة الدفع الخاص بك",
+"Confirm Payment":"تأكيد الدفع",
+"Loading payment gateway...":"جارٍ تحميل بوابة الدفع...",
+"Your payment is secure and encrypted":"دفعك آمن ومشفر",
+"Supported: MADA, Visa, Mastercard":"مدعوم: مدى، فيزا، ماستركارد",
+"Select a saved card":"اختر بطاقة محفوظة",
+"Saudi Riyal":"الريال السعودي",
+"Amount:":"المبلغ:",
+"Cards Pay":"دفع البطاقات",
+"Apple Pay":"أبل باي",
+"Apply to all days":"تطبيق على جميع الأيام",
 "Special Hours":"ساعات خاصة"
 
 

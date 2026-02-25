@@ -29,7 +29,7 @@ const ApplePayComponent = () => {
   const { orderId, amount, customerId, orderType } = useParams();
   const [customerDetails, setCustomerDetails] = useState(null);
   const { token } = useAuth();
-  const { t } = useTranslation();
+  const { t,i18n } = useTranslation();
   const AppleContainerRef = useRef(null);
 
   const orderIdDecoded = atob(decodeURIComponent(orderId));
@@ -67,7 +67,7 @@ const ApplePayComponent = () => {
     script.onload = () => setSdkLoaded(true);
     script.onerror = () => console.error("Failed to load Tap Apple Pay SDK");
     document.head.appendChild(script);
-  }, []);
+  }, [i18n.language]);
 
   // Format phone number
   let phone;
@@ -122,7 +122,7 @@ const ApplePayComponent = () => {
             },
           },
           interface: {
-            locale: Locale.EN,
+            locale: i18n.language === "ar" ? Locale.AR :Locale.EN,
             theme: ThemeMode.DARK,
             type: ButtonType.BUY,
             edges: Edges.CURVED,
@@ -140,7 +140,7 @@ const ApplePayComponent = () => {
     } catch (error) {
       console.error("Error initializing Apple Pay:", error);
     }
-  }, [sdkLoaded, customerDetails, initialized, amountDecoded]);
+  }, [sdkLoaded, customerDetails, initialized, amountDecoded,i18n.language]);
 
   // Handle payment success
   const handleSuccess = async (paymentData) => {
@@ -268,10 +268,16 @@ const ApplePayComponent = () => {
                       opacity: initialized ? 1 : 0.3,
                       transition: "opacity 0.4s ease",
                       pointerEvents: initialized ? "auto" : "none",
+                      position: "relative",
+                      top: "16%",
                     }}
                   />
                   {!initialized && sdkLoaded && (
-                    <Typography color="text.secondary" mt={1}>
+                    <Typography color="text.secondary" mt={1} style={{
+                     
+                      position: "relative",
+                      top: "16%",
+                    }}>
                       {t("Preparing Apple Pay...")}
                     </Typography>
                   )}
