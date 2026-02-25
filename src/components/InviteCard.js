@@ -19,6 +19,20 @@ function InviteCard({ invites, handleResend }) {
         return "#E5E7EB";
     }
   };
+  // 📅 Formatters
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+
+    // Force LTR direction using Unicode character
+    return `\u202A${day} ${month} ${year}\u202C`;
+  };
 
   const getStatusTextColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -120,7 +134,7 @@ function InviteCard({ invites, handleResend }) {
                 </div>
 
                 {/* Status badge */}
-                {/* <div
+                <div
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -147,7 +161,15 @@ function InviteCard({ invites, handleResend }) {
                   >
                     {invite?.registered ? t("Registered") : t("Pending")}
                   </Typography>
-                </div> */}
+                  <Typography
+                                                          fontSize={11}
+                                                          fontWeight={500}
+                                                          color="white"
+                                                          sx={{  mt: 0.3 }}
+                                                        >
+                                                          {formatDate(invite?.createdAt)}
+                                                        </Typography>
+                </div>
               </Grid>
 
               {/* Body */}
@@ -222,6 +244,9 @@ function InviteCard({ invites, handleResend }) {
                       </Button>
                     </Tooltip>
                   )}
+                  <Typography fontSize={12} color="#666">
+                    {t("Source")}: {invite?.source || "-"}
+                  </Typography>
                 </div>
               </Grid>
             </Grid>

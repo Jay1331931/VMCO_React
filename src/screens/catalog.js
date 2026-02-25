@@ -111,6 +111,7 @@ function Catalog() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const { loading: isLoading, startLoading, stopLoading } = useLoading();
+  const [contentReady, setContentReady] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
@@ -269,6 +270,7 @@ function Catalog() {
     if (reset) {
       startLoading();
       isLoadingRef.current = true;
+      setContentReady(false);
     } else {
       setIsLoadingMore(true);
       isLoadingRef.current = true;
@@ -412,6 +414,16 @@ function Catalog() {
     setQuantities({});
     fetchProducts(1, true);
   }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, user, resetInfiniteScrollStates]);
+
+  useEffect(() => {
+    if (products.length > 0) {
+      // Microtask ensures setDisplayedProducts completed
+      queueMicrotask(() => {
+        setContentReady(true);
+        stopLoading();  // NOW safe to hide skeleton
+      });
+    }
+  }, [products.length]);
 
   useEffect(() => {
     if (observerRef.current) {
@@ -1417,7 +1429,7 @@ function Catalog() {
         handleAddToCart={handleAddToCart}
         handleProductClick={handleProductClick}
         onToggleFavorite={handleToggleFavorite}
-        isLoading={isLoading}
+        isLoading={!contentReady || loading}
         isLoadingMore={isLoadingMore}
         hasMore={hasMore}
         searchQuery={searchQuery}

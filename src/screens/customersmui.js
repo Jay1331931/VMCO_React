@@ -1395,6 +1395,7 @@ function Customers() {
         const updatedInvites = result.data.data.map((invite) => ({
     ...invite,
     status: invite?.registered ? invite?.customerStatus?.toLowerCase() === "new" ? "Incomplete" : invite?.customerStatus?.toLowerCase() === "pending" ? "Pending Approval": invite?.customerStatus?.toLowerCase() === "blocked" ?  "Approved": invite?.customerStatus: "Invite Pending" ,   // default value
+    region: invite?.region ? (geoData?.[invite.region]?.[i18n.language] || invite.region) : "", // Convert region code to name using geoData
   }));
         setFilteredInvites(updatedInvites);
         // }));
@@ -1536,7 +1537,8 @@ function Customers() {
       if (!invitesFiltersInitialized) return;
       fetchInvites(page, searchQuery, filters);
     }
-  }, [activeTab, isApprovalMode, page, searchQuery, filters, customersFiltersInitialized, invitesFiltersInitialized]);
+  }, [activeTab, isApprovalMode, page, searchQuery, filters, customersFiltersInitialized, invitesFiltersInitialized, i18n.language
+  ]);
 
   useEffect(() => {
     getOptionsFromBasicsMaster("entity").then(setEntityOptions);
@@ -1556,7 +1558,9 @@ function Customers() {
             geoData
               ? Object.keys(geoData).map((region) => ({
                 value: region,
-                name: region,
+                name: i18n.language === "ar"
+                      ? geoData[region].ar
+                      : geoData[region].en,
               }))
               : []
           );
@@ -2839,7 +2843,9 @@ if (contentDisposition) {
                     geoData
                       ? Object.keys(geoData).map((region) => ({
                         value: region,
-                        name: region,
+                        name: i18n.language === "ar"
+                      ? geoData[region].ar
+                      : geoData[region].en,
                       }))
                       : []
                   }
