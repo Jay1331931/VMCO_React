@@ -682,7 +682,7 @@ const TimeInputGroup = ({
                   }}
                 >
                   <FontAwesomeIcon icon={faTimes} />
-                  <span>Cancel</span>
+                  <span>{t("Cancel")}</span>
                 </button>
               </>
             )}
@@ -694,10 +694,10 @@ const TimeInputGroup = ({
                   onApplyAll();
                   setIsExpanded(false);
                 }}
-                title="Apply to all days"
+                title={t("Apply to all days")}
               >
                 <FontAwesomeIcon icon={faCopy} />
-                <span>Apply All</span>
+                <span>{t("Apply All")}</span>
               </button>
             )}
             
@@ -706,7 +706,7 @@ const TimeInputGroup = ({
                   onClick={() => setIsExpanded(false)}
                 >
                   <FontAwesomeIcon icon={faCheck} />
-                  <span>Confirm</span>
+                  <span>{t("Confirm")}</span>
                 </button>
           </div>
         </div>

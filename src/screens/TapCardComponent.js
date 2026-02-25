@@ -47,7 +47,7 @@ const TapCardPayment = () => {
   const [isPayButtonValid, setisPayButtonValid] = useState(false);
     const [showCardForm, setShowCardForm] = useState(true);
   const { token } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const orderIdDecoded = atob(decodeURIComponent(orderId));
@@ -168,7 +168,7 @@ const TapCardPayment = () => {
           customer: {
             id: CustomerDetails?.tap_cust_id || "",
             name: [
-              { lang: Locale.EN, first: CustomerDetails?.company_name_en },
+              { lang: i18n.language === "ar" ? Locale.AR : Locale.EN, first: CustomerDetails?.company_name_en },
             ],
             editable: true,
             contact: { email: CustomerDetails?.contact_email, phone },
@@ -347,28 +347,28 @@ const TapCardPayment = () => {
           
             <Grid item xs={12} md={6}>
                 <Typography variant="h6" fontWeight={600}>
-                Payment Details
+                {t("Payment Details")}
               </Typography>
               <Divider sx={{ mb: 2, mt: 1 }} />
 
               <Box sx={{ lineHeight: 2 }}>
                 <Typography>
-                  <strong>Amount:</strong> {amountDecoded} SAR
+                  <strong>{t("Amount:")}</strong> {amountDecoded} SAR
                 </Typography>
                 <Typography>
-                  <strong>Currency:</strong> Saudi Riyal (SAR)
+                  <strong>{t("Currency")}:</strong> {t("Saudi Riyal")} (SAR)
                 </Typography>
                 <Typography>
-                  <strong>Customer:</strong>{" "}
+                  <strong>{t("Customer")}:</strong>{" "}
                   {CustomerDetails?.company_name_en || "N/A"}
                 </Typography>
                 <Typography>
-                  <strong>Phone:</strong>{" "}
-                  {CustomerDetails?.contact_phone || "Not available"}
+                  <strong>{t("Phone")}:</strong>{" "}
+                  {CustomerDetails?.contact_phone || t("Not available")}
                 </Typography>
                 <Typography>
-                  <strong>Email:</strong>{" "}
-                  {CustomerDetails?.contact_email || "Not available"}
+                  <strong>{t("Email")}:</strong>{" "}
+                  {CustomerDetails?.contact_email || t("Not available")}
                 </Typography>
               </Box>
             </Grid>
@@ -536,11 +536,11 @@ const TapCardPayment = () => {
           <Divider sx={{ mt: 4, mb: 2 }} />
           <Box textAlign="center">
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Your payment is secure and encrypted{" "}
+              {t("Your payment is secure and encrypted")}{" "}
               <Lock sx={{ verticalAlign: "middle", color: "success.main" }} />
             </Typography>
             <Chip
-              label="Supported: MADA, Visa, Mastercard"
+              label={t("Supported: MADA, Visa, Mastercard")}
               // variant="outlined"
               color="primary"
               sx={{ mt: 1 }}

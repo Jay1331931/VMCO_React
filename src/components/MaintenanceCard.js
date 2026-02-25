@@ -302,14 +302,14 @@ function MaintenanceCard({
                     >
                       {`${t("Issue Type")}: ${ticket?.issueType || "-"}`}
                     </Typography>
-                    <Typography
+                    {/* <Typography
                       fontSize={12}
                       color="textSecondary"
                       sx={{ mt: 0.3 }}
                     >
                       {`${t("Urgency Level")}: ${ticket?.urgencyLevel || t("Normal")
                         }`}
-                    </Typography>
+                    </Typography> */}
                     <Typography
                       fontSize={12}
                       fontWeight={500}

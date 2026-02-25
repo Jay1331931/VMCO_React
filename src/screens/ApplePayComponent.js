@@ -29,7 +29,7 @@ const ApplePayComponent = () => {
   const { orderId, amount, customerId, orderType } = useParams();
   const [customerDetails, setCustomerDetails] = useState(null);
   const { token } = useAuth();
-  const { t } = useTranslation();
+  const { t,i18n } = useTranslation();
   const AppleContainerRef = useRef(null);
 
   const orderIdDecoded = atob(decodeURIComponent(orderId));
@@ -38,7 +38,7 @@ const ApplePayComponent = () => {
   const orderTypeDecoded = atob(decodeURIComponent(orderType));
   const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
   const TAP_MERCHANT_ID = process.env.REACT_APP_TAP_MERCHANT_ID;
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   // Fetch customer details
   useEffect(() => {
     const fetchCustomerDetails = async () => {
@@ -67,7 +67,7 @@ const ApplePayComponent = () => {
     script.onload = () => setSdkLoaded(true);
     script.onerror = () => console.error("Failed to load Tap Apple Pay SDK");
     document.head.appendChild(script);
-  }, []);
+  }, [i18n.language]);
 
   // Format phone number
   let phone;
@@ -122,7 +122,7 @@ const ApplePayComponent = () => {
             },
           },
           interface: {
-            locale: Locale.EN,
+            locale: i18n.language === "ar" ? Locale.AR :Locale.EN,
             theme: ThemeMode.DARK,
             type: ButtonType.BUY,
             edges: Edges.CURVED,
@@ -140,7 +140,7 @@ const ApplePayComponent = () => {
     } catch (error) {
       console.error("Error initializing Apple Pay:", error);
     }
-  }, [sdkLoaded, customerDetails, initialized, amountDecoded]);
+  }, [sdkLoaded, customerDetails, initialized, amountDecoded,i18n.language]);
 
   // Handle payment success
   const handleSuccess = async (paymentData) => {
@@ -172,116 +172,122 @@ const ApplePayComponent = () => {
   };
 
   return (
-    
-            <Sidebar title={t("Apple Payment")}>
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        minHeight: "90vh",
-        bgcolor: "#f7f9fb",
-        py: 5,
-        px: 2,
-      }}
-    >
-      <Card
+
+    <Sidebar title={t("Apple Payment")}>
+      <Box
         sx={{
-          maxWidth: 800,
-          width: "100%",
-          borderRadius: 4,
-          boxShadow: 6,
-          transition: "0.3s ease",
-          "&:hover": { boxShadow: 10 },
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          minHeight: "90vh",
+          bgcolor: "#f7f9fb",
+          py: 5,
+          px: 2,
         }}
       >
-        <CardHeader
-          title={
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              gap={1}
-            >
-              <Payment color="primary" />
-              <Typography variant="h5" fontWeight={700}>
-                Apple Payment
-              </Typography>
-            </Box>
-          }
-          subheader="Complete your payment securely using Tap Apple Pay"
-          sx={{ textAlign: "center", pb: 0 }}
-        />
-        <Divider sx={{ my: 2 }} />
-
-        <CardContent>
-          {!customerDetails ? (
-            <Box textAlign="center" py={5}>
-              <CircularProgress />
-              <Typography sx={{ mt: 2 }}>
-                Loading customer details...
-              </Typography>
-            </Box>
-          ) : (
-            <Grid container spacing={4}>
-              {/* Payment Info */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" fontWeight={600}>
-                  Payment Details
+        <Card
+          sx={{
+            maxWidth: 800,
+            width: "100%",
+            borderRadius: 4,
+            boxShadow: 6,
+            transition: "0.3s ease",
+            "&:hover": { boxShadow: 10 },
+          }}
+        >
+          <CardHeader
+            title={
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                gap={1}
+              >
+                <Payment color="primary" />
+                <Typography variant="h5" fontWeight={700}>
+                  {t("Apple Payment")}
                 </Typography>
-                <Divider sx={{ mb: 2, mt: 1 }} />
+              </Box>
+            }
+            subheader={t("Complete your payment securely using Tap Apple Pay")}
+            sx={{ textAlign: "center", pb: 0 }}
+          />
+          <Divider sx={{ my: 2 }} />
 
-                <Box sx={{ lineHeight: 2 }}>
-                  <Typography>
-                    <strong>Amount:</strong> {amountDecoded} SAR
-                  </Typography>
-                  <Typography>
-                    <strong>Currency:</strong> Saudi Riyal (SAR)
-                  </Typography>
-                  <Typography>
-                    <strong>Customer:</strong>{" "}
-                    {customerDetails?.company_name_en || "N/A"}
-                  </Typography>
-                  <Typography>
-                    <strong>Phone:</strong>{" "}
-                    {customerDetails?.contact_phone || "Not available"}
-                  </Typography>
-                  <Typography>
-                    <strong>Email:</strong>{" "}
-                    {customerDetails?.contact_email || "Not available"}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              {/* Apple Pay Button */}
-              <Grid item xs={12} md={6} textAlign="center">
-                <Typography variant="h6" fontWeight={600}>
-                  Apple Pay Information
+          <CardContent>
+            {!customerDetails ? (
+              <Box textAlign="center" py={5}>
+                <CircularProgress />
+                <Typography sx={{ mt: 2 }}>
+                  Loading customer details...
                 </Typography>
-                <Divider sx={{ mb: 2, mt: 1 }} />
-                <div
-                  id="apple-pay-button"
-                  ref={AppleContainerRef}
-                  style={{
-                    display: sdkLoaded ? "block" : "none",
-                    minHeight: "60px",
-                    opacity: initialized ? 1 : 0.3,
-                    transition: "opacity 0.4s ease",
-                    pointerEvents: initialized ? "auto" : "none",
-                  }}
-                />
-                {!initialized && sdkLoaded && (
-                  <Typography color="text.secondary" mt={1}>
-                    Preparing Apple Pay...
+              </Box>
+            ) : (
+              <Grid container spacing={4}>
+                {/* Payment Info */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" fontWeight={600}>
+                    {t("Payment Details")}
                   </Typography>
-                )}
-              </Grid>
-            </Grid>
-          )}
+                  <Divider sx={{ mb: 2, mt: 1 }} />
 
-          {/* Footer Note */}
-          <Divider sx={{ mt: 4, mb: 2 }} />
-          {/* <Box textAlign="center">
+                  <Box sx={{ lineHeight: 2 }}>
+                    <Typography>
+                      <strong>{t("Amount")}:</strong> {amountDecoded} SAR
+                    </Typography>
+                    <Typography>
+                      <strong>{t("Currency")}:</strong> Saudi Riyal (SAR)
+                    </Typography>
+                    <Typography>
+                      <strong>{t("Customer")}:</strong>{" "}
+                      {customerDetails?.company_name_en || "N/A"}
+                    </Typography>
+                    <Typography>
+                      <strong>{t("Phone")}:</strong>{" "}
+                      {customerDetails?.contact_phone || "Not available"}
+                    </Typography>
+                    <Typography>
+                      <strong>{t("Email")}:</strong>{" "}
+                      {customerDetails?.contact_email || "Not available"}
+                    </Typography>
+                  </Box>
+                </Grid>
+
+                {/* Apple Pay Button */}
+                <Grid item xs={12} md={6} textAlign="center">
+                  <Typography variant="h6" fontWeight={600}>
+                    {t("Apple Pay Information")}
+                  </Typography>
+                  <Divider sx={{ mb: 2, mt: 1 }} />
+                  <div
+                    id="apple-pay-button"
+                    ref={AppleContainerRef}
+                    style={{
+                      display: sdkLoaded ? "block" : "none",
+                      minHeight: "60px",
+                      opacity: initialized ? 1 : 0.3,
+                      transition: "opacity 0.4s ease",
+                      pointerEvents: initialized ? "auto" : "none",
+                      position: "relative",
+                      top: "16%",
+                    }}
+                  />
+                  {!initialized && sdkLoaded && (
+                    <Typography color="text.secondary" mt={1} style={{
+                     
+                      position: "relative",
+                      top: "16%",
+                    }}>
+                      {t("Preparing Apple Pay...")}
+                    </Typography>
+                  )}
+                </Grid>
+              </Grid>
+            )}
+
+            {/* Footer Note */}
+            <Divider sx={{ mt: 4, mb: 2 }} />
+            {/* <Box textAlign="center">
               <Lock sx={{ verticalAlign: "middle", color: "success.main" }} />
               <Typography
                 variant="body2"
@@ -298,18 +304,18 @@ const ApplePayComponent = () => {
               />
             </Box> */}
 
-          {/* Processing State */}
-          {isProcessing && (
-            <Box textAlign="center" mt={3}>
-              <CircularProgress color="success" />
-              <Typography mt={2} color="success.main" fontWeight={500}>
-                {t("Processing your payment...")}
-              </Typography>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-    </Box></Sidebar>
+            {/* Processing State */}
+            {isProcessing && (
+              <Box textAlign="center" mt={3}>
+                <CircularProgress color="success" />
+                <Typography mt={2} color="success.main" fontWeight={500}>
+                  {t("Processing your payment...")}
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </Box></Sidebar>
   );
 };
 

@@ -51,11 +51,11 @@ const initialEntities = [
     label: "Naqi Company",
     imageUrl: Constants.TAB_IMAGES.NAQI
   },
-  {
-    value: Constants.ENTITY.DAR,
-    label: "DAR Company",
-    imageUrl: Constants.TAB_IMAGES.DAR
-  },
+  // {
+  //   value: Constants.ENTITY.DAR,
+  //   label: "DAR Company",
+  //   imageUrl: Constants.TAB_IMAGES.DAR
+  // },
   {
     value: "Special Products",
     label: "Special Products",

@@ -805,6 +805,7 @@ function OrderDetails() {
         icon: "warning",
         title: t("Validation Error"),
         text: t("Please add at least one product"),
+        confirmButtonText: t("OK"),
       });
       setSaving(false);
       return;
@@ -2124,7 +2125,7 @@ function OrderDetails() {
         icon: 'warning',
         title: t('Validation Error'),
         text: t('Order ID is missing.'),
-        confirmButtonText: t('OK')
+        confirmButtonText: t("OK")
       });
       return;
     }
@@ -2139,7 +2140,7 @@ function OrderDetails() {
         icon: 'warning',
         title: t('Validation Error'),
         text: t('Order ID is missing.'),
-        confirmButtonText: t('OK')
+        confirmButtonText: t("OK")
       });
       return;
     }
@@ -2197,7 +2198,7 @@ function OrderDetails() {
         icon: 'success',
         title: t('Order Cancelled'),
         text: t('Order cancelled successfully!'),
-        confirmButtonText: t('OK')
+        confirmButtonText: t("OK")
       });
 
       navigate('/orders');
@@ -2207,7 +2208,7 @@ function OrderDetails() {
         icon: 'error',
         title: t('Error Cancelling Order'),
         text: err.message || t('Failed to cancel order'),
-        confirmButtonText: t('OK')
+        confirmButtonText: t("OK")
       });
     } finally {
       setCancelling(false);
@@ -3934,7 +3935,7 @@ function OrderDetails() {
         icon: 'warning',
         title: t('Warehouse Required'),
         text: t('Please select a warehouse before approving.'),
-        confirmButtonText: t('OK'),
+        confirmButtonText: t("OK"),
       });
       return;
     }
@@ -4313,44 +4314,44 @@ function OrderDetails() {
     fromApproval,
     orderFromNav.id,
   ]);
-  // Safety effect to handle late-arriving pre-fetched data
-  useEffect(() => {
-    if (formMode === "add") return;
+  // // Safety effect to handle late-arriving pre-fetched data
+  // useEffect(() => {
+  //   if (formMode === "add") return;
 
-    // If we have pre-fetched data but no products loaded yet, load them
-    if (
-      salesOrderLinesFromNav &&
-      salesOrderLinesFromNav.length > 0 &&
-      formData.products &&
-      formData.products.length === 0
-    ) {
-      console.log("Late-loading pre-fetched sales order lines");
-      const processedProducts = salesOrderLinesFromNav.map((product) => ({
-        ...product,
-        id: product.productId || product.id,
-        productName:
-          product.productName || product.product_name || product.erp_prod_id,
-        isMachine: product.isMachine,
-        isFresh: product.isFresh,
-        quantity: product.quantity,
-      }));
+  //   // If we have pre-fetched data but no products loaded yet, load them
+  //   if (
+  //     salesOrderLinesFromNav &&
+  //     salesOrderLinesFromNav.length > 0 &&
+  //     formData.products &&
+  //     formData.products.length === 0
+  //   ) {
+  //     console.log("Late-loading pre-fetched sales order lines");
+  //     const processedProducts = salesOrderLinesFromNav.map((product) => ({
+  //       ...product,
+  //       id: product.productId || product.id,
+  //       productName:
+  //         product.productName || product.product_name || product.erp_prod_id,
+  //       isMachine: product.isMachine,
+  //       isFresh: product.isFresh,
+  //       quantity: product.quantity,
+  //     }));
 
-      setFormData((prev) => ({
-        ...prev,
-        products: processedProducts,
-      }));
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       products: processedProducts,
+  //     }));
 
-      setOriginalProducts(processedProducts);
-      console.log(
-        "Late-loaded pre-fetched sales order lines:",
-        processedProducts
-      );
-    }
-  }, [
-    salesOrderLinesFromNav,
-    formData.products ? formData.products.length : 0,
-    formMode,
-  ]);
+  //     setOriginalProducts(processedProducts);
+  //     console.log(
+  //       "Late-loaded pre-fetched sales order lines:",
+  //       processedProducts
+  //     );
+  //   }
+  // }, [
+  //   salesOrderLinesFromNav,
+  //   formData.products ? formData.products.length : 0,
+  //   formMode,
+  // ]);
   const handlePayments = () => {
     navigate(`/payments/${formData?.id}`)
   }
@@ -4469,6 +4470,7 @@ function OrderDetails() {
                             <input
                               id="customerField"
                               name="selectedCustomerName"
+                              readOnly
                               defaultValue={
                                 i18n.language === "ar"
                                   ? formData.companyNameAr ||
@@ -4568,6 +4570,7 @@ function OrderDetails() {
                         <label>{t("Order By")}</label>
                         <input
                           name="orderBy"
+                          readOnly
                           value={orderFromNav.createdByUsername || ""}
                           onChange={handleInputChange}
                           disabled={!isE("orderBy")}
@@ -4579,6 +4582,7 @@ function OrderDetails() {
                         <label>{t("Last Modified By")}</label>
                         <input
                           name="lastModifiedBy"
+                          readOnly
                           value={orderFromNav.modifiedByUsername || ""}
                           disabled={true}
                         />
@@ -4595,6 +4599,7 @@ function OrderDetails() {
                               ? formData.erpOrderId
                               : ""
                           }
+                          readOnly
                           onChange={handleInputChange}
                           disabled={!isE("erpOrderId")}
                           placeholder={t("ERP#")}
@@ -4608,6 +4613,7 @@ function OrderDetails() {
                           <select
                             name="entity"
                             value={formData.entity || ""}
+                            readOnly
                             onClick={handleEntityChange}
                             onChange={handleInputChange}
                             className="entity-dropdown"
@@ -4632,6 +4638,7 @@ function OrderDetails() {
                                 <option
                                   key={index}
                                   value={entity}
+                                  readOnly
                                   disabled={!isEntityAllowed}
                                   style={
                                     !isEntityAllowed
@@ -4651,6 +4658,7 @@ function OrderDetails() {
                           <input
                             name="entity"
                             value={formData.entity || ""}
+                            readOnly
                             disabled
                           />
                         )}
@@ -4663,6 +4671,7 @@ function OrderDetails() {
                           <Dropdown
                             name="category"
                             value={formData.category || ""}
+                            readOnly
                             onChange={handleInputChange}
                             options={
                               formData?.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
@@ -4691,6 +4700,7 @@ function OrderDetails() {
                           <input
                             name="category"
                             value={formData.category || ""}
+                            readOnly
                             disabled
                           />
                         )}
@@ -5635,7 +5645,7 @@ function OrderDetails() {
                         icon: 'error',
                         title: t('Error'),
                         text: t('Failed to save comment'),
-                        confirmButtonText: t('OK')
+                        confirmButtonText: t("OK")
                       });
                     }
                   };
