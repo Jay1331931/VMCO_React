@@ -62,6 +62,9 @@
 
 @media (max-width: 768px) {
   .action-buttons {
-    margin-top: 0px;
+    margin-bottom: 20px;
+  }
+  .invite-form-container {
+    padding: 0px 20px !important;
   }
 }
