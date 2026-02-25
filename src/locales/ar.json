@@ -576,6 +576,7 @@
     "Please fix the errors before saving.": "يرجى تصحيح الأخطاء قبل الحفظ.",
     "Error updating customer data.": "حدث خطأ أثناء تحديث بيانات العميل.",
     "This customer has already been registered.": "تم تسجيل هذا العميل بالفعل.",
+    "Registered": "مسجل",
     "Email Verified": "تم التحقق من البريد الإلكتروني",
     "Sending...": "جارٍ الإرسال...",
     "Verifying...": "جارٍ التحقق...",
