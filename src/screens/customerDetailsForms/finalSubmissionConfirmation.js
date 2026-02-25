@@ -555,7 +555,9 @@ const FinalSubmissionConfirmation = ({
 
 
         </div>
-        {!isV("assignedToEntityWise") && (<div className="form-header full-width">
+        {
+        // !isV("assignedToEntityWise") && 
+        (<div className="form-header full-width">
           <label className="checkbox-group-label">
             <input
               type="checkbox"
