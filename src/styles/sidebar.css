@@ -833,7 +833,7 @@ body.keyboard-open .orders-bottom-bar {
 }
 @media (max-width:500px){
 .card-padding-removing{
-  padding: 10px 0 20px 0px !important;
+  padding: 10px 0 90px 0px !important;
 }
 }
 
