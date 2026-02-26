@@ -16,17 +16,16 @@ import {
   Grid,
   CircularProgress,
   Chip,
-
- Paper,
+  Paper,
   Avatar,
   Stack,
   Button,
 } from "@mui/material";
-import { 
-  Lock, 
-  Payment, 
-  CreditCard, 
-  Security, 
+import {
+  Lock,
+  Payment,
+  CreditCard,
+  Security,
   VerifiedUser,
   ArrowForward,
   WhatsApp,
@@ -35,19 +34,19 @@ import {
   Business,
 } from "@mui/icons-material";
 // import { Lock, Payment } from "@mui/icons-material";
- 
+
 import Sidebar from "../components/Sidebar";
 function getCenteredOptions(width, height) {
   const screenWidth = window.screen.width;
   const screenHeight = window.screen.height;
-  
+
   // Calculate centered position
   const left = Math.max(0, (screenWidth - width) / 2);
   const top = Math.max(0, (screenHeight - height) / 2);
-  
+
   return {
     left: Math.round(left),
-    top: Math.round(top)
+    top: Math.round(top),
   };
 }
 const TapCardPayment = () => {
@@ -61,8 +60,8 @@ const TapCardPayment = () => {
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [isCardselected, setisCardselected] = useState(false);
   const [isPayButtonValid, setisPayButtonValid] = useState(false);
-    const [showCardForm, setShowCardForm] = useState(true);
-    const [isNewCard,setIsNewCard] = useState(false);
+  const [showCardForm, setShowCardForm] = useState(true);
+  const [isNewCard, setIsNewCard] = useState(false);
   const { token } = useAuth();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -80,7 +79,7 @@ const TapCardPayment = () => {
         const token = localStorage.getItem("token");
         const { data } = await api.get(
           `/get_customer_details?customerId=${customerIdDecoded}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setCustomerDetails(data?.details);
       } catch (error) {
@@ -96,7 +95,7 @@ const TapCardPayment = () => {
       try {
         const { data } = await api.get(
           `get_card_detrails?TapCustId=${CustomerDetails?.tap_cust_id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         if (data.details?.length > 0 && data.success) {
           setCardDetails(data.details);
@@ -185,7 +184,10 @@ const TapCardPayment = () => {
           customer: {
             id: CustomerDetails?.tap_cust_id || "",
             name: [
-              { lang: i18n.language === "ar" ? Locale.AR : Locale.EN, first: CustomerDetails?.company_name_en },
+              {
+                lang: i18n.language === "ar" ? Locale.AR : Locale.EN,
+                first: CustomerDetails?.company_name_en,
+              },
             ],
             editable: true,
             contact: { email: CustomerDetails?.contact_email, phone },
@@ -205,7 +207,7 @@ const TapCardPayment = () => {
           onReady: () => {
             if (selectedCard) loadSavedCard(selectedCard);
             setInitialized(true);
-            setIsNewCard(false)
+            setIsNewCard(false);
           },
           onValidInput: (data) => {
             setIsProcessing(!data);
@@ -240,8 +242,8 @@ const TapCardPayment = () => {
   };
 
   const createChargeRequest = async (tokenDATA) => {
-    setShowCardForm(false)
-    setPaymentProcessing(true)
+    setShowCardForm(false);
+    setPaymentProcessing(true);
     try {
       const payload = {
         salesOrderId: orderIdDecoded,
@@ -268,7 +270,7 @@ const TapCardPayment = () => {
           text: errorMessage || t("Something went wrong during payment."),
           confirmButtonColor: "#0b4c45",
         });
- setShowCardForm(true)
+        setShowCardForm(true);
         return;
       }
       if (data?.data?.transaction?.url) {
@@ -278,29 +280,35 @@ const TapCardPayment = () => {
         if (isMobile) {
           // For iOS: use window.open with _blank to open Safari
           // For Android: InAppBrowser if available, otherwise window.open
-          navigate("/catalog")
+          navigate("/catalog");
           if (window.cordova && window.cordova.InAppBrowser) {
             // Try InAppBrowser for Android
             const width = 400;
             const height = 500;
             const centeredPosition = getCenteredOptions(width, height);
             const options =
-              'toolbar=yes,' +
-              'hideurlbar=yes,' +
-              'zoom=no,' +
-              'hardwareback=yes,' +
-              'clearsessioncache=yes,' +
-              'clearcache=yes,' +
-              'width=' + width + ',' +
-              'height=' + height + ',' +
-              'left=' + centeredPosition.left + ',' +
-              'top=' + centeredPosition.top;
-            window.cordova.InAppBrowser.open(paymentUrl, '_blank', options);
-          
+              "toolbar=yes," +
+              "hideurlbar=yes," +
+              "zoom=no," +
+              "hardwareback=yes," +
+              "clearsessioncache=yes," +
+              "clearcache=yes," +
+              "width=" +
+              width +
+              "," +
+              "height=" +
+              height +
+              "," +
+              "left=" +
+              centeredPosition.left +
+              "," +
+              "top=" +
+              centeredPosition.top;
+            window.cordova.InAppBrowser.open(paymentUrl, "_blank", options);
           } else {
             // iOS fallback: use window.open with _blank to open Safari
-            window.open(paymentUrl, '_blank');
-            console.log('[Tap Debug] Opened with window.open (iOS Safari)');
+            window.open(paymentUrl, "_blank");
+            console.log("[Tap Debug] Opened with window.open (iOS Safari)");
           }
         } else {
           window.location.replace(paymentUrl);
@@ -321,22 +329,20 @@ const TapCardPayment = () => {
           text: errorMessage || t("Something went wrong during payment."),
           confirmButtonColor: "#0b4c45",
         });
-  setShowCardForm(true)
+        setShowCardForm(true);
         return;
       }
       console.error("Failed to create charge request", error);
     } finally {
-     setTimeout(() => {
-  setIsProcessing(false);
-  setPaymentProcessing(false);
-}, 100);
-         
+      setTimeout(() => {
+        setIsProcessing(false);
+        setPaymentProcessing(false);
+      }, 100);
     }
   };
 
   return (
-
-      <Sidebar title={t("Tap Payment")}>
+    <Sidebar title={t("Tap Payment")}>
       <Box
         sx={{
           minHeight: "100vh",
@@ -435,13 +441,26 @@ const TapCardPayment = () => {
                     border: "1px solid #eef2f6",
                   }}
                 >
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
                     <Box>
                       <Typography variant="body2" color="#64748b" gutterBottom>
                         {t("Total Amount")}
                       </Typography>
                       <Typography variant="h4" fontWeight={700} color="#0b4c45">
-                        {amountDecoded} <span style={{ fontSize: 16, fontWeight: 400, color: '#64748b' }}>SAR</span>
+                        {amountDecoded}{" "}
+                        <span
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 400,
+                            color: "#64748b",
+                          }}
+                        >
+                          SAR
+                        </span>
                       </Typography>
                     </Box>
                     {/* <Box
@@ -461,48 +480,83 @@ const TapCardPayment = () => {
 
                 {/* Customer Details */}
                 <Box>
-                  <Typography variant="subtitle2" fontWeight={600} color="#1e293b" mb={2}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    color="#1e293b"
+                    mb={2}
+                  >
                     {t("Customer Details")}
                   </Typography>
-                  
+
                   <Stack spacing={2}>
                     <Box display="flex" alignItems="center" gap={2}>
-                      <Avatar sx={{ bgcolor: "#e8f0fe", width: 40, height: 40 }}>
+                      <Avatar
+                        sx={{ bgcolor: "#e8f0fe", width: 40, height: 40 }}
+                      >
                         <Business sx={{ color: "#0b4c45", fontSize: 20 }} />
                       </Avatar>
                       <Box>
                         <Typography variant="body2" color="#64748b">
                           {t("Business Name")}
                         </Typography>
-                        <Typography variant="body1" fontWeight={500} color="#1e293b">
+                        <Typography
+                          variant="body1"
+                          fontWeight={500}
+                          color="#1e293b"
+                          sx={{
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word",
+                            maxWidth: "100%",
+                            lineHeight: 1.4,
+                          }}
+                        >
                           {CustomerDetails?.company_name_en || "N/A"}
                         </Typography>
                       </Box>
                     </Box>
 
                     <Box display="flex" alignItems="center" gap={2}>
-                      <Avatar sx={{ bgcolor: "#e8f0fe", width: 40, height: 40 }}>
+                      <Avatar
+                        sx={{ bgcolor: "#e8f0fe", width: 40, height: 40 }}
+                      >
                         <Email sx={{ color: "#0b4c45", fontSize: 20 }} />
                       </Avatar>
                       <Box>
                         <Typography variant="body2" color="#64748b">
                           {t("Email")}
                         </Typography>
-                        <Typography variant="body1" fontWeight={500} color="#1e293b">
+                        <Typography
+                          variant="body1"
+                          fontWeight={500}
+                          color="#1e293b"
+                          sx={{
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word",
+                            maxWidth: "100%",
+                            lineHeight: 1.4,
+                          }}
+                        >
                           {CustomerDetails?.contact_email || t("Not available")}
                         </Typography>
                       </Box>
                     </Box>
 
                     <Box display="flex" alignItems="center" gap={2}>
-                      <Avatar sx={{ bgcolor: "#e8f0fe", width: 40, height: 40 }}>
+                      <Avatar
+                        sx={{ bgcolor: "#e8f0fe", width: 40, height: 40 }}
+                      >
                         <Phone sx={{ color: "#0b4c45", fontSize: 20 }} />
                       </Avatar>
                       <Box>
                         <Typography variant="body2" color="#64748b">
                           {t("Phone")}
                         </Typography>
-                        <Typography variant="body1" fontWeight={500} color="#1e293b">
+                        <Typography
+                          variant="body1"
+                          fontWeight={500}
+                          color="#1e293b"
+                        >
                           {CustomerDetails?.contact_phone || t("Not available")}
                         </Typography>
                       </Box>
@@ -514,7 +568,12 @@ const TapCardPayment = () => {
 
                 {/* Accepted Cards */}
                 <Box>
-                  <Typography variant="subtitle2" fontWeight={600} color="#1e293b" mb={2}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    color="#1e293b"
+                    mb={2}
+                  >
                     {t("Accepted Cards")}
                   </Typography>
                   <Box display="flex" gap={1} flexWrap="wrap">
@@ -568,7 +627,16 @@ const TapCardPayment = () => {
                         {t("Payment Method")}
                       </Typography>
                     </Box>
-                    <Typography variant="body2" color="#64748b">
+                    <Typography
+                      variant="body2"
+                      color="#64748b"
+                      sx={{
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                        maxWidth: "100%",
+                        lineHeight: 1.4,
+                      }}
+                    >
                       {t("Choose a saved card or add a new one")}
                     </Typography>
                   </Box>
@@ -578,84 +646,112 @@ const TapCardPayment = () => {
 
               <CardContent sx={{ p: 3 }}>
                 {/* Saved Cards Section */}
-                {!initialized && sdkLoaded && CardDetails?.length > 0 && !selectedCardId && (
-                  <Box sx={{ mb: 4 }}>
-                    <Typography variant="subtitle1" fontWeight={600} color="#1e293b" mb={2}>
-                      {t("Your Saved Cards")}
-                    </Typography>
-                    
-                    <Stack spacing={2}>
-                      {CardDetails?.map((card) => (
-                        <Paper
-                          key={card.id}
-                          onClick={() => handleCardSelection(card.id)}
-                          elevation={0}
-                          sx={{
-                            p: 2,
-                            borderRadius: 2,
-                            border: selectedCardId === card.id
-                              ? "2px solid #0b4c45"
-                              : "1px solid #e2e8f0",
-                            bgcolor: selectedCardId === card.id ? "#e8f4f2" : "#fff",
-                            cursor: "pointer",
-                            transition: "all 0.2s",
-                            "&:hover": {
-                              borderColor: "#0b4c45",
-                              boxShadow: "0 4px 12px rgba(11,76,69,0.1)",
-                            },
-                          }}
-                        >
-                          <Box display="flex" alignItems="center" justifyContent="space-between">
-                            <Box display="flex" alignItems="center" gap={2}>
-                              <Avatar sx={{ bgcolor: "#0b4c45", width: 48, height: 48 }}>
-                                <CreditCard sx={{ color: "#fff" }} />
-                              </Avatar>
-                              <Box>
-                                <Typography variant="subtitle2" fontWeight={600} color="#1e293b">
-                                  {card.brand} •••• {card.last_four}
-                                </Typography>
-                                <Typography variant="caption" color="#64748b">
-                                  {card.name} • Expires {card.exp_month}/{card.exp_year}
-                                </Typography>
-                              </Box>
-                            </Box>
-                            {selectedCardId === card.id && (
-                              <VerifiedUser sx={{ color: "#0b4c45", fontSize: 20 }} />
-                            )}
-                          </Box>
-                        </Paper>
-                      ))}
-                    </Stack>
+                {!initialized &&
+                  sdkLoaded &&
+                  CardDetails?.length > 0 &&
+                  !selectedCardId && (
+                    <Box sx={{ mb: 4 }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={600}
+                        color="#1e293b"
+                        mb={2}
+                      >
+                        {t("Your Saved Cards")}
+                      </Typography>
 
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={() => {
-                        // setIsCardSelected(false);
-                        setIsNewCard(true)
-                        setCardDetails(null);
-                        initializeTapCard();
-                        setShowCardForm(true);
-                      }}
-                      sx={{
-                        mt: 3,
-                        borderColor: "#0b4c45",
-                        color: "#0b4c45",
-                        borderRadius: 2,
-                        py: 1.5,
-                        "&:hover": {
-                          borderColor: "#0a3d37",
-                          bgcolor: "#e8f4f2",
-                        },
-                      }}
-                    >
-                      + {t("Add New Card")}
-                    </Button>
-                  </Box>
-                )}
+                      <Stack spacing={2}>
+                        {CardDetails?.map((card) => (
+                          <Paper
+                            key={card.id}
+                            onClick={() => handleCardSelection(card.id)}
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              border:
+                                selectedCardId === card.id
+                                  ? "2px solid #0b4c45"
+                                  : "1px solid #e2e8f0",
+                              bgcolor:
+                                selectedCardId === card.id ? "#e8f4f2" : "#fff",
+                              cursor: "pointer",
+                              transition: "all 0.2s",
+                              "&:hover": {
+                                borderColor: "#0b4c45",
+                                boxShadow: "0 4px 12px rgba(11,76,69,0.1)",
+                              },
+                            }}
+                          >
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="space-between"
+                            >
+                              <Box display="flex" alignItems="center" gap={2}>
+                                <Avatar
+                                  sx={{
+                                    bgcolor: "#0b4c45",
+                                    width: 48,
+                                    height: 48,
+                                  }}
+                                >
+                                  <CreditCard sx={{ color: "#fff" }} />
+                                </Avatar>
+                                <Box>
+                                  <Typography
+                                    variant="subtitle2"
+                                    fontWeight={600}
+                                    color="#1e293b"
+                                  >
+                                    {card.brand} •••• {card.last_four}
+                                  </Typography>
+                                  <Typography variant="caption" color="#64748b">
+                                    {card.name} • Expires {card.exp_month}/
+                                    {card.exp_year}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                              {selectedCardId === card.id && (
+                                <VerifiedUser
+                                  sx={{ color: "#0b4c45", fontSize: 20 }}
+                                />
+                              )}
+                            </Box>
+                          </Paper>
+                        ))}
+                      </Stack>
+
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => {
+                          // setIsCardSelected(false);
+                          setIsNewCard(true);
+                          setCardDetails(null);
+                          initializeTapCard();
+                          setShowCardForm(true);
+                        }}
+                        sx={{
+                          mt: 3,
+                          borderColor: "#0b4c45",
+                          color: "#0b4c45",
+                          borderRadius: 2,
+                          py: 1.5,
+                          "&:hover": {
+                            borderColor: "#0a3d37",
+                            bgcolor: "#e8f4f2",
+                          },
+                        }}
+                      >
+                        + {t("Add New Card")}
+                      </Button>
+                    </Box>
+                  )}
 
                 {/* Card SDK Container */}
-                {(selectedCardId || isNewCard )&& !initialized && ( <Box
+                {(selectedCardId || isNewCard) && !initialized && (
+                  <Box
                     sx={{
                       display: "flex",
                       flexDirection: "column",
@@ -667,18 +763,35 @@ const TapCardPayment = () => {
                       border: "2px dashed #e2e8f0",
                     }}
                   >
-                    <CircularProgress size={48} sx={{ color: "#0b4c45", mb: 3 }} />
+                    <CircularProgress
+                      size={48}
+                      sx={{ color: "#0b4c45", mb: 3 }}
+                    />
                     <Typography variant="h6" fontWeight={600} color="#1e293b">
                       {t("Loading Payment Gateway")}
                     </Typography>
-                    <Typography variant="body2" color="#64748b" sx={{ mt: 1 }}>
+                    <Typography
+                      variant="body2"
+                      color="#64748b"
+                      sx={{
+                        mt: 1,
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                        maxWidth: "100%",
+                        lineHeight: 1.4,
+                      }}
+                    >
                       {t("Please wait while we secure your connection")}
                     </Typography>
-                  </Box>)}
+                  </Box>
+                )}
                 <div
                   id="card-sdk-container"
                   style={{
-                    display: (initialized && !paymentProcessing && showCardForm) ? "block" : "none",
+                    display:
+                      initialized && !paymentProcessing && showCardForm
+                        ? "block"
+                        : "none",
                   }}
                 />
 
@@ -696,11 +809,24 @@ const TapCardPayment = () => {
                       border: "2px dashed #e2e8f0",
                     }}
                   >
-                    <CircularProgress size={48} sx={{ color: "#0b4c45", mb: 3 }} />
+                    <CircularProgress
+                      size={48}
+                      sx={{ color: "#0b4c45", mb: 3 }}
+                    />
                     <Typography variant="h6" fontWeight={600} color="#1e293b">
                       {t("Loading Payment Gateway")}
                     </Typography>
-                    <Typography variant="body2" color="#64748b" sx={{ mt: 1 }}>
+                    <Typography
+                      variant="body2"
+                      color="#64748b"
+                      sx={{
+                        mt: 1,
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                        maxWidth: "100%",
+                        lineHeight: 1.4,
+                      }}
+                    >
                       {t("Please wait while we secure your connection")}
                     </Typography>
                   </Box>
@@ -720,11 +846,24 @@ const TapCardPayment = () => {
                       border: "2px dashed #e2e8f0",
                     }}
                   >
-                    <CircularProgress size={48} sx={{ color: "#0b4c45", mb: 3 }} />
+                    <CircularProgress
+                      size={48}
+                      sx={{ color: "#0b4c45", mb: 3 }}
+                    />
                     <Typography variant="h6" fontWeight={600} color="#1e293b">
                       {t("Processing Your Payment...")}
                     </Typography>
-                    <Typography variant="body2" color="#64748b" sx={{ mt: 1 }}>
+                    <Typography
+                      variant="body2"
+                      color="#64748b"
+                      sx={{
+                        mt: 1,
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                        maxWidth: "100%",
+                        lineHeight: 1.4,
+                      }}
+                    >
                       {t("Please don't close this window")}
                     </Typography>
                   </Box>
@@ -851,7 +990,6 @@ const TapCardPayment = () => {
         </Box> */}
       </Box>
     </Sidebar>
-
   );
 };
 
