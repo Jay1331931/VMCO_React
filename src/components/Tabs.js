@@ -10,7 +10,7 @@ const Tabs = ({
   className = "",
   variant = "pc",
   catalog = false,
-  scrollProgress = 0,
+  isContentScrolled = false,
   isMobile = false,
   loading = false,
   skeletonCount = 6,
@@ -19,6 +19,8 @@ const Tabs = ({
   const tabsRef = useRef(null);
   const currentLanguage = i18n.language;
   const activeIndex = tabs.findIndex(t => t.value === activeTab);
+  // const canScrollLeft = activeIndex > 0;
+  // const canScrollRight = activeIndex < tabs.length - 1;
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -60,7 +62,6 @@ const Tabs = ({
       window.removeEventListener("resize", checkScroll);
     };
   }, [tabs]);
-
   const moveTab = (direction) => {
     let nextIndex = activeIndex;
 
@@ -76,14 +77,38 @@ const Tabs = ({
     onTabChange(nextTab.value);
   };
 
+  //   useEffect(() => {
+  //   const container = tabsRef.current;
+  //   if (!container) return;
+
+  //   const activeButton = container.querySelector(".active");
+  //   if (!activeButton) return;
+
+  //   activeButton.scrollIntoView({
+  //     behavior: "smooth",
+  //     inline: "center",
+  //     block: "nearest",
+  //   });
+  // }, [activeTab]);
+
   console.log("tabs", tabs);
-  console.log("Tabs component props:", { isMobile, catalog });
+  console.log("Tabs component props:", { isContentScrolled, isMobile, catalog });
   return (
     <div className={`tab-container ${className}`}>
+      {/* {variant === "mobile" 
+      && catalog &&
+      canScrollLeft && 
+      <div className="scroll-gradient left" />}
+  {variant === "mobile" 
+      && catalog &&
+  canScrollRight && 
+  <div className="scroll-gradient right" />}  */}
       {/* LEFT ARROW */}
-      {variant === "mobile"
-        && catalog
-        && canScrollLeft
+
+      {
+        variant === "mobile"
+        && catalog &&
+        canScrollLeft
         && (
           <button className="scroll-arrow left" onClick={() => scrollTabs("left")}>
             <FontAwesomeIcon icon={faChevronLeft} />
@@ -92,8 +117,7 @@ const Tabs = ({
       <div
         ref={tabsRef}
         className={`tabs ${catalog && variant === "pc" ? "category-tabs" : "category-tabs-mobile"
-          } ${catalog ? "with-catalog" : "without-catalog"}`}
-        style={{ '--scroll-progress': scrollProgress }}
+          } ${catalog ? "with-catalog" : "without-catalog"} ${isMobile && catalog && isContentScrolled ? "scrolled" : ""}`}
       >
         {loading && catalog ? (
           Array.from({ length: skeletonCount }).map((_, i) => (
@@ -101,7 +125,7 @@ const Tabs = ({
               key={`skeleton-${i}`}
               className={`${variant === "mobile" ? "category-tab-mobile" : "category-tab"} catalog skeleton`}
             >
-              <div className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"}`}>
+              <div className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"} ${isMobile && isContentScrolled ? "scrolled" : ""}`}>
                 <div className="skeleton-image" />
               </div>
             </div>
@@ -111,17 +135,17 @@ const Tabs = ({
             <button
               key={tab.value}
               className={`
-                ${variant === "mobile" ? "category-tab-mobile" : "category-tab"}
-                ${catalog ? "catalog" : ""}
-                ${activeTab === tab.value ? "active" : ""}
-                ${tab.disabled ? "disabled" : ""}
-              `}
+              ${variant === "mobile" ? "category-tab-mobile" : "category-tab"}
+              ${catalog ? "catalog" : ""}
+              ${activeTab === tab.value ? "active" : ""}
+              ${tab.disabled ? "disabled" : ""}
+            `}
               onClick={() => onTabChange(tab.value)}
               title={tab.disabled ? "This tab is currently disabled" : ""}
             >
               {catalog && (
                 <div
-                  className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"}`}
+                  className={`${variant === "mobile" ? "tab-image-mobile" : "tab-image"} ${isMobile && isContentScrolled ? "scrolled" : ""}`}
                 >
                   <img
                     src={
@@ -139,9 +163,10 @@ const Tabs = ({
         )}
       </div>
       {/* RIGHT ARROW */}
-      {variant === "mobile"
-        && catalog
-        && canScrollRight
+      {
+        variant === "mobile"
+        && catalog &&
+        canScrollRight
         && (
           <button
             className="scroll-arrow right"
@@ -181,13 +206,12 @@ const Tabs = ({
           white-space: nowrap;
           box-sizing: border-box;
           scroll-behavior: smooth;
-          background: #ffffff;
-          transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          background: #ffffff
         }
 
         /* Ensure skeleton tab boxes take up visible space */
         .category-tab.skeleton, .category-tab-mobile.skeleton {
-          min-width: 80px;
+          min-width: 140px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -196,8 +220,8 @@ const Tabs = ({
         }
 
         .category-tab.skeleton .tab-image, .category-tab-mobile.skeleton .tab-image-mobile {
-          width: 80px;
-          height: 80px;
+          width: 140px;
+          height: 140px;
         }
 
         .tabs::-webkit-scrollbar {
@@ -230,7 +254,7 @@ const Tabs = ({
         /* PC catalog tabs - with images */
         .category-tabs.with-catalog {
           border-bottom: 1px solid #D9D9D6;
-          height: 100px;
+          height: 148px;
           display: flex;
           gap: 20px;
           white-space: nowrap;
@@ -266,25 +290,23 @@ const Tabs = ({
           border: none;
           cursor: pointer;
           color: rgb(99, 107, 110);
-          transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transition: all 0.5s ease-in-out;
           flex-shrink: 0;
         }
 
-        /* DEFAULT SIZE = CURRENTLY "SMALL" SIZE (when scrollProgress=1) */
-        .category-tab.catalog,
-        .category-tab-mobile.catalog {
-          min-width: 80px;
-          padding: 8px;
-          font-size: 0.75rem;
-        }
-
-        /* SHRINK EVEN SMALLER when scrolled (scrollProgress > 0) */
-        .category-tab.catalog,
-        .category-tab-mobile.catalog {
-          min-width: max(50px, calc(80px * (1 - 0.4 * var(--scroll-progress, 0))));
-          padding: max(4px, calc(8px * (1 - 0.4 * var(--scroll-progress, 0))));
-          font-size: max(0.55rem, calc(0.75rem * (1 - 0.3 * var(--scroll-progress, 0))));
-        }
+        /* With catalog (has images) - fixed width and smaller font */
+        // .category-tab.catalog,
+        // .category-tab-mobile.catalog {
+        //   // width: 80px;
+        //   // min-width: 80px;
+        //   // max-width: 80px;
+        //   // min-height: 80px;
+        //   // max-height: 80px;
+        //   padding: 4px;
+        //   font-size: 0.55rem;
+        //   font-weight: 600;
+        //   justify-content: flex-start;
+        // }
 
         /* Without catalog (no images) - auto width and larger font */
         .category-tab:not(.catalog) {
@@ -311,11 +333,16 @@ const Tabs = ({
           justify-content: center;
         }
 
+        .category-tab-mobile.catalog {
+          font-size: 0.7rem;
+        }
+
         /* Active states */
         .category-tab.active {
           color: #00205B;
           font-weight: 600;
           border-bottom: 2px solid #00205B;
+         
         }
 
         .category-tab-mobile.active {
@@ -334,33 +361,26 @@ const Tabs = ({
         .category-tab-mobile:hover {
           color: #00205B;
         }
-
-        .category-tab.active .tab-image,
-        .category-tab-mobile.active .tab-image-mobile {
-          margin-bottom: 10px;
-        }
-
-        /* DYNAMIC IMAGE SIZING - DEFAULT 80px → SHRINK TO 50px */
+.category-tab.active .tab-image,.category-tab-mobile.active.tab-image-mobile {
+margin-bottom:10px;}
+        /* FIXED SQUARE IMAGE AREAS */
         .tab-image,
         .tab-image-mobile {
-          --large-size: 80px;
-          --small-size: 50px;
-          width: max(var(--small-size), calc(var(--large-size) * (1 - 0.4 * var(--scroll-progress, 0))));
-          height: max(var(--small-size), calc(var(--large-size) * (1 - 0.4 * var(--scroll-progress, 0))));
+          width: 140px;
+          height: 140px;
           display: flex;
           align-items: center;
           justify-content: center;
           margin-bottom: 4px;
           overflow: hidden;
-          transition: width 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                      height 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                      transform 0.3s ease;
+          transition: width 0.8s ease-in-out, height 0.8s ease-in-out, transform 0.5s ease;
         }
 
-        .tab-image:hover {
-          transform: scale(1.02);
+        .tab-image.active{
         }
-
+        .tab-image:hover{
+        transform: scale(1.02);
+        }
         .tab-image img,
         .tab-image-mobile img {
           width: 100%;
@@ -371,6 +391,7 @@ const Tabs = ({
         }
 
         .category-tab.active .tab-image {
+          // border: 2px solid #00205B;
           border-radius: 8px;
         }
 
@@ -392,7 +413,7 @@ const Tabs = ({
           -webkit-box-orient: vertical;
           overflow: hidden;
           text-overflow: ellipsis;
-          max-height: calc(1.2em * 2 * max(0.7, (1 - 0.3 * var(--scroll-progress, 0))));
+          max-height: calc(1.2em * 2);
         }
 
         /* Text for non-catalog mode - single line */
@@ -415,6 +436,17 @@ const Tabs = ({
         .tab-button.disabled:hover,
         .category-tab.disabled:hover {
           color: #999;
+        }
+
+        /* Scroll animations for mobile */
+        .category-tabs.scrolled {
+          transition: height 0.5s ease-in-out;
+        }
+
+        .tab-image.scrolled,
+        .tab-image-mobile.scrolled {
+          width: 40px !important;
+          height: 40px !important;
         }
 
         @media (max-width: 768px) {
@@ -460,11 +492,11 @@ const Tabs = ({
             font-size: 0.75rem;
           }
         }
-
-        @media (max-width: 768px) {
+          @media (max-width: 768px) {
           .scroll-arrow {
             position: absolute;
             top: 30%;
+            // transform: translateY(-50%);
             z-index: 10;
             background: #99aaaab8;
             border: 1px solid #ccc;
@@ -486,70 +518,81 @@ const Tabs = ({
             right: 2px;
           }
         }
+.scroll-gradient {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 36px;
+  z-index: 6;
+  pointer-events: none; /* IMPORTANT */
+}
 
-        .scroll-gradient {
-          position: absolute;
-          top: 0;
-          height: 100%;
-          width: 36px;
-          z-index: 6;
-          pointer-events: none; /* IMPORTANT */
+.scroll-gradient.left {
+  left: 0;
+  background: linear-gradient(
+    90deg, #b9dcee, transparent
+  );
+  border-radius: 5px;
+}
+
+.scroll-gradient.right {
+  right: 0;
+  background: linear-gradient(
+    -90deg, #b9dcee, transparent
+  );
+  border-radius: 5px;
+}
+  @media (max-width: 768px) {
+  .scroll-gradient {
+    display: block;
+  }
+}
+  .tab-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+  @media (max-width:500px){
+
+    .tabs {
+        justify-content:flex-start;
+        max-height: 100px;
+    }
+
+  .category-tabs.with-catalog {
+          border-bottom: 1px solid #D9D9D6;
+          height: 80px !important;
+          display: flex;
+          gap: 20px;
+          white-space: nowrap;
         }
 
-        .scroll-gradient.left {
-          left: 0;
-          background: linear-gradient(
-            90deg, #b9dcee, transparent
-          );
-          border-radius: 5px;
-        }
-
-        .scroll-gradient.right {
-          right: 0;
-          background: linear-gradient(
-            -90deg, #b9dcee, transparent
-          );
-          border-radius: 5px;
-        }
-
-        @media (max-width: 768px) {
-          .scroll-gradient {
-            display: block;
+            .tab-image, .tab-image-mobile {
+            width: 80px;
+            height: 80px;
+            object-fit: fill;
+            object-position: center;
+            transition: width 0.3s ease, height 0.3s ease;
           }
-        }
 
-        .tab-container {
-          position: relative;
-          width: 100%;
-          overflow: hidden;
-        }
-
-        @media (max-width:500px) {
-          .tabs {
-            justify-content:flex-start;
-            max-height: 100px;
+          /* mobile skeleton sizing override */
+          .category-tab.skeleton, .category-tab-mobile.skeleton {
+            min-width: 80px;
           }
 
-          .category-tabs.with-catalog {
-            border-bottom: 1px solid #D9D9D6;
-            height: 90px !important;
-            display: flex;
-            gap: 20px;
-            white-space: nowrap;
-          }
-
-          .category-tab-mobile.disabled {
+        .category-tab-mobile.disabled {
             filter: grayscale(100%);
             opacity: 0.6;
             cursor: not-allowed;
           }
 
-          .category-tab-mobile.disabled:hover {
-            filter: grayscale(100%);
-            opacity: 0.6;
+        .category-tab-mobile.disabled:hover {
+          filter: grayscale(100%);
+          opacity: 0.6;
             cursor: not-allowed;
           }
         }
+      }
       `}</style>
     </div>
   );
