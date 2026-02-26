@@ -63,8 +63,8 @@ const CatalogLayout = ({
     const [headerHeight, setHeaderHeight] = useState(0);
     const [showSearch, setShowSearch] = useState(false);
     const dragStartY = useRef(0);
-    const scrollableContentRef = useRef(null);
-    const [isContentScrolled, setIsContentScrolled] = useState(false);
+    const scrollableContentRef = useRef(null); const viewportHeightRef = useRef(0);
+    const [scrollProgress, setScrollProgress] = useState(0);
     const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
     // Track initial page load completion
@@ -117,20 +117,26 @@ const CatalogLayout = ({
     // Handle scroll detection for tab size adjustment on mobile
     useEffect(() => {
         if (!isMobile) return;
-
         const scrollElement = scrollableContentRef.current;
         if (!scrollElement) return;
 
+        const updateViewportHeight = () => {
+            viewportHeightRef.current = window.innerHeight || 0;
+        };
+        updateViewportHeight();
+        window.addEventListener('resize', updateViewportHeight);
+
         const handleScroll = () => {
-            const currentScrollY = scrollElement.scrollTop;
-            // Check if scrolled down more than 50px threshold
-            const isScrolledDown = currentScrollY > 50;
-            setIsContentScrolled(isScrolledDown);
+            const scrollY = scrollElement.scrollTop;
+            const vh = viewportHeightRef.current;
+            const progress = Math.min(1, Math.max(0, scrollY / (vh * 0.3))); // Shrink over first 30% of viewport (adjust 0.3 as needed)
+            setScrollProgress(progress);
         };
 
-        scrollElement.addEventListener('scroll', handleScroll);
+        scrollElement.addEventListener('scroll', handleScroll, { passive: true });
         return () => {
             scrollElement.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', updateViewportHeight);
         };
     }, [isMobile]);
 
@@ -198,7 +204,6 @@ const CatalogLayout = ({
                                     className=""
                                     variant="pc"
                                     catalog={true}
-                                    isContentScrolled={isContentScrolled}
                                     isMobile={isMobile}
                                     loading={isLoading && !initialLoadComplete}
                                     skeletonCount={8}
@@ -428,7 +433,7 @@ const CatalogLayout = ({
                                 className="catalog"
                                 variant="mobile"
                                 catalog={true}
-                                isContentScrolled={isContentScrolled}
+                                scrollProgress={scrollProgress}
                                 isMobile={isMobile}
                                 loading={isLoading && !initialLoadComplete}
                                 skeletonCount={6}
@@ -515,7 +520,7 @@ const CatalogLayout = ({
                         <span className="loading-more-text">{t("Loading more products...")}</span>
                     </div>
                 )} */}
-                <SkeletonWrapper loading={isLoadingMore} type="mobile_card" count={1} style={{marginTop:"10px"}}> </SkeletonWrapper>
+                <SkeletonWrapper loading={isLoadingMore} type="mobile_card" count={1} style={{ marginTop: "10px" }}> </SkeletonWrapper>
                 {!hasMore && displayedProducts?.length > 0 && !isLoading && !isLoadingMore && (
                     <div className="end-of-catalog-message">
                         <p>{t("End of product catalog")}</p>

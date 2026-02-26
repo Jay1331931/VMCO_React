@@ -105,6 +105,8 @@ function Catalog() {
   const [quantities, setQuantities] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [categoriesTabImages, setCategoriesTabImages] = useState(initialCategories);
+  const scrollableContentRef = useRef(null); const viewportHeightRef = useRef(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   // Simplified pagination states
   const [products, setProducts] = useState([]);
@@ -1237,86 +1239,86 @@ function Catalog() {
     }
   }, [categoryFilter]);
 
-  const handleTabChange = (newCategory) => {
-    // Find the tab that was clicked
-    const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
+  // const handleTabChange = (newCategory) => {
+  //   // Find the tab that was clicked
+  //   const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
 
-    // Check if the tab is disabled
-    if (targetTab && targetTab.disabled) {
-      // Find the cooling period info for this entity
-      const category = categoriesTabImages.find(cat => cat.value === newCategory);
-      const entity = category?.entity;
+  //   // Check if the tab is disabled
+  //   if (targetTab && targetTab.disabled) {
+  //     // Find the cooling period info for this entity
+  //     const category = categoriesTabImages.find(cat => cat.value === newCategory);
+  //     const entity = category?.entity;
 
-      if (entity && disabledEntities.includes(entity)) {
-        const coolingInfo = coolingPeriodData.find(cp => cp.entity === entity);
+  //     if (entity && disabledEntities.includes(entity)) {
+  //       const coolingInfo = coolingPeriodData.find(cp => cp.entity === entity);
 
-        if (coolingInfo && coolingInfo.toTime) {
-          // Format the time
-          const todayUTC = new Date().toISOString().split('T')[0];
-          const utcDateTime = `${todayUTC}T${coolingInfo.toTime}Z`;
-          const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-          const localTime = new Date(utcDateTime).toLocaleTimeString('en-IN', {
-            timeZone: timezone,
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-          });
+  //       if (coolingInfo && coolingInfo.toTime) {
+  //         // Format the time
+  //         const todayUTC = new Date().toISOString().split('T')[0];
+  //         const utcDateTime = `${todayUTC}T${coolingInfo.toTime}Z`;
+  //         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  //         const localTime = new Date(utcDateTime).toLocaleTimeString('en-IN', {
+  //           timeZone: timezone,
+  //           hour: '2-digit',
+  //           minute: '2-digit',
+  //           hour12: true,
+  //         });
 
-          // Show the alert
-          Swal.fire({
-            icon: 'warning',
-            title: t("Ordering Window Closed"),
-            text: `${t("Ordering window is closed.")} ${t("You may place an order after")} ${localTime}`,
-            confirmButtonText: t("OK"),
-          });
-        } else {
-          // Fallback message if time info is not available
-          Swal.fire({
-            icon: 'warning',
-            title: t("Ordering Window Closed"),
-            text: t("Ordering window is closed for this category."),
-            confirmButtonText: t("OK"),
-          });
-        }
-      }
-      return; // Don't switch the tab
-    }
+  //         // Show the alert
+  //         Swal.fire({
+  //           icon: 'warning',
+  //           title: t("Ordering Window Closed"),
+  //           text: `${t("Ordering window is closed.")} ${t("You may place an order after")} ${localTime}`,
+  //           confirmButtonText: t("OK"),
+  //         });
+  //       } else {
+  //         // Fallback message if time info is not available
+  //         Swal.fire({
+  //           icon: 'warning',
+  //           title: t("Ordering Window Closed"),
+  //           text: t("Ordering window is closed for this category."),
+  //           confirmButtonText: t("OK"),
+  //         });
+  //       }
+  //     }
+  //     return; // Don't switch the tab
+  //   }
 
-    // Normal tab change logic
-    setActiveCategory(newCategory);
-  };
-  const fetchCart = async (userID) => {
-    console.log("userID", userID)
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/cart/get-cart-by-userId?id=${userID}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const result = await response.json();
-      console.log(result?.data)
-      if (result.status === "Ok") {
-        setSelectedLocation(result?.data?.branchId || null);
-        setSelectedBranchCity(result?.data?.city || null);
-        setSelectedBranchRegion(result?.data?.region || null);
-        // setSelectedBranchRegion(result.data)
-        // return result.data;
-      } else {
-        return null;
-        // console.error(
-        //   result?.result?.message || "Failed to fetch customer contacts"
-        // );
-      }
-    } catch (err) {
-      console.error("Error fetching cart :", err);
-      return null;
-    }
-  };
+  //   // Normal tab change logic
+  //   setActiveCategory(newCategory);
+  // };
+  // const fetchCart = async (userID) => {
+  //   console.log("userID", userID)
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/cart/get-cart-by-userId?id=${userID}`,
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     const result = await response.json();
+  //     console.log(result?.data)
+  //     if (result.status === "Ok") {
+  //       setSelectedLocation(result?.data?.branchId || null);
+  //       setSelectedBranchCity(result?.data?.city || null);
+  //       setSelectedBranchRegion(result?.data?.region || null);
+  //       // setSelectedBranchRegion(result.data)
+  //       // return result.data;
+  //     } else {
+  //       return null;
+  //       // console.error(
+  //       //   result?.result?.message || "Failed to fetch customer contacts"
+  //       // );
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching cart :", err);
+  //     return null;
+  //   }
+  // };
 
   console.log("selectedLocation", selectedLocation)
 
@@ -1338,7 +1340,6 @@ function Catalog() {
         // Filter section props
         filteredCategoryTabs={filteredCategoryTabs}
         activeCategory={activeCategory}
-
         handleTabChange={(newCategory) => {
           // Move the tab change logic here
           const targetTab = filteredCategoryTabs.find(t => t.value === newCategory);
@@ -1382,8 +1383,9 @@ function Catalog() {
 
           // Normal tab change
           console.log('Tab changing from', location, 'to', newCategory);
-
           setActiveCategory(newCategory);
+          scrollableContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          setScrollProgress(0);
           setSearchQuery('');
           setCategoryFilter('');
           setSubCategoryFilter('');
