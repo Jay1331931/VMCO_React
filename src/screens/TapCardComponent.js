@@ -62,6 +62,7 @@ const TapCardPayment = () => {
   const [isCardselected, setisCardselected] = useState(false);
   const [isPayButtonValid, setisPayButtonValid] = useState(false);
     const [showCardForm, setShowCardForm] = useState(true);
+    const [isNewCard,setIsNewCard] = useState(false);
   const { token } = useAuth();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -204,6 +205,7 @@ const TapCardPayment = () => {
           onReady: () => {
             if (selectedCard) loadSavedCard(selectedCard);
             setInitialized(true);
+            setIsNewCard(false)
           },
           onValidInput: (data) => {
             setIsProcessing(!data);
@@ -583,7 +585,7 @@ const TapCardPayment = () => {
                     </Typography>
                     
                     <Stack spacing={2}>
-                      {CardDetails.map((card) => (
+                      {CardDetails?.map((card) => (
                         <Paper
                           key={card.id}
                           onClick={() => handleCardSelection(card.id)}
@@ -630,6 +632,7 @@ const TapCardPayment = () => {
                       variant="outlined"
                       onClick={() => {
                         // setIsCardSelected(false);
+                        setIsNewCard(true)
                         setCardDetails(null);
                         initializeTapCard();
                         setShowCardForm(true);
@@ -652,6 +655,26 @@ const TapCardPayment = () => {
                 )}
 
                 {/* Card SDK Container */}
+                {(selectedCardId || isNewCard )&& !initialized && ( <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      bgcolor: "#f8fafc",
+                      borderRadius: 3,
+                      p: 6,
+                      border: "2px dashed #e2e8f0",
+                    }}
+                  >
+                    <CircularProgress size={48} sx={{ color: "#0b4c45", mb: 3 }} />
+                    <Typography variant="h6" fontWeight={600} color="#1e293b">
+                      {t("Loading Payment Gateway")}
+                    </Typography>
+                    <Typography variant="body2" color="#64748b" sx={{ mt: 1 }}>
+                      {t("Please wait while we secure your connection")}
+                    </Typography>
+                  </Box>)}
                 <div
                   id="card-sdk-container"
                   style={{
