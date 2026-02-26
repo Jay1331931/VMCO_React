@@ -1180,7 +1180,21 @@
 "Cards Pay":"دفع البطاقات",
 "Apple Pay":"أبل باي",
 "Apply to all days":"تطبيق على جميع الأيام",
-"Special Hours":"ساعات خاصة"
+"Special Hours":"ساعات خاصة",
+"TalabPoint Payments":"مدفوعات تالا بوينت",
+"Order Summary":"ملخص الطلب",
+"Customer Information":"معلومات العملاء",
+"Preparing secure payment...":"جارٍ إعداد عملية دفع آمنة...",
+"Please don't close this window":"الرجاء عدم إغلاق هذه النافذة",
+"Pay securely with Apple Pay. Fast, private, and protected.":"ادفع بأمان باستخدام Apple Pay. سريع، وخاص، ومحمي.",
+"Initializing Apple Pay...":"جارٍ تهيئة Apple Pay...",
+"Confirm & Pay":"تأكيد والدفع",
+"Please wait while we secure your connection":"يرجى الانتظار ريثما نؤمّن اتصالك",
+"Loading Payment Gateway":"جارٍ تحميل بوابة الدفع",
+"Your Saved Cards":"بطاقاتك المحفوظة",
+"Choose a saved card or add a new one":"اختر بطاقة محفوظة أو أضف بطاقة جديدة",
+"Accepted Cards":"البطاقات المقبولة",
+"Business Name":"اسم العمل"
 
 
 
