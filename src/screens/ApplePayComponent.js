@@ -30,11 +30,11 @@ const ApplePayComponent = () => {
   const { token } = useAuth();
   const { t, i18n } = useTranslation();
   const AppleContainerRef = useRef(null);
-  
+
   // Add a key to force remount on language change
   const [componentKey, setComponentKey] = useState(Date.now());
-const isFirstLoad = useRef(true);
-const prevLanguageRef = useRef(i18n.language);
+  const isFirstLoad = useRef(true);
+  const prevLanguageRef = useRef(i18n.language);
   const orderIdDecoded = atob(decodeURIComponent(orderId));
   const amountDecoded = atob(decodeURIComponent(amount));
   const customerIdDecoded = atob(decodeURIComponent(customerId));
@@ -45,15 +45,14 @@ const prevLanguageRef = useRef(i18n.language);
 
   // Force remount when language changes
   useEffect(() => {
-     if (prevLanguageRef.current !== i18n.language) {
-        setComponentKey(Date.now());
-    // Reset all states
-    setSdkLoaded(false);
-    setInitialized(false);
-    setCustomerDetails(null);
-    prevLanguageRef.current =i18n.language
+    if (prevLanguageRef.current !== i18n.language) {
+      setComponentKey(Date.now());
+      // Reset all states
+      setSdkLoaded(false);
+      setInitialized(false);
+      setCustomerDetails(null);
+      prevLanguageRef.current = i18n.language;
     }
-  
   }, [i18n.language]);
 
   // Fetch customer details
@@ -62,7 +61,7 @@ const prevLanguageRef = useRef(i18n.language);
       try {
         const { data } = await api.get(
           `/get_customer_details?customerId=${customerIdDecoded}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setCustomerDetails(data?.details);
       } catch (error) {
@@ -89,13 +88,15 @@ const prevLanguageRef = useRef(i18n.language);
     script.async = true;
     script.onload = () => setSdkLoaded(true);
     script.onerror = () => console.error("Failed to load Tap Apple Pay SDK");
-    
+
     // Remove any existing script with same src
-    const existingScript = document.querySelector(`script[src="${script.src}"]`);
+    const existingScript = document.querySelector(
+      `script[src="${script.src}"]`,
+    );
     if (existingScript) {
       existingScript.remove();
     }
-    
+
     document.head.appendChild(script);
 
     // Cleanup script on unmount
@@ -136,7 +137,7 @@ const prevLanguageRef = useRef(i18n.language);
     try {
       // Clear container first
       if (AppleContainerRef.current) {
-        AppleContainerRef.current.innerHTML = '';
+        AppleContainerRef.current.innerHTML = "";
       }
 
       render(
@@ -185,12 +186,19 @@ const prevLanguageRef = useRef(i18n.language);
             setInitialized(true);
           },
         },
-        AppleContainerRef.current?.id
+        AppleContainerRef.current?.id,
       );
     } catch (error) {
       console.error("Error initializing Apple Pay:", error);
     }
-  }, [sdkLoaded, customerDetails, initialized, amountDecoded, i18n.language, componentKey]);
+  }, [
+    sdkLoaded,
+    customerDetails,
+    initialized,
+    amountDecoded,
+    i18n.language,
+    componentKey,
+  ]);
 
   // Handle payment success
   const handleSuccess = async (paymentData) => {
@@ -206,7 +214,9 @@ const prevLanguageRef = useRef(i18n.language);
       const { data } = await api.post(`/payment/generate-link`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      window.location.replace(`${API_BASE_URL}/auth/payment/success?tap_id=${data?.data?.id}`);
+      window.location.replace(
+        `${API_BASE_URL}/auth/payment/success?tap_id=${data?.data?.id}`,
+      );
     } catch (error) {
       console.error("Failed to create charge request", error);
       Swal.fire({
@@ -221,7 +231,6 @@ const prevLanguageRef = useRef(i18n.language);
   };
 
   return (
- 
     <Sidebar title={t("Apple Payment")}>
       <Box
         sx={{
@@ -317,14 +326,27 @@ const prevLanguageRef = useRef(i18n.language);
                         {t("Amount")}
                       </Typography>
                       <Typography variant="h5" fontWeight={700} color="#1e293b">
-                        {amountDecoded} <span style={{ fontSize: 14, fontWeight: 400, color: '#64748b' }}>SAR</span>
+                        {amountDecoded}{" "}
+                        <span
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 400,
+                            color: "#64748b",
+                          }}
+                        >
+                          SAR
+                        </span>
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="#64748b">
                         {t("Currency")}
                       </Typography>
-                      <Typography variant="body1" fontWeight={600} color="#1e293b">
+                      <Typography
+                        variant="body1"
+                        fontWeight={600}
+                        color="#1e293b"
+                      >
                         {t("Saudi Riyal")} (SAR)
                       </Typography>
                     </Grid>
@@ -335,11 +357,18 @@ const prevLanguageRef = useRef(i18n.language);
 
                 {/* Customer Details */}
                 <Box>
-                  <Typography variant="subtitle2" fontWeight={600} color="#1e293b" mb={2}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    color="#1e293b"
+                    mb={2}
+                  >
                     {t("Customer Information")}
                   </Typography>
-                  
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
                     <Box display="flex" alignItems="center" gap={2}>
                       <Box
                         sx={{
@@ -352,7 +381,11 @@ const prevLanguageRef = useRef(i18n.language);
                           justifyContent: "center",
                         }}
                       >
-                        <Typography variant="body2" fontWeight={600} color="#1a4cff">
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          color="#1a4cff"
+                        >
                           {customerDetails?.company_name_en?.charAt(0) || "C"}
                         </Typography>
                       </Box>
@@ -360,7 +393,17 @@ const prevLanguageRef = useRef(i18n.language);
                         <Typography variant="body2" color="#64748b">
                           {t("Customer Name")}
                         </Typography>
-                        <Typography variant="body1" fontWeight={500} color="#1e293b">
+                        <Typography
+                          variant="body1"
+                          fontWeight={500}
+                          color="#1e293b"
+                          sx={{
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word",
+                            maxWidth: "100%",
+                            lineHeight: 1.4,
+                          }}
+                        >
                           {customerDetails?.company_name_en || "N/A"}
                         </Typography>
                       </Box>
@@ -373,24 +416,33 @@ const prevLanguageRef = useRef(i18n.language);
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
                           <Mail sx={{ fontSize: 16, color: "#94a3b8" }} />
-                          <Typography variant="body2" color="#1e293b">
-                            {customerDetails?.contact_email || t("Not available")}
+                          <Typography
+                            variant="body2"
+                            color="#1e293b"
+                            sx={{
+                              wordBreak: "break-word",
+                              overflowWrap: "break-word",
+                              maxWidth: "100%",
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {customerDetails?.contact_email ||
+                              t("Not available")}
                           </Typography>
                         </Box>
                       </Box>
-                      
                     </Box>
                     <Box flex={1}>
-                        <Typography variant="body2" color="#64748b" mb={0.5}>
-                          {t("Phone")}
+                      <Typography variant="body2" color="#64748b" mb={0.5}>
+                        {t("Phone")}
+                      </Typography>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Phone sx={{ fontSize: 16, color: "#94a3b8" }} />
+                        <Typography variant="body2" color="#1e293b">
+                          {customerDetails?.contact_phone || t("Not available")}
                         </Typography>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Phone sx={{ fontSize: 16, color: "#94a3b8" }} />
-                          <Typography variant="body2" color="#1e293b">
-                            {customerDetails?.contact_phone || t("Not available")}
-                          </Typography>
-                        </Box>
                       </Box>
+                    </Box>
                   </Box>
                 </Box>
               </CardContent>
@@ -479,7 +531,9 @@ const prevLanguageRef = useRef(i18n.language);
                           justifyContent: "center",
                         }}
                       >
-                        <Typography sx={{ color: "#fff", fontSize: 20, fontWeight: 600 }}>
+                        <Typography
+                          sx={{ color: "#fff", fontSize: 20, fontWeight: 600 }}
+                        >
                           
                         </Typography>
                       </Box>
@@ -487,14 +541,25 @@ const prevLanguageRef = useRef(i18n.language);
                         {t("Apple Pay")}
                       </Typography>
                     </Box>
-                    <Typography variant="body2" color="#64748b">
-                      {t("Pay securely with Apple Pay. Fast, private, and protected.")}
+                    <Typography
+                      variant="body2"
+                      color="#64748b"
+                      sx={{
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                        maxWidth: "100%",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {t(
+                        "Pay securely with Apple Pay. Fast, private, and protected.",
+                      )}
                     </Typography>
                   </Box>
                 }
                 sx={{ p: 3, pb: 0 }}
               />
-              
+
               <CardContent sx={{ p: 3 }}>
                 {/* Apple Pay Button Container */}
                 <Box
@@ -513,8 +578,20 @@ const prevLanguageRef = useRef(i18n.language);
                 >
                   {!sdkLoaded ? (
                     <Box textAlign="center">
-                      <CircularProgress size={32} sx={{ color: "#1a4cff", mb: 2 }} />
-                      <Typography variant="body2" color="#64748b">
+                      <CircularProgress
+                        size={32}
+                        sx={{ color: "#1a4cff", mb: 2 }}
+                      />
+                      <Typography
+                        variant="body2"
+                        color="#64748b"
+                        sx={{
+                          wordBreak: "break-word",
+                          overflowWrap: "break-word",
+                          maxWidth: "100%",
+                          lineHeight: 1.4,
+                        }}
+                      >
                         {t("Initializing Apple Pay...")}
                       </Typography>
                     </Box>
@@ -532,11 +609,18 @@ const prevLanguageRef = useRef(i18n.language);
                           pointerEvents: initialized ? "auto" : "none",
                         }}
                       />
-                      
+
                       {!initialized && (
                         <Box textAlign="center" mt={2}>
-                          <CircularProgress size={24} sx={{ color: "#94a3b8" }} />
-                          <Typography variant="caption" color="#94a3b8" sx={{ mt: 1, display: "block" }}>
+                          <CircularProgress
+                            size={24}
+                            sx={{ color: "#94a3b8" }}
+                          />
+                          <Typography
+                            variant="caption"
+                            color="#94a3b8"
+                            sx={{ mt: 1, display: "block" }}
+                          >
                             {t("Preparing secure payment...")}
                           </Typography>
                         </Box>
@@ -622,11 +706,23 @@ const prevLanguageRef = useRef(i18n.language);
                       zIndex: 10,
                     }}
                   >
-                    <CircularProgress size={48} sx={{ color: "#1a4cff", mb: 2 }} />
+                    <CircularProgress
+                      size={48}
+                      sx={{ color: "#1a4cff", mb: 2 }}
+                    />
                     <Typography variant="h6" fontWeight={600} color="#1e293b">
                       {t("Processing Payment")}
                     </Typography>
-                    <Typography variant="body2" color="#64748b">
+                    <Typography
+                      variant="body2"
+                      color="#64748b"
+                      sx={{
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                        maxWidth: "100%",
+                        lineHeight: 1.4,
+                      }}
+                    >
                       {t("Please don't close this window")}
                     </Typography>
                   </Box>
@@ -668,7 +764,6 @@ const prevLanguageRef = useRef(i18n.language);
         </Box> */}
       </Box>
     </Sidebar>
-
   );
 };
 
