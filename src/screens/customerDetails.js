@@ -2701,6 +2701,9 @@ if (field === "methodDetails" &&
           "en-CA"
         );
       }
+      if( customerData?.nonTradingDocuments && customerData?.nonTradingDocuments.length > 0) {
+        updatedCustomerData.current.nonTradingDocuments = JSON.stringify(customerData.nonTradingDocuments);
+      }
       const mergedData = {
         updates: {
           ...wfCustomerData,
@@ -3472,6 +3475,7 @@ if (field === "methodDetails" &&
                   tradingFilesToUpload={tradingFilesToUpload}
                   nonTradingFilesToUpload={nonTradingFilesToUpload}
                   customerData={customerData}
+                  setCustomerData={setCustomerData}
                   customerPaymentMethodsData={customerPaymentMethodsData}
                   originalCustomerData={originalCustomerData}
                   verifiedData={verifiedData}
