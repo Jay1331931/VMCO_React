@@ -148,6 +148,7 @@ export const getOptionsFromEmployees = async (token) => {
       const options = result.data.data.map((item) => ({
         name: item.name,
         employeeId: item.employeeId,
+        region: item.region[0],
       }));
 
       allResults.push(...options); // Add to the combined array

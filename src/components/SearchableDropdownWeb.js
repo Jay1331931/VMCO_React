@@ -137,7 +137,7 @@ function SearchableDropdown({
 
   const selectedOption = mergedOptions.find(opt => {
     const optVal = typeof opt === "object" ? (opt.value !== undefined ? opt.value : opt.employeeId || opt.name) : opt;
-    return optVal === value;
+    return optVal?.toLowerCase() === value?.toLowerCase();
   }) || allOption;
 
   const displayText = t(typeof selectedOption === "object" ? selectedOption.name : selectedOption) || placeholder;

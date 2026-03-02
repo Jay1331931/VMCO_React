@@ -27,6 +27,7 @@ function BusinessDetails({
   verifiedData = {},
   onChangeVerifiedData,
   setEntityWiseAssignment,
+  setPrimarySalesExecutive,
   mode,
   setTabsHeight,
   setInterCompany,
@@ -1957,7 +1958,8 @@ onKeyDown={handleKeyDown}
                   });
                 }}
                 disabled={
-            checkDisabledStatus("branch") || customerData?.customerStatus === "new"
+                  true
+            // checkDisabledStatus("branch") || customerData?.customerStatus === "new"
           }
                 className={
                   originalCustomerData &&
@@ -2031,7 +2033,7 @@ onKeyDown={handleKeyDown}
                   })) || []
                 }
                 value={customerData?.assignedTo || ""}
-                onChange={onChangeCustomerData}
+                onChange={setPrimarySalesExecutive}
                 disabled={
             checkDisabledStatus("assignedTo") || customerData?.customerStatus === "new"
           }
