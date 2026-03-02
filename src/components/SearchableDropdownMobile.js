@@ -145,7 +145,7 @@ function SearchableDropdown({
             ? opt.value
             : opt.employeeId || opt.name
           : opt;
-      return optVal === value;
+      return optVal?.toLowerCase() === value?.toLowerCase();
     }) || allOption;
 
   const displayText =

@@ -19,6 +19,12 @@ import BusinessDetails from "./customerDetailsForms/businessDetails";
 import ContactDetails from "./customerDetailsForms/contactDetails";
 import FinancialInformation from "./customerDetailsForms/financialInformation";
 import Documents from "./customerDetailsForms/documents";
+import {
+  fetchDropdownFromBasicsMaster,
+  getOptionsFromEmployeesWithManager,
+  getOptionsFromEmployees,
+  checkFieldForUpdate,
+} from "../utilities/commonServices";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Pagination from "../components/Pagination";
 import ApprovalDialog from "../components/ApprovalDialog";
@@ -439,7 +445,7 @@ function countNonTradingDocumentsUpdates(original = [], current = []) {
 }
 
 function CustomerDetails() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [tabsHeight, setTabsHeight] = useState("auto");
   const { token, user, isAuthenticated, logout, loading } = useAuth();
   const location = useLocation();
@@ -511,6 +517,18 @@ function CustomerDetails() {
   const [approvalAction, setApprovalAction] = useState(null);
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 950);
+  const dropdownFields = [
+    "companyType",
+    "typeOfBusiness",
+    "deliveryLocations",
+    "customerSource",
+    "entity",
+    "branch",
+  ];
+  const [basicMasterLists, setBasicMasterLists] = useState({});
+    const [employeeListWithManagers, setEmployeeListWithManagers] = useState([]);
+    const [employeeList, setEmployeeList] = useState([]);
+  let currentLanguage = i18n.language;
   // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 950);
@@ -518,6 +536,25 @@ function CustomerDetails() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  useEffect(() => {
+      const fetchData = async () => {
+        const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
+          dropdownFields,
+          token
+        );
+        const listOfEmployeesWithManagers =
+          await getOptionsFromEmployeesWithManager(customerData?.branch, token);
+  
+        const listOfEmployees = await getOptionsFromEmployees(token);
+  
+        setBasicMasterLists(listOfBasicsMaster);
+        setEmployeeListWithManagers(listOfEmployeesWithManagers);
+        console.log("listOfEmployees",listOfEmployees)
+        setEmployeeList(listOfEmployees);
+      };
+      fetchData();
+      setTabsHeight("auto");
+    }, [customerData?.branch, currentLanguage]);
   useEffect(() => {
     const activeTab = document.querySelector(
       ".customer-onboarding-tabs-vertical .tab.active"
@@ -932,6 +969,16 @@ const getClientIp = async () => {
       isDeliveryChargesApplicable: value,
     }));
   };
+  const setPrimarySalesExecutive = (e) => {
+    const { name, value } = e.target;
+    updatedCustomerData.current[name] = value;
+    const employee = employeeList?.find(
+    (emp) => emp.employeeId === value
+  );
+  const branch = employee?.region || '';
+    updatedCustomerData.current.branch = branch;
+    setCustomerData((prev) => ({ ...prev, [name]: value, branch: branch }));
+  }
   const mandatoryFields = [
     "companyNameEn",
     "companyNameAr",
@@ -2701,6 +2748,9 @@ if (field === "methodDetails" &&
           "en-CA"
         );
       }
+      if( customerData?.nonTradingDocuments && customerData?.nonTradingDocuments.length > 0) {
+        updatedCustomerData.current.nonTradingDocuments = JSON.stringify(customerData.nonTradingDocuments);
+      }
       const mergedData = {
         updates: {
           ...wfCustomerData,
@@ -3405,6 +3455,7 @@ if (field === "methodDetails" &&
                     customerData={customerData}
                     originalCustomerData={originalCustomerData}
                     onChangeCustomerData={handleCustomerDataChange}
+                    setPrimarySalesExecutive={setPrimarySalesExecutive}
                     verifiedData={verifiedData}
                     onChangeVerifiedData={handleVerifiedDataChange}
                     setEntityWiseAssignment={setEntityWiseAssignment}
@@ -3472,6 +3523,7 @@ if (field === "methodDetails" &&
                   tradingFilesToUpload={tradingFilesToUpload}
                   nonTradingFilesToUpload={nonTradingFilesToUpload}
                   customerData={customerData}
+                  setCustomerData={setCustomerData}
                   customerPaymentMethodsData={customerPaymentMethodsData}
                   originalCustomerData={originalCustomerData}
                   verifiedData={verifiedData}
