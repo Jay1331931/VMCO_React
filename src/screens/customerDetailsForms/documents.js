@@ -43,6 +43,7 @@ function Documents({
   tradingFilesToUpload = {},
   nonTradingFilesToUpload = {},
   customerData = {},
+  setCustomerData,
   customerPaymentMethodsData={},
   originalCustomerData = {},
   verifiedData = {},
@@ -408,6 +409,7 @@ setNonTradingFilesToNativeUpload((prev) => [
       const fileName = customerData.nonTradingDocuments[index];
       customerData.nonTradingDocuments =
         customerData.nonTradingDocuments.filter((file) => file !== fileName);
+        setCustomerData({...customerData});
     }
     nonTradingFilesToUpload["others"] = updatedFiles;
     console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
