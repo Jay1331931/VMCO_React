@@ -1,6 +1,6 @@
 {
   "name": "talabpoint",
-  "homepage": "https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
+  "homepage": "",
   "private": true,
   "dependencies": {
     "@capacitor/android": "7.4.4",
