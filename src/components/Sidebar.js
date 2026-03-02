@@ -829,7 +829,6 @@ function Sidebar({ children, title = null, MenuName = null, searchable = false, 
     const fetchBranches = async () => {
       try {
         setIsLoading(true);
-        if(!selectBranch) return;
         const response = await fetch(
           `${API_BASE_URL}/customer-branches/pagination?pageSize=10000`,
           {
