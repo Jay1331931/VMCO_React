@@ -76,7 +76,6 @@
     "Building Name": "Building Name",
     "Street": "Street",
     "City": "City",
-    "Region": "Region",
     "Geolocation": "Geolocation",
     "Pincode": "Pincode",
     "Bank Name": "Bank Name",
@@ -176,9 +175,10 @@
     "Order Updated": "Order Updated",
     "Order updated successfully!": "Order updated successfully!",
     "Order Updated Successfully": "Order Updated Successfully",
-    "The order has been successfully updated with product changes!": "The order has been successfully updated with product changes!"
-    
-    
+    "The order has been successfully updated with product changes!": "The order has been successfully updated with product changes!",
+    "Branch Regions": "Branch Office",
+    "Branch Region": "Collection Office",
+    "Region": "Province"
     
     
 }
