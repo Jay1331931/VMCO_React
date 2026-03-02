@@ -772,12 +772,12 @@ function Cart() {
     } else if (entity === Constants.ENTITY.GMTC) {
       if (createdOrders.length > 0) {
         messageParts.push(
-          `Order #${createdOrders[0].orderId} placed successfully`
+          `${t("Order #")} ${createdOrders[0].orderId} ${t("placed successfully")}`
         );
       }
       if (existingOrders.length > 0) {
         messageParts.push(
-          t(`An open order #`)+`${existingOrders[0].existingOrderId}`+t(` already exists. Please update instead of creating new one`)
+          `${t("An open order #")} ${existingOrders[0].existingOrderId} ${t("already exists. Please update instead of creating new one")}`
         );
       }
     } else if (
@@ -786,7 +786,7 @@ function Cart() {
     ) {
       if (createdOrders.length > 0) {
         messageParts.push(
-          `Order #${createdOrders[0].orderId} placed successfully`
+          `${t("Order #")} ${createdOrders[0].orderId} ${t("placed successfully")}`
         );
       }
     }
