@@ -724,6 +724,18 @@ function ContactDetails({
         value: value || null,
       },
     });
+    onChangeCustomerData({
+      target: {
+        name: "city",
+        value: null,
+      },
+    });
+    onChangeCustomerData({
+      target: {
+        name: "district",
+        value: null,
+      },
+    });
   };
 
   // Handle city selection
@@ -735,6 +747,12 @@ function ContactDetails({
       target: {
         name: "city",
         value: value || null,
+      },
+    });
+    onChangeCustomerData({
+      target: {
+        name: "district",
+        value: null,
       },
     });
   };
