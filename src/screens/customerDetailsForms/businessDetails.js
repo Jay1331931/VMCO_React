@@ -1350,6 +1350,9 @@ onKeyDown={handleKeyDown}
               {t("Previous")}{":"} {originalCustomerData?.brandNameEn || "(empty)"}
             </div>
           )}
+          {formErrors.brandNameEn && (
+            <div className="error">{t(formErrors.brandNameEn)}</div>
+          )}
       </div>
 
       {/* Brand Name (Arabic) */}
@@ -1422,6 +1425,9 @@ onKeyDown={handleKeyDown}
             <div className="current-value">
               {t("Previous")}{":"} {originalCustomerData?.brandNameAr || "(empty)"}
             </div>
+          )}
+          {formErrors.brandNameAr && (
+            <div className="error">{t(formErrors.brandNameAr)}</div>
           )}
       </div>
 

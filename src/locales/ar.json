@@ -690,6 +690,7 @@
     "Invalid format! 10 digits required": "تنسيق غير صالح! 10 أرقام مطلوبة",
     "Invalid format! 8 to 9 digits accepted": "تنسيق غير صالح! 8 إلى 9 أرقام مقبولة",
     "Please enter Arabic text.": "يرجى إدخال نص باللغة العربية.",
+    "Please enter English text.": "الرجاء إدخال نص باللغة الإنجليزية.",
     "Credit Period is required.": "فترة الائتمان مطلوبة.",
     "Credit Limit is required.": "حد الائتمان مطلوب.",
     "pending": "قيد الانتظار",
