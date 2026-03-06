@@ -10,8 +10,10 @@ import Swal from "sweetalert2";
 import "./styles/transitions.css";
 
 const currentVersion = process.env.REACT_APP_TALAB_VERSION;
+const currentIosVersion=process.env.REACT_APP_TALAB_IOS_VERSION
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const isIOSsMobile = /iPhone/i.test(navigator.userAgent);
+const isIOSMobile = /iPhone/i.test(navigator.userAgent);
+const isAndroidMobile = /Android/i.test(navigator.userAgent);
 const lastSkippedVersion = localStorage.getItem('last_skipped_version');
 
 const useNetworkStatus = () => {
@@ -40,23 +42,11 @@ const initializeReloadDetection = () => {
   const reloadReason = sessionStorage.getItem("pageReloadReason");
   if (reloadReason) {
     setTimeout(() => {
-
-       sessionStorage.removeItem("pageReloadReason");
-      // Swal.fire({
-      //   title: "⚠️ Page Reloaded",
-      //   html: `<strong>Reason:</strong> ${reloadReason}<br/><small>Time: ${new Date().toLocaleTimeString()}</small>`,
-      //   icon: "warning",
-      //   confirmButtonText: "OK",
-      //   allowOutsideClick: false,
-      //   didOpen: () => {
-      //     sessionStorage.removeItem("pageReloadReason");
-      //   }
-      // });
+      sessionStorage.removeItem("pageReloadReason");
     }, 500);
   }
 
   window.addEventListener("beforeunload", () => {
-    // FIX: Check if file picker is open before setting reload reason
     const isPickerOpen = sessionStorage.getItem("file_picker_open") === "true";
     if (!isPickerOpen) {
       sessionStorage.setItem("pageReloadReason", "User action (refresh/navigate)");
@@ -73,7 +63,6 @@ function App() {
   useEffect(() => {
     initializeReloadDetection();
     
-    // FIX: Clear picker flag when app regains focus (user returns from gallery)
     const handleFocus = () => {
       setTimeout(() => {
         sessionStorage.removeItem("file_picker_open");
@@ -102,16 +91,23 @@ function App() {
   };
 
   const checkForUpdates = async () => {
-    if (!isMobile || isIOSsMobile) return;
+    let device='android'
+    if (!isMobile ) {
+      return;
+    }else if (isIOSMobile){
+      device='ios'
+    }
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/get-latest-version?platform=android`);
+      const response = await fetch(`${API_BASE_URL}/auth/get-latest-version?platform=${device}`);
       const result = await response.json();
       if (result.status === "Ok" && result.data) {
         const latestV = result?.data?.version_number;
         setLatestVersion(latestV);
         setAppVersions(result.data);
-        if (lastSkippedVersion !== latestV && latestV !== currentVersion) {
+        if (lastSkippedVersion !== latestV && latestV !== currentVersion && isAndroidMobile && result.data.platform?.toLowerCase() === 'android')  {
           setShowUpdatePopup(true);
+        }else if (lastSkippedVersion !==latestV && latestV !== currentIosVersion && isIOSMobile && result.data.platform?.toLowerCase() === "ios"){
+          setShowUpdatePopup(true)
         }
       }
     } catch (error) {
@@ -125,8 +121,16 @@ function App() {
   }, []);
 
   const handleUpdateClick = () => {
-    if (Capacitor.isNativePlatform()) {
-      window.open("https://play.google.com/store/apps/details?id=com.vmco.android.talabpoint", "_system");
+  console.log("isMO",isMobile)
+    if (Capacitor.isNativePlatform() && isMobile ) {
+      console.log("isIos",isIOSMobile,isAndroidMobile)
+      if(isAndroidMobile){
+        window.open("https://play.google.com/store/apps/details?id=com.vmco.android.talabpoint", "_system");
+      }else if(isIOSMobile){
+        // iOS App Store universal link for direct app page with update capability
+        console.log("clicked on update now with ")
+        window.open("itms-apps://itunes.apple.com/in/app/id6756706821", "_system");
+      }
     }
     setShowUpdatePopup(false);
   };
