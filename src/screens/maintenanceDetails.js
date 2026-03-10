@@ -709,7 +709,6 @@ function MaintenanceDetails() {
           description,
         }))),
       };
-      console.log("Ticket update payload:", ticketUpdatePayload);
       const apiUrl = `${API_BASE_URL}/maintenance/id/${ticket.id}`;
       const response = await fetch(apiUrl, {
         method: 'PATCH',
