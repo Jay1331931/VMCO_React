@@ -140,10 +140,10 @@ function SupportDetails() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  
+
   // Prevent reload during file upload on Capacitor
   // Prevent reload during file upload on Capacitor
-  
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Block refresh shortcuts during upload
@@ -153,7 +153,7 @@ function SupportDetails() {
         }
       }
     };
-    
+
     const handleBeforeUnload = (e) => {
       if (uploadingImage || uploadingVideo) {
         e.preventDefault();
@@ -170,14 +170,14 @@ function SupportDetails() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [uploadingImage, uploadingVideo]);
-  
+
   // Handle image add
   const handleFileUpload = async (e, type) => {
-   sessionStorage.removeItem("file_picker_open");
-  
-  e.preventDefault();
-  e.stopPropagation();
-    
+    sessionStorage.removeItem("file_picker_open");
+
+    e.preventDefault();
+    e.stopPropagation();
+
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
@@ -233,10 +233,10 @@ function SupportDetails() {
         confirmButtonColor: "#dc3545"
       });
     } finally {
-      
-    if (type === "image") setUploadingImage(false);
-    else if (type === "video") setUploadingVideo(false);
-    e.target.value = "";
+
+      if (type === "image") setUploadingImage(false);
+      else if (type === "video") setUploadingVideo(false);
+      e.target.value = "";
     }
 
     e.target.value = "";
@@ -610,17 +610,17 @@ function SupportDetails() {
 
 
   // Open file dialog
- const openFileDialog = () => {
-  // Set flag immediately before opening the system dialog
-  sessionStorage.setItem("file_picker_open", "true");
-  if (fileInputRef.current) fileInputRef.current.click();
-};
+  const openFileDialog = () => {
+    // Set flag immediately before opening the system dialog
+    sessionStorage.setItem("file_picker_open", "true");
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
 
   // Open file dialog for videos
   const openVideoDialog = () => {
-  sessionStorage.setItem("file_picker_open", "true");
-  if (videoInputRef.current) videoInputRef.current.click();
-};
+    sessionStorage.setItem("file_picker_open", "true");
+    if (videoInputRef.current) videoInputRef.current.click();
+  };
 
   // Handle customer selection
   const handleSelectCustomer = (customer) => {
@@ -969,6 +969,8 @@ function SupportDetails() {
       const ticketUpdatePayload = {
         status: newStatus,
         isOpen: (approvalAction === 'close' || approvalAction === 'reject' || approvalAction === 'cancel') ? false : true,
+        closingDate: new Date().toISOString().split('T')[0],
+        ticketAge: ticket.daysOpen,
         comments: updatedComments,
       };
 
