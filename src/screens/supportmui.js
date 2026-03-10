@@ -67,7 +67,7 @@ function Support() {
     const [selectedRow, setSelectedRow] = useState(null);
     const [showRowPopup, setShowRowPopup] = useState(false);
     const [filtersInitialized, setFiltersInitialized] = useState(false);
-
+    const [exportLoading, setExportLoading] = useState(false);
 
     // Grid API reference
     const gridApiRef = useGridApiRef();
@@ -306,6 +306,61 @@ function Support() {
         });
     };
 
+    const handleExportToExcel = async () => {
+        setExportLoading(true);
+        try {
+          const filtersWithStatus = {
+            ...filters,
+            isOpen: isClosedMode === "open",
+          };
+    
+          const params = new URLSearchParams({
+            search: searchQuery,
+            sortBy: sortModel[0]?.field || "id",
+            sortOrder: sortModel[0]?.sort || "asc",
+            filters: JSON.stringify(filtersWithStatus),
+          });
+    
+          let apiUrl;
+        //   if (
+        //     user?.designation?.toLowerCase() ===
+        //     Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()
+        //   ) {
+        //     const accessParam = isMyTicketsMode ? "region" : "all";
+        //     apiUrl = `${API_BASE_URL}/maintenance/export?${params.toString()}&access=${accessParam}`;
+        //   } else {
+            apiUrl = `${API_BASE_URL}/grievances/export?${params.toString()}`;
+        //   }
+    
+          const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+    
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+          }
+    
+          // Get the blob and create download link
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `support-tickets-${new Date().toISOString().split("T")[0]
+            }.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error("Failed to export maintenance tickets:", error);
+          setError("Failed to export data");
+        } finally {
+          setExportLoading(false);
+        }
+      };
     // Define columns for the DataGrid
     const supportColumns = [
         {
@@ -607,7 +662,9 @@ function Support() {
                                                             searchPlaceholder="Search tickets..."
                                                             showColumnVisibility={false}
                                                             showFilters={false}
-                                                            showExport={false}
+                                                            showExport={true}
+                                                    handleExportClick={handleExportToExcel}
+                                                    exportLoading={exportLoading}
                                                             showUpload={false}
                                                             showAdd={isV('btnAdd')}
                                                             buttonName={t("Add Ticket")}
@@ -717,7 +774,9 @@ function Support() {
                                                     searchPlaceholder={"Search tickets..."}
                                                     showColumnVisibility={true}
                                                     showFilters={true}
-                                                    showExport={false}
+                                                    showExport={true}
+                                                    handleExportClick={handleExportToExcel}
+                                                    exportLoading={exportLoading}
                                                     showUpload={false}
                                                     showAdd={isV("btnAdd")}
                                                     buttonName={t("Add Ticket")}

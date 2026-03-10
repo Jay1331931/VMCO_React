@@ -104,6 +104,13 @@ function BusinessDetails({
       setEmployeeListWithManagers(listOfEmployeesWithManagers);
       console.log("listOfEmployees",listOfEmployees)
       setEmployeeList(listOfEmployees);
+      // if (customerData?.assignedTo) {
+      //       const employee = listOfEmployees?.find(
+      //         (emp) => emp.employeeId === customerData.assignedTo
+      //       );
+      //       const branch = employee?.region || '';
+      //       onChangeCustomerData({ target: { name: 'branch', value: branch } });
+      //     }
     };
     fetchData();
     setTabsHeight("auto");
