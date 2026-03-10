@@ -14,7 +14,7 @@
     }
   },
   "server": {
-    "url":"https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
+    "url":"https://talabpoint.com",
     "errorPath": "offline.html",
     "androidScheme": "https",
     "allowNavigation": [
