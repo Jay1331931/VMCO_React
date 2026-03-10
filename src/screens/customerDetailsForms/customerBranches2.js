@@ -106,7 +106,7 @@ const CustomerBranches = ({
   const [isFirstBranch, setIsFirstBranch] = useState(false);
   const [search, setSearch] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 450);
-  const [pageSize, setPageSize] = useState(isMobile ? 5 : 6);
+  const [pageSize, setPageSize] = useState(isMobile ? 5 : 10);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
@@ -477,7 +477,7 @@ const CustomerBranches = ({
   }, [expandedRows?.length, branches?.length]);
   // Fetch branches on mount
   useEffect(() => {
-    setPageSize(isMobile ? 5 : 6);
+    setPageSize(isMobile ? 5 : 10);
     if (customer?.id) {
       fetchBranches();
     }

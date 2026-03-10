@@ -19,6 +19,9 @@ import SearchableDropdown from "../components/SearchableDropdown";
 import { useAuth } from "../context/AuthContext";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import {
+  getOptionsFromEmployees,
+} from "../utilities/commonServices";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function CustomersOnboarding() {
@@ -44,6 +47,7 @@ function CustomersOnboarding() {
   const navigate = useNavigate();
 
   const [leadData, setLeadData] = useState(null);
+  const [employeeList, setEmployeeList] = useState([]);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerify, setIsOtpVerify] = useState(false);
 
@@ -177,6 +181,8 @@ function CustomersOnboarding() {
             // setInvitationValid(true);
           }
           console.log(formData);
+          const listOfEmployees = await getOptionsFromEmployees(token);
+          setEmployeeList(listOfEmployees);
         } catch (error) {
           console.log("Error fetching invitation data:", error.message);
           console.error("Error fetching invitation data:", error);
@@ -185,7 +191,6 @@ function CustomersOnboarding() {
           // setIsLoading(false);
         }
       };
-
       fetchInvitationData();
     }
   }, [id]);
@@ -474,6 +479,9 @@ function CustomersOnboarding() {
                 },
                 customerSource: leadData?.source || "portal",
                 assignedTo: leadData?.employeeId,
+                branch: leadData?.employeeId
+  ? employeeList?.find(emp => emp.employeeId === leadData.employeeId)?.region
+  : '',
                 primaryBusinessUnit: leadData?.primaryBusinessUnit,
                 registration: new Date().toLocaleDateString("en-CA"),
                 assignedToEntityWise: {
