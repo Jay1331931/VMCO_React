@@ -700,6 +700,8 @@ function MaintenanceDetails() {
         status: newStatus,
         isOpen: approvalAction === 'close' || approvalAction === 'reject' ? false : true,
         comments: updatedComments,
+        closingDate: new Date().toISOString().split('T')[0],
+        ticketAge: ticket.daysOpen,
         spareParts: JSON.stringify(selectedSpareParts.map(({ itemId, nameEn, nameAr, description }) => ({
           itemId,
           nameEn,
@@ -707,7 +709,6 @@ function MaintenanceDetails() {
           description,
         }))),
       };
-
       const apiUrl = `${API_BASE_URL}/maintenance/id/${ticket.id}`;
       const response = await fetch(apiUrl, {
         method: 'PATCH',
