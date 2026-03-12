@@ -169,7 +169,7 @@ function SupportCard({
                         ? ticket?.companyNameAr || "Unknown Customer"
                         : ticket?.companyNameEn || "Unknown Customer"}
                     </Typography>
-                    {ticket?.isOpen && isV("daysOpen") && (<Typography
+                    {isV("daysOpen") && (<Typography
                       fontSize={11}
                       // fontWeight={500}
                       color="white"

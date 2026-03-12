@@ -192,7 +192,7 @@ function MaintenanceCard({
                         ? ticket?.branchNameLc || "Unknown Customer"
                         : ticket?.branchNameEn || "Unknown Customer"}
                     </Typography>
-                    {ticket?.isOpen && isV("daysOpen") && (<Typography
+                    {isV("daysOpen") && (<Typography
                       fontSize={11}
                       // fontWeight={500}
                       color="white"
