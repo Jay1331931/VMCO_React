@@ -465,13 +465,13 @@ function Support() {
         {
             field: "daysOpen",
             headerName: t("Days Open"),
-            include: isClosedMode === 'open' && isV("daysOpen"),
+            include: isV("daysOpen"),
             searchable: false,
             width: columnDimensions["daysOpen"]?.width || 120,
             flex: 1,
             align: isArabic ? "right" : "left",
             headerAlign: isArabic ? "right" : "left",
-            renderCell: (params) => <span>{params.value}</span>,
+            renderCell: (params) => <span>{params.row.daysOpen}</span>,
         },
         {
             field: "createdAt",
