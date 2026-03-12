@@ -4078,7 +4078,7 @@ function Cart() {
                       <div className="category-items">
                         {category.items.length === 0 ? (
                           <div className="empty-category">
-                            {t("No items in this category")}
+                            {t("No items found")}
                           </div>
                         ) : !isMobile ? (
                           category.items.map((item, idx) => (

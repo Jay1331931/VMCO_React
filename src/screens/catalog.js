@@ -373,6 +373,9 @@ function Catalog() {
       stopLoading();
       setIsLoadingMore(false);
       isLoadingRef.current = false;
+      if (reset) {
+        setContentReady(true);
+      }
     }
   }, [categories, productsPerPage, API_BASE_URL, token, products.length, startLoading, stopLoading]);
 
@@ -416,14 +419,15 @@ function Catalog() {
   }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, user, resetInfiniteScrollStates]);
 
   useEffect(() => {
-    if (products.length > 0) {
+    if (products.length > 0 || !isLoading) {
       // Microtask ensures setDisplayedProducts completed
       queueMicrotask(() => {
-        setContentReady(true);
-        stopLoading();  // NOW safe to hide skeleton
+        if (!isLoading) {
+          setContentReady(true);
+        }
       });
     }
-  }, [products.length]);
+  }, [products.length, isLoading]);
 
   useEffect(() => {
     if (observerRef.current) {
