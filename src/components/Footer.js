@@ -21,11 +21,11 @@ navigate(`/${pathname}`)
         {/* <span> | </span> */}
        {" "}
 
+{t("for any support or delete account please")} {" "}
 <a  className="footer-link" onClick={()=>handlefooter('contact-us')}>
   {t("Contact Us")}
 </a>
-{" "}
-{t("for any support.")}
+
         {/* <p>
           {t(
             "© TalabPoint. All rights reserved. Use of this platform constitutes acceptance of the Terms and Conditions. Governed by the laws of the Kingdom of Saudi Arabia."
