@@ -20,7 +20,20 @@ import Pagination from "../components/Pagination";
 import SkeletonWrapper from "../components/SkeletonWrapper";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const getStatusClass = (status) => {
+  switch (status?.toLowerCase()) {
+    case "approved":
+      return "status-approved";
+    case "open":
+      return "status-open";
+    case "rejected":
+      return "status-rejected";
+    case "cancelled":
+      return "status-cancelled";
+    default:
+      return "status-pending";
+  }
+};
 const BankTransactions = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -451,7 +464,12 @@ const BankTransactions = () => {
       include: isV("statusCol"),
       searchable: true,
       flex: 1,
-      minWidth: 160
+      minWidth: 160,
+       renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>
+          {t(params.value)}
+        </label>
+      ),
     },
   ];
 
