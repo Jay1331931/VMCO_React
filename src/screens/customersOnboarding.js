@@ -880,7 +880,7 @@ function CustomersOnboarding() {
                               />
                               {field.name === "companyEmail" &&
                                 formData?.companyEmail &&
-                                !isOtpVerify && (
+                                !isOtpVerify && (<>
                                   <button
                                     type="button"
                                     style={{
@@ -913,6 +913,12 @@ function CustomersOnboarding() {
                                       ? t("Send Otp")
                                       : t("Resend Otp")}
                                   </button>
+                                  {errors["otp"] && !isOtpSent && (
+                                <span className="error-message">
+                                  {t(errors["otp"])}
+                                </span>
+                              )}
+                              </>
                                 )}
                               {field.name === "otp" && !isOtpVerify && (
                                 <button
