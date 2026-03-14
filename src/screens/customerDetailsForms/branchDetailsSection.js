@@ -362,7 +362,9 @@ const handleKeyDown = (e) => {
          useEffect(() => {
            if (window.google) {
              setAutocompleteService(new window.google.maps.places.AutocompleteService());
-             setPlacesService(new window.google.maps.places.Place(document.createElement('div')));
+             setPlacesService(new window.google.maps.places.PlacesService(document.createElement('div')));
+       
+            //  setPlacesService(new window.google.maps.places.Place(document.createElement('div')));
              setGeocoder(new window.google.maps.Geocoder());
            }
          }, []);
