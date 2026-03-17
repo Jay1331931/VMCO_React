@@ -124,6 +124,7 @@ function SearchableDropdown({
         dropdownContentRef.current &&
         !dropdownContentRef.current.contains(event.target)
       ) {
+          document.body.classList.remove("keyboard-open");
         setIsOpen(false);
       }
     };
@@ -211,7 +212,9 @@ function SearchableDropdown({
                 // zIndex: 999998,
                 backgroundColor: "transparent",
               }}
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                 document.body.classList.remove("keyboard-open");
+                setIsOpen(false)}}
             />
 
             <div
