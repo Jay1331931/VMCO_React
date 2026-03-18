@@ -24,7 +24,9 @@ import SupportCard from "../components/SupportCard";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import SkeletonWrapper from "../components/SkeletonWrapper";
-
+import {
+  fetchDropdownFromBasicsMaster,
+} from "../utilities/commonServices";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -77,7 +79,34 @@ function Support() {
     const [isAtTop, setIsAtTop] = useState(true);
     const [showHeader, setShowHeader] = useState(true);
     const dragStartY = useRef(0);
+const [basicMasterLists, setBasicMasterLists] = useState({});
+const dropdownFields = [
+    "entity",
+    "supportIssueType",
+  ];
 
+  useEffect(() => {
+      const fetchData = async () => {
+        const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
+          dropdownFields,
+          token
+        );
+        setBasicMasterLists(listOfBasicsMaster);
+      };
+      fetchData();
+    }, [i18n.language]);
+
+    const getDropdownLabel = (field, value) => {
+  const list = basicMasterLists?.[field] || [];
+
+  const item = list.find((i) => i.value === value);
+
+  if (!item) return value;
+
+  return i18n.language === "ar"
+    ? item.valueLc || item.value
+    : item.value;
+};
     useEffect(() => {
         console.log("Loading filters from localStorage...");
         const savedFilters = localStorage.getItem('supportFilters');
@@ -438,7 +467,11 @@ function Support() {
                     : columnDimensions["entity"]?.width || 150,
             align: isArabic ? "right" : "left",
             headerAlign: isArabic ? "right" : "left",
-            renderCell: (params) => <span>{params.value}</span>,
+            renderCell: (params) => {
+    const label = getDropdownLabel("entity", params.value);
+
+    return <span>{label}</span>;
+  },
         },
         {
             field: "grievanceName",
@@ -460,7 +493,11 @@ function Support() {
             flex: 1,
             align: isArabic ? "right" : "left",
             headerAlign: isArabic ? "right" : "left",
-            renderCell: (params) => <span>{params.value}</span>,
+            renderCell: (params) => {
+    const label = getDropdownLabel("supportIssueType", params.value);
+
+    return <span>{label}</span>;
+  },
         },
         {
             field: "daysOpen",

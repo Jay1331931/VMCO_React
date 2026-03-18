@@ -41,6 +41,9 @@ import InviteCard from "../components/InviteCard";
 import { faHeartPulse } from "@fortawesome/free-solid-svg-icons";
 import AddInvites from "../components/AddInvites";
 import SkeletonWrapper from "../components/SkeletonWrapper";
+import {
+  fetchDropdownFromBasicsMaster,
+} from "../utilities/commonServices";
 const getStatusClass = (status) => {
   switch (status?.toLowerCase()) {
     case "approved":
@@ -88,6 +91,7 @@ function Customers() {
   const [inviteErrors, setInviteErrors] = useState({});
   const [isInviteLoading, setIsInviteLoading] = useState(false);
   const [syncLoadingId, setSyncLoadingId] = useState(null);
+  const [basicMasterLists, setBasicMasterLists] = useState({});
   const customerTabs = [
     { value: "customers", label: "Customers" },
     { value: "invites", label: "Invites" },
@@ -125,7 +129,38 @@ function Customers() {
   const contentRef = useRef(null);
   const [isAtTop, setIsAtTop] = useState(true);
   const [showHeader, setShowHeader] = useState(true);
+  const dropdownFields = [
+    "companyType",
+    "typeOfBusiness",
+    "deliveryLocations",
+    "customerSource",
+    "entity",
+    "branch",
+  ];
+
+  useEffect(() => {
+      const fetchData = async () => {
+        const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
+          dropdownFields,
+          token
+        );
+        setBasicMasterLists(listOfBasicsMaster);
+      };
+      fetchData();
+    }, [i18n.language]);
   const dragStartY = useRef(0);
+
+  const getDropdownLabel = (field, value) => {
+  const list = basicMasterLists?.[field] || [];
+
+  const item = list.find((i) => i.value === value);
+
+  if (!item) return value;
+
+  return i18n.language === "ar"
+    ? item.valueLc || item.value
+    : item.value;
+};
 
   useEffect(() => {
     if (activeTab === "customers") {
@@ -813,7 +848,11 @@ function Customers() {
       width: isMobile ? 80 : columnDimensions["companyType"]?.width || 120,
       // flex: 1,
       align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
+      renderCell: (params) => {
+    const label = getDropdownLabel("companyType", params.value);
+
+    return <span>{label}</span>;
+  },
     },
     {
       field: "branchCount",
@@ -834,7 +873,11 @@ function Customers() {
       width: columnDimensions["typeOfBusiness"]?.width || 140,
       // flex: 1,
       align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
+      renderCell: (params) => {
+    const label = getDropdownLabel("typeOfBusiness", params.value);
+
+    return <span>{label}</span>;
+  },
     },
     {
       field: "createdAt",

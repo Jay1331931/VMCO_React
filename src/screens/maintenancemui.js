@@ -12,6 +12,9 @@ import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import Constants from "../constants";
 import { formatDate } from "../utilities/dateFormatter";
+import {
+  fetchDropdownFromBasicsMaster,
+} from "../utilities/commonServices";
 import { Box, Button, Typography, Tooltip, Chip } from "@mui/material";
 import {
   DataGrid,
@@ -77,7 +80,33 @@ function Maintenance() {
   const [columnDimensions, setColumnDimensions] = useState({});
   const contentRef = useRef(null);
   const [isAtTop, setIsAtTop] = useState(true);
+  const [basicMasterLists, setBasicMasterLists] = useState({});
+const dropdownFields = [
+    "maintenanceIssueType",
+  ];
 
+  useEffect(() => {
+      const fetchData = async () => {
+        const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
+          dropdownFields,
+          token
+        );
+        setBasicMasterLists(listOfBasicsMaster);
+      };
+      fetchData();
+    }, [i18n.language]);
+
+    const getDropdownLabel = (field, value) => {
+  const list = basicMasterLists?.[field] || [];
+
+  const item = list.find((i) => i.value === value);
+
+  if (!item) return value;
+
+  return i18n.language === "ar"
+    ? item.valueLc || item.value
+    : item.value;
+};
   useEffect(() => {
     console.log("Loading filters from localStorage...");
     const savedFilters = localStorage.getItem('maintenanceFilters');
@@ -425,7 +454,11 @@ function Maintenance() {
     { field: "branchNameEn", headerName: t("Branch Name"), width: 140, searchable: false, },
     { field: "branchCity", headerName: t("Branch City"), width: 120, searchable: true },
     { field: "assignedSalesExecutive", headerName: t("Assigned Sales Executive"), width: 160, searchable: false, },
-    { field: "issueType", headerName: t("Issue Type"), width: 120, searchable: true },
+    { field: "issueType", headerName: t("Issue Type"), width: 120, searchable: true, renderCell: (params) => {
+    const label = getDropdownLabel("maintenanceIssueType", params.value);
+
+    return <span>{label}</span>;
+  }, },
     {
             field: "daysOpen",
             headerName: t("Days Open"),
