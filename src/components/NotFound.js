@@ -9,7 +9,7 @@ const location = useLocation();
   // ✅ Check if source is d365 from URL or sessionStorage
   const params = new URLSearchParams(location.search);
   const isFromD365 = params.get("source") === "d365" || 
-                     sessionStorage.getItem("accessSource") === "d365";
+                     location.state?.isFromD365 === true;
 
   const handleGoBack = () => {
     navigate(-1); // Go back to the previous page

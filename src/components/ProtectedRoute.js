@@ -81,7 +81,11 @@ useEffect(() => {
     console.log("Full RBAC config:", rbacMgr.config);
     
     if (!isV(page)) {
-      return <Navigate to="*" replace />;
+      return <Navigate to="*" 
+      state={{ 
+        isFromD365: new URLSearchParams(location.search).get("source") === "d365"
+      }} 
+      replace />;
     }
   }
 
@@ -89,7 +93,10 @@ useEffect(() => {
     return (
       <Navigate
         to={user?.userType === "customer" ? "/login" : "/login/employee"}
-        state={{ redirectTo: location.pathname + location.search }}
+        state={{ 
+          redirectTo: location.pathname + location.search,
+          isFromD365: new URLSearchParams(location.search).get("source") === "d365"
+         }}
         replace
       />
     );
