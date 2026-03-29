@@ -56,6 +56,7 @@ import PrivacyPolicy from "./screens/PrivacyPolicy";
 import ContactUs from "./screens/ContactUs";
 import CoolingPeriodEditor from "./screens/coolingPeriodEditor";
 import PricingPolicyEditor from "./screens/pricingPolicyEditor";
+import PBIReport from "./screens/pbiReports";
 import DataManagement from "./screens/dataManagement";
 import { App } from "@capacitor/app";
 import Swal from "sweetalert2";
@@ -415,6 +416,11 @@ if (loading) {
       <Route path="/home" element={
         <ProtectedRoute page="home">
           <HomePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/pbiReport" element={
+        <ProtectedRoute page="pbiReport">
+          <PBIReport />
         </ProtectedRoute>
       } />
       </Routes>

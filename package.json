@@ -35,6 +35,8 @@
     "libphonenumber-js": "^1.12.12",
     "maplibre-gl": "^5.5.0",
     "papaparse": "^5.5.3",
+    "powerbi-client": "^2.23.10",
+    "powerbi-client-react": "^2.0.2",
     "react": "^19.1.0",
     "react-date-range": "^1.4.0",
     "react-dom": "^19.1.0",

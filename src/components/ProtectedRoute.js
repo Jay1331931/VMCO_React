@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 const ProtectedRoute = ({ children, page }) => {
   const { user, isAuthenticated, logout, token, buttonClicked } = useAuth();
   const [isValid, setIsValid] = useState(true);
+  const [rbacReady, setRbacReady] = useState(false);
   const isCheckingRef = useRef(false);
   const backButtonPressedRef = useRef(false);
 const { t, i18n } = useTranslation();
@@ -49,7 +50,20 @@ const { t, i18n } = useTranslation();
     
     return () => clearInterval(interval);
   }, [logout, buttonClicked]);
+useEffect(() => {
+  if (!user || !token) return;
 
+  const role =
+    user?.userType === "employee" && user?.roles[0] !== "admin"
+      ? user?.designation
+      : user?.roles[0];
+
+  // ✅ Always re-fetch, never use stale cache
+  RbacManager.loadRbacConfig(role, token)
+    .then(() => setRbacReady(true))
+    .catch(() => setRbacReady(true));
+
+}, [user, token]);
   // RBAC check
   if (user) {
     const rbacMgr = new RbacManager(
@@ -60,6 +74,9 @@ const { t, i18n } = useTranslation();
     );
 
     const isV = rbacMgr.isV.bind(rbacMgr);
+    const isVPage = isV(page);
+    console.log(`RBAC check for page "${page}": ${isVPage}`);
+    console.log("Full RBAC config:", rbacMgr.config);
     
     if (!isV(page)) {
       return <Navigate to="*" replace />;
