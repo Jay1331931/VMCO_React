@@ -15,7 +15,7 @@ function Login({ title, userType }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setLogin] = useState(false)
-  
+  const location = useLocation();
   // Detect autofill/saved password
   useEffect(() => {
     const handleAutofill = () => {
@@ -55,7 +55,23 @@ function Login({ title, userType }) {
       }
     };
   }, [email, password]);
+// ✅ Save redirect BEFORE token is cleared, on first mount only
+  useEffect(() => {
+    const redirectTo = location.state?.redirectTo 
+      || sessionStorage.getItem("redirectAfterLogin");
+    
+    if (redirectTo) {
+      // Re-save it so it survives the token removal re-render
+      sessionStorage.setItem("redirectAfterLogin", redirectTo);
+    }
+  }, []); // ✅ empty deps — runs once on mount only
 
+  // ✅ Move token removal into useEffect so it doesn't run on every render
+  useEffect(() => {
+    if (!isLogin) {
+      localStorage.removeItem("token");
+    }
+  }, [isLogin]); // ✅ only runs when isLogin changes, not on every render
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Add loading state
@@ -69,15 +85,16 @@ function Login({ title, userType }) {
   useEffect(() => {
     document.title = t("Login");
   }, [t]);
-  if (!isLogin) {
-    localStorage.removeItem("token")
-  }
+  
   const handleSubmit = async (e) => {
     setLogin(false)
     e.preventDefault();
     console.log("🔐 Login form submitted");
     sessionStorage.setItem("pageReloadReason", "Login form submitted");
-    
+    const redirectTo = location.state?.redirectTo 
+    || sessionStorage.getItem("redirectAfterLogin");
+
+    const isValidRedirect = redirectTo === "/pbiReport?source=d365";
     if (email === "" || password === "") {
       setError(t("Please fill in all fields"));
     } else {
@@ -138,8 +155,12 @@ function Login({ title, userType }) {
             data.data.roles[0]?.toLowerCase() === "employee"
             ? data?.data?.designation
             : data.data.roles[0];
-
+       
+  
         RbacManager.loadRbacConfig(role, data.token);
+        // Clear it after reading
+  sessionStorage.removeItem("redirectAfterLogin");
+
         if (data?.data?.customerStatus === "new") {
           navigate("/customerDetails", {
             state: { customerId: data?.data?.customerId, mode: "add" },
@@ -157,7 +178,7 @@ function Login({ title, userType }) {
             data?.data?.roles[0].toLowerCase() ===
             Constants.ROLES.SUPER_ADMIN.toLowerCase())
         ) {
-          navigate("/customers", { replace: true });
+          navigate(isValidRedirect ? redirectTo : "/customers", { replace: true });
         } else if (
           data?.data?.userType?.toLowerCase() === "employee" &&
           (data?.data?.designation?.toLowerCase() ===
@@ -182,7 +203,11 @@ function Login({ title, userType }) {
           navigate("/orders", { replace: true });
         } else {
           // navigate("/catalog",{replace:true});
-          navigate("/home", { replace: true });
+          if (isValidRedirect) {
+      navigate(redirectTo, { replace: true });
+    } else {
+      navigate("/home", { replace: true });
+    }
         }
 
         setMessage(data.message);

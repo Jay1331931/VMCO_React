@@ -1,6 +1,7 @@
 // ProtectedRoute.js
 import React, { useEffect, useState, useRef } from "react";
 import { Navigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import { isTokenValid } from '../utilities/authUtils';
@@ -13,6 +14,7 @@ const ProtectedRoute = ({ children, page }) => {
   const isCheckingRef = useRef(false);
   const backButtonPressedRef = useRef(false);
 const { t, i18n } = useTranslation();
+const location = useLocation();
   useEffect(() => {
     // Check if back button was recently pressed
     if (backButtonPressedRef.current) {
@@ -87,6 +89,7 @@ useEffect(() => {
     return (
       <Navigate
         to={user?.userType === "customer" ? "/login" : "/login/employee"}
+        state={{ redirectTo: location.pathname + location.search }}
         replace
       />
     );

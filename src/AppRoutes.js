@@ -140,6 +140,41 @@ function AppRoutes() {
     };
   }, [location.pathname, navigate]);
 
+  useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const source = params.get("source");
+
+  // Save source to sessionStorage if coming from d365
+  if (source === "d365") {
+    sessionStorage.setItem("accessSource", "d365");
+  }
+
+  // Save intended URL if token is invalid and not already on login/public pages
+  // const publicPaths = ["/login", "/login/employee"];
+  // const publicPaths = ["/pbiReport"];
+  // const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
+// ✅ Only save redirect if STRICTLY /pbiReport?source=d365
+  const isPbiReportFromD365 = 
+    location.pathname === "/pbiReport" && source === "d365";
+
+  if (isPbiReportFromD365) {
+    const currentToken = localStorage.getItem("token");
+    const currentTokenValid = currentToken && isTokenValid(currentToken);
+
+    // ✅ Only save if token is invalid (user not logged in)
+    if (!currentTokenValid) {
+      sessionStorage.setItem("redirectAfterLogin", "/pbiReport?source=d365");
+      console.log("✅ Saved redirect: /pbiReport?source=d365");
+    }
+  } else {
+    // ✅ Clear any previously saved redirect if navigating elsewhere
+    sessionStorage.removeItem("redirectAfterLogin");
+  }
+  // if (!tokenIsValid && !isPublicPath) {
+  //   sessionStorage.setItem("redirectAfterLogin", location.pathname + location.search); // ✅ saves /pbiReport?source=d365
+  // }
+}, [location]);
+
 if (loading) {
   return (
     <div className="loader-container">
